@@ -16,3 +16,20 @@ Thumbs.db
 # Editors
 .idea/
 .vscode/
+
+# >>> template:vite
+# Node, Vite, Vitest and the TanStack Router plugin
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.tanstack/
+*.tsbuildinfo
+*.local
+pnpm-debug.log*
+
+# Local environment; commit an .env.example instead
+.env
+.env.*
+!.env.example
+# <<< template:vite

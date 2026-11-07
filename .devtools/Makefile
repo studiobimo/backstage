@@ -1,10 +1,5 @@
+# The app gen.mjs and the shared targets build. apps/site is a second app; its own targets come with it.
+APP_DIR := apps/admin
+
 include base.mk
-
-.PHONY: check lock clean
-
-check: lint ## Everything CI runs
-
-lock: lock-tools ## Refresh every lockfile after a version change
-
-clean: ## Remove build outputs
-	@echo "Nothing to clean yet."
+include vite.mk
