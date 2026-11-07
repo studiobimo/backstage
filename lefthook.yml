@@ -21,12 +21,3 @@ remotes:
     configs:
       - lefthook/org.yml
 # <<< template:base
-
-# >>> template:init
-# The starter README's links only resolve once init moves it to the root.
-pre-push:
-  jobs:
-    - name: lychee
-      exclude:
-        - .template/README.md
-# <<< template:init

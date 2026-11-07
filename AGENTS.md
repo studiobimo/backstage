@@ -1,17 +1,11 @@
-# Agent guide: Project Name
-
-<!-- >>> template:init -->
-> **This is the template itself**, not a project. Its job is to be copied: see
-> [README.md](README.md) for how, and `.template/manifest` for which files it keeps in step
-> across projects. `make -C .devtools init` replaces this note and the placeholders below.
-<!-- <<< template:init -->
+# Agent guide: Backstage
 
 Instructions for AI coding agents (Codex, Claude Code, and others) working in this repo.
 `CLAUDE.md` only points here, so this file is the single source for every agent.
 
 ## Project
 
-One-line project description.
+Lean, reusable CMS for studio marketing sites on Cloudflare's free tier.
 
 <!-- Two or three sentences an agent needs before touching anything: what this is, what it is
 built with, and where most of the code lives. Then the pointers below. -->

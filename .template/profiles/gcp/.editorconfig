@@ -1,5 +1,0 @@
-# >>> template:gcp
-# As tofu fmt writes them.
-[*.{tf,tfvars,hcl}]
-indent_size = 2
-# <<< template:gcp

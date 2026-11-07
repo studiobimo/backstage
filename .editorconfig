@@ -20,9 +20,3 @@ indent_size = unset
 [{Makefile,*.mk}]
 indent_style = tab
 # <<< template:base
-
-# >>> template:init
-# The web profiles' sources, indented as Prettier indents them in a project.
-[.template/profiles/{vite-react-tanstack,cloudflare,gcp}/**.{js,mjs,ts,tsx,css,html}]
-indent_size = 2
-# <<< template:init
