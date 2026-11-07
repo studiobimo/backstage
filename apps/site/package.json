@@ -1,0 +1,8 @@
+{
+  "name": "backstage-site",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@studiobimo/backstage": "workspace:*"
+  }
+}

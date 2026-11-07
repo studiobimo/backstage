@@ -3,3 +3,6 @@ APP_DIR := apps/admin
 
 include base.mk
 include vite.mk
+
+# Nothing imports these yet, so tsc would not reach them through the admin app.
+TSC_PROJECTS += ../../apps/site ../../packages/backstage

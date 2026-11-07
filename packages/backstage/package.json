@@ -1,0 +1,8 @@
+{
+  "name": "@studiobimo/backstage",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
