@@ -3,11 +3,6 @@
     "title": "Te damos la bienvenida a {{name}}",
     "description": "Un CMS ligero y reutilizable para los sitios de marketing de un estudio, en el plan gratuito de Cloudflare."
   },
-  "nav": {
-    "label": "Principal",
-    "home": "Inicio",
-    "toggle": "Mostrar u ocultar la barra lateral"
-  },
   "theme": {
     "light": "Cambiar al tema claro",
     "dark": "Cambiar al tema oscuro"
@@ -18,5 +13,57 @@
       "en": "English",
       "es": "Español"
     }
+  },
+  "brand": {
+    "tagline": "Administración"
+  },
+  "nav": {
+    "label": "Principal",
+    "home": "Inicio",
+    "type": "Muestra tipográfica",
+    "support": "Ayuda",
+    "toggle": "Mostrar u ocultar la barra lateral",
+    "expand": "Mostrar u ocultar {{name}}",
+    "more": "Más opciones de {{name}}",
+    "open": "Abrir",
+    "delete": "Eliminar",
+    "groups": {
+      "workspace": "Espacio de trabajo",
+      "collections": "Colecciones"
+    },
+    "sections": {
+      "pages": {
+        "title": "Páginas",
+        "items": {
+          "all": "Todas las páginas",
+          "drafts": "Borradores"
+        }
+      },
+      "media": {
+        "title": "Medios",
+        "items": {
+          "library": "Biblioteca",
+          "uploads": "Subidas"
+        }
+      },
+      "settings": {
+        "title": "Ajustes",
+        "items": {
+          "general": "General",
+          "languages": "Idiomas"
+        }
+      }
+    },
+    "collections": {
+      "journal": "Diario",
+      "team": "Equipo",
+      "services": "Servicios"
+    }
+  },
+  "user": {
+    "name": "Editor",
+    "status": "El acceso llegará después",
+    "notifications": "Notificaciones",
+    "signOut": "Cerrar sesión"
   }
 }

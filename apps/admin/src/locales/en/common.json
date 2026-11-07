@@ -3,11 +3,6 @@
     "title": "Welcome to {{name}}",
     "description": "Lean, reusable CMS for studio marketing sites on Cloudflare's free tier."
   },
-  "nav": {
-    "label": "Main",
-    "home": "Home",
-    "toggle": "Toggle the sidebar"
-  },
   "theme": {
     "light": "Switch to light theme",
     "dark": "Switch to dark theme"
@@ -18,5 +13,57 @@
       "en": "English",
       "es": "Español"
     }
+  },
+  "brand": {
+    "tagline": "Admin"
+  },
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "type": "Type specimen",
+    "support": "Support",
+    "toggle": "Toggle the sidebar",
+    "expand": "Show or hide {{name}}",
+    "more": "More for {{name}}",
+    "open": "Open",
+    "delete": "Delete",
+    "groups": {
+      "workspace": "Workspace",
+      "collections": "Collections"
+    },
+    "sections": {
+      "pages": {
+        "title": "Pages",
+        "items": {
+          "all": "All pages",
+          "drafts": "Drafts"
+        }
+      },
+      "media": {
+        "title": "Media",
+        "items": {
+          "library": "Library",
+          "uploads": "Uploads"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "items": {
+          "general": "General",
+          "languages": "Languages"
+        }
+      }
+    },
+    "collections": {
+      "journal": "Journal",
+      "team": "Team",
+      "services": "Services"
+    }
+  },
+  "user": {
+    "name": "Editor",
+    "status": "Sign-in comes later",
+    "notifications": "Notifications",
+    "signOut": "Sign out"
   }
 }
