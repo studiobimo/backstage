@@ -18,3 +18,10 @@ peerDependencyRules:
 
 allowBuilds:
 # <<< template:vite
+
+# >>> template:cloudflare
+  # Inside the vite block's allowBuilds. wrangler's runtime: workerd and esbuild each fetch
+  # or check their platform's binary when installed.
+  esbuild: true
+  workerd: true
+# <<< template:cloudflare
