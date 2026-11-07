@@ -83,6 +83,32 @@ breaking commits. A change to a managed file titled `chore`, `docs` or `ci` merg
 `sync`, so title it `fix` or `feat`.
 <!-- <<< template:workflow -->
 
+## Planning: milestones and issues
+
+Each kind of information lives in exactly one place, so nothing has to be kept in step by hand.
+
+| What | Where |
+| --- | --- |
+| What the product does, story by story | [PRD](docs/PRD.md) |
+| What each milestone is for, and when it is done | [Roadmap](docs/ROADMAP.md) |
+| The work to do, who has it, and its status | GitHub issues in a milestone |
+| Why it is built this way | [Decision records](docs/adr/) |
+| What could go wrong | [Risks](docs/RISKS.md) |
+
+- **A milestone** has the same title as its section in the roadmap. Its exit criteria are its
+  definition of done.
+- **An issue** is one reviewable change: one pull request, or one layer of a stack. If it needs
+  more, split it.
+- **Its title is the Conventional Commit that will close it**, such as
+  `feat(admin): reorder blocks on a page`, and it becomes the PR title. The only labels are `bug`,
+  `enhancement`, `spike` (the outcome is a written answer) and `blocked`.
+- **Its body names the stories** it delivers (`PAG-2`) and how we will know it is done. Acceptance
+  stays in the PRD.
+- **Open questions are issues too**, in the milestone that needs the answer.
+- **The PR says `Closes #123`.**
+
+Start with the milestone's open issues, oldest first; they are created in working order.
+
 ## Releases
 
 [release-please](https://github.com/googleapis/release-please) maintains a release PR from the
