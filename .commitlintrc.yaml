@@ -7,4 +7,4 @@ extends:
 
 rules:
   # `main` is release-please's: it titles the release pull request `chore(main): ...`.
-  scope-enum: [2, always, [build, ci, docs, deps, devtools, main]]
+  scope-enum: [2, always, [core, admin, site, build, ci, docs, deps, devtools, main]]

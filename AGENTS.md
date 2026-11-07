@@ -7,12 +7,13 @@ Instructions for AI coding agents (Codex, Claude Code, and others) working in th
 
 Lean, reusable CMS for studio marketing sites on Cloudflare's free tier.
 
-<!-- Two or three sentences an agent needs before touching anything: what this is, what it is
-built with, and where most of the code lives. Then the pointers below. -->
+Each site is two Workers: an admin (React SPA + Hono API over D1, R2 and KV) and a public site
+that renders published snapshots from KV. The product docs are in `docs/`: read `docs/PRD.md`,
+`docs/ROADMAP.md` and the ADRs before changing behaviour.
 
 - What it is and how to use it: `README.md`
 - Workflow and conventions in full: `CONTRIBUTING.md`
-- Commit scopes: `build`, `ci`, `docs`, `deps`, `devtools`. `.commitlintrc.yaml` enforces this
+- Commit scopes: `core`, `admin`, `site`, `build`, `ci`, `docs`, `deps`, `devtools`. `.commitlintrc.yaml` enforces this
   list, so add a scope in both places.
 
 ## Layout
