@@ -1,0 +1,22 @@
+{
+  "home": {
+    "title": "Te damos la bienvenida a {{name}}",
+    "description": "Un CMS ligero y reutilizable para los sitios de marketing de un estudio, en el plan gratuito de Cloudflare."
+  },
+  "nav": {
+    "label": "Principal",
+    "home": "Inicio",
+    "toggle": "Mostrar u ocultar la barra lateral"
+  },
+  "theme": {
+    "light": "Cambiar al tema claro",
+    "dark": "Cambiar al tema oscuro"
+  },
+  "language": {
+    "label": "Idioma",
+    "names": {
+      "en": "English",
+      "es": "Español"
+    }
+  }
+}
