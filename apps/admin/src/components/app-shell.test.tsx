@@ -7,9 +7,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import i18n from '@/i18n/config'
 import { createAppRouter } from '@/router'
 
-async function renderShell() {
+async function renderShell(path = '/') {
   const queryClient = new QueryClient()
-  const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: ['/'] }))
+  const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }))
   render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
@@ -43,5 +43,20 @@ describe('app shell', () => {
     await user.click(screen.getByRole('combobox', { name: 'Language' }))
     await user.click(await screen.findByRole('option', { name: 'Español' }))
     expect(await screen.findByRole('link', { name: 'Inicio' })).toBeInTheDocument()
+  })
+
+  it('names the current page in the breadcrumb', async () => {
+    await renderShell('/type')
+    expect(
+      screen.getByText('Type specimen', { selector: '[aria-current="page"]' })
+    ).toBeInTheDocument()
+  })
+
+  it('opens a section of the navigation to show its items', async () => {
+    await renderShell()
+    const user = userEvent.setup()
+    expect(screen.queryByRole('button', { name: 'All pages' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Show or hide Pages' }))
+    expect(await screen.findByRole('button', { name: 'All pages' })).toBeInTheDocument()
   })
 })
