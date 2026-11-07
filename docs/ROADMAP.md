@@ -26,7 +26,7 @@ bimo.dev are met in that repository.
 
 ## M0: Foundation
 
-An empty admin and an empty site, deployed.
+An empty admin and an empty site, running in workerd.
 
 **Stories:** none.
 
