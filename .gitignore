@@ -1,0 +1,24 @@
+# >>> template:base
+# Python (.devtools)
+.venv/
+__pycache__/
+
+# OS
+.DS_Store
+__MACOSX/
+Thumbs.db
+
+# Local agent state (shared settings are committed)
+.claude/settings.local.json
+.claude/worktrees/
+# <<< template:base
+
+# Editors
+.idea/
+.vscode/
+
+# >>> template:init
+# What building a profile's sources in place leaves behind.
+.template/profiles/*/build-logic/.gradle/
+.template/profiles/*/build-logic/build/
+# <<< template:init

@@ -1,0 +1,28 @@
+root = true
+
+# >>> template:base
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{yml,yaml,json,jsonc,json5,toml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+# List continuation and nested content follow Markdown, not code, indentation.
+indent_size = unset
+
+[{Makefile,*.mk}]
+indent_style = tab
+# <<< template:base
+
+# >>> template:init
+# The web profiles' sources, indented as Prettier indents them in a project.
+[.template/profiles/{vite-react-tanstack,cloudflare,gcp}/**.{js,mjs,ts,tsx,css,html}]
+indent_size = 2
+# <<< template:init
