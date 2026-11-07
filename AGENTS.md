@@ -150,6 +150,12 @@ is inside it. Its `package.json` lists what the app imports. The root's lists th
 `.devtools/` imports, since those resolve from the root. `.prettierignore` stays at the root.
 Run `pnpm exec shadcn` from `APP_DIR`.
 
+With more than one app, list them in `APPS` instead (`APPS := apps/admin apps/site`). `build`,
+`typecheck`, `budget`, `clean` and the host's `types` and `deploy` then run once per app and stop
+at the first that fails; `dev` and `preview` take the first. `APP=apps/site` narrows any of them
+to one app. Give an app its own budget with `BUNDLE_DIR@apps/site`, `BUNDLE_CHUNK_KIB@apps/site`
+or `BUNDLE_TOTAL_KIB@apps/site`. `gen.mjs` writes the first app.
+
 Every other package brings its own `eslint.config.js` and `vitest.config.ts`, on the shared
 `base` of each, and adds what only it needs. ESLint uses the nearest config to each file, and
 `make -C .devtools test` runs every package that has a Vitest config. `tsc` reaches a package
@@ -225,21 +231,24 @@ make -C .devtools fmt       # Prettier over the web sources
 The `cloudflare` profile keeps this section and `.devtools/host/` in step with the template.
 The shared Vite, Vitest, ESLint and make configs load their Cloudflare parts from there, so
 the project's own config files never name the host. `wrangler.jsonc`, `.dev.vars.example`
-and `worker/` are the project's. In a workspace they sit in `APP_DIR`, so run `wrangler` there.
+and `worker/` are the project's. In a workspace they sit in each app's directory (`APP_DIR`, or
+every entry of `APPS`), so run `wrangler` there.
 
 - **One Worker serves the app.** Static files come from `dist/client`, and any path that is
   not a file falls back to `index.html` for the router. Only `/api/*` runs the Hono app in
   `worker/index.ts`. `make -C .devtools dev` runs it in workerd beside the client, with
   the bindings in `wrangler.jsonc` simulated locally.
 - **Environments.** The top level of `wrangler.jsonc` is local development. Deploys go to
-  `env.staging` or `env.production`, as `<name>-staging` and `<name>-production`. Neither
-  inherits bindings or vars from the top level, so restate them in each.
+  `env.development` or `env.production`, as `<name>-development` and `<name>-production`.
+  Neither inherits bindings or vars from the top level, so restate them in each.
 - **Deploy with `make -C .devtools deploy ENV=<env>`.** The environment is fixed when the
   app is built, not when it is deployed. The target builds and deploys in one step;
-  `wrangler deploy` after a plain build ships local development's bindings.
-- **`deploy.yml` runs the same target:** on a push to `main` to staging, and to production
-  when `release.yml` calls it for a release. It needs a repository variable,
-  `CLOUDFLARE_ACCOUNT_ID`, and in each of the `staging` and `production` GitHub
+  `wrangler deploy` after a plain build ships local development's bindings. It refuses to
+  run from any branch but the one its environment ships from: `develop` for development,
+  `main` for production.
+- **`deploy.yml` runs the same target:** on a push to `develop` to development, and to
+  production when `release.yml` calls it for a release. It needs a repository variable,
+  `CLOUDFLARE_ACCOUNT_ID`, and in each of the `development` and `production` GitHub
   environments a `CLOUDFLARE_API_TOKEN` secret, from the "Edit Cloudflare Workers"
   template and limited to the account. Don't also connect Workers Builds, or every push
   deploys twice.

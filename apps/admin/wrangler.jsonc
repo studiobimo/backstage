@@ -13,10 +13,10 @@
   "observability": { "enabled": true },
   "upload_source_maps": true,
   // The top level is local development. A deploy goes to one of these environments, named
-  // <name>-<environment>, chosen at build time: make -C .devtools deploy ENV=staging.
+  // <name>-<environment>, chosen at build time: make -C .devtools deploy ENV=development.
   // Neither inherits bindings or vars from the top level, so each restates them.
   "env": {
-    "staging": {},
+    "development": {},
     "production": {}
   }
 }
