@@ -74,9 +74,8 @@ jobs:
           REQUESTED: ${{ inputs.environment }}
         run: |
           envs="$(make -C .devtools --no-print-directory -s deploy-envs)"
-          # shellcheck disable=SC2086 # the list is words on purpose
           case "${REQUESTED}" in
-            auto) set -- ${envs}; pick="$1" ;;
+            auto) read -r pick _ <<<"${envs}" ;;
             '') pick=development ;;
             *) pick="${REQUESTED}" ;;
           esac
