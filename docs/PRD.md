@@ -2,7 +2,7 @@
 
 - **Status:** Draft for v1
 - **Date:** 2026-11-07
-- **First site:** `bimo.dev`, edited at `admin.studio.bimo.dev`
+- **First site:** `bimo.dev`, edited at `admin.studio.bimo.dev`, in its own repository
 
 ## 1. Summary
 
@@ -192,8 +192,8 @@ may slip to the next release.
   - A strict Content-Security-Policy on both Workers
   - No secret in the site worker
   - CSRF protection on every admin write
-- **Accessibility:** the admin and the dogfood site meet WCAG 2.2 AA.
-- **Performance:** the dogfood home page reaches an LCP under 2.5 s on a mid-range phone over 4G.
+- **Accessibility:** the admin and bimo.dev meet WCAG 2.2 AA.
+- **Performance:** bimo.dev's home page reaches an LCP under 2.5 s on a mid-range phone over 4G.
 
 ## 9. Success measures
 
