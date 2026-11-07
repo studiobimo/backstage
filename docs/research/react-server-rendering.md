@@ -78,9 +78,10 @@ starts.
    Untested here: check that the Vite plugin's bundle still defers the evaluation.
 2. **Budget the site worker at 150 KiB gzipped to start.** That is about twice the measured
    renderer, with room for Hono, the registry and the blocks. #9 sets the number and can move it.
-3. **Re-measure on `development`** once #8 deploys it. Read the Worker's CPU time in the
-   dashboard (p50 and p99) for a cold start and a day of normal use, and close risk 6 for good
-   or reopen it with those figures.
+3. **Re-measure on a deployed consumer.** This repository deploys nothing
+   ([ADR-0008](../adr/0008-workspace-profiles-and-styling.md)), so the first deployed site, bimo.dev
+   in its own repository, reads the Worker's CPU time in the dashboard (p50 and p99) for a cold
+   start and a day of normal use. It closes risk 6 for good or reopens it with those figures.
 4. **Keep blocks plain.** Nothing here rewards a heavier tree: a block with no client script
    ships no JavaScript (PUB-3), and cost grows with the number of elements, not with blocks.
 
