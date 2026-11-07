@@ -1,0 +1,19 @@
+{
+  "h2": "Define a block in code",
+  "h3": "Fill it in from a form",
+  "h4": "Publish when it is ready",
+  "h5": "See it on the site",
+  "h6": "Change it and publish again",
+  "paragraph": "Describe a block once, with its fields and its component. The admin builds the form from it, an editor fills it in, and the site renders the published page from a snapshot. Nothing is saved to the site until someone publishes.",
+  "small": "Drafts stay in the admin until they are published.",
+  "strong": "Publishing is one click.",
+  "link": "Back to the top",
+  "quote": "Write the block once. Edit the page as often as you like.",
+  "code": "backstage.example.com",
+  "kbd": "Ctrl B",
+  "primary": "Publish",
+  "secondary": "Save draft",
+  "families": "Families",
+  "weights": "Weights",
+  "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 &!?"
+}
