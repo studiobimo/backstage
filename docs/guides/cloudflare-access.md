@@ -70,8 +70,8 @@ is covered by the hostname application. Turn them off in the consumer's `wrangle
 }
 ```
 
-Set them in each environment, because an environment inherits neither
-([the `cloudflare` profile](../../AGENTS.md)).
+Check that they apply to every environment you deploy to; a Wrangler environment does not
+inherit everything from the top level ([the `cloudflare` profile](../../AGENTS.md)).
 
 ### 5. Give the worker the team domain and the audience
 
@@ -94,13 +94,13 @@ them or replaces them here.
 
 ## What the worker checks
 
-On every `/api/*` request the admin worker:
+This is what AUT-1 builds in M1. On every `/api/*` request the admin worker will:
 
-- reads the token from the `Cf-Access-Jwt-Assertion` header. Not the `CF_Authorization` cookie,
+- read the token from the `Cf-Access-Jwt-Assertion` header. Not the `CF_Authorization` cookie,
   which Cloudflare says is not guaranteed to be passed
-- verifies its signature against the keys at `<team domain>/cdn-cgi/access/certs`
-- requires the issuer to be the team domain and the audience to be `ACCESS_AUD`
-- answers `403` if the header, either variable or a valid signature is missing
+- verify its signature against the keys at `<team domain>/cdn-cgi/access/certs`
+- require the issuer to be the team domain and the audience to be `ACCESS_AUD`
+- answer `403` if the header, either variable or a valid signature is missing
 
 It does this itself because `ctx.access`, the shortcut Cloudflare offers for Workers, is not
 passed to a worker that has static assets, which the admin does. Local development skips the
@@ -129,7 +129,7 @@ From M1, a fourth check belongs here: a request to `/api/*` with no, or a forged
 - **The worker can't fetch the keys.** Check that the team domain is the exact
   `https://<team-name>.cloudflareaccess.com` with no trailing path.
 - **A person leaves the client.** Remove them from the policy. Their session lasts until it
-  expires, so end it from **Zero Trust > Access controls > Applications**.
+  expires, so revoke it in Zero Trust as well if it should end now.
 
 ## Sources
 
