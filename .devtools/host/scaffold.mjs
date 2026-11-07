@@ -8,12 +8,12 @@ import { join } from 'node:path'
 // than a week old, and a release supports dates up to its own.
 const compatibilityDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-export default ({ slug, repo }) => ({
+export default ({ slug, repo, deployEnvs }) => ({
   dependencies: ['hono'],
   devDependencies: ['@cloudflare/vite-plugin', 'wrangler'],
   next: [
     'pnpm exec wrangler login                 # once, to deploy from this machine',
-    'make -C .devtools deploy ENV=development # <name>-development, from wrangler.jsonc'
+    `make -C .devtools deploy ENV=${deployEnvs[0]} # <name>-${deployEnvs[0]}, from wrangler.jsonc`
   ],
   files: {
     'wrangler.jsonc': `{
@@ -31,11 +31,10 @@ export default ({ slug, repo }) => ({
   "observability": { "enabled": true },
   "upload_source_maps": true,
   // The top level is local development. A deploy goes to one of these environments, named
-  // <name>-<environment>, chosen at build time: make -C .devtools deploy ENV=development.
+  // <name>-<environment>, chosen at build time: make -C .devtools deploy ENV=<environment>.
   // Neither inherits bindings or vars from the top level, so each restates them.
   "env": {
-    "development": {},
-    "production": {}
+${deployEnvs.map((name) => `    "${name}": {}`).join(',\n')}
   }
 }
 `,

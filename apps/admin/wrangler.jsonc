@@ -12,11 +12,11 @@
   },
   "observability": { "enabled": true },
   "upload_source_maps": true,
-  // The top level is local development. A deploy goes to one of these environments, named
-  // <name>-<environment>, chosen at build time: make -C .devtools deploy ENV=development.
-  // Neither inherits bindings or vars from the top level, so each restates them.
+  // The top level is local development. A deploy goes to the production environment, named
+  // <name>-production: make -C .devtools deploy ENV=production. It does not inherit bindings
+  // or vars from the top level, so it restates them. There is no development environment
+  // (ADR-0008).
   "env": {
-    "development": {},
     "production": {}
   }
 }

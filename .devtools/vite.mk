@@ -29,27 +29,39 @@ BUNDLE_DIR ?= dist
 BUNDLE_CHUNK_KIB ?= 450
 BUNDLE_TOTAL_KIB ?= 550
 
-# The tsc -b projects, from APP_DIR: its tsconfig.json references the app's and the configs'.
+# The tsc -b projects of an app, from APP_DIR: its tsconfig.json references the app's and the
+# configs', and a hosting profile adds its own. Every other workspace package is found by its
+# src/ and checked on its own tsconfig.json.
 TSC_PROJECTS := .
+
+# The checks every workspace package gets, by what it has: scripts/packages.mjs runs in each
+# one. They tell the apps from the other packages by ALL_APPS, which APP does not narrow.
+PACKAGES = $(PNPM) --recursive exec node $(ROOT)/.devtools/scripts/packages.mjs
+ALL_APPS = $(or $(APPS),$(APP_DIR))
 
 # Prettier and ESLint run from the root, as the hooks do, so they cover a workspace's every
 # package. Prettier only formats the web sources. Markdown, YAML and JSON belong to the shared
 # hooks, and many of those files are managed: formatting them here would be drift.
 PRETTIER_FILES := '**/*.{js,mjs,cjs,jsx,ts,tsx,css,html}'
 
-# Every hosting profile deploys to these two environments, and each ships from one branch, so a
-# laptop cannot put a feature branch on production. A hosting profile's deploy target takes
-# ENV=<one of them>; the recipe line stops it unless it was given one.
-DEPLOY_ENVS := development production
+# A hosting profile deploys to these environments, and each ships from one branch, so a laptop
+# cannot put a feature branch on production. Its deploy target takes ENV=<one of them>; the
+# recipe line stops it unless it was given one. A project that has no development environment
+# or develop branch sets DEPLOY_ENVS := production in Makefile; the first one listed is the
+# default of deploy.yml's manual run.
+DEPLOY_ENVS ?= development production
 DEPLOY_BRANCH_development := develop
 DEPLOY_BRANCH_production := main
 space := $(subst ,, )
-deploy-env-pattern = $(subst $(space),|,$(DEPLOY_ENVS))
+deploy-env-pattern = $(subst $(space),|,$(strip $(DEPLOY_ENVS)))
 require-deploy-env = @case "$(ENV)" in $(deploy-env-pattern)) ;; \
 	*) echo "$(MSG_DEPLOY_USAGE)" >&2; exit 1 ;; esac
 
 MSG_ROUTES_STALE := $(GLYPH_FAIL) src/routeTree.gen.ts was stale and the build rewrote it: commit it
 MSG_DEPLOY_USAGE = $(GLYPH_FAIL) usage: $(DEVTOOLS) deploy ENV=$(deploy-env-pattern)
+
+deploy-envs:
+	@echo $(DEPLOY_ENVS)
 
 # A run from Actions has GITHUB_REF_NAME, the branch it started on: a checkout of a push is
 # detached, so git would name no branch there.
@@ -60,7 +72,7 @@ deploy-branch:
 		echo "$(GLYPH_FAIL) $(ENV) ships from $(DEPLOY_BRANCH_$(ENV)), not $$branch" >&2; \
 		exit 1; }
 
-.PHONY: install dev build build-app preview test typecheck typecheck-app eslint fmt fmt-check budget budget-app audit playwright-install ci check lock clean clean-app deploy-branch
+.PHONY: deploy-envs install dev build build-app preview test typecheck typecheck-app eslint fmt fmt-check budget budget-app audit playwright-install ci check lock clean clean-app deploy-branch
 
 install: ## Install the packages pnpm-lock.yaml pins
 	$(PNPM) install --frozen-lockfile
@@ -84,11 +96,12 @@ build-app:
 preview: build-app ## Serve the production build locally
 	$(APP_PNPM) exec vite preview
 
-test: ## Unit tests, once, in every package with a vitest.config.ts
-	$(PNPM) --recursive exec sh -c '[ ! -f vitest.config.ts ] || vitest run'
+test: ## Unit tests, once, in every package with a src/
+	$(PACKAGES) test
 
-typecheck: ## Type-check every tsconfig project reference, in every app
+typecheck: ## Type-check every app's tsconfig project references, and every other package's tsconfig.json
 	$(call each-app,typecheck-app)
+	$(PACKAGES) typecheck $(ALL_APPS)
 
 typecheck-app:
 	$(APP_PNPM) exec tsc -b $(TSC_PROJECTS)
@@ -103,6 +116,7 @@ fmt-check: ## Fail on web sources Prettier would change
 	$(PNPM) exec prettier --check --log-level=warn $(PRETTIER_FILES)
 
 budget: ## Fail if a client chunk or the whole bundle of any app outgrows its budget (after build)
+	$(PACKAGES) apps $(ALL_APPS)
 	$(call each-app,budget-app)
 
 budget-app:
