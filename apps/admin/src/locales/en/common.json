@@ -2,5 +2,21 @@
   "home": {
     "title": "Welcome to {{name}}",
     "description": "Lean, reusable CMS for studio marketing sites on Cloudflare's free tier."
+  },
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "toggle": "Toggle the sidebar"
+  },
+  "theme": {
+    "light": "Switch to light theme",
+    "dark": "Switch to dark theme"
+  },
+  "language": {
+    "label": "Language",
+    "names": {
+      "en": "English",
+      "es": "Español"
+    }
   }
 }

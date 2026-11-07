@@ -5,7 +5,10 @@ import { createRoot } from 'react-dom/client'
 
 import './i18n/config'
 import { createAppRouter } from './router'
+import { startTheme } from './lib/theme'
 import './index.css'
+
+startTheme()
 
 const queryClient = new QueryClient()
 const router = createAppRouter(queryClient)
