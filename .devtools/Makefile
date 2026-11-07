@@ -1,5 +1,6 @@
-# The app gen.mjs and the shared targets build. apps/site is a second app; its own targets come with it.
-APP_DIR := apps/admin
+# The apps the shared targets build, check and deploy, one after the other. apps/site joins
+# the list when its worker lands; until then it has nothing to build.
+APPS := apps/admin
 
 include base.mk
 include vite.mk
