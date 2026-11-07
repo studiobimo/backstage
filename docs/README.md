@@ -7,6 +7,7 @@ This folder is the source of truth for what Backstage is and why it is built the
 - [Risks](RISKS.md): risks with mitigations, and assumptions
 - Research:
   - [A hosted Backstage](research/hosted-backstage.md): the central `cms.bimo.dev` idea, and why it is set aside
+  - [React on the site worker](research/react-server-rendering.md): server rendering measured against the free plan's limits
 - Architecture decision records:
   - [ADR-0001: Two Workers per site, an admin and a site](adr/0001-two-workers.md)
   - [ADR-0002: Deploy into each client's own Cloudflare account](adr/0002-client-account.md)
