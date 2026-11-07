@@ -1,0 +1,19 @@
+{
+  "h2": "Define un bloque en código",
+  "h3": "Rellénalo desde un formulario",
+  "h4": "Publica cuando esté listo",
+  "h5": "Míralo en el sitio",
+  "h6": "Cámbialo y vuelve a publicar",
+  "paragraph": "Describe un bloque una sola vez, con sus campos y su componente. El administrador construye el formulario a partir de él, quien edita lo rellena y el sitio muestra la página publicada desde una copia. Nada llega al sitio hasta que alguien publica.",
+  "small": "Los borradores se quedan en el administrador hasta que se publican.",
+  "strong": "Publicar es un solo clic.",
+  "link": "Volver arriba",
+  "quote": "Escribe el bloque una vez. Edita la página tantas veces como quieras.",
+  "code": "backstage.example.com",
+  "kbd": "Ctrl B",
+  "primary": "Publicar",
+  "secondary": "Guardar borrador",
+  "families": "Familias",
+  "weights": "Pesos",
+  "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 &!?"
+}
