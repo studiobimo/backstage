@@ -12,7 +12,7 @@ Worker bundle that stays inside its size budget?
 
 ## Answer
 
-**It fits, with one thing to watch: the first request in a fresh isolate.**
+**It fits. The one thing to watch is the first render in a fresh isolate.**
 
 - **Size.** The renderer and a page of five blocks bundle to **222 KiB, or 68 KiB gzipped**.
   The renderer is nearly all of it; the page's code adds under 4 KiB. Cloudflare's compressed
@@ -20,12 +20,14 @@ Worker bundle that stays inside its size budget?
   uncompressed, so size is only the budget we set ourselves (#9).
 - **CPU, once warm:** about **0.1 ms** to render five blocks, and about 0.3 ms for 25.
 - **CPU, first render in a fresh process:** about **6 ms** for five blocks and 8 ms for 25.
-  Evaluating the bundle costs another **6 ms**. Cloudflare's docs describe startup as separate
-  from request CPU, but we could not confirm how the first request is billed. If both count,
-  a cold isolate is close to the 10 ms line.
+- **Startup, once per isolate:** evaluating the bundle takes about **6 ms**. This is not a
+  per-request cost. It runs when the Worker's global scope loads, before requests are handled,
+  and Cloudflare limits it separately, to [1 second](https://developers.cloudflare.com/workers/platform/limits/#worker-startup-time).
+  The docs do not say how the first request is billed, and nothing we found says startup counts
+  against its 10 ms. If it did, a cold isolate would take about 12 ms.
 
-So the risk is a cold isolate, not a busy one. Edge caching ([PUB-4](../PRD.md)) takes most
-requests off the render path, and the cold case is cheap to guard against (see below).
+So the risk is a cold isolate, not a busy one, and only if startup is charged to the request.
+Edge caching ([PUB-4](../PRD.md)) takes most requests off the render path.
 
 ## What was measured
 
@@ -65,17 +67,18 @@ starts.
 
 - **It is not Cloudflare's CPU meter.** Node and a local workerd are the same engine, not the
   same machine or the same accounting. Real pages carry more markup, i18n and the registry.
-- **The first-request bill is unconfirmed.** Whether module evaluation counts against the
-  request's 10 ms is the open question.
+- **The first-request bill is unconfirmed.** Whether startup counts against the first request's
+  10 ms is the open question. The deployed measurement in recommendation 3 answers it.
 - **The development build is far slower.** `wrangler dev` bundles with `NODE_ENV=development`
   unless told otherwise, and React's development build took about 4 ms warm instead of 1.9 ms.
   Measure production builds only.
 
 ## Recommendations
 
-1. **Keep the cached path off React.** Load the renderer only on a cache miss, with a dynamic
-   `import()`, so a cache hit in a cold isolate pays neither the 6 ms import nor the render.
-   Untested here: check that the Vite plugin's bundle still defers the evaluation.
+1. **Only if startup turns out to be charged: keep the cached path off React.** Load the
+   renderer on a cache miss, with a dynamic `import()`, so a cache hit in a cold isolate skips
+   the 6 ms of startup and the render. Untested here, and not worth the complexity until the
+   deployed measurement shows it is needed.
 2. **Budget the site worker at 150 KiB gzipped to start.** That is about twice the measured
    renderer, with room for Hono, the registry and the blocks. #9 sets the number and can move it.
 3. **Re-measure on a deployed consumer.** This repository deploys nothing
