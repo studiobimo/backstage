@@ -88,7 +88,7 @@ export default function SortableItems({ keys, names, onMove, children }: Sortabl
         if (source.initialIndex !== source.index) onMove(source.initialIndex, source.index)
       }}
     >
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-3">
         {keys.map((key, index) => (
           <SortableRow key={key} id={key} index={index} names={names}>
             {children}

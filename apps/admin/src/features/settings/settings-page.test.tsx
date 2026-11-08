@@ -55,8 +55,8 @@ describe('SettingsPage', { timeout: 15_000 }, () => {
     mockApi(() => reply(200, { settings: saved }))
     renderPage()
     expect(await screen.findByLabelText('Site name')).toHaveValue('Studio')
-    for (const name of ['Navigation', 'Footer', 'Contact details', 'Default social image']) {
-      expect(screen.getByText(name)).toBeInTheDocument()
+    for (const name of ['General', 'Header', 'Footer', 'Contact']) {
+      expect(screen.getByRole('region', { name })).toBeInTheDocument()
     }
     expect(screen.getByRole('button', { name: 'About' })).toBeInTheDocument()
   })

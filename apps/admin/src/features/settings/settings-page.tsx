@@ -1,10 +1,11 @@
 import { LOCALES, siteSettingsJsonSchema, siteSettingsSchema } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { CircleAlertIcon } from 'lucide-react'
+import { CircleAlertIcon, GlobeIcon, MailIcon, PanelBottomIcon, PanelTopIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BlockForm } from '@/features/block-form/block-form.tsx'
+import type { FormSection } from '@/features/block-form/form-sections.tsx'
 import type { JsonSchema } from '@/features/block-form/spec.ts'
 import { blockValue, type BlockValue } from '@/features/block-form/value.ts'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -26,6 +27,26 @@ function useTranslatedSchema() {
     })
     return translateSchema(SETTINGS_SCHEMA, copyOf)
   }, [t, i18n])
+}
+
+const SECTIONS = [
+  { id: 'general', icon: <GlobeIcon />, fields: ['siteName', 'defaultSocialImage'] },
+  { id: 'header', icon: <PanelTopIcon />, fields: ['navigation'] },
+  { id: 'footer', icon: <PanelBottomIcon />, group: 'footer' },
+  { id: 'contact', icon: <MailIcon />, group: 'contact' }
+] as const
+
+function useSections(): FormSection[] {
+  const { t } = useTranslation('settings')
+  return useMemo(
+    () =>
+      SECTIONS.map((section) => ({
+        ...section,
+        title: t(`sections.${section.id}.title`),
+        description: t(`sections.${section.id}.description`)
+      })),
+    [t]
+  )
 }
 
 function useSaveSettings() {
@@ -53,9 +74,10 @@ export function SettingsPage() {
   const { t } = useTranslation('settings')
   const { data: settings } = useSuspenseQuery(settingsQuery)
   const schema = useTranslatedSchema()
+  const sections = useSections()
   const { submit, failed } = useSaveSettings()
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 py-4 sm:p-8">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8 py-4 sm:p-8">
       <header className="flex flex-col gap-1">
         <h1 className="text-3xl">{t('title')}</h1>
         <p className="text-muted-foreground">{t('description')}</p>
@@ -72,6 +94,8 @@ export function SettingsPage() {
         locales={LOCALES}
         value={blockValue.parse(settings)}
         onSubmit={submit}
+        sections={sections}
+        className="max-w-none gap-10"
       />
     </div>
   )

@@ -33,25 +33,27 @@ export function LocaleSwitcher({
 }: LocaleSwitcherProps) {
   const { t, i18n } = useTranslation('blockForm')
   return (
-    <div className="flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs/5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-0.5">
-        <p className="font-medium text-sm">{t('locale.editing')}</p>
-        <p className="text-muted-foreground text-xs">{t('locale.hint')}</p>
+    <div className="z-20 bg-background pt-2 pb-4 sm:sticky sm:top-0">
+      <div className="flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs/5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-0.5">
+          <p className="font-medium text-sm">{t('locale.editing')}</p>
+          <p className="text-muted-foreground text-xs">{t('locale.hint')}</p>
+        </div>
+        <SegmentedControl role="group" aria-label={t('locale.editing')} className="w-full sm:w-fit">
+          {locales.map((locale) => (
+            <SegmentedControlItem
+              key={locale}
+              aria-pressed={locale === active}
+              data-pressed={locale === active ? '' : undefined}
+              className="flex-1 sm:flex-none"
+              onClick={() => onChange(locale)}
+            >
+              {languageName(locale, i18n.language)}
+              <StatusBadge status={status[locale]} showInvalid={showInvalid} />
+            </SegmentedControlItem>
+          ))}
+        </SegmentedControl>
       </div>
-      <SegmentedControl role="group" aria-label={t('locale.editing')} className="w-full sm:w-fit">
-        {locales.map((locale) => (
-          <SegmentedControlItem
-            key={locale}
-            aria-pressed={locale === active}
-            data-pressed={locale === active ? '' : undefined}
-            className="flex-1 sm:flex-none"
-            onClick={() => onChange(locale)}
-          >
-            {languageName(locale, i18n.language)}
-            <StatusBadge status={status[locale]} showInvalid={showInvalid} />
-          </SegmentedControlItem>
-        ))}
-      </SegmentedControl>
     </div>
   )
 }

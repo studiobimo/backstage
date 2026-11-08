@@ -226,7 +226,7 @@ function ListBody(props: NodeProps<ListSpec>) {
   )
 
   return (
-    <Fieldset className="w-full max-w-none gap-3">
+    <Fieldset className="flex w-full max-w-none flex-col gap-4">
       <FieldsetLegend className="mb-1 w-full">
         <FieldHeading
           legend
@@ -235,14 +235,16 @@ function ListBody(props: NodeProps<ListSpec>) {
           {...chrome}
         />
       </FieldsetLegend>
-      {spec.description && <p className="text-muted-foreground text-xs">{spec.description}</p>}
+      {spec.description && (
+        <p className="-mt-2.5 text-muted-foreground text-xs">{spec.description}</p>
+      )}
       {items.length === 0 ? (
         <ListEmpty label={label} action={addButton} />
       ) : (
         <>
           <Suspense
             fallback={
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-3">
                 {keys.map((key, index) => renderItem(key, index))}
               </ul>
             }
