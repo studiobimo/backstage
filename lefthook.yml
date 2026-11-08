@@ -65,3 +65,9 @@ pre-commit:
         mise exec -- pnpm exec prettier --check --log-level=warn {staged_files}
         || { mise exec -- pnpm exec prettier --write --log-level=warn {staged_files}; exit 1; }
 # <<< template:vite
+
+    # Until sqlfluff is a shared job (see the issue on studiobimo/.github), it is pinned in
+    # mise.toml and run from here.
+    - name: sqlfluff
+      glob: '*.sql'
+      run: mise exec -- sqlfluff lint {staged_files}

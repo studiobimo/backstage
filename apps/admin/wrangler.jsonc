@@ -10,6 +10,14 @@
   },
   "observability": { "enabled": true },
   "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "backstage",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../packages/backstage/migrations"
+    }
+  ],
   "env": {
     "production": {}
   }
