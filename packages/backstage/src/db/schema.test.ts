@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import migration from '../../migrations/0000_init.sql?raw'
+import settingsMigration from '../../migrations/0001_site_settings.sql?raw'
 import countChildren from './sql/count-children.sql?raw'
 import deletePage from './sql/delete-page.sql?raw'
 import deleteUser from './sql/delete-user.sql?raw'
@@ -18,6 +19,7 @@ describe('the D1 migrations', () => {
     db = new DatabaseSync(':memory:')
     db.exec('PRAGMA foreign_keys = ON')
     db.exec(migration)
+    db.exec(settingsMigration)
     db.exec(seed)
   })
 
@@ -27,7 +29,7 @@ describe('the D1 migrations', () => {
         .prepare(tables)
         .all()
         .map((r) => r.name)
-    ).toEqual(['media', 'page_blocks', 'page_locales', 'pages', 'users'])
+    ).toEqual(['media', 'page_blocks', 'page_locales', 'pages', 'site_settings', 'users'])
   })
 
   it('defaults a user to the editor role', () => {

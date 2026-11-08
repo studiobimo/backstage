@@ -70,3 +70,9 @@ export const pageBlocks = sqliteTable(
   },
   (t) => [index('page_blocks_page').on(t.pageId, t.position)]
 )
+
+export const siteSettings = sqliteTable('site_settings', {
+  id: text('id').primaryKey(),
+  content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
+  updatedAt: integer('updated_at').notNull().$defaultFn(now)
+})

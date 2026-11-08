@@ -24,6 +24,14 @@ export {
   slugify
 } from './pages.ts'
 export type { Locale, Page, PageBlock, PageBlocks, PageInput } from './pages.ts'
+export {
+  EMPTY_SITE_SETTINGS,
+  SETTINGS,
+  siteSettingsJsonSchema,
+  siteSettingsResponseSchema,
+  siteSettingsSchema
+} from './settings.ts'
+export type { SiteSettings } from './settings.ts'
 export * from './db/schema.ts'
 export {
   createPage,
@@ -37,3 +45,4 @@ export {
 } from './db/pages.ts'
 export type { PageWrite } from './db/pages.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
+export { readSiteSettings, writeSiteSettings } from './db/settings.ts'

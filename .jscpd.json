@@ -5,6 +5,7 @@
     "**/*.lock",
     "**/.mise/locks/**",
     "**/src/routeTree.gen.ts",
+    "**/migrations/meta/**",
     "**/src/components/ui/**",
     "**/.template/profiles/**"
   ]
