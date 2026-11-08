@@ -43,6 +43,12 @@ describe('page blocks API', () => {
     )
   })
 
+  it('refuses a block that belongs to a global slot', async () => {
+    const id = await createPage()
+    const header = { ...entry('a'), block: 'site-header' }
+    expect((await send('PUT', `/${id}/blocks`, { blocks: [header] })).status).toBe(400)
+  })
+
   it('answers 404 for a page that does not exist', async () => {
     expect((await send('GET', '/missing/blocks')).status).toBe(404)
     expect((await send('PUT', '/missing/blocks', { blocks: [] })).status).toBe(404)

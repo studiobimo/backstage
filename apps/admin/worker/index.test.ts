@@ -1,7 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest'
 
 import app from './index'
-import { registry } from './registry'
 import { openTestEnv } from './test-env'
 
 const { dispose, env } = await openTestEnv()
@@ -31,7 +30,7 @@ describe('worker', () => {
     expect(response.status).toBe(403)
   })
 
-  it('serves every registered block as JSON Schema with its field kinds', async () => {
+  it('serves every page block as JSON Schema with its field kinds', async () => {
     const response = await app.request('/api/v1/blocks', {}, env.localDevelopment)
     expect(response.status).toBe(200)
     const { blocks } = (await response.json()) as {
@@ -41,7 +40,7 @@ describe('worker', () => {
         schema: { properties: Record<string, { backstage?: string }> }
       }[]
     }
-    expect(blocks.map((block) => block.name)).toEqual([...registry.blocks.keys()])
+    expect(blocks.map((block) => block.name)).toEqual(['hero'])
     const hero = blocks.find((block) => block.name === 'hero')
     expect(hero?.version).toBe(1)
     expect(
