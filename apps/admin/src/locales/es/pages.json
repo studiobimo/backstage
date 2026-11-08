@@ -1,13 +1,17 @@
 {
   "title": "Páginas",
-  "locales": { "en": "English", "es": "Español" },
+  "locales": {
+    "en": "English",
+    "es": "Español"
+  },
   "list": {
     "create": "Nueva página",
     "home": "Inicio",
     "rename": "Renombrar {{name}}",
     "delete": "Eliminar {{name}}",
     "emptyTitle": "Aún no hay páginas",
-    "emptyDescription": "Crea la página de inicio y luego las demás."
+    "emptyDescription": "Crea la página de inicio y luego las demás.",
+    "edit": "Editar {{name}}"
   },
   "form": {
     "createTitle": "Nueva página",
