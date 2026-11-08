@@ -89,12 +89,12 @@ environment:
 }
 ```
 
-The names are the ones the worker's check is written against in M1 (AUT-1); that change confirms
-them or replaces them here.
+These are the names the worker's check reads. Leave `DEV_AUTH` out of `wrangler.jsonc`: it is for
+`.dev.vars` on a laptop only.
 
 ## What the worker checks
 
-This is what AUT-1 builds in M1. On every `/api/*` request the admin worker will:
+On every `/api/*` request, `apps/admin/worker/auth.ts` does this:
 
 - read the token from the `Cf-Access-Jwt-Assertion` header. Not the `CF_Authorization` cookie,
   which Cloudflare says is not guaranteed to be passed
@@ -102,9 +102,16 @@ This is what AUT-1 builds in M1. On every `/api/*` request the admin worker will
 - require the issuer to be the team domain and the audience to be `ACCESS_AUD`
 - answer `403` if the header, either variable or a valid signature is missing
 
-It does this itself because `ctx.access`, the shortcut Cloudflare offers for Workers, is not
-passed to a worker that has static assets, which the admin does. Local development skips the
-check when `DEV_AUTH` is set, and a deploy with it set is refused (AUT-2).
+The check runs before routing, so an unknown path gets `403` as well, not `404`. It does this itself because `ctx.access`, the shortcut Cloudflare offers for Workers, is not
+passed to a worker that has static assets, which the admin does.
+
+## Local development
+
+Put `DEV_AUTH=true` in `.dev.vars` (see `.dev.vars.example`) and the check is skipped. The bypass
+only works for requests to `localhost`, `127.0.0.1` or `[::1]`. On any other host, a worker with
+`DEV_AUTH` set to anything answers `500` to every `/api/*` request, even one with a valid token, so
+a deploy that carries it is refused rather than left open (AUT-2). A test also fails if
+`wrangler.jsonc` mentions `DEV_AUTH`.
 
 ## Check that it works
 
@@ -116,8 +123,8 @@ From a browser with no Access session, such as a private window:
 3. Sign in with an address that is not on the policy. Access should refuse you.
 4. Open the worker's `workers.dev` address. It should not exist.
 
-From M1, a fourth check belongs here: a request to `/api/*` with no, or a forged,
-`Cf-Access-Jwt-Assertion` header gets `403` from the worker. It is a unit test as well.
+A request to `/api/*` with no, or a forged, `Cf-Access-Jwt-Assertion` header gets `403` from the
+worker. `apps/admin/worker/auth.test.ts` covers it.
 
 ## When something goes wrong
 
