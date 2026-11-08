@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { richTextDoc } from './rich-text.ts'
+import { RICH_TEXT, richTextDoc } from './rich-text.ts'
 
 export const fieldKinds = ['image', 'richText', 'link', 'localized'] as const
 export type FieldKind = (typeof fieldKinds)[number]
@@ -13,11 +13,11 @@ export const image = () =>
 
 export const richText = () => marked(richTextDoc, 'richText')
 
-export const link = () =>
+export const link = ({ strict = false } = {}) =>
   marked(
     z.object({
-      href: z.string().min(1),
-      label: z.string().default('')
+      href: strict ? z.string().regex(RICH_TEXT.safeHref) : z.string().min(1),
+      label: strict ? z.string().trim().min(1) : z.string().default('')
     }),
     'link'
   )
