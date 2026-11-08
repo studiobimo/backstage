@@ -1,9 +1,12 @@
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
+import { requireAccess } from './auth'
+
 const app = new Hono<{ Bindings: Env }>().basePath('/api')
 
 app.use(secureHeaders())
+app.use(requireAccess)
 
 app.get('/health', (c) => c.json({ ok: true }))
 
