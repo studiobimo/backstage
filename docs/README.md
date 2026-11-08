@@ -20,3 +20,4 @@ This folder is the source of truth for what Backstage is and why it is built the
   - [ADR-0006: A private repo, and a package on GitHub Packages](adr/0006-private-package.md)
   - [ADR-0007: English and Spanish from the start](adr/0007-two-locales.md)
   - [ADR-0008: The org's profiles inside a workspace, with coss ui and lineup's styling](adr/0008-workspace-profiles-and-styling.md)
+  - [ADR-0009: Rich text is edited with Tiptap and stored as a fixed JSON document](adr/0009-rich-text-with-tiptap.md)
