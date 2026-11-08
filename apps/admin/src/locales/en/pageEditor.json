@@ -1,0 +1,28 @@
+{
+  "title": "Page",
+  "back": "All pages",
+  "save": "Save",
+  "empty": {
+    "title": "No blocks yet",
+    "description": "Add the first block to start building this page."
+  },
+  "picker": {
+    "add": "Add block",
+    "label": "Blocks"
+  },
+  "block": {
+    "duplicate": "Duplicate {{name}}",
+    "remove": "Remove {{name}}"
+  },
+  "errors": {
+    "invalid": "Some blocks are not valid. Reload and try again.",
+    "not_found": "This page no longer exists.",
+    "internal": "Something went wrong. Try again."
+  },
+  "unsaved": "Unsaved changes",
+  "announce": {
+    "added": "{{name}} added in position {{position}} of {{total}}.",
+    "duplicated": "{{name}} duplicated. The copy is in position {{position}} of {{total}}.",
+    "removed": "{{name}} removed. {{total}} blocks left."
+  }
+}

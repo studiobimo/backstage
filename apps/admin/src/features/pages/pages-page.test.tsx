@@ -2,10 +2,18 @@ import type { Page } from '@studiobimo/backstage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Suspense } from 'react'
+import { type ReactNode, Suspense } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PagesPage } from './pages-page'
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, ...props }: { children: ReactNode; 'aria-label'?: string }) => (
+    <a href="/pages/p1" aria-label={props['aria-label']}>
+      {children}
+    </a>
+  )
+}))
 
 const about: Page = {
   id: 'p1',

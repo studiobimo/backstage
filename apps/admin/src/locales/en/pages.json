@@ -1,13 +1,17 @@
 {
   "title": "Pages",
-  "locales": { "en": "English", "es": "Español" },
+  "locales": {
+    "en": "English",
+    "es": "Español"
+  },
   "list": {
     "create": "New page",
     "home": "Home",
     "rename": "Rename {{name}}",
     "delete": "Delete {{name}}",
     "emptyTitle": "No pages yet",
-    "emptyDescription": "Create the home page, then add the pages around it."
+    "emptyDescription": "Create the home page, then add the pages around it.",
+    "edit": "Edit {{name}}"
   },
   "form": {
     "createTitle": "New page",

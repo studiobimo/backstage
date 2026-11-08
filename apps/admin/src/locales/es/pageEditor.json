@@ -1,0 +1,28 @@
+{
+  "title": "Página",
+  "back": "Todas las páginas",
+  "save": "Guardar",
+  "empty": {
+    "title": "Aún no hay bloques",
+    "description": "Añade el primer bloque para empezar a montar esta página."
+  },
+  "picker": {
+    "add": "Añadir bloque",
+    "label": "Bloques"
+  },
+  "block": {
+    "duplicate": "Duplicar {{name}}",
+    "remove": "Quitar {{name}}"
+  },
+  "errors": {
+    "invalid": "Algunos bloques no son válidos. Recarga e inténtalo de nuevo.",
+    "not_found": "Esta página ya no existe.",
+    "internal": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "unsaved": "Cambios sin guardar",
+  "announce": {
+    "added": "{{name}} añadido en la posición {{position}} de {{total}}.",
+    "duplicated": "{{name}} duplicado. La copia está en la posición {{position}} de {{total}}.",
+    "removed": "{{name}} quitado. Quedan {{total}} bloques."
+  }
+}
