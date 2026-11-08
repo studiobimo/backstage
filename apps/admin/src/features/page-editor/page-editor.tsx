@@ -10,6 +10,7 @@ import type { SortableSlot } from '@/components/sortable-items'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
+import { PageHeader } from '@/components/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/lib/api'
@@ -170,7 +171,7 @@ interface EditorHeaderProps {
 function EditorHeader({ title, dirty, saving, failure, onSave }: EditorHeaderProps) {
   const { t } = useTranslation('pageEditor')
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <Link
         to="/pages"
         className="inline-flex w-fit items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
@@ -178,22 +179,24 @@ function EditorHeader({ title, dirty, saving, failure, onSave }: EditorHeaderPro
         <ArrowLeftIcon className="size-4" aria-hidden />
         {t('back')}
       </Link>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl">{title}</h1>
-        <div className="flex items-center gap-3">
-          {dirty && <Badge variant="warning">{t('unsaved')}</Badge>}
-          <Button onClick={onSave} disabled={!dirty || saving}>
-            {saving ? <Spinner /> : <SaveIcon aria-hidden />}
-            {t('save')}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={title}
+        actions={
+          <div className="flex items-center gap-3">
+            {dirty && <Badge variant="warning">{t('unsaved')}</Badge>}
+            <Button onClick={onSave} disabled={!dirty || saving}>
+              {saving ? <Spinner /> : <SaveIcon aria-hidden />}
+              {t('save')}
+            </Button>
+          </div>
+        }
+      />
       {failure && (
         <p role="alert" className="text-destructive-foreground text-sm">
           {failure}
         </p>
       )}
-    </>
+    </div>
   )
 }
 
@@ -232,7 +235,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
   )
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-4 sm:p-8">
+    <>
       <EditorHeader
         title={page ? pageLabel(page, i18n.language) : t('title')}
         dirty={!sameBlocks(blocks, saved)}
@@ -267,6 +270,6 @@ export function PageEditor({ pageId }: { pageId: string }) {
       <p role="status" aria-live="polite" className="sr-only">
         {actions.announcement}
       </p>
-    </div>
+    </>
   )
 }

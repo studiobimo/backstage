@@ -56,14 +56,14 @@ describe('app shell', () => {
     await renderShell()
     const user = userEvent.setup()
     expect(screen.queryByRole('link', { name: 'All pages' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Show or hide Pages' }))
+    await user.click(screen.getByRole('button', { name: 'Pages' }))
     expect(await screen.findByRole('link', { name: 'All pages' })).toBeInTheDocument()
   })
 
   it('links the settings section to the site settings', async () => {
     await renderShell()
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Show or hide Settings' }))
+    await user.click(screen.getByRole('button', { name: 'Settings' }))
     expect(await screen.findByRole('link', { name: 'General' })).toHaveAttribute(
       'href',
       '/settings'

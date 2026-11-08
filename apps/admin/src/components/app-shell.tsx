@@ -68,7 +68,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <ThemeToggle />
               </div>
             </header>
-            <div className="flex-1 p-gutter pt-0">{children}</div>
+            <div className="flex-1 px-gutter pb-10 sm:px-8">
+              <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">{children}</div>
+            </div>
           </SidebarInset>
         </SidebarProvider>
       </TooltipProvider>
