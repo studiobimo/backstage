@@ -14,6 +14,12 @@ describe('worker', () => {
     expect(await response.json()).toEqual({ ok: true })
   })
 
+  it('answers /api/health before the Access check', async () => {
+    const response = await app.request('/api/health', {}, env.deployed)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ ok: true })
+  })
+
   it('answers an unknown /api path with a JSON 404', async () => {
     const response = await app.request('/api/nothing-here', {}, env.localDevelopment)
     expect(response.status).toBe(404)

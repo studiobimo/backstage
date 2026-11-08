@@ -1,4 +1,4 @@
-import { API_ERROR } from '@studiobimo/backstage'
+import { API_ERROR, logEvent } from '@studiobimo/backstage'
 import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
 
@@ -40,7 +40,7 @@ export const requireAccess = createMiddleware<{ Bindings: Env }>(async (c, next)
 
   if (DEV_AUTH) {
     if (!isLocalRequest(c.req.url)) {
-      console.error(API_ERROR.devAuthOutsideLocal.message)
+      logEvent('error', c, API_ERROR.devAuthOutsideLocal.message)
       return respondWithError(c, API_ERROR.devAuthOutsideLocal)
     }
     return next()

@@ -1,8 +1,10 @@
+import { OBSERVABILITY, observe, reportError, respondHealthy } from '@studiobimo/backstage'
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
 const app = new Hono<{ Bindings: Env }>()
 
+app.use(...observe)
 app.use(
   secureHeaders({
     contentSecurityPolicy: {
@@ -25,6 +27,8 @@ app.use(
   })
 )
 
+app.get(OBSERVABILITY.health.path, respondHealthy)
+
 const placeholder = `<!doctype html>
 <html lang="en">
   <head>
@@ -46,7 +50,7 @@ app.get('/', (c) => c.html(placeholder))
 
 app.notFound((c) => c.text('Not found', 404))
 app.onError((error, c) => {
-  console.error(error)
+  reportError(c, error)
   return c.text('Internal error', 500)
 })
 

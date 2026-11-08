@@ -42,7 +42,7 @@ const deployedEnv = { ACCESS_TEAM_DOMAIN: TEAM_DOMAIN, ACCESS_AUD: AUDIENCE } as
 const request = (
   token?: string,
   env: Partial<Env> = deployedEnv,
-  url = 'https://admin.example.com/api/health'
+  url = 'https://admin.example.com/api/v1/blocks'
 ) => app.request(url, token ? { headers: { 'Cf-Access-Jwt-Assertion': token } } : {}, env)
 
 let trusted: CryptoKeyPair
@@ -124,7 +124,6 @@ describe('access verification', () => {
     await serveCerts()
     const response = await request(await signToken(trusted.privateKey, {}))
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ ok: true })
     expect(certsRequests).toEqual([`${TEAM_DOMAIN}/cdn-cgi/access/certs`])
   })
 
@@ -139,9 +138,9 @@ describe('DEV_AUTH', () => {
   const devEnv = { DEV_AUTH: 'true' } as Env
 
   it.each([
-    'http://localhost:5173/api/health',
-    'http://127.0.0.1:8787/api/health',
-    'http://[::1]:8787/api/health'
+    'http://localhost:5173/api/v1/blocks',
+    'http://127.0.0.1:8787/api/v1/blocks',
+    'http://[::1]:8787/api/v1/blocks'
   ])('skips the check on %s', async (url) => {
     expect((await request(undefined, devEnv, url)).status).toBe(200)
   })
@@ -162,7 +161,11 @@ describe('DEV_AUTH', () => {
   })
 
   it('does not leak onto a lookalike hostname', async () => {
-    const response = await request(undefined, devEnv, 'https://localhost.evil.example/api/health')
+    const response = await request(
+      undefined,
+      devEnv,
+      'https://localhost.evil.example/api/v1/blocks'
+    )
     expect(response.status).toBe(500)
   })
 })

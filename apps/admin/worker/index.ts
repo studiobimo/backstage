@@ -1,4 +1,10 @@
-import { API_ERROR } from '@studiobimo/backstage'
+import {
+  API_ERROR,
+  OBSERVABILITY,
+  observe,
+  reportError,
+  respondHealthy
+} from '@studiobimo/backstage'
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
@@ -9,15 +15,16 @@ import { v1Routes } from './v1'
 
 const app = new Hono<{ Bindings: Env }>().basePath('/api')
 
+app.use(...observe)
 app.use(secureHeaders())
+app.get(OBSERVABILITY.health.path, respondHealthy)
 app.use(requireAccess)
 
-app.get('/health', (c) => c.json({ ok: true }))
 app.route('/v1', v1Routes(registry))
 
 app.notFound((c) => respondWithError(c, API_ERROR.notFound))
 app.onError((error, c) => {
-  console.error(error)
+  reportError(c, error)
   return respondWithError(c, API_ERROR.internal)
 })
 
