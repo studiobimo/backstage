@@ -12,5 +12,23 @@
     }
   },
   "invalidSummary_one": "{{count}} field needs attention.",
-  "invalidSummary_other": "{{count}} fields need attention."
+  "invalidSummary_other": "{{count}} fields need attention.",
+  "list": {
+    "add": "Add item",
+    "item": "Item {{number}}",
+    "remove": "Remove {{item}}",
+    "hasErrors": "Has errors",
+    "count_one": "{{count}} item",
+    "count_other": "{{count}} items",
+    "emptyTitle": "No items yet",
+    "emptyDescription": "Add the first item to {{label}}."
+  },
+  "sort": {
+    "handle": "Reorder {{item}}",
+    "instructions": "To reorder, press space or enter to pick up the item, use the arrow keys to move it, then press space or enter again to drop it. Press escape to cancel.",
+    "picked": "Picked up {{item}}. It is in position {{position}} of {{total}}.",
+    "over": "{{item}} moved to position {{position}} of {{total}}.",
+    "dropped": "{{item}} dropped in position {{position}} of {{total}}.",
+    "cancelled": "Reordering cancelled. {{item}} went back to position {{position}} of {{total}}."
+  }
 }

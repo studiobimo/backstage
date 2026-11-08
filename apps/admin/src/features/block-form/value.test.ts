@@ -9,7 +9,7 @@ import type {
 
 import { parseBlockSchema } from './spec.ts'
 import { everyKindSchema } from './test-fixtures.ts'
-import { fieldName, initialGroup, type ValueByKind, withoutUndefined } from './value.ts'
+import { fieldName, initialGroup, summarize, type ValueByKind, withoutUndefined } from './value.ts'
 
 describe('initialGroup', () => {
   const initial = initialGroup(parseBlockSchema(everyKindSchema))
@@ -19,7 +19,8 @@ describe('initialGroup', () => {
     expect(initial).not.toHaveProperty('ratio')
   })
 
-  it('uses the defaults the schema gives', () => {
+  it('starts lists empty, and uses the defaults the schema gives', () => {
+    expect(initial.items).toEqual([])
     expect(initial.theme).toBe('light')
   })
 
@@ -33,6 +34,12 @@ describe('value helpers', () => {
   it('names a path the way the form names its fields', () => {
     expect(fieldName(['items', 0, 'title', 'es'])).toBe('items[0].title.es')
     expect(fieldName(['slug'])).toBe('slug')
+  })
+
+  it('summarizes a value as one line of text', () => {
+    expect(summarize({ href: '/about', label: 'About' })).toBe('/about · About')
+    expect(summarize(3)).toBe('3')
+    expect(summarize(true)).toBe('')
   })
 
   it('drops undefined entries the way JSON would', () => {

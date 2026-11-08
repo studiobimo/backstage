@@ -47,7 +47,13 @@ describe('parseBlockSchema', () => {
     expect(byKey('cta')).toMatchObject({ kind: 'group', variant: 'link' })
   })
 
-  it('reads nested groups', () => {
+  it('reads lists and nested groups', () => {
+    expect(byKey('items')).toMatchObject({
+      kind: 'list',
+      minItems: 1,
+      maxItems: 2,
+      item: { kind: 'group' }
+    })
     expect(byKey('details')).toMatchObject({
       kind: 'group',
       fields: [{ key: 'credit', kind: 'text' }]
@@ -61,12 +67,11 @@ describe('parseBlockSchema', () => {
     expect(() => parseBlockSchema({ type: 'string' })).toThrow(UnsupportedSchemaError)
   })
 
-  it('refuses lists, localized fields and rich text, which the form cannot edit yet', () => {
+  it('refuses localized fields and rich text, which the form cannot edit yet', () => {
     const refuses = (field: JsonSchema) =>
       expect(() => parseBlockSchema({ type: 'object', properties: { field } })).toThrow(
         UnsupportedSchemaError
       )
-    refuses({ type: 'array', items: { type: 'string' } })
     refuses({ type: 'object', backstage: 'localized', additionalProperties: { type: 'string' } })
     refuses({ type: 'object', backstage: 'richText' })
   })
@@ -80,6 +85,7 @@ const incomplete = {
   size: 'xl',
   columns: 7.5,
   slug: 'Ab1',
+  items: [],
   details: {}
 }
 
@@ -89,6 +95,7 @@ const complete = {
   size: 'm',
   columns: 3,
   slug: 'abc',
+  items: [{ name: 'One' }],
   details: {}
 }
 

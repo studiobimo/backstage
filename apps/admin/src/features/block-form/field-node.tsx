@@ -7,11 +7,12 @@ import { type FieldChromeProps, FieldHeading } from '@/components/form/fields'
 import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
 import { cn } from '@/lib/utils'
 
+import { ListField } from './list-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
 import type { BlockFormApi } from './validation.ts'
 import { fieldName, type Path } from './value.ts'
 
-interface NodeProps<S extends FieldSpec = FieldSpec> {
+export interface NodeProps<S extends FieldSpec = FieldSpec> {
   form: BlockFormApi
   spec: S
   path: Path
@@ -77,7 +78,7 @@ function LeafNode({ form, spec, path, label, chrome, translated, icon }: NodePro
                 options={spec.options.map((option) => ({ value: option, label: String(option) }))}
               />
             )
-          case 'group':
+          default:
             return null
         }
       }}
@@ -140,11 +141,13 @@ function GroupNode(props: NodeProps<GroupSpec>) {
   )
 }
 
-function FieldNode(props: NodeProps) {
+export function FieldNode(props: NodeProps) {
   const { spec } = props
   switch (spec.kind) {
     case 'group':
       return <GroupNode {...props} spec={spec} />
+    case 'list':
+      return <ListField {...props} spec={spec} />
     default:
       return <LeafNode {...props} />
   }
