@@ -31,13 +31,21 @@ export function FieldHeading({
   optional,
   badge,
   legend,
+  section,
   labelId
-}: FieldChromeProps & { legend?: boolean; labelId?: string }) {
+}: FieldChromeProps & { legend?: boolean; section?: boolean; labelId?: string }) {
   const { t } = useTranslation('form')
   return (
     <span className="flex w-full flex-wrap items-center gap-2">
       {legend ? (
-        <span className="font-medium text-base/4.5 sm:text-sm/4">{label}</span>
+        <span
+          className={cn(
+            'font-medium text-base/4.5 sm:text-sm/4',
+            section && 'font-pixel font-normal text-lg/6 sm:text-lg/6'
+          )}
+        >
+          {label}
+        </span>
       ) : (
         <FieldLabel id={labelId}>{label}</FieldLabel>
       )}

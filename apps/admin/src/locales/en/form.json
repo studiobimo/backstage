@@ -8,6 +8,7 @@
     "minLength": "Use {{min}} characters or more.",
     "maxLength": "Use {{max}} characters or fewer.",
     "format": "Enter a valid value.",
+    "email": "Enter a valid email address.",
     "notNumber": "Enter a number.",
     "notInteger": "Enter a whole number.",
     "minimum": "Enter {{min}} or more.",
