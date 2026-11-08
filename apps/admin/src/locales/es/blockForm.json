@@ -32,14 +32,6 @@
     "invalid_other": "{{count}} errores",
     "copyFrom": "Copiar {{language}}"
   },
-  "sort": {
-    "handle": "Reordenar {{item}}",
-    "instructions": "Para reordenar, pulsa espacio o intro para tomar el elemento, muévelo con las flechas y vuelve a pulsar espacio o intro para soltarlo. Pulsa escape para cancelar.",
-    "picked": "Has tomado {{item}}. Está en la posición {{position}} de {{total}}.",
-    "over": "{{item}} está ahora en la posición {{position}} de {{total}}.",
-    "dropped": "Has soltado {{item}} en la posición {{position}} de {{total}}.",
-    "cancelled": "Reordenación cancelada. {{item}} vuelve a la posición {{position}} de {{total}}."
-  },
   "richText": {
     "toolbar": "Formato",
     "tools": {

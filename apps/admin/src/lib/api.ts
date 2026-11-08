@@ -1,0 +1,27 @@
+import { API_ERROR } from '@studiobimo/backstage'
+import { z } from 'zod'
+
+const API_ROOT = '/api/v1'
+
+export class ApiError extends Error {
+  readonly code: string
+  constructor(code: string, message: string) {
+    super(message)
+    this.code = code
+  }
+}
+
+const failureShape = z.object({ error: z.string(), code: z.string() })
+
+export const apiRequest = async (path: string, init?: RequestInit) => {
+  const response = await fetch(`${API_ROOT}${path}`, {
+    ...init,
+    headers: { 'content-type': 'application/json' }
+  })
+  if (response.ok) return response
+  const failure = failureShape.safeParse(await response.json().catch(() => null))
+  const { code, error } = failure.success
+    ? failure.data
+    : { code: API_ERROR.internal.code, error: API_ERROR.internal.message }
+  throw new ApiError(code, error)
+}

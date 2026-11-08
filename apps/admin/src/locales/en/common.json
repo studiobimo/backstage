@@ -65,5 +65,13 @@
     "status": "Sign-in comes later",
     "notifications": "Notifications",
     "signOut": "Sign out"
+  },
+  "sort": {
+    "handle": "Reorder {{item}}",
+    "instructions": "To reorder, press space or enter to pick up the item, use the arrow keys to move it, then press space or enter again to drop it. Press escape to cancel.",
+    "picked": "Picked up {{item}}. It is in position {{position}} of {{total}}.",
+    "over": "{{item}} moved to position {{position}} of {{total}}.",
+    "dropped": "{{item}} dropped in position {{position}} of {{total}}.",
+    "cancelled": "Reordering cancelled. {{item}} went back to position {{position}} of {{total}}."
   }
 }
