@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import headersFile from '../public/_headers?raw'
 
-// public/_headers in Cloudflare's format: a path, then its headers indented under it.
 function headersFor(path: string) {
   const lines = headersFile.split('\n').filter((line) => line.trim() && !line.startsWith('#'))
   const start = lines.indexOf(path) + 1
@@ -15,6 +14,8 @@ function headersFor(path: string) {
     })
   )
 }
+
+const CSP = { forbiddenSources: new Set(["'unsafe-inline'", "'unsafe-eval'", '*']) }
 
 const headers = headersFor('/*')
 const policy = new Map(
@@ -42,11 +43,8 @@ describe('the admin SPA headers', () => {
   })
 
   it('never allow inline code, eval or any origin', () => {
-    for (const sources of policy.values()) {
-      expect(sources).not.toContain("'unsafe-inline'")
-      expect(sources).not.toContain("'unsafe-eval'")
-      expect(sources).not.toContain('*')
-    }
+    const allowed = [...policy.values()].flat()
+    expect(allowed.filter((source) => CSP.forbiddenSources.has(source))).toEqual([])
   })
 
   it('send the other security headers', () => {

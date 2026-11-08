@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { DatabaseSync } from 'node:sqlite'
 
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -13,7 +12,6 @@ import seed from './sql/seed.sql?raw'
 import tables from './sql/tables.sql?raw'
 import userRole from './sql/user-role.sql?raw'
 
-// drizzle-kit separates statements with a comment; SQLite runs the file as it is.
 describe('the D1 migrations', () => {
   let db: DatabaseSync
   beforeEach(() => {
