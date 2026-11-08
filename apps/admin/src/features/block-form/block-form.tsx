@@ -5,8 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { Spinner } from '@/components/ui/spinner'
+import { cn } from '@/lib/utils'
 
 import { GroupFields } from './field-node.tsx'
+import { type FormSection, SectionedFields } from './form-sections.tsx'
 import { EditingLocaleContext, hasLocalized, localeStatus } from './locale-status.ts'
 import { LocaleSwitcher } from './locale-switcher.tsx'
 import { type GroupSpec, type JsonSchema, parseBlockSchema } from './spec.ts'
@@ -24,6 +26,8 @@ export interface BlockFormProps {
   locales: readonly string[]
   value?: BlockValue
   onSubmit: (value: BlockValue) => void | Promise<void>
+  sections?: readonly FormSection[]
+  className?: string
 }
 
 const noIssues: readonly never[] = []
@@ -61,7 +65,9 @@ function SupportedBlockForm({
   parsed,
   locales,
   value,
-  onSubmit
+  onSubmit,
+  sections,
+  className
 }: BlockFormProps & { parsed: ParsedBlock }) {
   const { t } = useTranslation('blockForm')
   const fallback = locales[0] ?? ''
@@ -89,7 +95,7 @@ function SupportedBlockForm({
       <ShownIssuesContext.Provider value={attempted ? issuePaths : noIssues}>
         <Form
           noValidate
-          className="flex w-full max-w-2xl flex-col gap-6"
+          className={cn('flex w-full max-w-2xl flex-col gap-6', className)}
           onSubmit={(event) => {
             event.preventDefault()
             submit()
@@ -104,7 +110,11 @@ function SupportedBlockForm({
               onChange={setActive}
             />
           )}
-          <GroupFields form={form} spec={parsed.root} path={[]} label="" />
+          {sections ? (
+            <SectionedFields form={form} root={parsed.root} sections={sections} />
+          ) : (
+            <GroupFields form={form} spec={parsed.root} path={[]} label="" />
+          )}
           <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t bg-background py-4">
             {attempted && issuePaths.length > 0 && (
               <p role="alert" className="text-destructive-foreground text-sm">

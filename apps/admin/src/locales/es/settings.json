@@ -9,6 +9,24 @@
     "title": "No se pudieron guardar los ajustes",
     "description": "Tus cambios siguen aquí. Revisa tu conexión e inténtalo de nuevo."
   },
+  "sections": {
+    "general": {
+      "title": "General",
+      "description": "Lo básico que comparten todas las páginas: el nombre del sitio y la imagen que se usa al compartir un enlace."
+    },
+    "header": {
+      "title": "Cabecera",
+      "description": "La navegación en la parte superior de cada página."
+    },
+    "footer": {
+      "title": "Pie de página",
+      "description": "Lo que cierra cada página: una línea breve y algunos enlaces."
+    },
+    "contact": {
+      "title": "Contacto",
+      "description": "Cómo pueden ponerse en contacto contigo los visitantes."
+    }
+  },
   "fields": {
     "siteName": {
       "title": "Nombre del sitio",
@@ -19,8 +37,8 @@
       "description": "Se usa cuando una página se comparte sin una imagen propia."
     },
     "navigation": {
-      "title": "Navegación",
-      "description": "Los enlaces de la cabecera del sitio, en orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
+      "title": "Enlaces de navegación",
+      "description": "Se muestran en este orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
     },
     "footer": {
       "title": "Pie de página",
@@ -30,7 +48,7 @@
       },
       "links": {
         "title": "Enlaces del pie",
-        "description": "Enlaces que se muestran bajo el contenido, en orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
+        "description": "Se muestran en este orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
       }
     },
     "contact": {

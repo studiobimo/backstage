@@ -286,3 +286,22 @@ describe('BlockForm content', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('cannot show')
   })
 })
+
+describe('BlockForm sections', () => {
+  afterEach(restoreEnglish)
+
+  it('groups the named fields under a heading and keeps the rest', () => {
+    setup({ sections: [{ id: 'basics', title: 'Basics', icon: null, fields: ['title'] }] })
+    const basics = within(screen.getByRole('region', { name: 'Basics' }))
+    expect(basics.getByRole('textbox', { name: 'Title' })).toBeInTheDocument()
+    expect(basics.queryByRole('textbox', { name: 'Slug' })).not.toBeInTheDocument()
+    expect(textbox('Slug')).toBeInTheDocument()
+  })
+
+  it('shows the children of a group directly under its section', () => {
+    setup({ sections: [{ id: 'details', title: 'More', icon: null, group: 'details' }] })
+    const more = within(screen.getByRole('region', { name: 'More' }))
+    expect(more.getByRole('textbox', { name: 'Credit' })).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: /^Details/ })).not.toBeInTheDocument()
+  })
+})

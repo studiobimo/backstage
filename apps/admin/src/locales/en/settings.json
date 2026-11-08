@@ -9,6 +9,24 @@
     "title": "Could not save the settings",
     "description": "Your changes are still here. Check your connection and try again."
   },
+  "sections": {
+    "general": {
+      "title": "General",
+      "description": "The basics every page shares: the site's name and the image used when a link is shared."
+    },
+    "header": {
+      "title": "Header",
+      "description": "The navigation at the top of every page."
+    },
+    "footer": {
+      "title": "Footer",
+      "description": "What closes every page: a short line and a few links."
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "How visitors can reach you."
+    }
+  },
   "fields": {
     "siteName": {
       "title": "Site name",
@@ -19,8 +37,8 @@
       "description": "Used when a page shares a link without an image of its own."
     },
     "navigation": {
-      "title": "Navigation",
-      "description": "The links in the site header, in order. Addresses start with https://, /, #, mailto: or tel:."
+      "title": "Navigation links",
+      "description": "Shown in this order. Addresses start with https://, /, #, mailto: or tel:."
     },
     "footer": {
       "title": "Footer",
@@ -30,7 +48,7 @@
       },
       "links": {
         "title": "Footer links",
-        "description": "Links shown below the content, in order. Addresses start with https://, /, #, mailto: or tel:."
+        "description": "Shown in this order. Addresses start with https://, /, #, mailto: or tel:."
       }
     },
     "contact": {

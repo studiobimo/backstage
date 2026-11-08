@@ -135,14 +135,18 @@ function GroupNode(props: NodeProps<GroupSpec>) {
   const { spec, label, chrome } = props
   const section = props.path.length === 1 && !spec.variant
   return (
-    <Fieldset className={cn('w-full max-w-none gap-3', section && 'mt-2 gap-4 border-t pt-6')}>
+    <Fieldset
+      className={cn('flex w-full max-w-none flex-col gap-4', section && 'mt-2 gap-5 border-t pt-6')}
+    >
       <GroupLegend
         label={label}
         badge={chrome?.badge}
         optional={!spec.required && !props.translated}
         section={section}
       />
-      {spec.description && <p className="text-muted-foreground text-xs">{spec.description}</p>}
+      {spec.description && (
+        <p className="-mt-2.5 text-muted-foreground text-xs">{spec.description}</p>
+      )}
       <GroupFields {...props} className={section ? undefined : 'border-s ps-4'} />
       {chrome?.footer}
     </Fieldset>
