@@ -11,3 +11,12 @@ window.matchMedia = (query: string) =>
     removeEventListener: () => {}
   }) as unknown as MediaQueryList
 Object.assign(globalThis, { cookieStore: { set: async () => {} } })
+
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+Object.assign(globalThis, { ResizeObserver: globalThis.ResizeObserver ?? ResizeObserverStub })
+
+Element.prototype.getAnimations ??= () => []
