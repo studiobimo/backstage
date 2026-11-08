@@ -1,16 +1,11 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-
 import { EMPTY_SITE_SETTINGS } from '@studiobimo/backstage'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import app from './index'
 import { openTestEnv } from './test-env'
+import { migrationStatements } from './test-migrations'
 
-const migration = readFileSync(
-  resolve(import.meta.dirname, '../../../packages/backstage/migrations/0001_site_settings.sql'),
-  'utf8'
-)
+const [migration] = migrationStatements('0001_site_settings')
 
 const { dispose, db, env } = await openTestEnv()
 afterAll(dispose)
@@ -29,13 +24,13 @@ const send = (method: string, body?: unknown, bindings = env.localDevelopment) =
 const saved = {
   ...EMPTY_SITE_SETTINGS,
   siteName: { en: 'Studio', es: 'Estudio' },
-  navigation: [{ en: { href: '/about', label: 'About' } }]
+  defaultSocialImage: { id: 'img-1', alt: '' }
 }
 
 describe('settings API', () => {
   beforeAll(async () => {
     await db.prepare('DROP TABLE IF EXISTS site_settings').run()
-    await db.prepare(migration.trim()).run()
+    await db.prepare(migration!).run()
   })
 
   it('answers empty settings before anything is saved', async () => {
@@ -52,14 +47,14 @@ describe('settings API', () => {
 
   it('replaces the previous settings on every save', async () => {
     await send('PUT', saved)
-    await send('PUT', { ...saved, navigation: [] })
+    await send('PUT', { siteName: { en: 'Bimo' } })
     const { settings } = (await (await send('GET')).json()) as { settings: typeof saved }
-    expect(settings.navigation).toEqual([])
+    expect(settings).toEqual({ siteName: { en: 'Bimo' } })
   })
 
   it('refuses invalid settings and keeps what was saved', async () => {
     await send('PUT', saved)
-    const bad = await send('PUT', { ...saved, navigation: [{ en: { href: 'x', label: '' } }] })
+    const bad = await send('PUT', { ...saved, siteName: { en: '' } })
     expect(bad.status).toBe(400)
     expect(await bad.json()).toMatchObject({ code: 'invalid' })
     expect(await (await send('GET')).json()).toEqual({ settings: saved })

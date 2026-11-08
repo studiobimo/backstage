@@ -1,15 +1,10 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
-
 import { afterAll, beforeAll, beforeEach } from 'vitest'
 
 import app from './index'
+import { migrationStatements } from './test-migrations'
 import { openTestEnv } from './test-env'
 
-const migration = readFileSync(
-  resolve(import.meta.dirname, '../../../packages/backstage/migrations/0000_init.sql'),
-  'utf8'
-)
+const migrations = migrationStatements('0000_init', '0003_page_layout')
 
 const { dispose, db, env } = await openTestEnv()
 
@@ -38,9 +33,7 @@ export const useFreshPagesDb = () => {
   beforeAll(async () => {
     const dropped = ['page_blocks', 'page_locales', 'pages', 'media', 'users']
     await db.batch(dropped.map((table) => db.prepare(`DROP TABLE IF EXISTS ${table}`)))
-    await db.batch(
-      migration.split('--> statement-breakpoint').map((statement) => db.prepare(statement.trim()))
-    )
+    await db.batch(migrations.map((statement) => db.prepare(statement)))
   })
   beforeEach(async () => {
     await db.batch(tables.map((table) => db.prepare(`DELETE FROM ${table}`)))

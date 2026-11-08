@@ -8,8 +8,10 @@ import {
   PAGE_WRITE,
   pageBlocksSchema,
   pageInputSchema,
+  pageLayoutInputSchema,
   renamePage,
   replacePageBlocks,
+  setPageLayout,
   type Registry,
   type ApiError,
   type PageWrite
@@ -64,10 +66,22 @@ export const pagesRoutes = (registry: Registry) =>
     })
     .put('/:id/blocks', async (c) => {
       const parsed = pageBlocksSchema.safeParse(await c.req.json().catch(() => null))
-      if (!parsed.success || parsed.data.blocks.some(({ block }) => !registry.get(block))) {
+      if (
+        !parsed.success ||
+        parsed.data.blocks.some(({ block }) => !registry.get(block) || registry.isSlotBlock(block))
+      ) {
         return respondWithError(c, API_ERROR.invalid)
       }
       const id = c.req.param('id')
       const failure = failureOf(c, await replacePageBlocks(c.env.DB!, id, parsed.data.blocks))
       return failure ?? c.json({ blocks: await listPageBlocks(c.env.DB!, id) })
+    })
+    .put('/:id/layout', async (c) => {
+      const parsed = pageLayoutInputSchema.safeParse(await c.req.json().catch(() => null))
+      if (!parsed.success || !registry.hasLayout(parsed.data.layout)) {
+        return respondWithError(c, API_ERROR.invalid)
+      }
+      const id = c.req.param('id')
+      const failure = failureOf(c, await setPageLayout(c.env.DB!, id, parsed.data.layout))
+      return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
     })
