@@ -53,6 +53,8 @@ AUT-1, AUT-2; OPS-3.
 - Every "Must" story above passes its acceptance, on desktop and at 360 px with touch
 - A test proves the site worker has no D1 binding and no admin secret
 - Unit tests cover schema-to-form for every field kind, and publish validation
+- Rich text fields edit with Tiptap and render on the site with no client JavaScript
+  ([ADR-0009](adr/0009-rich-text-with-tiptap.md))
 - Playwright covers the whole loop: create a page, add blocks, upload an image, publish, see it on the site
 - An axe scan of the page editor reports no violations
 - The free-plan budgets in the PRD hold during a day of normal use of a deployed consumer
