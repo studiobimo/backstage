@@ -6,7 +6,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* The space from the edge of the page to its content. Every region uses it, so they line up. */
   --spacing-gutter: 1rem;
   --animate-skeleton: skeleton 2s -1s infinite linear;
   --animate-caret-blink: 1s ease-out infinite caret-blink;
@@ -168,7 +167,6 @@
   --card: var(--color-white);
   --card-foreground: var(--color-neutral-800);
   --destructive: var(--color-red-600);
-  /* Opaque: a control over an image has to stay readable whatever is under it. */
   --control-hover: color-mix(in srgb, var(--popover) 90%, var(--foreground));
   --device: var(--color-neutral-950);
   --field-border: --alpha(var(--color-black) / 44%);
@@ -251,7 +249,6 @@
   * {
     @apply border-border outline-ring/50;
   }
-  /* The whole page, because a drag passes over everything and each thing has its own cursor. */
   [data-dragging],
   [data-dragging] * {
     cursor: grabbing !important;
@@ -263,7 +260,6 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: 'ss01', 'cv01';
   }
-  /* Bitcount renders at normal weight. */
   h1 {
     font-family: var(--font-display);
     font-weight: 400;
@@ -286,7 +282,6 @@
   pre {
     font-family: var(--font-mono);
   }
-  /* Past the header and the bottom bar, which float over the page and would hide what has focus. */
   html {
     @apply scroll-pt-16 scroll-pb-16 font-sans;
     color-scheme: light;
@@ -294,7 +289,6 @@
   html.dark {
     color-scheme: dark;
   }
-  /* Base UI's own rule. Its <style> element breaks public/_headers' policy, so main.tsx turns it off. */
   .base-ui-disable-scrollbar {
     scrollbar-width: none;
   }
@@ -303,7 +297,6 @@
   }
 }
 
-/* coss draws these in --input, too faint to find a field or a switch by (WCAG 1.4.11). */
 @layer utilities {
   [data-slot='input-control'],
   [data-slot='textarea-control'] {
@@ -314,7 +307,6 @@
   }
 }
 
-/* A mark on a photo. One colour vanishes on a photo of that tone, so another runs inside it. */
 @utility photo-outline {
   outline: 2px solid var(--primary);
   outline-offset: -2px;

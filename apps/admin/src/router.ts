@@ -3,7 +3,6 @@ import { createRouter, type RouterHistory } from '@tanstack/react-router'
 
 import { routeTree } from './routeTree.gen'
 
-// TanStack Query owns freshness, so a preload always asks it rather than a router cache.
 export function createAppRouter(queryClient: QueryClient, history?: RouterHistory) {
   return createRouter({
     routeTree,

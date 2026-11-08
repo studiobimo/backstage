@@ -14,7 +14,6 @@ startTheme()
 const queryClient = new QueryClient()
 const router = createAppRouter(queryClient)
 
-// public/_headers allows no inline <style>, so Base UI's own come from index.css instead.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <CSPProvider disableStyleElements>
