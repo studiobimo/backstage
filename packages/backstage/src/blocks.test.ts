@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { defineBlock, defineRegistry, image, link, localized, richText } from './index.ts'
+import {
+  defineBlock,
+  defineRegistry,
+  describeBlocks,
+  image,
+  link,
+  localized,
+  richText
+} from './index.ts'
 
 const Hero = () => null
 const hero = defineBlock({
@@ -46,6 +54,28 @@ describe('defineRegistry', () => {
     expect(properties.cta?.backstage).toBe('link')
     expect(properties.picture?.backstage).toBe('image')
     expect(properties.theme?.backstage).toBeUndefined()
+  })
+})
+
+describe('describeBlocks', () => {
+  const quote = defineBlock({
+    name: 'quote',
+    version: 3,
+    schema: z.object({ text: z.string() }),
+    component: Hero
+  })
+
+  it('lists every block in registration order with its version and JSON Schema', () => {
+    const registry = defineRegistry([quote, hero])
+    expect(describeBlocks(registry).map(({ name, version }) => ({ name, version }))).toEqual([
+      { name: 'quote', version: 3 },
+      { name: 'hero', version: 1 }
+    ])
+    expect(describeBlocks(registry)[1]?.schema).toEqual(registry.jsonSchema('hero'))
+  })
+
+  it('lists nothing for an empty registry', () => {
+    expect(describeBlocks(defineRegistry([]))).toEqual([])
   })
 })
 
