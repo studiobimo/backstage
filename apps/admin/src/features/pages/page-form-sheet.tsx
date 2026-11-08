@@ -16,8 +16,9 @@ import {
   SheetTitle
 } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs'
+import { ApiError } from '@/lib/api'
 
-import { createPageMutation, PagesApiError, renamePageMutation } from './queries'
+import { createPageMutation, renamePageMutation } from './queries'
 
 interface PageFormSheetProps {
   page?: Page
@@ -69,9 +70,7 @@ function usePageForm(page: Page | undefined, onSaved: () => void) {
         else await create.mutateAsync(input)
         onSaved()
       } catch (error) {
-        setFailure(
-          error instanceof PagesApiError ? t(`errors.${error.code}`) : t('errors.internal')
-        )
+        setFailure(error instanceof ApiError ? t(`errors.${error.code}`) : t('errors.internal'))
       }
     }
   })

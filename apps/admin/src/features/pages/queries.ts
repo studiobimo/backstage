@@ -1,39 +1,19 @@
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
-import { API_ERROR, pageSchema, pagesResponseSchema, type PageInput } from '@studiobimo/backstage'
-import { z } from 'zod'
+import { pageSchema, pagesResponseSchema, type PageInput } from '@studiobimo/backstage'
 
-const PAGES_API = { path: '/api/v1/pages', queryKey: ['pages'] } as const
+import { apiRequest } from '@/lib/api'
 
-export class PagesApiError extends Error {
-  readonly code: string
-  constructor(code: string, message: string) {
-    super(message)
-    this.code = code
-  }
-}
+const PAGES_QUERY_KEY = ['pages'] as const
 
-const failureShape = z.object({ error: z.string(), code: z.string() })
-
-const request = async (path: string, init?: RequestInit) => {
-  const response = await fetch(`${PAGES_API.path}${path}`, {
-    ...init,
-    headers: { 'content-type': 'application/json' }
-  })
-  if (response.ok) return response
-  const failure = failureShape.safeParse(await response.json().catch(() => null))
-  const { code, error } = failure.success
-    ? failure.data
-    : { code: API_ERROR.internal.code, error: API_ERROR.internal.message }
-  throw new PagesApiError(code, error)
-}
+const request = (path: string, init?: RequestInit) => apiRequest(`/pages${path}`, init)
 
 export const pagesQuery = queryOptions({
-  queryKey: PAGES_API.queryKey,
+  queryKey: PAGES_QUERY_KEY,
   queryFn: async () => pagesResponseSchema.parse(await (await request('')).json()).pages
 })
 
 const refresh = (queryClient: QueryClient) =>
-  queryClient.invalidateQueries({ queryKey: PAGES_API.queryKey })
+  queryClient.invalidateQueries({ queryKey: PAGES_QUERY_KEY })
 
 const body = (input: PageInput) => JSON.stringify(input)
 

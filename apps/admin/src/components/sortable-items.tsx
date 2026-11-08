@@ -8,13 +8,17 @@ import {
 import { DragDropProvider } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { GripVerticalIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 
-import type { SortableSlot } from './list-field.tsx'
+export interface SortableSlot {
+  ref?: Ref<HTMLLIElement>
+  handle?: ReactNode
+  dragging?: boolean
+}
 
 interface SortableItemsProps {
   keys: readonly string[]
@@ -29,7 +33,7 @@ interface RowProps extends Omit<SortableItemsProps, 'keys' | 'onMove'> {
 }
 
 function SortableRow({ id, index, names, children }: RowProps) {
-  const { t } = useTranslation('blockForm')
+  const { t } = useTranslation()
   const { ref, handleRef, isDragging } = useSortable({
     id,
     index,
@@ -59,7 +63,7 @@ function placeOf(source: Draggable | null) {
 }
 
 export default function SortableItems({ keys, names, onMove, children }: SortableItemsProps) {
-  const { t } = useTranslation('blockForm')
+  const { t } = useTranslation()
   return (
     <DragDropProvider
       plugins={(defaults) => [

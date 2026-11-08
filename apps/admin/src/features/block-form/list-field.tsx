@@ -1,6 +1,6 @@
 import { useStore } from '@tanstack/react-form'
 import { ChevronRightIcon, CircleAlertIcon, ListPlusIcon, PlusIcon, Trash2Icon } from 'lucide-react'
-import { lazy, type ReactNode, type Ref, Suspense, useState } from 'react'
+import { lazy, type ReactNode, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useFieldContext } from '@/components/form/contexts'
@@ -19,6 +19,7 @@ import {
   EmptyTitle
 } from '@/components/ui/empty'
 import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
+import type { SortableSlot } from '@/components/sortable-items'
 import { cn } from '@/lib/utils'
 
 import { FieldNode, GroupFields, type NodeProps } from './field-node.tsx'
@@ -59,13 +60,7 @@ function itemTitle(spec: FieldSpec, value: FieldValue | undefined, locales: stri
   return spec.fields.map((field) => itemTitle(field, value[field.key], locales)).find(Boolean) ?? ''
 }
 
-const SortableItems = lazy(() => import('./sortable-items.tsx'))
-
-export interface SortableSlot {
-  ref?: Ref<HTMLLIElement>
-  handle?: ReactNode
-  dragging?: boolean
-}
+const SortableItems = lazy(() => import('@/components/sortable-items'))
 
 function useItemTitles(form: BlockFormApi, spec: ListSpec, path: Path, count: number) {
   const { t } = useTranslation('blockForm')
