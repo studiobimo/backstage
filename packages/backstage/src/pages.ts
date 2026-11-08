@@ -33,6 +33,7 @@ export const pageSchema = z.object({
   id: z.string(),
   isHome: z.boolean(),
   version: z.number().int(),
+  layout: z.string(),
   updatedAt: z.number().int(),
   locales: z.array(z.object({ locale: z.string(), slug: z.string().nullable(), title: z.string() }))
 })

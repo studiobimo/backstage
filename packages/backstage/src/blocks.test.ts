@@ -3,8 +3,13 @@ import { z } from 'zod'
 
 import {
   defineBlock,
+  defineLayout,
   defineRegistry,
   describeBlocks,
+  describeSlots,
+  layoutNames,
+  upgradeBlockContent,
+  validateBlockContent,
   image,
   link,
   localized,
@@ -76,6 +81,79 @@ describe('describeBlocks', () => {
 
   it('lists nothing for an empty registry', () => {
     expect(describeBlocks(defineRegistry([]))).toEqual([])
+  })
+})
+
+describe('slots', () => {
+  const header = defineBlock({
+    name: 'site-header',
+    schema: z.object({ text: z.string() }),
+    component: Hero
+  })
+  const registry = defineRegistry([hero, header], { slots: { header: ['site-header'] } })
+
+  it('describes each slot with the blocks it offers', () => {
+    const described = describeSlots(registry).map(({ name, blocks }) => [
+      name,
+      blocks.map((block) => block.name)
+    ])
+    expect(described).toEqual([['header', ['site-header']]])
+  })
+
+  it('keeps slot blocks out of the page block list', () => {
+    expect(registry.isSlotBlock('site-header')).toBe(true)
+    expect(describeBlocks(registry).map(({ name }) => name)).toEqual(['hero'])
+  })
+
+  it('refuses a slot that names an unknown or no block', () => {
+    expect(() => defineRegistry([hero], { slots: { header: ['nope'] } })).toThrow(/unknown block/)
+    expect(() => defineRegistry([hero], { slots: { header: [] } })).toThrow(/at least one/)
+    expect(() => defineRegistry([hero], { slots: { 'Bad Slot': ['hero'] } })).toThrow(/Slot name/)
+  })
+})
+
+describe('layouts', () => {
+  const layout = (name: string) => defineLayout({ name, component: () => null })
+
+  it('always offers the default layout first', () => {
+    expect(layoutNames(defineRegistry([]))).toEqual(['default'])
+    const registry = defineRegistry([], { layouts: [layout('bare'), layout('default')] })
+    expect(layoutNames(registry)).toEqual(['default', 'bare'])
+    expect(registry.hasLayout('bare')).toBe(true)
+    expect(registry.hasLayout('nope')).toBe(false)
+  })
+
+  it('refuses a duplicate or malformed name', () => {
+    expect(() => defineRegistry([], { layouts: [layout('a'), layout('a')] })).toThrow(/twice/)
+    expect(() => layout('Not A Slug')).toThrow()
+  })
+})
+
+describe('block content', () => {
+  const note = defineBlock({
+    name: 'note',
+    version: 2,
+    schema: z.object({ text: z.string().min(1) }),
+    component: Hero,
+    migrate: (content, from) =>
+      from === 1 ? { text: (content as { body: string }).body } : content
+  })
+
+  it('migrates old content to the current version', () => {
+    expect(upgradeBlockContent(note, 1, { body: 'Hi' })).toEqual({
+      ok: true,
+      schemaVersion: 2,
+      content: { text: 'Hi' }
+    })
+  })
+
+  it('refuses a version newer than the block', () => {
+    expect(upgradeBlockContent(note, 3, {}).ok).toBe(false)
+  })
+
+  it('validates migrated content against the schema', () => {
+    expect(validateBlockContent(note, 1, { body: 'Hi' }).ok).toBe(true)
+    expect(validateBlockContent(note, 2, { text: '' }).ok).toBe(false)
   })
 })
 

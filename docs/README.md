@@ -21,3 +21,5 @@ This folder is the source of truth for what Backstage is and why it is built the
   - [ADR-0007: English and Spanish from the start](adr/0007-two-locales.md)
   - [ADR-0008: The org's profiles inside a workspace, with coss ui and lineup's styling](adr/0008-workspace-profiles-and-styling.md)
   - [ADR-0009: Rich text is edited with Tiptap and stored as a fixed JSON document](adr/0009-rich-text-with-tiptap.md)
+  - [ADR-0010: The header and footer are blocks in named global slots](adr/0010-global-slots.md)
+  - [ADR-0011: A page chooses a layout from a list in the registry](adr/0011-page-layouts.md)

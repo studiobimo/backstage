@@ -30,6 +30,7 @@ export const media = sqliteTable('media', {
 export const pages = sqliteTable('pages', {
   id: text('id').primaryKey(),
   isHome: integer('is_home', { mode: 'boolean' }).notNull().default(false),
+  layout: text('layout').notNull().default('default'),
   version: integer('version').notNull().default(1),
   createdAt: createdAt(),
   updatedAt: integer('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
@@ -73,6 +74,14 @@ export const pageBlocks = sqliteTable(
 
 export const siteSettings = sqliteTable('site_settings', {
   id: text('id').primaryKey(),
+  content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
+  updatedAt: integer('updated_at').notNull().$defaultFn(now)
+})
+
+export const siteBlocks = sqliteTable('site_blocks', {
+  slot: text('slot').primaryKey(),
+  block: text('block').notNull(),
+  schemaVersion: integer('schema_version').notNull().default(1),
   content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
   updatedAt: integer('updated_at').notNull().$defaultFn(now)
 })
