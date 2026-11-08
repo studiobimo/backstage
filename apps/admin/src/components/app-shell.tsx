@@ -19,7 +19,6 @@ import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sideb
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { site } from '@/config/site'
 
-// The title of each page, for the breadcrumb. A route that is not here shows as Home.
 const pageTitles: Record<string, string> = { '/type': 'nav.type' }
 
 function SidebarToggle() {
@@ -63,7 +62,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               <ThemeToggle />
             </div>
           </header>
-          {/* SidebarInset is the page's <main>, so this is not a second one. */}
           <div className="flex-1 p-gutter pt-0">{children}</div>
         </SidebarInset>
       </SidebarProvider>

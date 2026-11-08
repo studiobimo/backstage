@@ -15,8 +15,6 @@ import {
   SidebarMenuSubItem
 } from '@/components/ui/sidebar'
 
-// Placeholders until the pages, media and settings screens exist (M1): a button that goes
-// nowhere is better than a link to a route that is not there.
 const sections: { key: string; icon: LucideIcon; items: string[] }[] = [
   { key: 'pages', icon: FileText, items: ['all', 'drafts'] },
   { key: 'media', icon: Image, items: ['library', 'uploads'] },
