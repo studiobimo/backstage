@@ -1,0 +1,50 @@
+{
+  "title": "Site settings",
+  "description": "What appears on every page of the site. Switch language to translate each text.",
+  "saved": {
+    "title": "Settings saved",
+    "description": "The changes are in the editor. Publishing comes later."
+  },
+  "failed": {
+    "title": "Could not save the settings",
+    "description": "Your changes are still here. Check your connection and try again."
+  },
+  "fields": {
+    "siteName": {
+      "title": "Site name",
+      "description": "Shown in the header, the browser tab and search results."
+    },
+    "defaultSocialImage": {
+      "title": "Default social image",
+      "description": "Used when a page shares a link without an image of its own."
+    },
+    "navigation": {
+      "title": "Navigation",
+      "description": "The links in the site header, in order. Addresses start with https://, /, #, mailto: or tel:."
+    },
+    "footer": {
+      "title": "Footer",
+      "text": {
+        "title": "Footer text",
+        "description": "A short line such as a copyright notice."
+      },
+      "links": {
+        "title": "Footer links",
+        "description": "Links shown below the content, in order. Addresses start with https://, /, #, mailto: or tel:."
+      }
+    },
+    "contact": {
+      "title": "Contact details",
+      "email": {
+        "title": "Email",
+        "description": "Where visitors can write to you."
+      },
+      "phone": {
+        "title": "Phone"
+      },
+      "address": {
+        "title": "Address"
+      }
+    }
+  }
+}

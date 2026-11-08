@@ -5,6 +5,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PagesRouteImport } from './routes/pages'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TypeRouteImport } from './routes/type'
 import { Route as PagesPageIdRouteImport } from './routes/pages_.$pageId'
 
@@ -16,6 +17,11 @@ const IndexRoute = IndexRouteImport.update({
 const PagesRoute = PagesRouteImport.update({
   id: '/pages',
   path: '/pages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TypeRoute = TypeRouteImport.update({
@@ -32,12 +38,14 @@ const PagesPageIdRoute = PagesPageIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/pages': typeof PagesRoute
+  '/settings': typeof SettingsRoute
   '/type': typeof TypeRoute
   '/pages/$pageId': typeof PagesPageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/pages': typeof PagesRoute
+  '/settings': typeof SettingsRoute
   '/type': typeof TypeRoute
   '/pages/$pageId': typeof PagesPageIdRoute
 }
@@ -45,20 +53,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/pages': typeof PagesRoute
+  '/settings': typeof SettingsRoute
   '/type': typeof TypeRoute
   '/pages_/$pageId': typeof PagesPageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pages' | '/type' | '/pages/$pageId'
+  fullPaths: '/' | '/pages' | '/settings' | '/type' | '/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pages' | '/type' | '/pages/$pageId'
-  id: '__root__' | '/' | '/pages' | '/type' | '/pages_/$pageId'
+  to: '/' | '/pages' | '/settings' | '/type' | '/pages/$pageId'
+  id: '__root__' | '/' | '/pages' | '/settings' | '/type' | '/pages_/$pageId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PagesRoute: typeof PagesRoute
+  SettingsRoute: typeof SettingsRoute
   TypeRoute: typeof TypeRoute
   PagesPageIdRoute: typeof PagesPageIdRoute
 }
@@ -77,6 +87,13 @@ declare module '@tanstack/react-router' {
       path: '/pages'
       fullPath: '/pages'
       preLoaderRoute: typeof PagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/type': {
@@ -99,6 +116,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PagesRoute: PagesRoute,
+  SettingsRoute: SettingsRoute,
   TypeRoute: TypeRoute,
   PagesPageIdRoute: PagesPageIdRoute,
 }

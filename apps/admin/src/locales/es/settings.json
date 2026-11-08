@@ -1,0 +1,50 @@
+{
+  "title": "Ajustes del sitio",
+  "description": "Lo que aparece en todas las páginas del sitio. Cambia de idioma para traducir cada texto.",
+  "saved": {
+    "title": "Ajustes guardados",
+    "description": "Los cambios están en el editor. La publicación llegará después."
+  },
+  "failed": {
+    "title": "No se pudieron guardar los ajustes",
+    "description": "Tus cambios siguen aquí. Revisa tu conexión e inténtalo de nuevo."
+  },
+  "fields": {
+    "siteName": {
+      "title": "Nombre del sitio",
+      "description": "Se muestra en la cabecera, en la pestaña del navegador y en los resultados de búsqueda."
+    },
+    "defaultSocialImage": {
+      "title": "Imagen social predeterminada",
+      "description": "Se usa cuando una página se comparte sin una imagen propia."
+    },
+    "navigation": {
+      "title": "Navegación",
+      "description": "Los enlaces de la cabecera del sitio, en orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
+    },
+    "footer": {
+      "title": "Pie de página",
+      "text": {
+        "title": "Texto del pie",
+        "description": "Una línea breve, como el aviso de derechos de autor."
+      },
+      "links": {
+        "title": "Enlaces del pie",
+        "description": "Enlaces que se muestran bajo el contenido, en orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
+      }
+    },
+    "contact": {
+      "title": "Datos de contacto",
+      "email": {
+        "title": "Correo electrónico",
+        "description": "Donde los visitantes pueden escribirte."
+      },
+      "phone": {
+        "title": "Teléfono"
+      },
+      "address": {
+        "title": "Dirección"
+      }
+    }
+  }
+}

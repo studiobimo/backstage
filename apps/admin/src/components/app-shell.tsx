@@ -16,10 +16,15 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
+import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { site } from '@/config/site'
 
-const pageTitles: Record<string, string> = { '/type': 'nav.type' }
+const pageTitles: Record<string, string> = {
+  '/type': 'nav.type',
+  '/pages': 'nav.sections.pages.title',
+  '/settings': 'nav.sections.settings.title'
+}
 
 function SidebarToggle() {
   const { t } = useTranslation()
@@ -49,22 +54,24 @@ function PageBreadcrumb() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <TooltipProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 px-gutter">
-            <SidebarToggle />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <PageBreadcrumb />
-            <div className="ml-auto flex items-center gap-1">
-              <LanguageSwitcher />
-              <ThemeToggle />
-            </div>
-          </header>
-          <div className="flex-1 p-gutter pt-0">{children}</div>
-        </SidebarInset>
-      </SidebarProvider>
-    </TooltipProvider>
+    <ToastProvider position="top-center">
+      <TooltipProvider>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center gap-2 px-gutter">
+              <SidebarToggle />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <PageBreadcrumb />
+              <div className="ml-auto flex items-center gap-1">
+                <LanguageSwitcher />
+                <ThemeToggle />
+              </div>
+            </header>
+            <div className="flex-1 p-gutter pt-0">{children}</div>
+          </SidebarInset>
+        </SidebarProvider>
+      </TooltipProvider>
+    </ToastProvider>
   )
 }
