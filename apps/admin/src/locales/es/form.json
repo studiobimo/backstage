@@ -1,0 +1,19 @@
+{
+  "optional": "Opcional",
+  "choose": "Elige…",
+  "none": "Ninguno",
+  "count": "{{count}}/{{max}}",
+  "errors": {
+    "required": "Este campo es obligatorio.",
+    "minLength": "Usa {{min}} caracteres o más.",
+    "maxLength": "Usa {{max}} caracteres o menos.",
+    "format": "Escribe un valor válido.",
+    "notNumber": "Escribe un número.",
+    "notInteger": "Escribe un número entero.",
+    "minimum": "Escribe {{min}} o más.",
+    "maximum": "Escribe {{max}} o menos.",
+    "notChoice": "Elige una de las opciones.",
+    "minItems": "Añade al menos {{min}} elementos.",
+    "maxItems": "Usa {{max}} elementos o menos."
+  }
+}
