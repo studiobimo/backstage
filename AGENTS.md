@@ -59,6 +59,19 @@ violation is caught before it is reviewed.
   committed together.
 - **Workflows:** `permissions: {}` at the top, the minimum per job, `persist-credentials: false`
   on every checkout, secrets passed explicitly and never with `secrets: inherit`.
+- **No comments** in code files. Code that seems to need one gets a well-named helper or clearer
+  names instead. A suppression (`eslint-disable`, `@ts-ignore`, `# noqa`) is a finding too: fix
+  what the linter flags. `.uncomment.toml` sets what `uncomment` checks, in the pre-commit hook.
+- **One source of truth.** Domain logic, validation rules, schemas and configuration values live
+  in exactly one place, in application code, tests, build scripts and workflows alike. Replace
+  duplication with shared functions or modules: fewer lines through consolidation, never through
+  clever one-liners. `make -C .devtools check` runs jscpd (`.jscpd.json`), and knip where there
+  is a `package.json`.
+- **Repo health:** the `repo-health` workflow runs these and more (lizard: functions under 80
+  lines) over every tracked file. A finding fails it unless `.repo-health/baseline.json` lists it
+  with an open issue, and each pull request resolves at least one listed finding while any are
+  left. Changing an analyser's config needs the `repo-health-config-change` label.
+- **Constants by domain:** grouped in objects, `DOMAIN.group.name`, not `DOMAIN_GROUP_NAME`.
 - **Say what you tested.** State what you ran and what it showed. If something could not be
   tested, say so plainly rather than implying it was.
 
@@ -270,16 +283,15 @@ export default mergeConfig(base, defineConfig({ test: { environment: 'node' } })
 - **Styling uses the design tokens.** No raw colour values outside `src/index.css`; use the
   semantic utilities (`bg-card`, `text-muted-foreground`).
 - **Abstract before duplicating.** Extend an existing component or helper rather than adding
-  a parallel one.
-- **Comments say why, not what.** Names carry the meaning; a comment is for a workaround, an
-  invariant or a trap.
+  a parallel one. knip fails on unused files, exports and dependencies; `knip.json` exempts the
+  shadcn/ui primitives and the dependencies a new app has before its first feature.
 
 ### Commands
 
 ```sh
 make -C .devtools install   # the packages pnpm-lock.yaml pins
 make -C .devtools dev       # Vite dev server on http://localhost:5173
-make -C .devtools ci        # build, types, ESLint, Prettier, tests, budget, audit
+make -C .devtools ci        # build, types, ESLint, knip, jscpd, Prettier, tests, budget, audit
 make -C .devtools fmt       # Prettier over the web sources
 ```
 <!-- <<< template:vite -->

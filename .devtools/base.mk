@@ -11,7 +11,7 @@ GLYPH_FAIL := ✖
 DEVTOOLS := make -C .devtools
 
 .DEFAULT_GOAL := help
-.PHONY: help setup lint scan lock-tools sync drift github
+.PHONY: help setup lint duplication scan lock-tools sync drift github
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -22,6 +22,11 @@ setup: ## Install the tools mise.toml pins and the git hooks (pre-commit, commit
 
 lint: ## Run the pre-commit hook on all files
 	cd $(ROOT) && $(LEFTHOOK) run pre-commit --all-files
+
+check: duplication
+
+duplication: ## Fail on copy-pasted code, skipping what .jscpd.json ignores
+	cd $(ROOT) && $(MISE) exec -- jscpd --exit-code 1 --no-colors .
 
 scan: ## Secret scan of the whole history, and the workflow security audit
 	cd $(ROOT) && $(MISE) exec -- gitleaks git --redact
