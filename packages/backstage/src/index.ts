@@ -1,10 +1,27 @@
-export { defineBlock, defineRegistry, describeBlocks } from './blocks.ts'
+export {
+  defineBlock,
+  defineLayout,
+  defineRegistry,
+  describeBlocks,
+  describeSlots,
+  LAYOUT,
+  layoutNames,
+  SLOT,
+  upgradeBlockContent,
+  validateBlockContent
+} from './blocks.ts'
 export type {
   Block,
   BlockDefinition,
+  BlockContentResult,
   BlockDescription,
+  LayoutDefinition,
+  LayoutProps,
   RegisteredBlock,
-  Registry
+  RegisteredLayout,
+  Registry,
+  RegistryOptions,
+  SlotDescription
 } from './blocks.ts'
 export { API_ERROR, errorBody } from './errors.ts'
 export type { ApiError } from './errors.ts'
@@ -32,6 +49,15 @@ export {
   siteSettingsSchema
 } from './settings.ts'
 export type { SiteSettings } from './settings.ts'
+export {
+  layoutsResponseSchema,
+  pageLayoutInputSchema,
+  siteBlockSchema,
+  slotResponseSchema,
+  slotSchema,
+  slotsResponseSchema
+} from './slots.ts'
+export type { SiteBlock, Slot } from './slots.ts'
 export * from './db/schema.ts'
 export {
   createPage,
@@ -41,8 +67,10 @@ export {
   listPages,
   PAGE_WRITE,
   renamePage,
-  replacePageBlocks
+  replacePageBlocks,
+  setPageLayout
 } from './db/pages.ts'
 export type { PageWrite } from './db/pages.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
 export { readSiteSettings, writeSiteSettings } from './db/settings.ts'
+export { readSiteBlocks, writeSiteBlock } from './db/site-blocks.ts'

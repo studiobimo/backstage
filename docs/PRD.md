@@ -72,7 +72,9 @@ BackUp Coffee Shop and Brasa Brava are waiting for a site they can edit.
 | **Page** | An ordered list of blocks, with a slug and SEO fields for each locale |
 | **Collection** | A type of reusable entry, such as a blog post or a case study, defined in code like a block |
 | **Entry** | One item in a collection |
-| **Site settings** | The single document for navigation, footer, site name and defaults |
+| **Site settings** | The single document for what the package itself reads: the site name and the default social image |
+| **Slot** | A named place on every page, such as the header or footer, that holds one block defined in the site's registry ([ADR-0010](adr/0010-global-slots.md)) |
+| **Layout** | A component in the registry that places the slots around a page's blocks, chosen for each page ([ADR-0011](adr/0011-page-layouts.md)) |
 | **Draft** | What the admin stores in D1 and edits |
 | **Snapshot** | The published, validated JSON of a page, which the admin writes to KV and the site reads |
 
@@ -100,8 +102,9 @@ may slip to the next release.
 | PAG-2 | I can arrange a page | Add a block from the picker, then reorder, duplicate or remove it, with the keyboard or a pointer | Must |
 | PAG-3 | I can set a page's SEO | Title, description and social image for each locale, with defaults taken from the site settings | Must |
 | PAG-4 | I do not lose or overwrite work | Leaving with unsaved changes asks first. Saving over a newer version is refused and shows who saved it | Must |
-| PAG-5 | I can edit the site settings | Navigation, footer, site name, default social image and contact details, all localized | Must |
+| PAG-5 | I can edit the site settings and the global slots | The site name and default social image, localized, and one section for each slot the registry declares (the header and footer by convention). A slot's form is built from its block's schema, saves are validated against it, and a slot with several blocks lets me pick one | Must |
 | PAG-6 | The admin works on a phone and with a screen reader | Every action works at 360 px, with touch, and from the keyboard alone | Must |
+| PAG-7 | I can choose a layout for a page | A select in the page editor lists the layouts in the registry, `default` unless changed. The choice survives publishing and the site renders the slots to match | Should |
 
 ### E3. Media
 

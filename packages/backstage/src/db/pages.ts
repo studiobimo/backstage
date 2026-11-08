@@ -43,6 +43,7 @@ export const listPages = async (d1: AnyD1Database): Promise<Page[]> => {
     id: row.id,
     isHome: row.isHome,
     version: row.version,
+    layout: row.layout,
     updatedAt: row.updatedAt,
     locales: locales
       .filter((locale) => locale.pageId === row.id)
@@ -116,5 +117,16 @@ export const replacePageBlocks = async (d1: AnyD1Database, id: string, blocks: P
       .set({ version: existing.version + 1 })
       .where(eq(pages.id, id))
   ])
+  return PAGE_WRITE.ok
+}
+
+export const setPageLayout = async (d1: AnyD1Database, id: string, layout: string) => {
+  const db = connect(d1)
+  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
+  if (!existing) return PAGE_WRITE.notFound
+  await db
+    .update(pages)
+    .set({ layout, version: existing.version + 1 })
+    .where(eq(pages.id, id))
   return PAGE_WRITE.ok
 }
