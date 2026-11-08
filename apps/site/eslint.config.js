@@ -1,5 +1,7 @@
 import { defineConfig } from 'eslint/config'
 
-import { react } from '../../.devtools/vite/eslint.js'
+import { app } from '../../.devtools/vite/eslint.js'
 
-export default defineConfig([react])
+// app, not react: it is a Vite app, and app carries the hosting profile's Worker globals and
+// ignores.
+export default defineConfig([app])

@@ -159,6 +159,9 @@ importers:
       '@studiobimo/backstage':
         specifier: workspace:*
         version: link:../../packages/backstage
+      hono:
+        specifier: ^4.13.14
+        version: 4.13.14
 
   packages/backstage:
     dependencies:

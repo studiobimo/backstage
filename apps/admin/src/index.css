@@ -294,6 +294,13 @@
   html.dark {
     color-scheme: dark;
   }
+  /* Base UI's own rule. Its <style> element breaks public/_headers' policy, so main.tsx turns it off. */
+  .base-ui-disable-scrollbar {
+    scrollbar-width: none;
+  }
+  .base-ui-disable-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* coss draws these in --input, too faint to find a field or a switch by (WCAG 1.4.11). */

@@ -1,9 +1,18 @@
 {
   "name": "@studiobimo/backstage",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "prepack": "NODE_ENV=production pnpm --filter backstage-admin build && rm -rf dist && mkdir dist && cp -R ../../apps/admin/dist/client dist/client",
+    "test": "vitest"
   },
   "dependencies": {
     "zod": "^4.6.7"
