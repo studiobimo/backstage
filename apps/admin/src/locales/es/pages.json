@@ -1,0 +1,37 @@
+{
+  "title": "Páginas",
+  "locales": { "en": "English", "es": "Español" },
+  "list": {
+    "create": "Nueva página",
+    "home": "Inicio",
+    "rename": "Renombrar {{name}}",
+    "delete": "Eliminar {{name}}",
+    "emptyTitle": "Aún no hay páginas",
+    "emptyDescription": "Crea la página de inicio y luego las demás."
+  },
+  "form": {
+    "createTitle": "Nueva página",
+    "renameTitle": "Renombrar página",
+    "description": "Cada idioma tiene su propio título y dirección.",
+    "isHome": "Página de inicio",
+    "isHomeHint": "La página de inicio no tiene dirección propia.",
+    "title": "Título",
+    "slug": "Dirección",
+    "slugHint": "Letras minúsculas, números y guiones.",
+    "needsAttention": "Revisar",
+    "cancel": "Cancelar",
+    "create": "Crear página",
+    "save": "Guardar"
+  },
+  "delete": {
+    "title": "¿Eliminar {{name}}?",
+    "description": "Se eliminan la página y sus bloques. No se puede deshacer.",
+    "confirm": "Eliminar página"
+  },
+  "errors": {
+    "slug_taken": "Otra página ya usa esa dirección en este idioma.",
+    "home_taken": "La página de inicio ya existe.",
+    "invalid": "Revisa los campos e inténtalo de nuevo.",
+    "internal": "Algo salió mal. Inténtalo de nuevo."
+  }
+}

@@ -4,11 +4,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PagesRouteImport } from './routes/pages'
 import { Route as TypeRouteImport } from './routes/type'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagesRoute = PagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TypeRoute = TypeRouteImport.update({
@@ -19,27 +25,31 @@ const TypeRoute = TypeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/pages': typeof PagesRoute
   '/type': typeof TypeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pages': typeof PagesRoute
   '/type': typeof TypeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/pages': typeof PagesRoute
   '/type': typeof TypeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/type'
+  fullPaths: '/' | '/pages' | '/type'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/type'
-  id: '__root__' | '/' | '/type'
+  to: '/' | '/pages' | '/type'
+  id: '__root__' | '/' | '/pages' | '/type'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PagesRoute: typeof PagesRoute
   TypeRoute: typeof TypeRoute
 }
 
@@ -50,6 +60,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pages': {
+      id: '/pages'
+      path: '/pages'
+      fullPath: '/pages'
+      preLoaderRoute: typeof PagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/type': {
@@ -64,6 +81,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PagesRoute: PagesRoute,
   TypeRoute: TypeRoute,
 }
 export const routeTree = rootRouteImport
