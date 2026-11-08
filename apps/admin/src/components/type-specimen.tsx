@@ -146,7 +146,7 @@ function WeightsSection() {
 
 export function TypeSpecimen() {
   return (
-    <div id="top" className="mx-auto max-w-4xl scroll-mt-14 p-4 sm:p-8">
+    <div id="top" className="scroll-mt-14">
       <ElementsSection />
       <FamiliesSection />
       <WeightsSection />

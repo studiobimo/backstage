@@ -23,7 +23,6 @@
     "type": "Muestra tipográfica",
     "support": "Ayuda",
     "toggle": "Mostrar u ocultar la barra lateral",
-    "expand": "Mostrar u ocultar {{name}}",
     "more": "Más opciones de {{name}}",
     "open": "Abrir",
     "delete": "Eliminar",

@@ -254,6 +254,7 @@
   html {
     @apply scroll-pt-16 scroll-pb-16 font-sans;
     color-scheme: light;
+    scrollbar-gutter: stable;
   }
   html.dark {
     color-scheme: dark;

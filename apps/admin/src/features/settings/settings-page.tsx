@@ -8,6 +8,7 @@ import { BlockForm } from '@/features/block-form/block-form.tsx'
 import type { FormSection } from '@/features/block-form/form-sections.tsx'
 import type { JsonSchema } from '@/features/block-form/spec.ts'
 import { blockValue, type BlockValue } from '@/features/block-form/value.ts'
+import { PageHeader } from '@/components/page-header'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toastManager } from '@/components/ui/toast'
 
@@ -77,11 +78,8 @@ export function SettingsPage() {
   const sections = useSections()
   const { submit, failed } = useSaveSettings()
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 py-4 sm:p-8">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-3xl">{t('title')}</h1>
-        <p className="text-muted-foreground">{t('description')}</p>
-      </header>
+    <>
+      <PageHeader title={t('title')} description={t('description')} />
       {failed && (
         <Alert variant="error" role="alert">
           <CircleAlertIcon />
@@ -97,6 +95,6 @@ export function SettingsPage() {
         sections={sections}
         className="max-w-none gap-10"
       />
-    </div>
+    </>
   )
 }

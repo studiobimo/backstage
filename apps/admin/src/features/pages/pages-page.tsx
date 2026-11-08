@@ -5,6 +5,7 @@ import { Blocks, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PageHeader } from '@/components/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
@@ -68,14 +69,16 @@ export function PagesPage() {
   const [editing, setEditing] = useState<Editing>()
   const close = () => setEditing(undefined)
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-8">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl">{t('title')}</h1>
-        <Button onClick={() => setEditing({ kind: 'create' })}>
-          <Plus />
-          {t('list.create')}
-        </Button>
-      </div>
+    <>
+      <PageHeader
+        title={t('title')}
+        actions={
+          <Button onClick={() => setEditing({ kind: 'create' })}>
+            <Plus />
+            {t('list.create')}
+          </Button>
+        }
+      />
       {pages.length === 0 ? (
         <Empty>
           <EmptyHeader>
@@ -99,6 +102,6 @@ export function PagesPage() {
       {editing?.kind === 'delete' && (
         <DeletePageDialog page={editing.page} open onOpenChange={(open) => !open && close()} />
       )}
-    </div>
+    </>
   )
 }

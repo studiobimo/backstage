@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { ChevronRight, FileText, House, Image, Settings2, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -7,7 +7,6 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -20,14 +19,15 @@ const itemRoutes: Record<string, '/pages' | '/settings'> = {
   'settings.general': '/settings'
 }
 
-const sections: { key: string; icon: LucideIcon; items: string[] }[] = [
-  { key: 'pages', icon: FileText, items: ['all', 'drafts'] },
+const sections: { key: string; icon: LucideIcon; items: string[]; path?: string }[] = [
+  { key: 'pages', icon: FileText, items: ['all', 'drafts'], path: '/pages' },
   { key: 'media', icon: Image, items: ['library', 'uploads'] },
-  { key: 'settings', icon: Settings2, items: ['general', 'languages'] }
+  { key: 'settings', icon: Settings2, items: ['general', 'languages'], path: '/settings' }
 ]
 
 export function NavMain() {
   const { t } = useTranslation()
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t('nav.groups.workspace')}</SidebarGroupLabel>
@@ -41,20 +41,20 @@ export function NavMain() {
             <span>{t('nav.home')}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        {sections.map(({ key, icon: Icon, items }) => (
-          <Collapsible key={key} render={<SidebarMenuItem />}>
-            <SidebarMenuButton tooltip={t(`nav.sections.${key}.title`)}>
+        {sections.map(({ key, icon: Icon, items, path }) => (
+          <Collapsible
+            key={key}
+            defaultOpen={path !== undefined && pathname.startsWith(path)}
+            render={<SidebarMenuItem />}
+          >
+            <SidebarMenuButton
+              render={<CollapsibleTrigger />}
+              tooltip={t(`nav.sections.${key}.title`)}
+            >
               <Icon />
               <span>{t(`nav.sections.${key}.title`)}</span>
+              <ChevronRight className="ms-auto transition-transform in-data-panel-open:rotate-90" />
             </SidebarMenuButton>
-            <CollapsibleTrigger
-              render={<SidebarMenuAction className="data-panel-open:rotate-90" />}
-            >
-              <ChevronRight />
-              <span className="sr-only">
-                {t('nav.expand', { name: t(`nav.sections.${key}.title`) })}
-              </span>
-            </CollapsibleTrigger>
             <CollapsiblePanel>
               <SidebarMenuSub>
                 {items.map((item) => (

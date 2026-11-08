@@ -23,7 +23,6 @@
     "type": "Type specimen",
     "support": "Support",
     "toggle": "Toggle the sidebar",
-    "expand": "Show or hide {{name}}",
     "more": "More for {{name}}",
     "open": "Open",
     "delete": "Delete",
