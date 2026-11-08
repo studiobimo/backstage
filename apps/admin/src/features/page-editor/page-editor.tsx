@@ -123,66 +123,54 @@ function useRowFeedback(blocks: PageBlock[]) {
   }
 }
 
-export function PageEditor({ pageId }: { pageId: string }) {
-  const { t, i18n } = useTranslation('pageEditor')
-  const { data: saved } = useSuspenseQuery(pageBlocksQuery(pageId))
-  const { data: options } = useSuspenseQuery(blockDescriptionsQuery)
-  const { data: pages } = useSuspenseQuery(pagesQuery)
+function useBlockActions(saved: PageBlock[]) {
+  const { t } = useTranslation('pageEditor')
   const [blocks, setBlocks] = useState(saved)
-  const { save, saving, failure } = useSave(pageId, blocks)
-  const page = pages.find((candidate) => candidate.id === pageId)
+  const feedback = useRowFeedback(blocks)
   const names = blocks.map((block) => block.block)
-  const dirty = !sameBlocks(blocks, saved)
-  const { announcement, announce, listRef, focusRow } = useRowFeedback(blocks)
 
   const apply = (next: PageBlock[], message: string, focusId?: string) => {
     setBlocks(next)
-    announce(message)
-    focusRow(focusId)
+    feedback.announce(message)
+    feedback.focusRow(focusId)
   }
   const add = (option: BlockOption) => {
     const created = newBlock(option)
-    apply(
-      [...blocks, created],
-      t('announce.added', {
-        name: option.name,
-        position: blocks.length + 1,
-        total: blocks.length + 1
-      }),
-      created.id
-    )
+    const total = blocks.length + 1
+    const message = t('announce.added', { name: option.name, position: total, total })
+    apply([...blocks, created], message, created.id)
   }
   const duplicate = (index: number) => {
     const next = duplicateAt(blocks, index)
-    apply(
-      next,
-      t('announce.duplicated', { name: names[index], position: index + 2, total: next.length }),
-      next[index + 1]?.id
-    )
+    const message = t('announce.duplicated', {
+      name: names[index],
+      position: index + 2,
+      total: next.length
+    })
+    apply(next, message, next[index + 1]?.id)
   }
   const remove = (index: number) => {
     const next = removeAt(blocks, index)
-    apply(
-      next,
-      t('announce.removed', { name: names[index], total: next.length }),
-      (next[index] ?? next[index - 1])?.id
-    )
+    const message = t('announce.removed', { name: names[index], total: next.length })
+    apply(next, message, (next[index] ?? next[index - 1])?.id)
   }
+  const move = (from: number, to: number) => setBlocks((current) => moveBlock(current, from, to))
 
-  const renderRow = (key: string, index: number, slot?: SortableSlot) => (
-    <BlockRow
-      key={key}
-      block={blocks[index]!}
-      name={names[index]!}
-      position={index + 1}
-      slot={slot}
-      onDuplicate={() => duplicate(index)}
-      onRemove={() => remove(index)}
-    />
-  )
+  return { blocks, names, add, duplicate, remove, move, ...feedback }
+}
 
+interface EditorHeaderProps {
+  title: string
+  dirty: boolean
+  saving: boolean
+  failure?: string
+  onSave: () => void
+}
+
+function EditorHeader({ title, dirty, saving, failure, onSave }: EditorHeaderProps) {
+  const { t } = useTranslation('pageEditor')
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-4 sm:p-8">
+    <>
       <Link
         to="/pages"
         className="inline-flex w-fit items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
@@ -191,10 +179,10 @@ export function PageEditor({ pageId }: { pageId: string }) {
         {t('back')}
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl">{page ? pageLabel(page, i18n.language) : t('title')}</h1>
+        <h1 className="text-3xl">{title}</h1>
         <div className="flex items-center gap-3">
           {dirty && <Badge variant="warning">{t('unsaved')}</Badge>}
-          <Button onClick={save} disabled={!dirty || saving}>
+          <Button onClick={onSave} disabled={!dirty || saving}>
             {saving ? <Spinner /> : <SaveIcon aria-hidden />}
             {t('save')}
           </Button>
@@ -205,14 +193,56 @@ export function PageEditor({ pageId }: { pageId: string }) {
           {failure}
         </p>
       )}
+    </>
+  )
+}
+
+function EmptyBlocks() {
+  const { t } = useTranslation('pageEditor')
+  return (
+    <Empty>
+      <EmptyHeader>
+        <EmptyTitle>{t('empty.title')}</EmptyTitle>
+        <EmptyDescription>{t('empty.description')}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  )
+}
+
+export function PageEditor({ pageId }: { pageId: string }) {
+  const { t, i18n } = useTranslation('pageEditor')
+  const { data: saved } = useSuspenseQuery(pageBlocksQuery(pageId))
+  const { data: options } = useSuspenseQuery(blockDescriptionsQuery)
+  const { data: pages } = useSuspenseQuery(pagesQuery)
+  const actions = useBlockActions(saved)
+  const { blocks, names, listRef } = actions
+  const { save, saving, failure } = useSave(pageId, blocks)
+  const page = pages.find((candidate) => candidate.id === pageId)
+
+  const renderRow = (key: string, index: number, slot?: SortableSlot) => (
+    <BlockRow
+      key={key}
+      block={blocks[index]!}
+      name={names[index]!}
+      position={index + 1}
+      slot={slot}
+      onDuplicate={() => actions.duplicate(index)}
+      onRemove={() => actions.remove(index)}
+    />
+  )
+
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-4 sm:p-8">
+      <EditorHeader
+        title={page ? pageLabel(page, i18n.language) : t('title')}
+        dirty={!sameBlocks(blocks, saved)}
+        saving={saving}
+        failure={failure}
+        onSave={save}
+      />
       <div ref={listRef} className="contents">
         {blocks.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>{t('empty.title')}</EmptyTitle>
-              <EmptyDescription>{t('empty.description')}</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <EmptyBlocks />
         ) : (
           <Suspense
             fallback={
@@ -224,7 +254,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
             <SortableItems
               keys={blocks.map((block) => block.id)}
               names={names}
-              onMove={(from, to) => setBlocks((current) => moveBlock(current, from, to))}
+              onMove={actions.move}
             >
               {renderRow}
             </SortableItems>
@@ -232,10 +262,10 @@ export function PageEditor({ pageId }: { pageId: string }) {
         )}
       </div>
       <div>
-        <BlockPicker options={options} onPick={add} />
+        <BlockPicker options={options} onPick={actions.add} />
       </div>
       <p role="status" aria-live="polite" className="sr-only">
-        {announcement}
+        {actions.announcement}
       </p>
     </div>
   )
