@@ -5,17 +5,11 @@
   "compatibility_date": "2026-10-24",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    // Only /api/* reaches the Worker. Every other path is a file from dist/client or, for a
-    // client route, index.html.
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
   "observability": { "enabled": true },
   "upload_source_maps": true,
-  // The top level is local development. A deploy goes to the production environment, named
-  // <name>-production: make -C .devtools deploy ENV=production. It does not inherit bindings
-  // or vars from the top level, so it restates them. There is no development environment
-  // (ADR-0008).
   "env": {
     "production": {}
   }

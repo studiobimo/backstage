@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import headersFile from '../public/_headers?raw'
 
-// public/_headers in Cloudflare's format: a path, then its headers indented under it.
 function headersFor(path: string) {
   const lines = headersFile.split('\n').filter((line) => line.trim() && !line.startsWith('#'))
   const start = lines.indexOf(path) + 1
