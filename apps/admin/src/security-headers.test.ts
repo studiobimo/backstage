@@ -15,6 +15,8 @@ function headersFor(path: string) {
   )
 }
 
+const CSP = { forbiddenSources: new Set(["'unsafe-inline'", "'unsafe-eval'", '*']) }
+
 const headers = headersFor('/*')
 const policy = new Map(
   (headers.get('content-security-policy') ?? '')
@@ -41,11 +43,8 @@ describe('the admin SPA headers', () => {
   })
 
   it('never allow inline code, eval or any origin', () => {
-    for (const sources of policy.values()) {
-      expect(sources).not.toContain("'unsafe-inline'")
-      expect(sources).not.toContain("'unsafe-eval'")
-      expect(sources).not.toContain('*')
-    }
+    const allowed = [...policy.values()].flat()
+    expect(allowed.filter((source) => CSP.forbiddenSources.has(source))).toEqual([])
   })
 
   it('send the other security headers', () => {
