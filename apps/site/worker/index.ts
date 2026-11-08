@@ -1,10 +1,6 @@
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
-// Every request reaches the Worker (wrangler.jsonc has no assets), so these headers are on
-// every response the site sends. The policy allows nothing the pages do not use: no script
-// at all, and styles, images and fonts only from the site itself. A block that needs more
-// widens it here, in review, never with 'unsafe-inline'.
 const app = new Hono<{ Bindings: Env }>()
 
 app.use(
@@ -29,7 +25,6 @@ app.use(
   })
 )
 
-// Until pages are published from the admin, every path is this one placeholder.
 const placeholder = `<!doctype html>
 <html lang="en">
   <head>
