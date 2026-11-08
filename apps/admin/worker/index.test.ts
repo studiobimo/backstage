@@ -1,34 +1,32 @@
 import { afterAll, describe, expect, it } from 'vitest'
-import { getPlatformProxy } from 'wrangler'
 
 import app from './index'
 import { registry } from './registry'
+import { openTestEnv } from './test-env'
 
-const platform = await getPlatformProxy<Env>()
-afterAll(() => platform.dispose())
-
-const localDevelopment = { ...platform.env, DEV_AUTH: 'true' }
+const { dispose, env } = await openTestEnv()
+afterAll(dispose)
 
 describe('worker', () => {
   it('answers /api/health', async () => {
-    const response = await app.request('/api/health', {}, localDevelopment)
+    const response = await app.request('/api/health', {}, env.localDevelopment)
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ ok: true })
   })
 
   it('answers an unknown /api path with a JSON 404', async () => {
-    const response = await app.request('/api/nothing-here', {}, localDevelopment)
+    const response = await app.request('/api/nothing-here', {}, env.localDevelopment)
     expect(response.status).toBe(404)
     expect(await response.json()).toEqual({ error: 'Not found', code: 'not_found' })
   })
 
   it('keeps /api/v1/blocks behind the Access check', async () => {
-    const response = await app.request('/api/v1/blocks', {}, { ...platform.env, DEV_AUTH: '' })
+    const response = await app.request('/api/v1/blocks', {}, env.deployed)
     expect(response.status).toBe(403)
   })
 
   it('serves every registered block as JSON Schema with its field kinds', async () => {
-    const response = await app.request('/api/v1/blocks', {}, localDevelopment)
+    const response = await app.request('/api/v1/blocks', {}, env.localDevelopment)
     expect(response.status).toBe(200)
     const { blocks } = (await response.json()) as {
       blocks: {

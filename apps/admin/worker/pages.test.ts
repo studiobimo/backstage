@@ -2,20 +2,17 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { getPlatformProxy } from 'wrangler'
 
 import app from './index'
+import { openTestEnv } from './test-env'
 
 const migration = readFileSync(
   resolve(import.meta.dirname, '../../../packages/backstage/migrations/0000_init.sql'),
   'utf8'
 )
 
-const platform = await getPlatformProxy<Env>({ persist: false })
-afterAll(() => platform.dispose())
-
-const env = { ...platform.env, DEV_AUTH: 'true' }
-const db = platform.env.DB!
+const { dispose, db, env } = await openTestEnv()
+afterAll(dispose)
 
 const send = (method: string, path: string, body?: unknown) =>
   app.request(
@@ -25,7 +22,7 @@ const send = (method: string, path: string, body?: unknown) =>
       headers: { 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body)
     },
-    env
+    env.localDevelopment
   )
 
 const regular = (slug: string) => ({
