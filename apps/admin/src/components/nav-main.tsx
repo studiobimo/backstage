@@ -54,7 +54,15 @@ export function NavMain() {
               <SidebarMenuSub>
                 {items.map((item) => (
                   <SidebarMenuSubItem key={item}>
-                    <SidebarMenuSubButton render={<button type="button" />}>
+                    <SidebarMenuSubButton
+                      render={
+                        key === 'pages' && item === 'all' ? (
+                          <Link to="/pages" />
+                        ) : (
+                          <button type="button" />
+                        )
+                      }
+                    >
                       <span>{t(`nav.sections.${key}.items.${item}`)}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>

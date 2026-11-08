@@ -55,8 +55,8 @@ describe('app shell', () => {
   it('opens a section of the navigation to show its items', async () => {
     await renderShell()
     const user = userEvent.setup()
-    expect(screen.queryByRole('button', { name: 'All pages' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'All pages' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Show or hide Pages' }))
-    expect(await screen.findByRole('button', { name: 'All pages' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'All pages' })).toBeInTheDocument()
   })
 })

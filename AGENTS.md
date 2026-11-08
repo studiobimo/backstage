@@ -337,3 +337,57 @@ every entry of `APPS`), so run `wrangler` there.
   the feature's schema from `src/features/<name>/schema.ts`, or from a workspace's shared
   package.
 <!-- <<< template:cloudflare -->
+
+## Admin UI/UX (this project's own rules)
+
+These sit outside the template's managed blocks, so they are this repo's to edit. They apply to
+every change under `apps/admin/src`.
+
+### Before building any UI
+
+- **Start the shadcn MCP first.** `.mcp.json` registers it (`pnpm --filter backstage-admin exec
+shadcn mcp`). At the start of any UI/UX task, check that its tools are loaded; if they are
+  not, say so and fall back to the CLI from `apps/admin`: `pnpm exec shadcn search @coss -q
+<term>`, `pnpm exec shadcn view @coss/<name>` and `pnpm exec shadcn add @coss/<name>`. Never
+  skip the registry search because the tools are missing.
+- **Search the `@coss` registry before writing a component.** Look for the component and for a
+  matching block (`p-<name>-N`) as a pattern. Hand-build only what the registry has no answer
+  for, and say what you searched.
+- **Never hand-edit `src/components/ui/**`.** Add or regenerate it with `shadcn add`.
+- **Do not change the stack silently.** TanStack Form, Query, Router, zod, i18next and coss/Base
+  UI are the stack. A new dependency, or a deviation from anything the owner decided, is asked
+  about first, with the trade-off in a sentence or two.
+
+### Patterns that are decided
+
+- **Locales are never stacked.** A field that exists per locale is edited one locale at a time
+  behind tabs or the locale switcher, with a marker on a locale that is missing or invalid
+  (LOC-2). Never repeat a full set of inputs per locale in one view.
+- **Typed forms.** Values are typed from the zod schema in `@studiobimo/backstage`; no
+  `unknown`-typed form values or untyped getters and setters.
+- **Reordering** uses dnd-kit with drag handles, keyboard sorting, announcements and touch.
+- **Use the real components:** `field`, `fieldset`, `input-group`, `number-field`, `select`,
+  `switch`, `tabs`, `alert-dialog`, `empty`, `tooltip`, `collapsible` and the rest of `@coss`,
+  never a raw `<input>`, `<select>` or hand-rolled dialog. A confirmation that destroys data is
+  an `alert-dialog`.
+- **Derive what can be derived,** such as a slug from a title, and let the editor override it.
+- **No boxed-in-boxed layouts.** Group with spacing, headings and separators, not nested
+  borders.
+
+### Done means looked at
+
+- Open the change in the browser at 360 px and at desktop width, in light and dark, and report
+  what you saw. Exercise the real flow (create, error, save), not only the happy path.
+- Every action works from the keyboard, with a label for a screen reader (PAG-6).
+- Strings come from `en` and `es` catalogs with identical keys; no inline text.
+- Say what you tested and what you did not.
+
+### Working notes
+
+- The preview tool may fail to start `make` with a `getcwd` error. Start the dev server from the
+  repo root with `make -C .devtools dev` and use the port it prints.
+- Local admin needs `apps/admin/.dev.vars` with `DEV_AUTH=true` and the migration applied
+  (`pnpm exec wrangler d1 migrations apply DB --local`, from `apps/admin`). The file is
+  gitignored. Tests that expect a refused request clear `DEV_AUTH` themselves.
+- Keep scope to the issue. Features the PRD lists as separate stories (for example SEO fields,
+  PAG-3) get their own issue and PR.

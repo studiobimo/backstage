@@ -1,0 +1,37 @@
+{
+  "title": "Pages",
+  "locales": { "en": "English", "es": "Español" },
+  "list": {
+    "create": "New page",
+    "home": "Home",
+    "rename": "Rename {{name}}",
+    "delete": "Delete {{name}}",
+    "emptyTitle": "No pages yet",
+    "emptyDescription": "Create the home page, then add the pages around it."
+  },
+  "form": {
+    "createTitle": "New page",
+    "renameTitle": "Rename page",
+    "description": "Each language has its own title and address.",
+    "isHome": "Home page",
+    "isHomeHint": "The home page has no address of its own.",
+    "title": "Title",
+    "slug": "Address",
+    "slugHint": "Lowercase letters, numbers and hyphens.",
+    "needsAttention": "Fix",
+    "cancel": "Cancel",
+    "create": "Create page",
+    "save": "Save"
+  },
+  "delete": {
+    "title": "Delete {{name}}?",
+    "description": "The page and its blocks are removed. This cannot be undone.",
+    "confirm": "Delete page"
+  },
+  "errors": {
+    "slug_taken": "Another page already uses that address in this language.",
+    "home_taken": "The home page already exists.",
+    "invalid": "Check the fields and try again.",
+    "internal": "Something went wrong. Try again."
+  }
+}
