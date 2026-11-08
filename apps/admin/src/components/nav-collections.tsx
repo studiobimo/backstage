@@ -20,7 +20,6 @@ import {
   useSidebar
 } from '@/components/ui/sidebar'
 
-// Placeholders until collections exist (M4).
 const collections: { key: string; icon: LucideIcon }[] = [
   { key: 'journal', icon: Newspaper },
   { key: 'team', icon: Users },
