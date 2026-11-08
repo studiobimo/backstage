@@ -1,10 +1,12 @@
-import { image, link, localized } from '@studiobimo/backstage'
+import { image, link, localized, richText } from '@studiobimo/backstage'
 import { z } from 'zod'
 
 import type { JsonSchema } from './spec.ts'
 
 export const everyKind = z.object({
   title: localized(z.string().min(1)),
+  body: localized(richText()),
+  note: richText().optional(),
   cta: link(),
   picture: image(),
   theme: z.enum(['light', 'dark']).default('light'),

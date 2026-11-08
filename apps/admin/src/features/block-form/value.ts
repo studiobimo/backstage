@@ -10,6 +10,7 @@ export type FieldValue = Scalar | BlockValue | FieldValue[]
 
 export interface ValueByKind {
   text: string
+  richText: BlockValue
   number: number
   boolean: boolean
   select: string | number
@@ -44,8 +45,20 @@ export const fieldName = (path: Path): string =>
 export const isRecord = (value: FieldValue | undefined): value is BlockValue =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
+const isRichText = (value: FieldValue | undefined): value is BlockValue =>
+  isRecord(value) && value.type === 'doc'
+
+function richTextPlain(value: FieldValue | undefined): string {
+  if (isRecord(value)) {
+    const text = typeof value.text === 'string' ? value.text : ''
+    return text + richTextPlain(value.content)
+  }
+  return Array.isArray(value) ? value.map(richTextPlain).join(' ').trim() : ''
+}
+
 export function isBlank(value: FieldValue | undefined): boolean {
   if (value === undefined || value === null || value === '') return true
+  if (isRichText(value)) return richTextPlain(value) === ''
   if (Array.isArray(value)) return value.length === 0
   if (isRecord(value)) return Object.values(value).every(isBlank)
   return false
@@ -83,6 +96,7 @@ export function withoutUndefined(value: unknown): unknown {
 
 export function summarize(value: FieldValue | undefined): string {
   if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (isRichText(value)) return richTextPlain(value)
   if (isRecord(value)) return Object.values(value).map(summarize).filter(Boolean).join(' · ')
   return ''
 }
