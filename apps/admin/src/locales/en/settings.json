@@ -13,18 +13,6 @@
     "general": {
       "title": "General",
       "description": "The basics every page shares: the site's name and the image used when a link is shared."
-    },
-    "header": {
-      "title": "Header",
-      "description": "The navigation at the top of every page."
-    },
-    "footer": {
-      "title": "Footer",
-      "description": "What closes every page: a short line and a few links."
-    },
-    "contact": {
-      "title": "Contact",
-      "description": "How visitors can reach you."
     }
   },
   "fields": {
@@ -35,34 +23,20 @@
     "defaultSocialImage": {
       "title": "Default social image",
       "description": "Used when a page shares a link without an image of its own."
-    },
-    "navigation": {
-      "title": "Navigation links",
-      "description": "Shown in this order. Addresses start with https://, /, #, mailto: or tel:."
+    }
+  },
+  "slots": {
+    "header": {
+      "title": "Header",
+      "description": "What opens every page that shows it. Its fields come from this site’s header block."
     },
     "footer": {
       "title": "Footer",
-      "text": {
-        "title": "Footer text",
-        "description": "A short line such as a copyright notice."
-      },
-      "links": {
-        "title": "Footer links",
-        "description": "Shown in this order. Addresses start with https://, /, #, mailto: or tel:."
-      }
-    },
-    "contact": {
-      "title": "Contact details",
-      "email": {
-        "title": "Email",
-        "description": "Where visitors can write to you."
-      },
-      "phone": {
-        "title": "Phone"
-      },
-      "address": {
-        "title": "Address"
-      }
+      "description": "What closes every page that shows it. Its fields come from this site’s footer block."
     }
+  },
+  "variant": {
+    "label": "Design",
+    "description": "The site offers more than one. Changing it starts the fields from scratch."
   }
 }

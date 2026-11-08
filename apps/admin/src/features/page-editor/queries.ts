@@ -1,4 +1,4 @@
-import { pageBlocksSchema, type PageBlock } from '@studiobimo/backstage'
+import { layoutsResponseSchema, pageBlocksSchema, type PageBlock } from '@studiobimo/backstage'
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 
@@ -42,4 +42,21 @@ export const savePageBlocksMutation = (queryClient: QueryClient, pageId: string)
       queryClient.setQueryData(pageBlocksKey(pageId), blocks)
       return queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
     }
+  })
+
+export const layoutsQuery = queryOptions({
+  queryKey: ['layouts'],
+  queryFn: async () =>
+    layoutsResponseSchema.parse(await (await apiRequest('/layouts')).json()).layouts
+})
+
+export const savePageLayoutMutation = (queryClient: QueryClient, pageId: string) =>
+  mutationOptions({
+    mutationFn: async (layout: string) => {
+      await apiRequest(`/pages/${pageId}/layout`, {
+        method: 'PUT',
+        body: JSON.stringify({ layout })
+      })
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
   })

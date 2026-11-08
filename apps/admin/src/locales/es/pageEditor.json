@@ -24,5 +24,14 @@
     "added": "{{name}} añadido en la posición {{position}} de {{total}}.",
     "duplicated": "{{name}} duplicado. La copia está en la posición {{position}} de {{total}}.",
     "removed": "{{name}} quitado. Quedan {{total}} bloques."
+  },
+  "layout": {
+    "label": "Diseño de página",
+    "description": "Si esta página muestra la cabecera y el pie del sitio, y cómo.",
+    "names": {
+      "default": "Predeterminado",
+      "minimal": "Mínimo",
+      "bare": "Sin adornos"
+    }
   }
 }

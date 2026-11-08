@@ -1,18 +1,19 @@
 import { LOCALES, siteSettingsJsonSchema, siteSettingsSchema } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { CircleAlertIcon, GlobeIcon, MailIcon, PanelBottomIcon, PanelTopIcon } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { GlobeIcon } from 'lucide-react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PageHeader } from '@/components/page-header'
 import { BlockForm } from '@/features/block-form/block-form.tsx'
-import type { FormSection } from '@/features/block-form/form-sections.tsx'
+import { SectionFrame } from '@/features/block-form/section-frame.tsx'
 import type { JsonSchema } from '@/features/block-form/spec.ts'
 import { blockValue, type BlockValue } from '@/features/block-form/value.ts'
-import { PageHeader } from '@/components/page-header'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { toastManager } from '@/components/ui/toast'
 
-import { saveSettingsMutation, settingsQuery } from './queries'
+import { saveSettingsMutation, settingsQuery, slotsQuery } from './queries'
+import { SaveFailedAlert } from './save-failed-alert'
+import { SlotSection } from './slot-section'
+import { useSaveFeedback } from './use-save-feedback'
 import { type CopyOf, translateSchema } from './translate-schema'
 
 const SETTINGS_SCHEMA = siteSettingsJsonSchema() as JsonSchema
@@ -30,71 +31,47 @@ function useTranslatedSchema() {
   }, [t, i18n])
 }
 
-const SECTIONS = [
-  { id: 'general', icon: <GlobeIcon />, fields: ['siteName', 'defaultSocialImage'] },
-  { id: 'header', icon: <PanelTopIcon />, fields: ['navigation'] },
-  { id: 'footer', icon: <PanelBottomIcon />, group: 'footer' },
-  { id: 'contact', icon: <MailIcon />, group: 'contact' }
-] as const
-
-function useSections(): FormSection[] {
-  const { t } = useTranslation('settings')
-  return useMemo(
-    () =>
-      SECTIONS.map((section) => ({
-        ...section,
-        title: t(`sections.${section.id}.title`),
-        description: t(`sections.${section.id}.description`)
-      })),
-    [t]
-  )
-}
-
 function useSaveSettings() {
-  const { t } = useTranslation('settings')
-  const queryClient = useQueryClient()
-  const save = useMutation(saveSettingsMutation(queryClient))
-  const [failed, setFailed] = useState(false)
-  async function submit(value: BlockValue) {
-    setFailed(false)
-    try {
-      await save.mutateAsync(siteSettingsSchema.parse(value))
-      toastManager.add({
-        type: 'success',
-        title: t('saved.title'),
-        description: t('saved.description')
-      })
-    } catch {
-      setFailed(true)
-    }
-  }
-  return { submit, failed }
+  const save = useMutation(saveSettingsMutation(useQueryClient()))
+  return useSaveFeedback((value: BlockValue) => save.mutateAsync(siteSettingsSchema.parse(value)))
 }
 
-export function SettingsPage() {
+function GeneralSection() {
   const { t } = useTranslation('settings')
   const { data: settings } = useSuspenseQuery(settingsQuery)
   const schema = useTranslatedSchema()
-  const sections = useSections()
   const { submit, failed } = useSaveSettings()
   return (
-    <>
-      <PageHeader title={t('title')} description={t('description')} />
-      {failed && (
-        <Alert variant="error" role="alert">
-          <CircleAlertIcon />
-          <AlertTitle>{t('failed.title')}</AlertTitle>
-          <AlertDescription>{t('failed.description')}</AlertDescription>
-        </Alert>
-      )}
+    <SectionFrame
+      id="general"
+      title={t('sections.general.title')}
+      description={t('sections.general.description')}
+      icon={<GlobeIcon />}
+    >
+      {failed && <SaveFailedAlert />}
       <BlockForm
         schema={schema}
         locales={LOCALES}
         value={blockValue.parse(settings)}
         onSubmit={submit}
-        sections={sections}
-        className="max-w-none gap-10"
+        className="max-w-none gap-8"
       />
+    </SectionFrame>
+  )
+}
+
+export function SettingsPage() {
+  const { t } = useTranslation('settings')
+  const { data: slots } = useSuspenseQuery(slotsQuery)
+  return (
+    <>
+      <PageHeader title={t('title')} description={t('description')} />
+      <div className="flex flex-col gap-10">
+        <GeneralSection />
+        {slots.map((slot) => (
+          <SlotSection key={slot.name} slot={slot} />
+        ))}
+      </div>
     </>
   )
 }

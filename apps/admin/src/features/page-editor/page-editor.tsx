@@ -1,10 +1,11 @@
-import type { PageBlock } from '@studiobimo/backstage'
+import { LAYOUT, type PageBlock } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, CopyIcon, PlusIcon, SaveIcon, Trash2Icon } from 'lucide-react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ChoiceSelect } from '@/components/choice-select'
 import { IconButton } from '@/components/icon-button'
 import type { SortableSlot } from '@/components/sortable-items'
 import { Button } from '@/components/ui/button'
@@ -19,9 +20,20 @@ import { cn } from '@/lib/utils'
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
 import { type BlockOption, duplicateAt, moveBlock, newBlock, removeAt, sameBlocks } from './draft'
-import { blockDescriptionsQuery, pageBlocksQuery, savePageBlocksMutation } from './queries'
+import {
+  blockDescriptionsQuery,
+  layoutsQuery,
+  pageBlocksQuery,
+  savePageBlocksMutation,
+  savePageLayoutMutation
+} from './queries'
 
 const SortableItems = lazy(() => import('@/components/sortable-items'))
+
+interface SavedPage {
+  blocks: PageBlock[]
+  layout: string
+}
 
 interface BlockRowProps {
   block: PageBlock
@@ -90,15 +102,22 @@ function BlockPicker({
   )
 }
 
-function useSave(pageId: string, blocks: PageBlock[]) {
+function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string }, saved: SavedPage) {
   const { t } = useTranslation('pageEditor')
-  const mutation = useMutation(savePageBlocksMutation(useQueryClient(), pageId))
-  const failure = mutation.error
-    ? t(`errors.${mutation.error instanceof ApiError ? mutation.error.code : 'internal'}`, {
+  const queryClient = useQueryClient()
+  const saveBlocks = useMutation(savePageBlocksMutation(queryClient, pageId))
+  const saveLayout = useMutation(savePageLayoutMutation(queryClient, pageId))
+  const error = saveBlocks.error ?? saveLayout.error
+  const failure = error
+    ? t(`errors.${error instanceof ApiError ? error.code : 'internal'}`, {
         defaultValue: t('errors.internal')
       })
     : undefined
-  return { save: () => mutation.mutate(blocks), saving: mutation.isPending, failure }
+  const save = () => {
+    if (!sameBlocks(draft.blocks, saved.blocks)) saveBlocks.mutate(draft.blocks)
+    if (draft.layout !== saved.layout) saveLayout.mutate(draft.layout)
+  }
+  return { save, saving: saveBlocks.isPending || saveLayout.isPending, failure }
 }
 
 function useRowFeedback(blocks: PageBlock[]) {
@@ -200,6 +219,30 @@ function EditorHeader({ title, dirty, saving, failure, onSave }: EditorHeaderPro
   )
 }
 
+function LayoutPicker({
+  layouts,
+  value,
+  onChange
+}: {
+  layouts: string[]
+  value: string
+  onChange: (layout: string) => void
+}) {
+  const { t } = useTranslation('pageEditor')
+  return (
+    <ChoiceSelect
+      label={t('layout.label')}
+      description={t('layout.description')}
+      value={value}
+      options={layouts.map((name) => ({
+        value: name,
+        label: t(`layout.names.${name}`, { defaultValue: name })
+      }))}
+      onChange={onChange}
+    />
+  )
+}
+
 function EmptyBlocks() {
   const { t } = useTranslation('pageEditor')
   return (
@@ -217,10 +260,17 @@ export function PageEditor({ pageId }: { pageId: string }) {
   const { data: saved } = useSuspenseQuery(pageBlocksQuery(pageId))
   const { data: options } = useSuspenseQuery(blockDescriptionsQuery)
   const { data: pages } = useSuspenseQuery(pagesQuery)
+  const { data: layouts } = useSuspenseQuery(layoutsQuery)
+  const page = pages.find((candidate) => candidate.id === pageId)
+  const savedLayout = page?.layout ?? LAYOUT.default
+  const [layout, setLayout] = useState(savedLayout)
   const actions = useBlockActions(saved)
   const { blocks, names, listRef } = actions
-  const { save, saving, failure } = useSave(pageId, blocks)
-  const page = pages.find((candidate) => candidate.id === pageId)
+  const { save, saving, failure } = useSave(
+    pageId,
+    { blocks, layout },
+    { blocks: saved, layout: savedLayout }
+  )
 
   const renderRow = (key: string, index: number, slot?: SortableSlot) => (
     <BlockRow
@@ -238,11 +288,12 @@ export function PageEditor({ pageId }: { pageId: string }) {
     <>
       <EditorHeader
         title={page ? pageLabel(page, i18n.language) : t('title')}
-        dirty={!sameBlocks(blocks, saved)}
+        dirty={!sameBlocks(blocks, saved) || layout !== savedLayout}
         saving={saving}
         failure={failure}
         onSave={save}
       />
+      <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
       <div ref={listRef} className="contents">
         {blocks.length === 0 ? (
           <EmptyBlocks />

@@ -16,6 +16,7 @@ const about: Page = {
   id: 'p1',
   isHome: false,
   version: 1,
+  layout: 'default',
   updatedAt: 0,
   locales: [{ locale: 'en', slug: 'about', title: 'About' }]
 }
@@ -31,13 +32,21 @@ const saved: PageBlock[] = [
 
 const mockApi = (initial: PageBlock[]) => {
   const puts: { blocks: PageBlock[] }[] = []
+  const layoutPuts: { layout: string }[] = []
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT' && url.endsWith('/layout')) {
+        layoutPuts.push(JSON.parse(init.body as string))
+        return new Response(null, { status: 200 })
+      }
       if (init?.method === 'PUT') {
         const body = JSON.parse(init.body as string) as { blocks: PageBlock[] }
         puts.push(body)
         return new Response(JSON.stringify(body))
+      }
+      if (url.endsWith('/layouts')) {
+        return new Response(JSON.stringify({ layouts: ['default', 'minimal', 'bare'] }))
       }
       if (url.endsWith('/blocks') && url.includes('/pages/')) {
         return new Response(JSON.stringify({ blocks: initial }))
@@ -46,7 +55,7 @@ const mockApi = (initial: PageBlock[]) => {
       return new Response(JSON.stringify({ pages: [about] }))
     })
   )
-  return puts
+  return Object.assign(puts, { layouts: layoutPuts })
 }
 
 const renderEditor = () =>
@@ -97,5 +106,18 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     mockApi(saved)
     renderEditor()
     expect(await screen.findAllByRole('button', { name: 'Reorder hero' })).toHaveLength(2)
+  })
+
+  it('picks a layout for the page and saves it without touching the blocks', async () => {
+    const puts = mockApi(saved)
+    const user = userEvent.setup()
+    renderEditor()
+    const picker = await screen.findByRole('combobox', { name: 'Layout' })
+    expect(picker).toHaveTextContent('Default')
+    await user.click(picker)
+    await user.click(await screen.findByRole('option', { name: 'Minimal' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(puts.layouts).toEqual([{ layout: 'minimal' }]))
+    expect(puts).toHaveLength(0)
   })
 })
