@@ -1,26 +1,4 @@
 #!/usr/bin/env node
-// Managed by studiobimo/project-template (profile vite-react-tanstack); change it there.
-//
-// Scaffolds on-convention code, so a new file starts formatted, lint-clean and tested
-// rather than copied from whichever file was nearest. It never overwrites a file. The paths
-// below are from APP_DIR, which .devtools/Makefile sets for an app in a workspace.
-//
-//   gen.mjs app [--no-install]           the config, router and i18n wiring a new project
-//                                        needs, and the hosting profile's files if there is
-//                                        one; then installs the packages and builds once
-//   gen.mjs host [--no-install]          the hosting profile's files, for an app that has
-//                                        been running without one
-//   gen.mjs route <path> [--feature <f>] a file route, src/routes/<path>.tsx; with
-//                                        --feature it loads and renders that feature's page
-//   gen.mjs feature <name>               src/features/<name>/: schema, query, page and test,
-//                                        and the page's strings in src/locales/*/<name>.json
-//   gen.mjs component <name>             src/components/<name>.tsx and its test
-//   gen.mjs hook <name>                  src/hooks/use-<name>.ts and its test
-//
-// Names take any casing: user-profile, userProfile and UserProfile are the same. A route is
-// named by its id, the URL path plus any layout and group folders it sits in: /users/$userId,
-// /settings/ (a trailing slash is an index route), /_auth/account (inside the pathless
-// _auth layout), /(marketing)/pricing (in the marketing group, served at /pricing).
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join, matchesGlob, relative } from 'node:path'
@@ -33,24 +11,16 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 
 const read = (path) => (existsSync(join(root, path)) ? readFileSync(join(root, path), 'utf8') : '')
 
-// vite.mk's APP_DIR, read from the line in the project's Makefile that sets it, or the first
-// app of APPS when the workspace has several.
-const appDir =
-  read('.devtools/Makefile').match(/^(?:APP_DIR|APPS)\s*[:?]?=\s*(\S+)/m)?.[1] ?? '.'
+const appDir = read('.devtools/Makefile').match(/^(?:APP_DIR|APPS)\s*[:?]?=\s*(\S+)/m)?.[1] ?? '.'
 const app = join(root, appDir)
 const workspace = appDir !== '.'
 
-// vite.mk's DEPLOY_ENVS, from the line in Makefile that sets it, without a trailing comment.
 const deployEnvs = read('.devtools/Makefile')
   .match(/^DEPLOY_ENVS\s*[:?]?=([^#\n]*)/m)?.[1]
   .trim()
   .split(/\s+/)
   .filter(Boolean) ?? ['development', 'production']
 
-/**
- * Whether the block list under pnpm-workspace.yaml's packages: key takes in APP_DIR. An app it
- * leaves out still installs, but on its own: with a lockfile of its own, and outside `make install`.
- */
 function workspaceListsApp() {
   const [, list = ''] =
     read('pnpm-workspace.yaml').match(/^packages:\n((?:[ \t]*(?:-.*|#.*)?\n)*)/m) ?? []
@@ -84,10 +54,6 @@ const camel = (name) => {
   return p[0].toLowerCase() + p.slice(1)
 }
 
-/**
- * Writes every file or none: one that already exists stops the run before anything is written.
- * Paths in `appFiles` are from APP_DIR, those in `repoFiles` from the repository's root.
- */
 function emit(appFiles, repoFiles = {}) {
   const files = { ...repoFiles }
   for (const [path, contents] of Object.entries(appFiles)) files[join(appDir, path)] = contents
@@ -102,8 +68,6 @@ function emit(appFiles, repoFiles = {}) {
   return Object.keys(files)
 }
 
-// Templates cannot know how long a name will be, so the project's own Prettier has the last
-// word on line breaks. Before the first install there is none, and `app` formats afterwards.
 function format(paths) {
   const prettier = join(root, 'node_modules', '.bin', 'prettier')
   const web = paths.filter((path) => /\.(js|mjs|ts|tsx|css|html)$/.test(path))
@@ -118,7 +82,6 @@ function run(command, args) {
   if (error || status !== 0) die(say.failed(command, args))
 }
 
-/** The README's first line of prose under its heading. Badges and images are not prose. */
 function readmeDescription(readme) {
   const [, body = ''] = readme.match(/^# .+\n([\s\S]*)/m) ?? []
   const lines = body.split('\n').map((line) => line.trim())
@@ -126,10 +89,6 @@ function readmeDescription(readme) {
   return first?.startsWith('#') ? undefined : first
 }
 
-/**
- * The project's name, slug and Node major, as init and mise.toml left them, with `appDir`,
- * `deployEnvs` and `repo`, the path from the app back to the repository's root.
- */
 function project() {
   const readme = read('README.md')
   const slug = kebab(basename(root))
@@ -147,10 +106,6 @@ function project() {
   }
 }
 
-/**
- * What the hosting profile's .devtools/host/scaffold.mjs writes and installs: its default
- * export takes project() and returns { files, repoFiles, dependencies, devDependencies, next }.
- */
 async function hostScaffold() {
   const path = join(root, '.devtools', 'host', 'scaffold.mjs')
   if (!existsSync(path)) return undefined
@@ -164,7 +119,6 @@ async function hostScaffold() {
   return { files, repoFiles, dependencies, devDependencies, next }
 }
 
-/** `tools` are what .devtools/ imports, and Node resolves those upward from .devtools/. */
 function install(dependencies, devDependencies, tools) {
   const add = (packages, flags) => {
     if (packages.length > 0) run('pnpm', ['add', ...flags, ...packages])
@@ -174,7 +128,6 @@ function install(dependencies, devDependencies, tools) {
   add(tools, ['--save-dev', '--workspace-root'])
 }
 
-/** The languages the app has catalogs for, the default one if it has none yet. */
 function languages() {
   const dir = join(app, 'src', 'locales')
   const found = existsSync(dir)
@@ -185,7 +138,6 @@ function languages() {
 
 const next = (...lines) => console.log(say.next(lines))
 
-/** Maps a URL path to its route file and the id createFileRoute takes. */
 function routeOf(path) {
   if (!path.startsWith('/')) die(say.routeNoSlash(path))
   const segments = path.slice(1).split('/')
@@ -197,9 +149,43 @@ function routeOf(path) {
     }
   }
   const file = [...segments, ...(index || segments.length === 0 ? ['index'] : [])].join('/')
-  // The id keeps groups and pathless layouts, which the URL leaves out.
   const id = `/${segments.join('/')}${index && segments.length > 0 ? '/' : ''}`
   return { file: `src/routes/${file}.tsx`, id }
+}
+
+const featureCatalogs = (name, k) => {
+  const title = words(name).join(' ')
+  const catalog = { title: title[0].toUpperCase() + title.slice(1) }
+  return Object.fromEntries(
+    languages().map((language) => [
+      `src/locales/${language}/${k}.json`,
+      `${JSON.stringify(catalog, null, 2)}\n`
+    ])
+  )
+}
+
+function featurePageTest(k, P, c) {
+  return `import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+
+import { ${P}Page } from './${k}-page'
+import { ${c}QueryOptions } from './queries'
+
+describe('${P}Page', () => {
+  it('lists what the query returned under its title', () => {
+    const queryClient = new QueryClient()
+    queryClient.setQueryData(${c}QueryOptions().queryKey, [{ id: 'first' }])
+    render(
+      <QueryClientProvider client={queryClient}>
+        <${P}Page />
+      </QueryClientProvider>
+    )
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+    expect(screen.getByText('first')).toBeInTheDocument()
+  })
+})
+`
 }
 
 const generators = {
@@ -247,31 +233,19 @@ export const Route = createFileRoute('${id}')({
     const P = pascal(name)
     const c = camel(name)
     const dir = `src/features/${k}`
-    // Every language starts from the same strings, so the catalogs keep the same keys; a
-    // translator replaces them.
-    const title = words(name).join(' ')
-    const catalog = { title: title[0].toUpperCase() + title.slice(1) }
-    const catalogs = Object.fromEntries(
-      languages().map((language) => [
-        `src/locales/${language}/${k}.json`,
-        `${JSON.stringify(catalog, null, 2)}\n`
-      ])
-    )
     emit({
-      ...catalogs,
+      ...featureCatalogs(name, k),
       [`${dir}/schema.ts`]: `import { z } from 'zod'
 
 export const ${c}Schema = z.object({
   id: z.string()
 })
-
-export type ${P} = z.infer<typeof ${c}Schema>
 `,
       [`${dir}/queries.ts`]: `import { queryOptions } from '@tanstack/react-query'
 
 import { ${c}Schema } from './schema'
 
-export const ${c}Keys = {
+const ${c}Keys = {
   all: ['${k}'] as const
 }
 
@@ -306,27 +280,7 @@ export function ${P}Page() {
   )
 }
 `,
-      [`${dir}/${k}-page.test.tsx`]: `import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
-
-import { ${P}Page } from './${k}-page'
-import { ${c}QueryOptions } from './queries'
-
-describe('${P}Page', () => {
-  it('lists what the query returned under its title', () => {
-    const queryClient = new QueryClient()
-    queryClient.setQueryData(${c}QueryOptions().queryKey, [{ id: 'first' }])
-    render(
-      <QueryClientProvider client={queryClient}>
-        <${P}Page />
-      </QueryClientProvider>
-    )
-    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
-    expect(screen.getByText('first')).toBeInTheDocument()
-  })
-})
-`
+      [`${dir}/${k}-page.test.tsx`]: featurePageTest(k, P, c)
     })
     next(genNext.feature(k))
   },
@@ -409,7 +363,6 @@ describe('use${P}', () => {
     }
     const { slug, name, description, nodeMajor, repo } = project()
     const quote = (text) => text.replaceAll('\\', '\\\\').replaceAll("'", "\\'")
-    // Its files are written with the app's, so the first build already runs on the host.
     const host = (await hostScaffold()) ?? {
       files: {},
       repoFiles: {},
@@ -431,6 +384,19 @@ describe('use${P}', () => {
       lint: 'eslint --max-warnings=0 .',
       format: "prettier --write '**/*.{js,mjs,cjs,jsx,ts,tsx,css,html}'",
       gen: 'node .devtools/scripts/gen.mjs'
+    }
+    const knipApp = {
+      entry: ['src/lib/utils.ts'],
+      ignore: ['src/components/ui/**'],
+      ignoreDependencies: ['shadcn', 'zod']
+    }
+    const knipConfig = (dir) => {
+      const shared = { $schema: 'https://unpkg.com/knip@6/schema.json' }
+      const config =
+        dir === '.'
+          ? { ...shared, ...knipApp, ignore: ['.devtools/**', ...knipApp.ignore] }
+          : { ...shared, ignore: ['.devtools/**'], workspaces: { [dir]: knipApp } }
+      return `${JSON.stringify(config, null, 2)}\n`
     }
     const eslintConfig = (path, rules) => `import { defineConfig } from 'eslint/config'
 
@@ -487,7 +453,6 @@ export default defineConfig([${rules}])
 import { app } from '${repo}/.devtools/vite/vite.ts'
 import { site } from './src/config/site.ts'
 
-// The hosting profile's plugin, if there is one, comes in through app().
 export default defineConfig(await app({ site }))
 `,
         'vitest.config.ts': `import { defineConfig } from 'vitest/config'
@@ -522,9 +487,7 @@ export default defineConfig({
   </body>
 </html>
 `,
-        'src/config/site.ts': `// The one source of truth for the site's metadata: index.html takes it at build time,
-// and the app imports it for page titles.
-export const site = {
+        'src/config/site.ts': `export const site = {
   name: '${quote(name)}',
   title: '${quote(name)}',
   description: '${quote(description)}',
@@ -548,7 +511,6 @@ import { createRouter, type RouterHistory } from '@tanstack/react-router'
 
 import { routeTree } from './routeTree.gen'
 
-// TanStack Query owns freshness, so a preload always asks it rather than a router cache.
 export function createAppRouter(queryClient: QueryClient, history?: RouterHistory) {
   return createRouter({
     routeTree,
@@ -648,10 +610,6 @@ import { site } from '@/config/site'
 
 type Catalog = Record<string, unknown>
 
-// Every catalog in src/locales/<language>/<namespace>.json, so a new language or namespace
-// is a new file and nothing here changes. They are small enough to bundle: no loading state.
-// Cast rather than glob<Catalog>(: Vitest only knows not to cache a file whose glob results
-// can change when it finds the text import.meta.glob( in it.
 const catalogs = import.meta.glob('../locales/*/*.json', {
   eager: true,
   import: 'default'
@@ -663,7 +621,6 @@ for (const [path, catalog] of Object.entries(catalogs)) {
   resources[language] = { ...resources[language], [file.replace(/\\.json$/, '')]: catalog }
 }
 
-/** The language of site.locale. Its catalogs are the source the others are held to. */
 export const defaultLanguage = site.locale.split('_')[0]
 
 void i18n
@@ -674,11 +631,9 @@ void i18n
     fallbackLng: defaultLanguage,
     supportedLngs: Object.keys(resources),
     defaultNS: 'common',
-    // React escapes what it renders.
     interpolation: { escapeValue: false },
     initAsync: false,
     detection: { order: ['querystring', 'localStorage', 'navigator'], caches: ['localStorage'] },
-    // A key with no string is a bug: a test that renders it fails, the dev server warns.
     saveMissing: import.meta.env.DEV,
     missingKeyHandler: (_languages, namespace, key) => {
       const message = \`i18n: no string for \${namespace}:\${key}\`
@@ -687,12 +642,9 @@ void i18n
     }
   })
 
-// Screen readers pick their pronunciation from <html lang>, which index.html only starts.
 const setLang = (language: string) => (document.documentElement.lang = language)
 setLang(i18n.resolvedLanguage ?? defaultLanguage)
 i18n.on('languageChanged', setLang)
-
-export default i18n
 `,
         'src/i18n/locales.test.ts': `import { describe, expect, it } from 'vitest'
 
@@ -729,7 +681,6 @@ describe('locales', () => {
         'src/test/setup.ts': `import '@testing-library/jest-dom/vitest'
 import '@/i18n/config'
 
-// jsdom lays nothing out, so it has no scrollTo for the router's scroll restoration to call.
 window.scrollTo = () => {}
 `
       },
@@ -741,6 +692,7 @@ ${join(appDir, 'src/routeTree.gen.ts')}
 ${join(appDir, 'src/components/ui/')}
 pnpm-lock.yaml
 `,
+        'knip.json': knipConfig(appDir),
         '.claude/launch.json': `{
   "version": "0.0.1",
   "configurations": [
@@ -780,9 +732,7 @@ pnpm-lock.yaml
         '@testing-library/react',
         '@testing-library/dom',
         '@testing-library/jest-dom',
-        // The shadcn/ui CLI, so `pnpm exec shadcn` runs the version pnpm-lock.yaml pins.
         'shadcn',
-        // src/index.css imports it, and the CLI looks for it in the app's own package.
         'tailwindcss'
       ],
       [
@@ -791,7 +741,6 @@ pnpm-lock.yaml
         '@tanstack/router-plugin',
         'tailwindcss',
         '@tailwindcss/vite',
-        // typescript-eslint supports TypeScript below 6.1.
         'typescript@~6.0.3',
         `@types/node@^${nodeMajor}`,
         'vitest',
@@ -807,10 +756,10 @@ pnpm-lock.yaml
         '@tanstack/eslint-plugin-router',
         'eslint-plugin-i18next',
         'prettier',
+        'knip',
         ...host.devDependencies
       ]
     )
-    // The first build writes src/routeTree.gen.ts, which the router and the types import.
     run('pnpm', ['exec', 'vite', 'build'])
     format(written)
     next(genNext.check, genNext.shadcn(appDir), genNext.commit, ...host.next)
