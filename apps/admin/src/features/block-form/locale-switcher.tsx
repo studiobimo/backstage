@@ -33,7 +33,7 @@ export function LocaleSwitcher({
 }: LocaleSwitcherProps) {
   const { t, i18n } = useTranslation('blockForm')
   return (
-    <div className="z-20 bg-background pt-2 pb-4 sm:sticky sm:top-0">
+    <div className="z-20 pb-2 sm:sticky sm:top-10">
       <div className="flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs/5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-0.5">
           <p className="font-medium text-sm">{t('locale.editing')}</p>
