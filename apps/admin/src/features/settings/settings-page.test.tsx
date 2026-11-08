@@ -87,7 +87,7 @@ afterEach(async () => {
   await i18n.changeLanguage('en')
 })
 
-describe('SettingsPage', { timeout: 15_000 }, () => {
+describe('SettingsPage saving', { timeout: 15_000 }, () => {
   it('shows a General section and one section for each slot', async () => {
     mockApi()
     renderPage()
@@ -146,7 +146,9 @@ describe('SettingsPage', { timeout: 15_000 }, () => {
     await user.click(await screen.findByRole('option', { name: 'site-footer-wide' }))
     expect(await screen.findByLabelText('Motto')).toHaveValue('')
   })
+})
 
+describe('SettingsPage editing', { timeout: 15_000 }, () => {
   it('keeps the form and explains when the server refuses', async () => {
     mockApi((method) =>
       method === 'PUT' ? reply(500, { error: 'x', code: 'internal' }) : undefined
