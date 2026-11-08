@@ -15,6 +15,11 @@ import {
   SidebarMenuSubItem
 } from '@/components/ui/sidebar'
 
+const itemRoutes: Record<string, '/pages' | '/settings'> = {
+  'pages.all': '/pages',
+  'settings.general': '/settings'
+}
+
 const sections: { key: string; icon: LucideIcon; items: string[] }[] = [
   { key: 'pages', icon: FileText, items: ['all', 'drafts'] },
   { key: 'media', icon: Image, items: ['library', 'uploads'] },
@@ -56,8 +61,8 @@ export function NavMain() {
                   <SidebarMenuSubItem key={item}>
                     <SidebarMenuSubButton
                       render={
-                        key === 'pages' && item === 'all' ? (
-                          <Link to="/pages" />
+                        itemRoutes[`${key}.${item}`] ? (
+                          <Link to={itemRoutes[`${key}.${item}`]} />
                         ) : (
                           <button type="button" />
                         )
