@@ -1,0 +1,4 @@
+# drizzle-kit writes these files (lowercase keywords, tabs), and rewriting them would be undone
+# by the next generate. Layout and capitalisation are left to it; every other rule applies.
+[sqlfluff]
+exclude_rules = layout, capitalisation

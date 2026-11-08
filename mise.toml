@@ -39,3 +39,6 @@ editorconfig-checker = "4.0.2"
 # one file holds every tool version.
 pnpm = "12.14.0"
 # <<< template:vite
+
+# The project's own tools, below the markers.
+"pipx:sqlfluff" = "4.5.0"
