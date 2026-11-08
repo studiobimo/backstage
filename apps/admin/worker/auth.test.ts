@@ -68,7 +68,7 @@ describe('access verification', () => {
     await serveCerts()
     const response = await request()
     expect(response.status).toBe(403)
-    expect(await response.json()).toEqual({ error: 'Forbidden' })
+    expect(await response.json()).toEqual({ error: 'Forbidden', code: 'forbidden' })
   })
 
   it('refuses a token that is not a JWT', async () => {
@@ -149,7 +149,10 @@ describe('DEV_AUTH', () => {
   it('refuses every request on a deployed host', async () => {
     const response = await request(undefined, devEnv)
     expect(response.status).toBe(500)
-    expect(await response.json()).toEqual({ error: 'DEV_AUTH is set on a deployed worker' })
+    expect(await response.json()).toEqual({
+      error: 'DEV_AUTH is set on a deployed worker',
+      code: 'dev_auth_outside_local'
+    })
   })
 
   it('refuses even a valid token on a deployed host while it is set', async () => {

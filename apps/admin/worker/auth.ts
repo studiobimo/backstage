@@ -1,16 +1,15 @@
+import { API_ERROR } from '@studiobimo/backstage'
 import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
+
+import { respondWithError } from './respond'
 
 const ACCESS = {
   header: 'Cf-Access-Jwt-Assertion',
   certsPath: '/cdn-cgi/access/certs',
   algorithms: ['RS256'],
   certsCacheSeconds: 300,
-  localHostnames: ['localhost', '127.0.0.1', '[::1]'],
-  errors: {
-    forbidden: 'Forbidden',
-    devAuthOutsideLocal: 'DEV_AUTH is set on a deployed worker'
-  }
+  localHostnames: ['localhost', '127.0.0.1', '[::1]']
 } as const
 
 const trimTrailingSlashes = (value: string) => value.replace(/\/+$/, '')
@@ -41,8 +40,8 @@ export const requireAccess = createMiddleware<{ Bindings: Env }>(async (c, next)
 
   if (DEV_AUTH) {
     if (!isLocalRequest(c.req.url)) {
-      console.error(ACCESS.errors.devAuthOutsideLocal)
-      return c.json({ error: ACCESS.errors.devAuthOutsideLocal }, 500)
+      console.error(API_ERROR.devAuthOutsideLocal.message)
+      return respondWithError(c, API_ERROR.devAuthOutsideLocal)
     }
     return next()
   }
@@ -54,7 +53,7 @@ export const requireAccess = createMiddleware<{ Bindings: Env }>(async (c, next)
     !ACCESS_AUD ||
     !(await isValidAccessToken(token, ACCESS_TEAM_DOMAIN, ACCESS_AUD))
   ) {
-    return c.json({ error: ACCESS.errors.forbidden }, 403)
+    return respondWithError(c, API_ERROR.forbidden)
   }
   return next()
 })
