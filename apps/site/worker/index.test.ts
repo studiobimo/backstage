@@ -55,6 +55,12 @@ describe('site worker', () => {
     expect(headers.get('Permissions-Policy')).toContain('camera=()')
   })
 
+  it('answers /health', async () => {
+    const response = await get('/health')
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ ok: true })
+  })
+
   it('answers an unknown path with a 404', async () => {
     const response = await get('/nothing-here')
     expect(response.status).toBe(404)
