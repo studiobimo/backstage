@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": [".devtools/**", "**/components/ui/**"],
-  "ignoreDependencies": ["shadcn", "tailwindcss", "zod", "@studiobimo/backstage", "@cloudflare/vite-plugin"],
+  "ignoreDependencies": ["shadcn", "tailwindcss", "@studiobimo/backstage", "@cloudflare/vite-plugin"],
   "workspaces": {
     "apps/admin": { "entry": ["src/test/setup.ts"] }
   }

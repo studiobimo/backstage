@@ -46,3 +46,17 @@ export function defineRegistry(blocks: readonly RegisteredBlock[]): Registry {
     }
   }
 }
+
+export interface BlockDescription {
+  name: string
+  version: number
+  schema: z.core.JSONSchema.BaseSchema
+}
+
+export function describeBlocks(registry: Registry): BlockDescription[] {
+  return [...registry.blocks.values()].map(({ name, version }) => ({
+    name,
+    version,
+    schema: registry.jsonSchema(name)
+  }))
+}
