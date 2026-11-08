@@ -4,14 +4,8 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-24",
   "compatibility_flags": ["nodejs_compat"],
-  // No assets: every request reaches the Worker, so its headers cover every response. Pages
-  // come from KV snapshots and media from R2 once those bindings land.
   "observability": { "enabled": true },
   "upload_source_maps": true,
-  // The top level is local development. A deploy goes to the production environment, named
-  // <name>-production: make -C .devtools deploy ENV=production. It does not inherit bindings
-  // or vars from the top level, so it restates them. There is no development environment
-  // (ADR-0008).
   "env": {
     "production": {}
   }

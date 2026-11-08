@@ -103,6 +103,36 @@ make -C .devtools help    # all targets
 <!-- What an agent cannot infer from the code: formatting it must not hand-apply, invariants,
 where tests go, what cannot be tested locally. Keep each to one or two lines. -->
 
+### Code style: no comments, one source of truth
+
+This overrides "Comments say why, not what" in the Vite block below.
+
+- **No comments.** Never write an inline or block comment in a code file: no `//`, `/* */`,
+  `/** */`, `{/* */}`, JSON comments in `wrangler.jsonc`, or `#` lines in `.dev.vars.example` and
+  `_headers`. Directives a tool reads (`eslint-disable`, `@ts-expect-error`, `TODO`, `FIXME`)
+  are the only exception, and each needs a real reason.
+- **Refactor instead of explaining.** If code seems to need a comment, extract it into a
+  well-named helper or give the values excessively clear, descriptive names. The reason for a
+  decision belongs in `docs/` (an ADR), the PR description or the commit message.
+- **Strip comments with [uncomment](https://github.com/goldziher/uncomment)** before
+  committing: `uncomment -d -r -f --exclude '**/routeTree.gen.ts' --exclude '**/components/ui/**' apps packages`
+  (`-d -r -f` also removes doc, TODO and FIXME comments). It is pinned in the author's mise;
+  review the diff, since it leaves empty `{}` JSX expressions and can keep a comment line it
+  matches to a directive pattern.
+- **Single source of truth.** Domain logic, validation rules, schemas and configuration values
+  live in exactly one canonical place and are imported everywhere else.
+- **Eliminate duplication.** Replace copy-pasted snippets and repeated calculations with a shared
+  function, class or utility. Run `jscpd` and `knip` and act on what they report. This covers
+  application code, tests, build scripts and workflow configuration alike.
+- **Fewer lines through consolidation,** never through obfuscated one-liners. Clarity and
+  maintainability come first.
+- **Constants and configuration are grouped by domain in objects,** read as
+  `DOMAIN.group.name`, never as `DOMAIN_GROUP_NAME`:
+
+  ```ts
+  export const SESSION = { cookie: { name: 'session', maxAgeSeconds: 3600 } } as const
+  ```
+
 <!-- >>> template:vite -->
 ## Web app: Vite, React and TanStack
 

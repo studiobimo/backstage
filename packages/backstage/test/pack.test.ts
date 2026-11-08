@@ -5,9 +5,6 @@ import { join } from 'node:path'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-// What a client installs: the tarball pnpm pack makes, with prepack's fresh build of the
-// admin SPA in dist/client. A client's admin serves that folder as its assets, _headers and
-// all, so the SPA's security headers are only as good as what this tarball holds.
 const packageDir = join(import.meta.dirname, '..')
 const adminHeaders = join(packageDir, '../../apps/admin/public/_headers')
 let out: string
@@ -36,8 +33,6 @@ describe('the packed package', () => {
     expect(shipped).toContain('Content-Security-Policy:')
   })
 
-  // Vite inlines small fonts and images as data: URIs unless told not to, and the policy's
-  // font-src and img-src allow only 'self'.
   it('loads no data: URI from its stylesheets', () => {
     const stylesheets = tar('-tzf')
       .split('\n')
