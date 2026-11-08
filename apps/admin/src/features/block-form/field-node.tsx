@@ -8,6 +8,7 @@ import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
 import { cn } from '@/lib/utils'
 
 import { ListField } from './list-field.tsx'
+import { LocalizedField } from './localized-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
 import type { BlockFormApi } from './validation.ts'
 import { fieldName, type Path } from './value.ts'
@@ -148,6 +149,8 @@ export function FieldNode(props: NodeProps) {
       return <GroupNode {...props} spec={spec} />
     case 'list':
       return <ListField {...props} spec={spec} />
+    case 'localized':
+      return <LocalizedField {...props} spec={spec} />
     default:
       return <LeafNode {...props} />
   }

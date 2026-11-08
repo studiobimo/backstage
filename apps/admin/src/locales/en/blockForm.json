@@ -11,8 +11,6 @@
       "label": "Label"
     }
   },
-  "invalidSummary_one": "{{count}} field needs attention.",
-  "invalidSummary_other": "{{count}} fields need attention.",
   "list": {
     "add": "Add item",
     "item": "Item {{number}}",
@@ -23,6 +21,17 @@
     "emptyTitle": "No items yet",
     "emptyDescription": "Add the first item to {{label}}."
   },
+  "locale": {
+    "editing": "Editing language",
+    "hint": "Fields with a language badge change per language. The rest are shared.",
+    "perLanguage": "Translated separately for each language",
+    "missing": "Not translated",
+    "missingCount_one": "{{count}} missing",
+    "missingCount_other": "{{count}} missing",
+    "invalid_one": "{{count}} error",
+    "invalid_other": "{{count}} errors",
+    "copyFrom": "Copy {{language}}"
+  },
   "sort": {
     "handle": "Reorder {{item}}",
     "instructions": "To reorder, press space or enter to pick up the item, use the arrow keys to move it, then press space or enter again to drop it. Press escape to cancel.",
@@ -30,5 +39,7 @@
     "over": "{{item}} moved to position {{position}} of {{total}}.",
     "dropped": "{{item}} dropped in position {{position}} of {{total}}.",
     "cancelled": "Reordering cancelled. {{item}} went back to position {{position}} of {{total}}."
-  }
+  },
+  "invalidSummary_one": "{{count}} field needs attention.",
+  "invalidSummary_other": "{{count}} fields need attention."
 }

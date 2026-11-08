@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  type FieldSpec,
-  type JsonSchema,
-  parseBlockSchema,
-  UnsupportedSchemaError
-} from './spec.ts'
+import { parseBlockSchema, UnsupportedSchemaError, type FieldSpec } from './spec.ts'
 import { everyKind, everyKindSchema } from './test-fixtures.ts'
 import { blockValidator } from './validation.ts'
 
@@ -60,6 +55,18 @@ describe('parseBlockSchema', () => {
     })
   })
 
+  it('reads a localized field with the kind it wraps', () => {
+    expect(byKey('title')).toMatchObject({
+      kind: 'localized',
+      inner: { kind: 'text', minLength: 1 }
+    })
+    expect(byKey('alt')).toMatchObject({
+      kind: 'localized',
+      required: false,
+      inner: { kind: 'group', variant: 'link' }
+    })
+  })
+
   it('refuses a shape it cannot render', () => {
     expect(() => parseBlockSchema({ type: 'object', properties: { x: { type: 'null' } } })).toThrow(
       UnsupportedSchemaError
@@ -67,19 +74,20 @@ describe('parseBlockSchema', () => {
     expect(() => parseBlockSchema({ type: 'string' })).toThrow(UnsupportedSchemaError)
   })
 
-  it('refuses localized fields and rich text, which the form cannot edit yet', () => {
-    const refuses = (field: JsonSchema) =>
-      expect(() => parseBlockSchema({ type: 'object', properties: { field } })).toThrow(
-        UnsupportedSchemaError
-      )
-    refuses({ type: 'object', backstage: 'localized', additionalProperties: { type: 'string' } })
-    refuses({ type: 'object', backstage: 'richText' })
+  it('refuses rich text, which the form cannot edit yet', () => {
+    expect(() =>
+      parseBlockSchema({
+        type: 'object',
+        properties: { body: { type: 'object', backstage: 'richText' } }
+      })
+    ).toThrow(UnsupportedSchemaError)
   })
 })
 
 const validator = blockValidator(everyKindSchema)
 
 const incomplete = {
+  title: { en: '' },
   cta: { href: '' },
   picture: { id: 'x' },
   size: 'xl',
@@ -90,7 +98,8 @@ const incomplete = {
 }
 
 const complete = {
-  cta: { href: '/about', label: undefined },
+  title: { en: 'Hello', es: undefined },
+  cta: { href: '/about' },
   picture: { id: 'img-1' },
   size: 'm',
   columns: 3,
@@ -111,7 +120,7 @@ describe('blockValidator', () => {
 
   it('accepts what the block schema accepts, with its defaults applied', () => {
     expect(validator.parse(complete)).toEqual(
-      everyKind.parse({ ...complete, cta: { href: '/about' } })
+      everyKind.parse({ ...complete, title: { en: 'Hello' } })
     )
   })
 })

@@ -9,7 +9,14 @@ import type {
 
 import { parseBlockSchema } from './spec.ts'
 import { everyKindSchema } from './test-fixtures.ts'
-import { fieldName, initialGroup, summarize, type ValueByKind, withoutUndefined } from './value.ts'
+import {
+  fieldName,
+  initialGroup,
+  isBlank,
+  summarize,
+  type ValueByKind,
+  withoutUndefined
+} from './value.ts'
 
 describe('initialGroup', () => {
   const initial = initialGroup(parseBlockSchema(everyKindSchema))
@@ -19,7 +26,8 @@ describe('initialGroup', () => {
     expect(initial).not.toHaveProperty('ratio')
   })
 
-  it('starts lists empty, and uses the defaults the schema gives', () => {
+  it('starts localized fields and lists empty, and uses defaults', () => {
+    expect(initial.title).toEqual({})
     expect(initial.items).toEqual([])
     expect(initial.theme).toBe('light')
   })
@@ -36,16 +44,24 @@ describe('value helpers', () => {
     expect(fieldName(['slug'])).toBe('slug')
   })
 
-  it('summarizes a value as one line of text', () => {
-    expect(summarize({ href: '/about', label: 'About' })).toBe('/about · About')
-    expect(summarize(3)).toBe('3')
-    expect(summarize(true)).toBe('')
+  it('treats empty text, lists and groups of empty values as blank', () => {
+    expect(isBlank('')).toBe(true)
+    expect(isBlank([])).toBe(true)
+    expect(isBlank({ href: '', label: undefined })).toBe(true)
+    expect(isBlank(0)).toBe(false)
+    expect(isBlank(false)).toBe(false)
   })
 
   it('drops undefined entries the way JSON would', () => {
     expect(withoutUndefined({ a: undefined, b: [{ c: undefined, d: 1 }] })).toEqual({
       b: [{ d: 1 }]
     })
+  })
+
+  it('summarizes a value as one line of text', () => {
+    expect(summarize({ href: '/about', label: 'About' })).toBe('/about · About')
+    expect(summarize(3)).toBe('3')
+    expect(summarize(true)).toBe('')
   })
 })
 

@@ -22,6 +22,7 @@ import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
 import { cn } from '@/lib/utils'
 
 import { FieldNode, GroupFields, type NodeProps } from './field-node.tsx'
+import { useEditingLocale } from './locale-status.ts'
 import type { FieldSpec, ListSpec } from './spec.ts'
 import type { BlockFormApi } from './validation.ts'
 import {
@@ -48,9 +49,14 @@ function useItemKeys(length: number) {
   return { keys, setKeys }
 }
 
-function itemTitle(spec: FieldSpec, value: FieldValue | undefined): string {
+function itemTitle(spec: FieldSpec, value: FieldValue | undefined, locales: string[]): string {
+  if (spec.kind === 'localized' && isRecord(value)) {
+    return (
+      locales.map((locale) => itemTitle(spec.inner, value[locale], locales)).find(Boolean) ?? ''
+    )
+  }
   if (spec.kind !== 'group' || !isRecord(value)) return summarize(value)
-  return spec.fields.map((field) => itemTitle(field, value[field.key])).find(Boolean) ?? ''
+  return spec.fields.map((field) => itemTitle(field, value[field.key], locales)).find(Boolean) ?? ''
 }
 
 const SortableItems = lazy(() => import('./sortable-items.tsx'))
@@ -63,10 +69,13 @@ export interface SortableSlot {
 
 function useItemTitles(form: BlockFormApi, spec: ListSpec, path: Path, count: number) {
   const { t } = useTranslation('blockForm')
+  const { active, fallback } = useEditingLocale()
   return useStore(form.store, () =>
     Array.from({ length: count }, (_, index) => {
       const value = readValue(form.getFieldValue(fieldName([...path, index])))
-      return itemTitle(spec.item, value) || t('list.item', { number: index + 1 })
+      return (
+        itemTitle(spec.item, value, [active, fallback]) || t('list.item', { number: index + 1 })
+      )
     })
   )
 }
