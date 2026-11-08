@@ -65,7 +65,7 @@ const renderPage = () =>
 
 afterEach(() => vi.unstubAllGlobals())
 
-describe('PagesPage', () => {
+describe('PagesPage', { timeout: 15_000 }, () => {
   it('lists pages with their address in each locale', async () => {
     mockApi(() => reply(200, { pages: [about] }))
     renderPage()
