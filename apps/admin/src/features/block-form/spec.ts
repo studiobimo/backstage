@@ -65,7 +65,14 @@ export interface GroupSpec extends Common {
   fields: readonly FieldSpec[]
 }
 
-export type FieldSpec = TextSpec | NumberSpec | BooleanSpec | SelectSpec | GroupSpec
+export interface ListSpec extends Common {
+  kind: 'list'
+  item: FieldSpec
+  minItems?: number
+  maxItems?: number
+}
+
+export type FieldSpec = TextSpec | NumberSpec | BooleanSpec | SelectSpec | GroupSpec | ListSpec
 
 export class UnsupportedSchemaError extends Error {
   constructor(key: string) {
@@ -85,9 +92,23 @@ function groupFields(schema: JsonSchema): FieldSpec[] {
   )
 }
 
+function parseChild(schema: JsonSchema | undefined, key: string, required: boolean): FieldSpec {
+  if (!schema) throw new UnsupportedSchemaError(key)
+  return parseField(schema, key, required)
+}
+
 function parseStructured(schema: JsonSchema, common: Common): FieldSpec | undefined {
   if (schema.backstage === 'image' || schema.backstage === 'link') {
     return { ...common, kind: 'group', variant: schema.backstage, fields: groupFields(schema) }
+  }
+  if (schema.type === 'array') {
+    return {
+      ...common,
+      kind: 'list',
+      item: parseChild(schema.items, common.key, true),
+      minItems: schema.minItems,
+      maxItems: schema.maxItems
+    }
   }
   if (schema.type === 'object') return { ...common, kind: 'group', fields: groupFields(schema) }
   return undefined

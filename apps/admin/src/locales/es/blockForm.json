@@ -12,5 +12,23 @@
     }
   },
   "invalidSummary_one": "{{count}} campo necesita revisión.",
-  "invalidSummary_other": "{{count}} campos necesitan revisión."
+  "invalidSummary_other": "{{count}} campos necesitan revisión.",
+  "list": {
+    "add": "Añadir elemento",
+    "item": "Elemento {{number}}",
+    "remove": "Quitar {{item}}",
+    "hasErrors": "Tiene errores",
+    "count_one": "{{count}} elemento",
+    "count_other": "{{count}} elementos",
+    "emptyTitle": "Aún no hay elementos",
+    "emptyDescription": "Añade el primer elemento a {{label}}."
+  },
+  "sort": {
+    "handle": "Reordenar {{item}}",
+    "instructions": "Para reordenar, pulsa espacio o intro para tomar el elemento, muévelo con las flechas y vuelve a pulsar espacio o intro para soltarlo. Pulsa escape para cancelar.",
+    "picked": "Has tomado {{item}}. Está en la posición {{position}} de {{total}}.",
+    "over": "{{item}} está ahora en la posición {{position}} de {{total}}.",
+    "dropped": "Has soltado {{item}} en la posición {{position}} de {{total}}.",
+    "cancelled": "Reordenación cancelada. {{item}} vuelve a la posición {{position}} de {{total}}."
+  }
 }

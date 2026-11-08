@@ -15,6 +15,10 @@ export const everyKind = z.object({
     .string()
     .max(5)
     .regex(/^[a-z]+$/),
+  items: z
+    .array(z.object({ name: z.string().min(1) }))
+    .min(1)
+    .max(2),
   details: z.object({ credit: z.string().optional() })
 })
 

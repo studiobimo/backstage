@@ -39,6 +39,7 @@ describe('BlockForm fields', () => {
     expect(within(group('Cta')).getByRole('textbox', { name: 'Address' })).toBeInTheDocument()
     expect(within(group('Picture')).getByRole('textbox', { name: 'Image' })).toBeInTheDocument()
     expect(within(group('Details')).getByRole('textbox', { name: 'Credit' })).toBeInTheDocument()
+    expect(within(group('Items')).getByText('No items yet')).toBeInTheDocument()
   })
 
   it('marks optional fields and counts characters against a limit', async () => {
@@ -78,6 +79,7 @@ describe('BlockForm errors', () => {
       within(group('Cta')).getByRole('textbox', { name: 'Address' })
     ).toHaveAccessibleDescription('This field is required.')
     expect(textbox('Columns')).toHaveAccessibleDescription('This field is required.')
+    expect(group('Items')).toHaveTextContent('Add at least 1 items.')
     expect(screen.getByText(/fields need attention/)).toBeInTheDocument()
   })
 
@@ -86,6 +88,7 @@ describe('BlockForm errors', () => {
     const { user } = setup()
     await user.click(screen.getByRole('button', { name: 'Guardar' }))
     expect(textbox('Slug')).toHaveAccessibleDescription('Este campo es obligatorio.')
+    expect(group('Items')).toHaveTextContent('Añade al menos 1 elementos.')
     await user.type(textbox('Columns'), '9')
     await user.tab()
     expect(textbox('Columns')).toHaveValue('4')
@@ -104,6 +107,8 @@ describe('BlockForm content', () => {
     await user.click(screen.getByRole('switch', { name: /Featured/ }))
     await user.type(within(group('Cta')).getByRole('textbox', { name: 'Address' }), '/about')
     await user.type(within(group('Picture')).getByRole('textbox', { name: 'Image' }), 'img-1')
+    await user.click(screen.getByRole('button', { name: 'Add item' }))
+    await user.keyboard('One')
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(onSubmit).toHaveBeenCalledWith({
       cta: { href: '/about', label: '' },
@@ -113,8 +118,28 @@ describe('BlockForm content', () => {
       columns: 3,
       featured: true,
       slug: 'abc',
+      items: [{ name: 'One' }],
       details: {}
     })
+  })
+
+  it('adds and removes list items, up to the limit', async () => {
+    const { user } = setup()
+    await user.click(screen.getByRole('button', { name: 'Add item' }))
+    await user.keyboard('A')
+    const add = screen.getByRole('button', { name: 'Add item' })
+    await user.click(add)
+    expect(add).toBeDisabled()
+    expect(group('Items')).toHaveTextContent('2 items')
+    await user.click(screen.getByRole('button', { name: 'Remove A' }))
+    expect(group('Items')).toHaveTextContent('1 item')
+    expect(screen.queryByRole('button', { name: 'Remove A' })).not.toBeInTheDocument()
+  })
+
+  it('gives each item a named handle to reorder it with', async () => {
+    setup({ value: { items: [{ name: 'First' }, { name: 'Second' }] } })
+    expect(await screen.findByRole('button', { name: 'Reorder First' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reorder Second' })).toBeInTheDocument()
   })
 
   it('starts from the content it is given', () => {
