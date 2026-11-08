@@ -8,6 +8,7 @@ import { useFieldContext } from './contexts.ts'
 const issueShape = z.object({
   code: z.string(),
   origin: z.string().optional(),
+  format: z.string().optional(),
   expected: z.string().optional(),
   minimum: z.union([z.number(), z.bigint()]).optional(),
   maximum: z.union([z.number(), z.bigint()]).optional()
@@ -43,6 +44,8 @@ function issueKey(issue: Issue): string {
       return sizeIssueKey(issue)
     case 'invalid_value':
       return 'notChoice'
+    case 'invalid_format':
+      return issue.format === 'email' ? 'email' : 'format'
     default:
       return 'format'
   }

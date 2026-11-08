@@ -57,7 +57,14 @@ function itemTitle(spec: FieldSpec, value: FieldValue | undefined, locales: stri
     )
   }
   if (spec.kind !== 'group' || !isRecord(value)) return summarize(value)
-  return spec.fields.map((field) => itemTitle(field, value[field.key], locales)).find(Boolean) ?? ''
+  const labelFirst = [...spec.fields].sort(
+    (a, b) => Number(b.key === 'label') - Number(a.key === 'label')
+  )
+  return (
+    (spec.variant === 'link' ? labelFirst : spec.fields)
+      .map((field) => itemTitle(field, value[field.key], locales))
+      .find(Boolean) ?? ''
+  )
 }
 
 const SortableItems = lazy(() => import('@/components/sortable-items'))

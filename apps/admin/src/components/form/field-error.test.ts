@@ -20,6 +20,7 @@ describe('issueMessage', () => {
     expect(message(z.array(z.string()).min(2), [])).toBe('Add at least 2 items.')
     expect(message(z.enum(['a', 'b']), 'c')).toBe('Choose one of the options.')
     expect(message(z.string().regex(/^[a-z]+$/), 'A1')).toBe('Enter a valid value.')
+    expect(message(z.email(), 'nope')).toBe('Enter a valid email address.')
   })
 
   it('says a blank field is required, whatever rule it breaks', () => {

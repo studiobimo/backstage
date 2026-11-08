@@ -105,7 +105,7 @@ function SupportedBlockForm({
             />
           )}
           <GroupFields form={form} spec={parsed.root} path={[]} label="" />
-          <div className="flex items-center justify-end gap-3 border-t pt-4">
+          <div className="sticky bottom-0 z-10 flex items-center justify-end gap-3 border-t bg-background py-4">
             {attempted && issuePaths.length > 0 && (
               <p role="alert" className="text-destructive-foreground text-sm">
                 {t('invalidSummary', { count: issuePaths.length })}

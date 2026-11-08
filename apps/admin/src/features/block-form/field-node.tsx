@@ -116,30 +116,34 @@ export function GroupFields({ form, spec, path, translated, className }: GroupFi
 function GroupLegend({
   label,
   badge,
-  optional
+  optional,
+  section
 }: {
   label: string
   badge?: ReactNode
   optional?: boolean
+  section?: boolean
 }) {
   return (
     <FieldsetLegend className="mb-1 w-full">
-      <FieldHeading legend label={label} badge={badge} optional={optional} />
+      <FieldHeading legend section={section} label={label} badge={badge} optional={optional} />
     </FieldsetLegend>
   )
 }
 
 function GroupNode(props: NodeProps<GroupSpec>) {
   const { spec, label, chrome } = props
+  const section = props.path.length === 1 && !spec.variant
   return (
-    <Fieldset className="w-full max-w-none gap-3">
+    <Fieldset className={cn('w-full max-w-none gap-3', section && 'mt-2 gap-4 border-t pt-6')}>
       <GroupLegend
         label={label}
         badge={chrome?.badge}
         optional={!spec.required && !props.translated}
+        section={section}
       />
       {spec.description && <p className="text-muted-foreground text-xs">{spec.description}</p>}
-      <GroupFields {...props} className="border-s ps-4" />
+      <GroupFields {...props} className={section ? undefined : 'border-s ps-4'} />
       {chrome?.footer}
     </Fieldset>
   )
