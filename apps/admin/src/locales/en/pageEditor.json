@@ -24,5 +24,14 @@
     "added": "{{name}} added in position {{position}} of {{total}}.",
     "duplicated": "{{name}} duplicated. The copy is in position {{position}} of {{total}}.",
     "removed": "{{name}} removed. {{total}} blocks left."
+  },
+  "layout": {
+    "label": "Layout",
+    "description": "Whether this page shows the site’s header and footer, and how.",
+    "names": {
+      "default": "Default",
+      "minimal": "Minimal",
+      "bare": "Bare"
+    }
   }
 }

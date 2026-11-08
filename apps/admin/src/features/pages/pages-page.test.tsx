@@ -19,6 +19,7 @@ const about: Page = {
   id: 'p1',
   isHome: false,
   version: 1,
+  layout: 'default',
   updatedAt: 0,
   locales: [
     { locale: 'en', slug: 'about', title: 'About' },

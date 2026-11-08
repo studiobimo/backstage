@@ -8,7 +8,6 @@ import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
 import { GroupFields } from './field-node.tsx'
-import { type FormSection, SectionedFields } from './form-sections.tsx'
 import { EditingLocaleContext, hasLocalized, localeStatus } from './locale-status.ts'
 import { LocaleSwitcher } from './locale-switcher.tsx'
 import { type GroupSpec, type JsonSchema, parseBlockSchema } from './spec.ts'
@@ -26,7 +25,6 @@ export interface BlockFormProps {
   locales: readonly string[]
   value?: BlockValue
   onSubmit: (value: BlockValue) => void | Promise<void>
-  sections?: readonly FormSection[]
   className?: string
 }
 
@@ -66,7 +64,6 @@ function SupportedBlockForm({
   locales,
   value,
   onSubmit,
-  sections,
   className
 }: BlockFormProps & { parsed: ParsedBlock }) {
   const { t } = useTranslation('blockForm')
@@ -110,11 +107,7 @@ function SupportedBlockForm({
               onChange={setActive}
             />
           )}
-          {sections ? (
-            <SectionedFields form={form} root={parsed.root} sections={sections} />
-          ) : (
-            <GroupFields form={form} spec={parsed.root} path={[]} label="" />
-          )}
+          <GroupFields form={form} spec={parsed.root} path={[]} label="" />
           <div className="sticky bottom-10 z-10 flex items-center justify-end gap-3">
             {attempted && issuePaths.length > 0 && (
               <p role="alert" className="text-destructive-foreground text-sm">

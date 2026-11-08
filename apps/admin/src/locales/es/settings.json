@@ -13,18 +13,6 @@
     "general": {
       "title": "General",
       "description": "Lo básico que comparten todas las páginas: el nombre del sitio y la imagen que se usa al compartir un enlace."
-    },
-    "header": {
-      "title": "Cabecera",
-      "description": "La navegación en la parte superior de cada página."
-    },
-    "footer": {
-      "title": "Pie de página",
-      "description": "Lo que cierra cada página: una línea breve y algunos enlaces."
-    },
-    "contact": {
-      "title": "Contacto",
-      "description": "Cómo pueden ponerse en contacto contigo los visitantes."
     }
   },
   "fields": {
@@ -35,34 +23,20 @@
     "defaultSocialImage": {
       "title": "Imagen social predeterminada",
       "description": "Se usa cuando una página se comparte sin una imagen propia."
-    },
-    "navigation": {
-      "title": "Enlaces de navegación",
-      "description": "Se muestran en este orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
+    }
+  },
+  "slots": {
+    "header": {
+      "title": "Cabecera",
+      "description": "Lo que abre cada página que la muestra. Sus campos vienen del bloque de cabecera de este sitio."
     },
     "footer": {
       "title": "Pie de página",
-      "text": {
-        "title": "Texto del pie",
-        "description": "Una línea breve, como el aviso de derechos de autor."
-      },
-      "links": {
-        "title": "Enlaces del pie",
-        "description": "Se muestran en este orden. Las direcciones empiezan por https://, /, #, mailto: o tel:."
-      }
-    },
-    "contact": {
-      "title": "Datos de contacto",
-      "email": {
-        "title": "Correo electrónico",
-        "description": "Donde los visitantes pueden escribirte."
-      },
-      "phone": {
-        "title": "Teléfono"
-      },
-      "address": {
-        "title": "Dirección"
-      }
+      "description": "Lo que cierra cada página que lo muestra. Sus campos vienen del bloque de pie de este sitio."
     }
+  },
+  "variant": {
+    "label": "Diseño",
+    "description": "El sitio ofrece más de uno. Cambiarlo empieza los campos desde cero."
   }
 }
