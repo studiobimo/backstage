@@ -1,0 +1,14 @@
+# The admin SPA's security headers. Only /api/* reaches the Worker (wrangler.jsonc's
+# run_worker_first), so the HTML and assets never pass through secureHeaders() and only this
+# file can set their headers. It ships in the package's dist/client, where a client's admin
+# serves it as it is. The policy allows nothing the SPA does not use: no inline script or
+# style, nothing from another origin.
+/*
+    Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+    Cross-Origin-Opener-Policy: same-origin
+    Cross-Origin-Resource-Policy: same-origin
+    Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()
+    Referrer-Policy: no-referrer
+    Strict-Transport-Security: max-age=15552000; includeSubDomains
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY

@@ -1,4 +1,5 @@
 {
   "extends": "../../.devtools/vite/tsconfig.package.json",
-  "compilerOptions": { "lib": ["ES2024"], "types": [] }
+  "compilerOptions": { "lib": ["ES2024"], "types": ["node"] },
+  "include": ["src", "test", "vitest.config.ts"]
 }

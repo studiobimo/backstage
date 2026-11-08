@@ -1,3 +1,4 @@
+import { CSPProvider } from '@base-ui/react/csp-provider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
@@ -13,10 +14,13 @@ startTheme()
 const queryClient = new QueryClient()
 const router = createAppRouter(queryClient)
 
+// public/_headers allows no inline <style>, so Base UI's own come from index.css instead.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <CSPProvider disableStyleElements>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </CSPProvider>
   </StrictMode>
 )
