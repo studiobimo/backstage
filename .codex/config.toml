@@ -1,2 +1,6 @@
 model_context_window = 500000
 model_auto_compact_token_limit = 500000
+
+[mcp_servers.shadcn]
+command = "pnpm"
+args = ["--filter", "backstage-admin", "exec", "shadcn", "mcp"]
