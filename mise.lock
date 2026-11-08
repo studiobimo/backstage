@@ -286,6 +286,12 @@ backend = "pipx:pre-commit-hooks"
 specifiers = ["6.0.0"]
 uv = { path = ".mise/locks/pipx-pre-commit-hooks/6.0.0", digest = "sha256:4d4735c1c58306c3b9637d1edd4d38274af1fae3129981d03052101e721669bc" }
 
+[[tools."pipx:sqlfluff"]]
+version = "4.5.0"
+backend = "pipx:sqlfluff"
+specifiers = ["4.5.0"]
+uv = { path = ".mise/locks/pipx-sqlfluff/4.5.0", digest = "sha256:19db3c622bb7114fd013b52f3bf72f0e37c0be91ef3c693c45d492021847e07a" }
+
 [[tools.pnpm]]
 version = "12.14.0"
 backend = "aqua:pnpm/pnpm"
