@@ -30,15 +30,16 @@ export function FieldHeading({
   label,
   optional,
   badge,
-  legend
-}: FieldChromeProps & { legend?: boolean }) {
+  legend,
+  labelId
+}: FieldChromeProps & { legend?: boolean; labelId?: string }) {
   const { t } = useTranslation('form')
   return (
     <span className="flex w-full flex-wrap items-center gap-2">
       {legend ? (
         <span className="font-medium text-base/4.5 sm:text-sm/4">{label}</span>
       ) : (
-        <FieldLabel>{label}</FieldLabel>
+        <FieldLabel id={labelId}>{label}</FieldLabel>
       )}
       {optional && <span className="text-muted-foreground text-xs">{t('optional')}</span>}
       {badge && <span className="ms-auto flex items-center gap-1.5">{badge}</span>}
@@ -47,14 +48,26 @@ export function FieldHeading({
 }
 
 interface FieldFrameProps extends FieldChromeProps {
+  message?: string
+  labelId?: string
+  errorId?: string
   children: ReactNode
   className?: string
   inline?: boolean
 }
 
-function FieldFrame({ children, className, inline, ...chrome }: FieldFrameProps) {
+export function FieldFrame({
+  children,
+  className,
+  inline,
+  labelId,
+  errorId,
+  message: shownMessage,
+  ...chrome
+}: FieldFrameProps) {
   const field = useFieldContext<never>()
-  const message = useFieldError()
+  const fieldMessage = useFieldError()
+  const message = shownMessage ?? fieldMessage
   const description = chrome.description && (
     <FieldDescription>{chrome.description}</FieldDescription>
   )
@@ -68,19 +81,21 @@ function FieldFrame({ children, className, inline, ...chrome }: FieldFrameProps)
       {inline ? (
         <span className="flex w-full items-center justify-between gap-4">
           <span className="flex flex-col gap-1">
-            <FieldHeading {...chrome} />
+            <FieldHeading {...chrome} labelId={labelId} />
             {description}
           </span>
           {children}
         </span>
       ) : (
         <>
-          <FieldHeading {...chrome} />
+          <FieldHeading {...chrome} labelId={labelId} />
           {children}
           {description}
         </>
       )}
-      <FieldError match={Boolean(message)}>{message}</FieldError>
+      <FieldError id={errorId} match={Boolean(message)}>
+        {message}
+      </FieldError>
       {chrome.footer}
     </Field>
   )

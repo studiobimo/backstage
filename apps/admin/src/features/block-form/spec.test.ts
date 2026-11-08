@@ -16,8 +16,9 @@ describe('parseBlockSchema', () => {
     expect(fields.map((field) => field.key)).toEqual(Object.keys(everyKindSchema.properties ?? {}))
   })
 
-  it('reads text and its limits', () => {
+  it('reads text, rich text and their limits', () => {
     expect(byKey('slug')).toMatchObject({ kind: 'text', required: true, maxLength: 5 })
+    expect(byKey('note')).toMatchObject({ kind: 'richText', required: false })
   })
 
   it('reads numbers, booleans and selects', () => {
@@ -60,6 +61,7 @@ describe('parseBlockSchema', () => {
       kind: 'localized',
       inner: { kind: 'text', minLength: 1 }
     })
+    expect(byKey('body')).toMatchObject({ kind: 'localized', inner: { kind: 'richText' } })
     expect(byKey('alt')).toMatchObject({
       kind: 'localized',
       required: false,
@@ -72,15 +74,6 @@ describe('parseBlockSchema', () => {
       UnsupportedSchemaError
     )
     expect(() => parseBlockSchema({ type: 'string' })).toThrow(UnsupportedSchemaError)
-  })
-
-  it('refuses rich text, which the form cannot edit yet', () => {
-    expect(() =>
-      parseBlockSchema({
-        type: 'object',
-        properties: { body: { type: 'object', backstage: 'richText' } }
-      })
-    ).toThrow(UnsupportedSchemaError)
   })
 })
 
@@ -99,6 +92,7 @@ const incomplete = {
 
 const complete = {
   title: { en: 'Hello', es: undefined },
+  body: {},
   cta: { href: '/about' },
   picture: { id: 'img-1' },
   size: 'm',

@@ -14,6 +14,7 @@ import {
   type BlockFormApi,
   type BlockValidator,
   blockValidator,
+  ShownIssuesContext,
   useBlockForm
 } from './validation.ts'
 import { type BlockValue, initialGroup, readValue, isRecord } from './value.ts'
@@ -24,6 +25,8 @@ export interface BlockFormProps {
   value?: BlockValue
   onSubmit: (value: BlockValue) => void | Promise<void>
 }
+
+const noIssues: readonly never[] = []
 
 interface ParsedBlock {
   root: GroupSpec
@@ -83,36 +86,38 @@ function SupportedBlockForm({
 
   return (
     <EditingLocaleContext.Provider value={editing}>
-      <Form
-        noValidate
-        className="flex w-full max-w-2xl flex-col gap-6"
-        onSubmit={(event) => {
-          event.preventDefault()
-          submit()
-        }}
-      >
-        {locales.length > 1 && hasLocalized(parsed.root) && (
-          <LocaleSwitcher
-            locales={locales}
-            active={active}
-            status={status}
-            showInvalid={attempted}
-            onChange={setActive}
-          />
-        )}
-        <GroupFields form={form} spec={parsed.root} path={[]} label="" />
-        <div className="flex items-center justify-end gap-3 border-t pt-4">
-          {attempted && issuePaths.length > 0 && (
-            <p role="alert" className="text-destructive-foreground text-sm">
-              {t('invalidSummary', { count: issuePaths.length })}
-            </p>
+      <ShownIssuesContext.Provider value={attempted ? issuePaths : noIssues}>
+        <Form
+          noValidate
+          className="flex w-full max-w-2xl flex-col gap-6"
+          onSubmit={(event) => {
+            event.preventDefault()
+            submit()
+          }}
+        >
+          {locales.length > 1 && hasLocalized(parsed.root) && (
+            <LocaleSwitcher
+              locales={locales}
+              active={active}
+              status={status}
+              showInvalid={attempted}
+              onChange={setActive}
+            />
           )}
-          <Button type="submit" disabled={submitting}>
-            {submitting && <Spinner />}
-            {t('save')}
-          </Button>
-        </div>
-      </Form>
+          <GroupFields form={form} spec={parsed.root} path={[]} label="" />
+          <div className="flex items-center justify-end gap-3 border-t pt-4">
+            {attempted && issuePaths.length > 0 && (
+              <p role="alert" className="text-destructive-foreground text-sm">
+                {t('invalidSummary', { count: issuePaths.length })}
+              </p>
+            )}
+            <Button type="submit" disabled={submitting}>
+              {submitting && <Spinner />}
+              {t('save')}
+            </Button>
+          </div>
+        </Form>
+      </ShownIssuesContext.Provider>
     </EditingLocaleContext.Provider>
   )
 }

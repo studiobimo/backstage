@@ -122,6 +122,109 @@ describe('BlockForm locales', () => {
   })
 })
 
+const richDoc = {
+  type: 'doc',
+  content: [
+    { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Menu' }] },
+    {
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'Fresh', marks: [{ type: 'bold' }] },
+        { type: 'hardBreak' },
+        { type: 'text', text: 'daily', marks: [{ type: 'italic' }] }
+      ]
+    },
+    {
+      type: 'bulletList',
+      content: [
+        {
+          type: 'listItem',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'One' }] }]
+        }
+      ]
+    },
+    {
+      type: 'orderedList',
+      attrs: { start: 1, type: null },
+      content: [
+        {
+          type: 'listItem',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Two' }] }]
+        }
+      ]
+    },
+    {
+      type: 'blockquote',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Quote' }] }]
+    }
+  ]
+}
+
+describe('BlockForm rich text', () => {
+  afterEach(restoreEnglish)
+
+  it('edits rich text with a labelled editor and a formatting toolbar', async () => {
+    setup()
+    expect(await screen.findByRole('textbox', { name: 'Body' })).toHaveAttribute(
+      'contenteditable',
+      'true'
+    )
+    const toolbar = screen.getAllByRole('toolbar', { name: 'Formatting' })[0]
+    for (const tool of [
+      'Bold',
+      'Italic',
+      'Heading',
+      'Subheading',
+      'Bulleted list',
+      'Numbered list',
+      'Quote',
+      'Link'
+    ]) {
+      expect(within(toolbar).getByRole('button', { name: tool })).toBeInTheDocument()
+    }
+  })
+
+  it('keeps every node rich text allows, unchanged, through the editor', async () => {
+    const { user, onSubmit } = setup({
+      value: {
+        note: richDoc,
+        slug: 'abc',
+        columns: 1,
+        size: 's',
+        cta: { href: '/' },
+        picture: { id: 'i' },
+        items: [{ name: 'x' }]
+      }
+    })
+    expect(await screen.findByRole('textbox', { name: /Note/ })).toHaveTextContent('Menu')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ note: richDoc }))
+  })
+})
+
+describe('BlockForm rich text errors', () => {
+  afterEach(restoreEnglish)
+
+  it('shows an error on the editor when its content breaks the schema', async () => {
+    const unsafe = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'x', marks: [{ type: 'link', attrs: { href: 'ftp://x' } }] }
+          ]
+        }
+      ]
+    }
+    const { user } = setup({ value: { note: unsafe } })
+    const note = await screen.findByRole('textbox', { name: /Note/ })
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(note).toHaveAttribute('aria-invalid', 'true')
+    expect(note).toHaveAccessibleDescription(/formatting the site cannot show/)
+  })
+})
+
 describe('BlockForm content', () => {
   afterEach(restoreEnglish)
 
@@ -139,6 +242,7 @@ describe('BlockForm content', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(onSubmit).toHaveBeenCalledWith({
       title: { en: 'Hello' },
+      body: {},
       alt: {},
       cta: { href: '/about', label: '' },
       picture: { id: 'img-1', alt: '' },

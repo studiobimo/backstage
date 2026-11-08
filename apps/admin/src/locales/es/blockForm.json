@@ -40,6 +40,27 @@
     "dropped": "Has soltado {{item}} en la posición {{position}} de {{total}}.",
     "cancelled": "Reordenación cancelada. {{item}} vuelve a la posición {{position}} de {{total}}."
   },
+  "richText": {
+    "toolbar": "Formato",
+    "tools": {
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "heading2": "Título",
+      "heading3": "Subtítulo",
+      "bulletList": "Lista con viñetas",
+      "orderedList": "Lista numerada",
+      "blockquote": "Cita",
+      "link": "Enlace"
+    },
+    "link": {
+      "address": "Dirección del enlace",
+      "placeholder": "https://… o /pagina",
+      "invalid": "Usa una dirección que empiece por https://, /, #, mailto: o tel:.",
+      "apply": "Aplicar",
+      "remove": "Quitar enlace"
+    },
+    "invalid": "Este texto tiene un formato que el sitio no puede mostrar. Quítalo e inténtalo de nuevo."
+  },
   "invalidSummary_one": "{{count}} campo necesita revisión.",
   "invalidSummary_other": "{{count}} campos necesitan revisión."
 }

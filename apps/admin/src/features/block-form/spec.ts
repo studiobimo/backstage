@@ -43,6 +43,10 @@ interface TextSpec extends Common, StringConstraints {
   kind: 'text'
 }
 
+interface RichTextSpec extends Common {
+  kind: 'richText'
+}
+
 interface NumberSpec extends Common {
   kind: 'number'
   integer: boolean
@@ -78,7 +82,14 @@ export interface LocalizedSpec extends Common {
 }
 
 export type FieldSpec =
-  TextSpec | NumberSpec | BooleanSpec | SelectSpec | GroupSpec | ListSpec | LocalizedSpec
+  | TextSpec
+  | RichTextSpec
+  | NumberSpec
+  | BooleanSpec
+  | SelectSpec
+  | GroupSpec
+  | ListSpec
+  | LocalizedSpec
 
 export class UnsupportedSchemaError extends Error {
   constructor(key: string) {
@@ -147,7 +158,7 @@ function parseScalar(schema: JsonSchema, common: Common): FieldSpec | undefined 
 function parseField(schema: JsonSchema, key: string, required: boolean): FieldSpec {
   const { title, description } = schema
   const common: Common = { key, title, description, required, defaultValue: schema.default }
-  if (schema.backstage === 'richText') throw new UnsupportedSchemaError(key)
+  if (schema.backstage === 'richText') return { ...common, kind: 'richText' }
   const spec = parseStructured(schema, common) ?? parseScalar(schema, common)
   if (!spec) throw new UnsupportedSchemaError(key)
   return spec

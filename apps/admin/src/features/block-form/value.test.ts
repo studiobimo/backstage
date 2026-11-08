@@ -7,6 +7,8 @@ import type {
   TextFieldValue
 } from '@/components/form/fields'
 
+import type { RichTextFieldValue } from './rich-text-field.tsx'
+
 import { parseBlockSchema } from './spec.ts'
 import { everyKindSchema } from './test-fixtures.ts'
 import {
@@ -23,6 +25,7 @@ describe('initialGroup', () => {
 
   it('starts required text empty and optional fields absent', () => {
     expect(initial.slug).toBe('')
+    expect(initial).not.toHaveProperty('note')
     expect(initial).not.toHaveProperty('ratio')
   })
 
@@ -58,6 +61,15 @@ describe('value helpers', () => {
     })
   })
 
+  it('reads rich text as its plain text', () => {
+    const doc = {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hola' }] }]
+    }
+    expect(summarize(doc)).toBe('Hola')
+    expect(isBlank({ type: 'doc', content: [{ type: 'paragraph' }] })).toBe(true)
+  })
+
   it('summarizes a value as one line of text', () => {
     expect(summarize({ href: '/about', label: 'About' })).toBe('/about · About')
     expect(summarize(3)).toBe('3')
@@ -68,6 +80,7 @@ describe('value helpers', () => {
 describe('the control for each field kind', () => {
   it('edits exactly the value that kind stores', () => {
     expectTypeOf<TextFieldValue>().toEqualTypeOf<ValueByKind['text'] | undefined>()
+    expectTypeOf<RichTextFieldValue>().toEqualTypeOf<ValueByKind['richText'] | undefined>()
     expectTypeOf<NumberFieldValue>().toEqualTypeOf<ValueByKind['number'] | undefined>()
     expectTypeOf<SwitchFieldValue>().toEqualTypeOf<ValueByKind['boolean'] | undefined>()
     expectTypeOf<SelectFieldValue>().toEqualTypeOf<ValueByKind['select'] | undefined>()

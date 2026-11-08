@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 
 import { ListField } from './list-field.tsx'
 import { LocalizedField } from './localized-field.tsx'
+import { RichTextField } from './rich-text-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
 import type { BlockFormApi } from './validation.ts'
 import { fieldName, type Path } from './value.ts'
@@ -52,6 +53,8 @@ function LeafNode({ form, spec, path, label, chrome, translated, icon }: NodePro
     <form.AppField name={fieldName(path)}>
       {(field) => {
         switch (spec.kind) {
+          case 'richText':
+            return <RichTextField {...props} />
           case 'text':
             return (
               <field.TextField

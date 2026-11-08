@@ -40,6 +40,27 @@
     "dropped": "{{item}} dropped in position {{position}} of {{total}}.",
     "cancelled": "Reordering cancelled. {{item}} went back to position {{position}} of {{total}}."
   },
+  "richText": {
+    "toolbar": "Formatting",
+    "tools": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "heading2": "Heading",
+      "heading3": "Subheading",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "blockquote": "Quote",
+      "link": "Link"
+    },
+    "link": {
+      "address": "Link address",
+      "placeholder": "https://… or /page",
+      "invalid": "Use an address that starts with https://, /, #, mailto: or tel:.",
+      "apply": "Apply",
+      "remove": "Remove link"
+    },
+    "invalid": "This text has formatting the site cannot show. Remove it and try again."
+  },
   "invalidSummary_one": "{{count}} field needs attention.",
   "invalidSummary_other": "{{count}} fields need attention."
 }
