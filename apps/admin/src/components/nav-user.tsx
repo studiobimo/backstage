@@ -10,7 +10,6 @@ import {
   useSidebar
 } from '@/components/ui/sidebar'
 
-// A placeholder until sign-in exists (M5): there is no user to show, so it says so.
 export function NavUser() {
   const { t } = useTranslation()
   const { isMobile } = useSidebar()

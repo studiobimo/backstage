@@ -49,7 +49,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-/** Every type style on one page, at /type, for reviewing the fonts in place. */
 export function TypeSpecimen() {
   const { t } = useTranslation(['specimen', 'common'])
   return (

@@ -24,7 +24,6 @@ export function NavSecondary(props: ComponentProps<typeof SidebarGroup>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            {/* A placeholder: there is no help to open yet. */}
             <SidebarMenuButton size="sm" render={<button type="button" />}>
               <LifeBuoy />
               <span>{t('nav.support')}</span>
