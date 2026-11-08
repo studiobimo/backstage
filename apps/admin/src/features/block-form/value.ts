@@ -15,6 +15,7 @@ export interface ValueByKind {
   select: string | number
   group: BlockValue
   list: FieldValue[]
+  localized: BlockValue
 }
 
 const fieldValue: z.ZodType<FieldValue> = z.lazy(() =>
@@ -43,6 +44,13 @@ export const fieldName = (path: Path): string =>
 export const isRecord = (value: FieldValue | undefined): value is BlockValue =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
+export function isBlank(value: FieldValue | undefined): boolean {
+  if (value === undefined || value === null || value === '') return true
+  if (Array.isArray(value)) return value.length === 0
+  if (isRecord(value)) return Object.values(value).every(isBlank)
+  return false
+}
+
 export function initialValue(spec: FieldSpec): FieldValue | undefined {
   if (spec.defaultValue !== undefined) return spec.defaultValue
   switch (spec.kind) {
@@ -54,6 +62,8 @@ export function initialValue(spec: FieldSpec): FieldValue | undefined {
       return spec.required ? initialGroup(spec) : undefined
     case 'list':
       return []
+    case 'localized':
+      return {}
     default:
       return undefined
   }

@@ -11,8 +11,6 @@
       "label": "Texto"
     }
   },
-  "invalidSummary_one": "{{count}} campo necesita revisión.",
-  "invalidSummary_other": "{{count}} campos necesitan revisión.",
   "list": {
     "add": "Añadir elemento",
     "item": "Elemento {{number}}",
@@ -23,6 +21,17 @@
     "emptyTitle": "Aún no hay elementos",
     "emptyDescription": "Añade el primer elemento a {{label}}."
   },
+  "locale": {
+    "editing": "Idioma de edición",
+    "hint": "Los campos con la etiqueta de idioma cambian según el idioma. El resto se comparte.",
+    "perLanguage": "Se traduce por separado en cada idioma",
+    "missing": "Sin traducir",
+    "missingCount_one": "{{count}} sin traducir",
+    "missingCount_other": "{{count}} sin traducir",
+    "invalid_one": "{{count}} error",
+    "invalid_other": "{{count}} errores",
+    "copyFrom": "Copiar {{language}}"
+  },
   "sort": {
     "handle": "Reordenar {{item}}",
     "instructions": "Para reordenar, pulsa espacio o intro para tomar el elemento, muévelo con las flechas y vuelve a pulsar espacio o intro para soltarlo. Pulsa escape para cancelar.",
@@ -30,5 +39,7 @@
     "over": "{{item}} está ahora en la posición {{position}} de {{total}}.",
     "dropped": "Has soltado {{item}} en la posición {{position}} de {{total}}.",
     "cancelled": "Reordenación cancelada. {{item}} vuelve a la posición {{position}} de {{total}}."
-  }
+  },
+  "invalidSummary_one": "{{count}} campo necesita revisión.",
+  "invalidSummary_other": "{{count}} campos necesitan revisión."
 }

@@ -72,7 +72,13 @@ export interface ListSpec extends Common {
   maxItems?: number
 }
 
-export type FieldSpec = TextSpec | NumberSpec | BooleanSpec | SelectSpec | GroupSpec | ListSpec
+export interface LocalizedSpec extends Common {
+  kind: 'localized'
+  inner: FieldSpec
+}
+
+export type FieldSpec =
+  TextSpec | NumberSpec | BooleanSpec | SelectSpec | GroupSpec | ListSpec | LocalizedSpec
 
 export class UnsupportedSchemaError extends Error {
   constructor(key: string) {
@@ -98,6 +104,14 @@ function parseChild(schema: JsonSchema | undefined, key: string, required: boole
 }
 
 function parseStructured(schema: JsonSchema, common: Common): FieldSpec | undefined {
+  const { key } = common
+  if (schema.backstage === 'localized') {
+    return {
+      ...common,
+      kind: 'localized',
+      inner: parseChild(schema.additionalProperties, key, true)
+    }
+  }
   if (schema.backstage === 'image' || schema.backstage === 'link') {
     return { ...common, kind: 'group', variant: schema.backstage, fields: groupFields(schema) }
   }
@@ -105,7 +119,7 @@ function parseStructured(schema: JsonSchema, common: Common): FieldSpec | undefi
     return {
       ...common,
       kind: 'list',
-      item: parseChild(schema.items, common.key, true),
+      item: parseChild(schema.items, key, true),
       minItems: schema.minItems,
       maxItems: schema.maxItems
     }
@@ -133,9 +147,7 @@ function parseScalar(schema: JsonSchema, common: Common): FieldSpec | undefined 
 function parseField(schema: JsonSchema, key: string, required: boolean): FieldSpec {
   const { title, description } = schema
   const common: Common = { key, title, description, required, defaultValue: schema.default }
-  if (schema.backstage === 'richText' || schema.backstage === 'localized') {
-    throw new UnsupportedSchemaError(key)
-  }
+  if (schema.backstage === 'richText') throw new UnsupportedSchemaError(key)
   const spec = parseStructured(schema, common) ?? parseScalar(schema, common)
   if (!spec) throw new UnsupportedSchemaError(key)
   return spec

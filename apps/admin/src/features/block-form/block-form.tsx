@@ -1,5 +1,5 @@
 import { useStore } from '@tanstack/react-form'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,8 @@ import { Form } from '@/components/ui/form'
 import { Spinner } from '@/components/ui/spinner'
 
 import { GroupFields } from './field-node.tsx'
+import { EditingLocaleContext, hasLocalized, localeStatus } from './locale-status.ts'
+import { LocaleSwitcher } from './locale-switcher.tsx'
 import { type GroupSpec, type JsonSchema, parseBlockSchema } from './spec.ts'
 import {
   type BlockFormApi,
@@ -14,10 +16,11 @@ import {
   blockValidator,
   useBlockForm
 } from './validation.ts'
-import { type BlockValue, initialGroup } from './value.ts'
+import { type BlockValue, initialGroup, readValue, isRecord } from './value.ts'
 
 export interface BlockFormProps {
   schema: JsonSchema
+  locales: readonly string[]
   value?: BlockValue
   onSubmit: (value: BlockValue) => void | Promise<void>
 }
@@ -35,47 +38,82 @@ function parseOrNull(schema: JsonSchema): ParsedBlock | null {
   }
 }
 
-function useIssueCount(form: BlockFormApi, parsed: ParsedBlock) {
+function useLocaleStatus(form: BlockFormApi, parsed: ParsedBlock, locales: readonly string[]) {
   const values = useStore(form.store, (state) => state.values)
-  return useMemo(
-    () => parsed.validator.safeParse(values).error?.issues.length ?? 0,
-    [values, parsed]
-  )
+  return useMemo(() => {
+    const result = parsed.validator.safeParse(values)
+    const issuePaths = result.error?.issues.map((issue) => issue.path) ?? []
+    const current = readValue(values)
+    const byLocale = localeStatus(
+      parsed.root,
+      isRecord(current) ? current : {},
+      issuePaths,
+      locales
+    )
+    return { byLocale, issuePaths }
+  }, [values, parsed, locales])
 }
 
-function SupportedBlockForm({ parsed, value, onSubmit }: BlockFormProps & { parsed: ParsedBlock }) {
+function SupportedBlockForm({
+  parsed,
+  locales,
+  value,
+  onSubmit
+}: BlockFormProps & { parsed: ParsedBlock }) {
   const { t } = useTranslation('blockForm')
+  const fallback = locales[0] ?? ''
+  const [active, setActive] = useState(fallback)
   const form = useBlockForm({
     validator: parsed.validator,
     initial: { ...initialGroup(parsed.root), ...value },
     onSubmit
   })
-  const issues = useIssueCount(form, parsed)
+  const { byLocale: status, issuePaths } = useLocaleStatus(form, parsed, locales)
   const attempted = useStore(form.store, (state) => state.submissionAttempts > 0)
   const submitting = useStore(form.store, (state) => state.isSubmitting)
+  const editing = useMemo(() => ({ locales, active, fallback }), [locales, active, fallback])
+
+  function submit() {
+    void form.handleSubmit().then(() => {
+      const invalidHere = status[active]?.invalid
+      const firstInvalid = locales.find((locale) => status[locale]?.invalid)
+      if (!invalidHere && firstInvalid) setActive(firstInvalid)
+    })
+  }
 
   return (
-    <Form
-      noValidate
-      className="flex w-full max-w-2xl flex-col gap-6"
-      onSubmit={(event) => {
-        event.preventDefault()
-        void form.handleSubmit()
-      }}
-    >
-      <GroupFields form={form} spec={parsed.root} path={[]} label="" />
-      <div className="flex items-center justify-end gap-3 border-t pt-4">
-        {attempted && issues > 0 && (
-          <p role="alert" className="text-destructive-foreground text-sm">
-            {t('invalidSummary', { count: issues })}
-          </p>
+    <EditingLocaleContext.Provider value={editing}>
+      <Form
+        noValidate
+        className="flex w-full max-w-2xl flex-col gap-6"
+        onSubmit={(event) => {
+          event.preventDefault()
+          submit()
+        }}
+      >
+        {locales.length > 1 && hasLocalized(parsed.root) && (
+          <LocaleSwitcher
+            locales={locales}
+            active={active}
+            status={status}
+            showInvalid={attempted}
+            onChange={setActive}
+          />
         )}
-        <Button type="submit" disabled={submitting}>
-          {submitting && <Spinner />}
-          {t('save')}
-        </Button>
-      </div>
-    </Form>
+        <GroupFields form={form} spec={parsed.root} path={[]} label="" />
+        <div className="flex items-center justify-end gap-3 border-t pt-4">
+          {attempted && issuePaths.length > 0 && (
+            <p role="alert" className="text-destructive-foreground text-sm">
+              {t('invalidSummary', { count: issuePaths.length })}
+            </p>
+          )}
+          <Button type="submit" disabled={submitting}>
+            {submitting && <Spinner />}
+            {t('save')}
+          </Button>
+        </div>
+      </Form>
+    </EditingLocaleContext.Provider>
   )
 }
 

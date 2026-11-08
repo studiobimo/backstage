@@ -1,9 +1,10 @@
-import { image, link } from '@studiobimo/backstage'
+import { image, link, localized } from '@studiobimo/backstage'
 import { z } from 'zod'
 
 import type { JsonSchema } from './spec.ts'
 
 export const everyKind = z.object({
+  title: localized(z.string().min(1)),
   cta: link(),
   picture: image(),
   theme: z.enum(['light', 'dark']).default('light'),
@@ -19,7 +20,10 @@ export const everyKind = z.object({
     .array(z.object({ name: z.string().min(1) }))
     .min(1)
     .max(2),
-  details: z.object({ credit: z.string().optional() })
+  details: z.object({ credit: z.string().optional() }),
+  alt: localized(link()).optional()
 })
 
 export const everyKindSchema = z.toJSONSchema(everyKind, { io: 'input' }) as JsonSchema
+
+export const locales = ['en', 'es'] as const

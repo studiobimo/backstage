@@ -5,12 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import i18n from '@/i18n/config'
 
 import { BlockForm } from './block-form.tsx'
-import { everyKindSchema } from './test-fixtures.ts'
+import { everyKindSchema, locales } from './test-fixtures.ts'
 
 function setup(props: Partial<React.ComponentProps<typeof BlockForm>> = {}) {
   const onSubmit = vi.fn()
   const user = userEvent.setup()
-  render(<BlockForm schema={everyKindSchema} onSubmit={onSubmit} {...props} />)
+  render(<BlockForm schema={everyKindSchema} locales={locales} onSubmit={onSubmit} {...props} />)
   return { user, onSubmit }
 }
 
@@ -32,6 +32,7 @@ describe('BlockForm fields', () => {
 
   it('renders a control for every field kind', () => {
     setup()
+    expect(textbox('Title')).toBeInTheDocument()
     expect(textbox('Slug').tagName).toBe('INPUT')
     expect(textbox('Columns')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: /Featured/ })).not.toBeChecked()
@@ -96,11 +97,37 @@ describe('BlockForm errors', () => {
   })
 })
 
+describe('BlockForm locales', () => {
+  afterEach(restoreEnglish)
+
+  it('edits one locale at a time and flags the missing translation', async () => {
+    const { user } = setup()
+    await user.type(textbox('Title'), 'Fresh coffee')
+    const spanish = screen.getByRole('button', { name: /Spanish/ })
+    expect(spanish).toHaveTextContent('1 missing')
+    await user.click(spanish)
+    expect(spanish).toHaveAttribute('aria-pressed', 'true')
+    expect(textbox('Title')).toHaveValue('')
+    expect(screen.getByText('Not translated')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Copy English' }))
+    expect(textbox('Title')).toHaveValue('Fresh coffee')
+    expect(spanish).not.toHaveTextContent('missing')
+  })
+
+  it('opens the locale with errors when saving finds them only there', async () => {
+    const { user } = setup({ value: { title: { es: '' } } })
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(screen.getByRole('button', { name: /Spanish/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(textbox('Title')).toHaveAccessibleDescription('This field is required.')
+  })
+})
+
 describe('BlockForm content', () => {
   afterEach(restoreEnglish)
 
   it('submits the typed content once every error is fixed', async () => {
     const { user, onSubmit } = setup()
+    await user.type(textbox('Title'), 'Hello')
     await user.type(textbox('Slug'), 'abc')
     await user.type(textbox('Columns'), '3')
     await choose(user, 'Size', 'm')
@@ -111,6 +138,8 @@ describe('BlockForm content', () => {
     await user.keyboard('One')
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(onSubmit).toHaveBeenCalledWith({
+      title: { en: 'Hello' },
+      alt: {},
       cta: { href: '/about', label: '' },
       picture: { id: 'img-1', alt: '' },
       theme: 'light',
@@ -143,9 +172,9 @@ describe('BlockForm content', () => {
   })
 
   it('starts from the content it is given', () => {
-    setup({ value: { slug: 'abc', cta: { href: '/menu' } } })
+    setup({ value: { slug: 'abc', title: { en: 'Hi' } } })
     expect(textbox('Slug')).toHaveValue('abc')
-    expect(within(group('Cta')).getByRole('textbox', { name: 'Address' })).toHaveValue('/menu')
+    expect(textbox('Title')).toHaveValue('Hi')
   })
 
   it('says so when the schema has a shape it cannot render', () => {
