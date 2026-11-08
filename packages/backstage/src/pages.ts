@@ -5,7 +5,8 @@ export type Locale = (typeof LOCALES)[number]
 
 export const PAGE = {
   slug: { maxLength: 80, pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ },
-  title: { maxLength: 120 }
+  title: { maxLength: 120 },
+  blocks: { maxCount: 100 }
 } as const
 
 const perLocale = <T extends z.ZodType>(value: T) =>
@@ -54,3 +55,19 @@ export const slugify = (text: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, PAGE.slug.maxLength)
+
+export const pageBlockSchema = z.object({
+  id: z.string().min(1),
+  block: z.string().min(1),
+  schemaVersion: z.number().int().min(1),
+  content: z.json()
+})
+export type PageBlock = z.infer<typeof pageBlockSchema>
+
+export const pageBlocksSchema = z.object({
+  blocks: z
+    .array(pageBlockSchema)
+    .max(PAGE.blocks.maxCount)
+    .refine((blocks) => new Set(blocks.map((block) => block.id)).size === blocks.length)
+})
+export type PageBlocks = z.infer<typeof pageBlocksSchema>

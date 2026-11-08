@@ -15,14 +15,25 @@ export type { RichTextDoc } from './rich-text.ts'
 export {
   LOCALES,
   PAGE,
+  pageBlockSchema,
+  pageBlocksSchema,
   pageInputSchema,
   pageSchema,
   pagesResponseSchema,
   pageSlugsOf,
   slugify
 } from './pages.ts'
-export type { Locale, Page, PageInput } from './pages.ts'
+export type { Locale, Page, PageBlock, PageBlocks, PageInput } from './pages.ts'
 export * from './db/schema.ts'
-export { createPage, deletePage, findPage, listPages, PAGE_WRITE, renamePage } from './db/pages.ts'
+export {
+  createPage,
+  deletePage,
+  findPage,
+  listPageBlocks,
+  listPages,
+  PAGE_WRITE,
+  renamePage,
+  replacePageBlocks
+} from './db/pages.ts'
 export type { PageWrite } from './db/pages.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
