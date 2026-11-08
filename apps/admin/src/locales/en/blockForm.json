@@ -1,0 +1,16 @@
+{
+  "save": "Save",
+  "unsupported": "This block uses a field the editor cannot show yet.",
+  "variants": {
+    "image": {
+      "id": "Image",
+      "alt": "Alternative text"
+    },
+    "link": {
+      "href": "Address",
+      "label": "Label"
+    }
+  },
+  "invalidSummary_one": "{{count}} field needs attention.",
+  "invalidSummary_other": "{{count}} fields need attention."
+}

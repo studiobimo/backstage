@@ -1,0 +1,19 @@
+{
+  "optional": "Optional",
+  "choose": "Choose…",
+  "none": "None",
+  "count": "{{count}}/{{max}}",
+  "errors": {
+    "required": "This field is required.",
+    "minLength": "Use {{min}} characters or more.",
+    "maxLength": "Use {{max}} characters or fewer.",
+    "format": "Enter a valid value.",
+    "notNumber": "Enter a number.",
+    "notInteger": "Enter a whole number.",
+    "minimum": "Enter {{min}} or more.",
+    "maximum": "Enter {{max}} or less.",
+    "notChoice": "Choose one of the options.",
+    "minItems": "Add at least {{min}} items.",
+    "maxItems": "Use {{max}} items or fewer."
+  }
+}

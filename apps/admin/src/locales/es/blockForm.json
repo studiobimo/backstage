@@ -1,0 +1,16 @@
+{
+  "save": "Guardar",
+  "unsupported": "Este bloque usa un campo que el editor aún no puede mostrar.",
+  "variants": {
+    "image": {
+      "id": "Imagen",
+      "alt": "Texto alternativo"
+    },
+    "link": {
+      "href": "Dirección",
+      "label": "Texto"
+    }
+  },
+  "invalidSummary_one": "{{count}} campo necesita revisión.",
+  "invalidSummary_other": "{{count}} campos necesitan revisión."
+}
