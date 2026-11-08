@@ -1,5 +1,8 @@
 export const API_ERROR = {
   forbidden: { code: 'forbidden', status: 403, message: 'Forbidden' },
+  invalid: { code: 'invalid', status: 400, message: 'Invalid input' },
+  slugTaken: { code: 'slug_taken', status: 409, message: 'That slug is already used' },
+  homeTaken: { code: 'home_taken', status: 409, message: 'The home page already exists' },
   notFound: { code: 'not_found', status: 404, message: 'Not found' },
   internal: { code: 'internal', status: 500, message: 'Internal error' },
   devAuthOutsideLocal: {

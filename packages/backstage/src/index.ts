@@ -12,4 +12,16 @@ export { fieldKinds, image, link, localized, richText } from './fields.ts'
 export type { FieldKind } from './fields.ts'
 export { RICH_TEXT, richTextDoc } from './rich-text.ts'
 export type { RichTextDoc } from './rich-text.ts'
+export {
+  LOCALES,
+  PAGE,
+  pageInputSchema,
+  pageSchema,
+  pagesResponseSchema,
+  pageSlugsOf,
+  slugify
+} from './pages.ts'
+export type { Locale, Page, PageInput } from './pages.ts'
 export * from './db/schema.ts'
+export { createPage, deletePage, findPage, listPages, PAGE_WRITE, renamePage } from './db/pages.ts'
+export type { PageWrite } from './db/pages.ts'

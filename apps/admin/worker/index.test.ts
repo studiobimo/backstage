@@ -23,7 +23,7 @@ describe('worker', () => {
   })
 
   it('keeps /api/v1/blocks behind the Access check', async () => {
-    const response = await app.request('/api/v1/blocks', {}, platform.env)
+    const response = await app.request('/api/v1/blocks', {}, { ...platform.env, DEV_AUTH: '' })
     expect(response.status).toBe(403)
   })
 
