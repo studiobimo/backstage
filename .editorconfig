@@ -27,6 +27,10 @@ indent_style = tab
 indent_size = 2
 # <<< template:vite
 
+# sqlfluff's indent, set in .sqlfluff.
+[*.sql]
+indent_size = 2
+
 # drizzle-kit writes these; regenerate them, do not reindent them.
 [packages/backstage/migrations/**]
 indent_style = unset

@@ -1,10 +1,10 @@
-import { sql } from 'drizzle-orm'
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 // Everything the admin keeps in D1. The site worker has no D1 binding (PUB-6); it reads the
 // snapshots publish writes to KV. Times are Unix milliseconds.
-const now = sql`(unixepoch('subsec') * 1000)`
-const createdAt = () => integer('created_at').notNull().default(now)
+// Set by the app on insert, not by a SQL default, so the schema holds no SQL of its own.
+const now = () => Date.now()
+const createdAt = () => integer('created_at').notNull().$defaultFn(now)
 
 export const roles = ['owner', 'editor'] as const
 
@@ -39,7 +39,7 @@ export const pages = sqliteTable('pages', {
   isHome: integer('is_home', { mode: 'boolean' }).notNull().default(false),
   version: integer('version').notNull().default(1),
   createdAt: createdAt(),
-  updatedAt: integer('updated_at').notNull().default(now),
+  updatedAt: integer('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
   updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
   publishedAt: integer('published_at'),
   publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' })

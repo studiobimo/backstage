@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1112e312-d6da-413b-b5ca-49bf08b17a91",
+  "id": "da53bab9-3462-4431-a842-cefdd9e0eabb",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "media": {
@@ -84,8 +84,7 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch('subsec') * 1000)"
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -294,16 +293,14 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch('subsec') * 1000)"
+          "autoincrement": false
         },
         "updated_at": {
           "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch('subsec') * 1000)"
+          "autoincrement": false
         },
         "updated_by": {
           "name": "updated_by",
@@ -390,8 +387,7 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch('subsec') * 1000)"
+          "autoincrement": false
         }
       },
       "indexes": {

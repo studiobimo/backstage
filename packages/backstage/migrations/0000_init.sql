@@ -9,7 +9,7 @@ CREATE TABLE `media` (
 	`decorative` integer DEFAULT false NOT NULL,
 	`alt` text DEFAULT '{}' NOT NULL,
 	`uploaded_by` text,
-	`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL,
+	`created_at` integer NOT NULL,
 	FOREIGN KEY (`uploaded_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
@@ -42,8 +42,8 @@ CREATE TABLE `pages` (
 	`id` text PRIMARY KEY NOT NULL,
 	`is_home` integer DEFAULT false NOT NULL,
 	`version` integer DEFAULT 1 NOT NULL,
-	`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL,
-	`updated_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL,
 	`updated_by` text,
 	`published_at` integer,
 	`published_by` text,
@@ -56,7 +56,7 @@ CREATE TABLE `users` (
 	`email` text NOT NULL,
 	`name` text DEFAULT '' NOT NULL,
 	`role` text DEFAULT 'editor' NOT NULL,
-	`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL
+	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);
