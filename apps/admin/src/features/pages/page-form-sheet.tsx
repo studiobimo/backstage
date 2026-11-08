@@ -52,7 +52,7 @@ const localesWithErrors = (fieldMeta: Record<string, { errors: unknown[] }>) =>
     )
   )
 
-export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) {
+function usePageForm(page: Page | undefined, onSaved: () => void) {
   const { t } = useTranslation('pages')
   const queryClient = useQueryClient()
   const [failure, setFailure] = useState<string>()
@@ -67,7 +67,7 @@ export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) 
       try {
         if (page) await rename.mutateAsync({ id: page.id, input })
         else await create.mutateAsync(input)
-        onOpenChange(false)
+        onSaved()
       } catch (error) {
         setFailure(
           error instanceof PagesApiError ? t(`errors.${error.code}`) : t('errors.internal')
@@ -75,7 +75,79 @@ export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) 
       }
     }
   })
+  return { form, failure }
+}
 
+type PageForm = ReturnType<typeof usePageForm>['form']
+
+function LocaleFields({ form, locale, page }: { form: PageForm; locale: Locale; page?: Page }) {
+  const { t } = useTranslation('pages')
+  const slugName = `slugs.${locale}` as const
+  return (
+    <div className="flex flex-col gap-4">
+      <form.AppField
+        name={`titles.${locale}`}
+        listeners={{
+          onChange: ({ value }) => {
+            if (!page && !form.getFieldMeta(slugName)?.isDirty) {
+              form.setFieldValue(slugName, slugify(value), { dontUpdateMeta: true })
+            }
+          }
+        }}
+      >
+        {(field) => <field.TextField label={t('form.title')} />}
+      </form.AppField>
+      <form.Subscribe selector={(state) => state.values.isHome}>
+        {(isHome) =>
+          !isHome && (
+            <form.AppField name={slugName}>
+              {(field) => (
+                <field.TextField
+                  label={t('form.slug')}
+                  description={t('form.slugHint')}
+                  icon={<span className="font-mono">/{locale}/</span>}
+                />
+              )}
+            </form.AppField>
+          )
+        }
+      </form.Subscribe>
+    </div>
+  )
+}
+
+function LocaleTabs({ form, page }: { form: PageForm; page?: Page }) {
+  const { t } = useTranslation('pages')
+  return (
+    <Tabs defaultValue={LOCALES[0]}>
+      <form.Subscribe selector={(state) => localesWithErrors(state.fieldMeta)}>
+        {(invalid) => (
+          <TabsList className="w-full">
+            {LOCALES.map((locale) => (
+              <TabsTab key={locale} value={locale} className="flex-1 gap-2">
+                {t(`locales.${locale}`)}
+                {invalid.includes(locale) && (
+                  <Badge variant="error" size="sm">
+                    {t('form.needsAttention')}
+                  </Badge>
+                )}
+              </TabsTab>
+            ))}
+          </TabsList>
+        )}
+      </form.Subscribe>
+      {LOCALES.map((locale) => (
+        <TabsPanel key={locale} value={locale} keepMounted className="pt-4">
+          <LocaleFields form={form} locale={locale} page={page} />
+        </TabsPanel>
+      ))}
+    </Tabs>
+  )
+}
+
+export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) {
+  const { t } = useTranslation('pages')
+  const { form, failure } = usePageForm(page, () => onOpenChange(false))
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetPopup>
@@ -98,58 +170,7 @@ export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) 
                 )}
               </form.AppField>
             )}
-            <Tabs defaultValue={LOCALES[0]}>
-              <form.Subscribe selector={(state) => localesWithErrors(state.fieldMeta)}>
-                {(invalid) => (
-                  <TabsList className="w-full">
-                    {LOCALES.map((locale) => (
-                      <TabsTab key={locale} value={locale} className="flex-1 gap-2">
-                        {t(`locales.${locale}`)}
-                        {invalid.includes(locale) && (
-                          <Badge variant="error" size="sm">
-                            {t('form.needsAttention')}
-                          </Badge>
-                        )}
-                      </TabsTab>
-                    ))}
-                  </TabsList>
-                )}
-              </form.Subscribe>
-              {LOCALES.map((locale) => (
-                <TabsPanel key={locale} value={locale} keepMounted className="pt-4">
-                  <div className="flex flex-col gap-4">
-                    <form.AppField
-                      name={`titles.${locale}`}
-                      listeners={{
-                        onChange: ({ value }) => {
-                          const slugName = `slugs.${locale}` as const
-                          if (!page && !form.getFieldMeta(slugName)?.isDirty) {
-                            form.setFieldValue(slugName, slugify(value), { dontUpdateMeta: true })
-                          }
-                        }
-                      }}
-                    >
-                      {(field) => <field.TextField label={t('form.title')} />}
-                    </form.AppField>
-                    <form.Subscribe selector={(state) => state.values.isHome}>
-                      {(isHome) =>
-                        !isHome && (
-                          <form.AppField name={`slugs.${locale}`}>
-                            {(field) => (
-                              <field.TextField
-                                label={t('form.slug')}
-                                description={t('form.slugHint')}
-                                icon={<span className="font-mono">/{locale}/</span>}
-                              />
-                            )}
-                          </form.AppField>
-                        )
-                      }
-                    </form.Subscribe>
-                  </div>
-                </TabsPanel>
-              ))}
-            </Tabs>
+            <LocaleTabs form={form} page={page} />
             {failure && (
               <p role="alert" className="text-destructive-foreground text-sm">
                 {failure}
