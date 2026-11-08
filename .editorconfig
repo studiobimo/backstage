@@ -26,3 +26,8 @@ indent_style = tab
 [*.{js,mjs,cjs,jsx,ts,tsx,css,html}]
 indent_size = 2
 # <<< template:vite
+
+# drizzle-kit writes these; regenerate them, do not reindent them.
+[packages/backstage/migrations/**]
+indent_style = unset
+indent_size = unset
