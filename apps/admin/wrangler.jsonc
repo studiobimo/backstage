@@ -12,6 +12,16 @@
   },
   "observability": { "enabled": true },
   "upload_source_maps": true,
+  // Local only: the library deploys nothing, so no database_id. A consumer binds its own D1 and
+  // applies the package's migrations to it: wrangler d1 migrations apply DB --local
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "backstage",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../packages/backstage/migrations"
+    }
+  ],
   // The top level is local development. A deploy goes to the production environment, named
   // <name>-production: make -C .devtools deploy ENV=production. It does not inherit bindings
   // or vars from the top level, so it restates them. There is no development environment
