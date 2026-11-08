@@ -58,18 +58,20 @@ export function AppShell({ children }: { children: ReactNode }) {
       <TooltipProvider>
         <SidebarProvider>
           <AppSidebar />
-          <SidebarInset>
-            <header className="flex h-16 shrink-0 items-center gap-2 px-gutter">
-              <SidebarToggle />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <PageBreadcrumb />
-              <div className="ml-auto flex items-center gap-1">
-                <LanguageSwitcher />
-                <ThemeToggle />
+          <SidebarInset className="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
+            <div className="scroll-fade scroll-fade-10 flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-gutter:stable]">
+              <header className="flex h-16 shrink-0 items-center gap-2 px-gutter">
+                <SidebarToggle />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <PageBreadcrumb />
+                <div className="ml-auto flex items-center gap-1">
+                  <LanguageSwitcher />
+                  <ThemeToggle />
+                </div>
+              </header>
+              <div className="flex-1 px-gutter pb-10 sm:px-8">
+                <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">{children}</div>
               </div>
-            </header>
-            <div className="flex-1 px-gutter pb-10 sm:px-8">
-              <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">{children}</div>
             </div>
           </SidebarInset>
         </SidebarProvider>

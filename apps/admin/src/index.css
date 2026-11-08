@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'shadcn/tailwind.css';
 @import '@fontsource-variable/space-grotesk';
 @import '@fontsource-variable/bitcount-single';
 @import '@fontsource-variable/bitcount-prop-double';
@@ -254,7 +255,6 @@
   html {
     @apply scroll-pt-16 scroll-pb-16 font-sans;
     color-scheme: light;
-    scrollbar-gutter: stable;
   }
   html.dark {
     color-scheme: dark;
