@@ -1,0 +1,4 @@
+# components copied from the coss and shadcn registries, regenerated rather than edited
+apps/admin/src/components/ui/**
+# template-managed, refreshed by make -C .devtools sync
+.devtools/**
