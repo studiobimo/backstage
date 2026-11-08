@@ -3,10 +3,14 @@ import {
   createPage,
   deletePage,
   findPage,
+  listPageBlocks,
   listPages,
   PAGE_WRITE,
+  pageBlocksSchema,
   pageInputSchema,
   renamePage,
+  replacePageBlocks,
+  type Registry,
   type ApiError,
   type PageWrite
 } from '@studiobimo/backstage'
@@ -32,7 +36,7 @@ const readInput = async (c: PagesContext) => {
 const failureOf = (c: PagesContext, outcome: PageWrite) =>
   outcome === PAGE_WRITE.ok ? null : respondWithError(c, WRITE_ERRORS[outcome])
 
-export const pagesRoutes = () =>
+export const pagesRoutes = (registry: Registry) =>
   new Hono<{ Bindings: Env }>()
     .get('/', async (c) => c.json({ pages: await listPages(c.env.DB!) }))
     .post('/', async (c) => {
@@ -52,4 +56,18 @@ export const pagesRoutes = () =>
     .delete('/:id', async (c) => {
       const failure = failureOf(c, await deletePage(c.env.DB!, c.req.param('id')))
       return failure ?? c.body(null, 204)
+    })
+    .get('/:id/blocks', async (c) => {
+      const id = c.req.param('id')
+      if (!(await findPage(c.env.DB!, id))) return respondWithError(c, API_ERROR.notFound)
+      return c.json({ blocks: await listPageBlocks(c.env.DB!, id) })
+    })
+    .put('/:id/blocks', async (c) => {
+      const parsed = pageBlocksSchema.safeParse(await c.req.json().catch(() => null))
+      if (!parsed.success || parsed.data.blocks.some(({ block }) => !registry.get(block))) {
+        return respondWithError(c, API_ERROR.invalid)
+      }
+      const id = c.req.param('id')
+      const failure = failureOf(c, await replacePageBlocks(c.env.DB!, id, parsed.data.blocks))
+      return failure ?? c.json({ blocks: await listPageBlocks(c.env.DB!, id) })
     })

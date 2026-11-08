@@ -7,4 +7,4 @@ import { pagesRoutes } from './pages'
 export const v1Routes = (registry: Registry) =>
   new Hono<{ Bindings: Env }>()
     .route('/blocks', blocksRoutes(registry))
-    .route('/pages', pagesRoutes())
+    .route('/pages', pagesRoutes(registry))

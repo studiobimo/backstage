@@ -1,50 +1,9 @@
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-
-import app from './index'
-import { openTestEnv } from './test-env'
-
-const migration = readFileSync(
-  resolve(import.meta.dirname, '../../../packages/backstage/migrations/0000_init.sql'),
-  'utf8'
-)
-
-const { dispose, db, env } = await openTestEnv()
-afterAll(dispose)
-
-const send = (method: string, path: string, body?: unknown) =>
-  app.request(
-    `/api/v1/pages${path}`,
-    {
-      method,
-      headers: { 'content-type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body)
-    },
-    env.localDevelopment
-  )
-
-const regular = (slug: string) => ({
-  isHome: false,
-  slugs: { en: slug, es: `${slug}-es` },
-  titles: { en: 'About', es: 'Acerca' }
-})
-const home = { isHome: true, titles: { en: 'Home', es: 'Inicio' } }
-
-const tables = ['page_blocks', 'page_locales', 'pages']
+import { home, regular, send, useFreshPagesDb } from './pages-test-support'
 
 describe('pages API', () => {
-  beforeAll(async () => {
-    const dropped = ['page_blocks', 'page_locales', 'pages', 'media', 'users']
-    await db.batch(dropped.map((table) => db.prepare(`DROP TABLE IF EXISTS ${table}`)))
-    await db.batch(
-      migration.split('--> statement-breakpoint').map((statement) => db.prepare(statement.trim()))
-    )
-  })
-  beforeEach(async () => {
-    await db.batch(tables.map((table) => db.prepare(`DELETE FROM ${table}`)))
-  })
+  useFreshPagesDb()
 
   it('creates a page with a slug for each locale', async () => {
     const response = await send('POST', '', regular('about'))

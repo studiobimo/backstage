@@ -1,8 +1,8 @@
-import { eq } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
-import { pageSlugsOf, type Page, type PageInput } from '../pages.ts'
-import { pageLocales, pages } from './schema.ts'
+import { pageSlugsOf, type Page, type PageBlock, type PageInput } from '../pages.ts'
+import { pageBlocks, pageLocales, pages } from './schema.ts'
 
 type Database = ReturnType<typeof drizzle>
 
@@ -87,4 +87,34 @@ export const renamePage = async (d1: AnyD1Database, id: string, input: PageInput
 export const deletePage = async (d1: AnyD1Database, id: string) => {
   const removed = await connect(d1).delete(pages).where(eq(pages.id, id)).returning()
   return removed.length > 0 ? PAGE_WRITE.ok : PAGE_WRITE.notFound
+}
+
+export const listPageBlocks = async (d1: AnyD1Database, pageId: string): Promise<PageBlock[]> => {
+  const rows = await connect(d1)
+    .select()
+    .from(pageBlocks)
+    .where(eq(pageBlocks.pageId, pageId))
+    .orderBy(asc(pageBlocks.position))
+  return rows.map(({ id, block, schemaVersion, content }) => ({
+    id,
+    block,
+    schemaVersion,
+    content: content as PageBlock['content']
+  }))
+}
+
+export const replacePageBlocks = async (d1: AnyD1Database, id: string, blocks: PageBlock[]) => {
+  const db = connect(d1)
+  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
+  if (!existing) return PAGE_WRITE.notFound
+  const rows = blocks.map((block, position) => ({ ...block, pageId: id, position }))
+  await db.batch([
+    db.delete(pageBlocks).where(eq(pageBlocks.pageId, id)),
+    ...(rows.length > 0 ? [db.insert(pageBlocks).values(rows)] : []),
+    db
+      .update(pages)
+      .set({ version: existing.version + 1 })
+      .where(eq(pages.id, id))
+  ])
+  return PAGE_WRITE.ok
 }
