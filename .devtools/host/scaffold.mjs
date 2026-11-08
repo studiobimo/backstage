@@ -1,12 +1,47 @@
-// Managed by studiobimo/project-template (profile cloudflare); change it there.
-//
-// The project's own Cloudflare files and packages, for `gen.mjs host` (or `gen.mjs app`) to
-// write and install. Once written they are the project's: sync never compares them.
 import { join } from 'node:path'
 
-// The newest date the workerd that pnpm installs is sure to know: pnpm takes nothing less
-// than a week old, and a release supports dates up to its own.
 const compatibilityDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
+const workerIndex = `import { Hono } from 'hono'
+import { secureHeaders } from 'hono/secure-headers'
+
+const app = new Hono<{ Bindings: Env }>().basePath('/api')
+
+app.use(secureHeaders())
+
+app.get('/health', (c) => c.json({ ok: true }))
+
+app.notFound((c) => c.json({ error: 'Not found' }, 404))
+app.onError((error, c) => {
+  console.error(error)
+  return c.json({ error: 'Internal error' }, 500)
+})
+
+export default app
+`
+
+const workerIndexTest = `import { afterAll, describe, expect, it } from 'vitest'
+import { getPlatformProxy } from 'wrangler'
+
+import app from './index'
+
+const platform = await getPlatformProxy<Env>()
+afterAll(() => platform.dispose())
+
+describe('worker', () => {
+  it('answers /api/health', async () => {
+    const response = await app.request('/api/health', {}, platform.env)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ ok: true })
+  })
+
+  it('answers an unknown /api path with a JSON 404', async () => {
+    const response = await app.request('/api/nothing-here', {}, platform.env)
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({ error: 'Not found' })
+  })
+})
+`
 
 export default ({ slug, repo, deployEnvs }) => ({
   dependencies: ['hono'],
@@ -53,48 +88,7 @@ ${deployEnvs.map((name) => `    "${name}": {}`).join(',\n')}
   "include": ["."]
 }
 `,
-    'worker/index.ts': `import { Hono } from 'hono'
-import { secureHeaders } from 'hono/secure-headers'
-
-// Only /api/* reaches the Worker: wrangler.jsonc's run_worker_first. A route validates what
-// it reads with the feature's schema from src/features/<name>/schema.ts, the one the client
-// parses the response with.
-const app = new Hono<{ Bindings: Env }>().basePath('/api')
-
-app.use(secureHeaders())
-
-app.get('/health', (c) => c.json({ ok: true }))
-
-app.notFound((c) => c.json({ error: 'Not found' }, 404))
-app.onError((error, c) => {
-  console.error(error)
-  return c.json({ error: 'Internal error' }, 500)
-})
-
-export default app
-`,
-    'worker/index.test.ts': `import { afterAll, describe, expect, it } from 'vitest'
-import { getPlatformProxy } from 'wrangler'
-
-import app from './index'
-
-// wrangler.jsonc's bindings and .dev.vars, run locally as vite dev runs them.
-const platform = await getPlatformProxy<Env>()
-afterAll(() => platform.dispose())
-
-describe('worker', () => {
-  it('answers /api/health', async () => {
-    const response = await app.request('/api/health', {}, platform.env)
-    expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ ok: true })
-  })
-
-  it('answers an unknown /api path with a JSON 404', async () => {
-    const response = await app.request('/api/nothing-here', {}, platform.env)
-    expect(response.status).toBe(404)
-    expect(await response.json()).toEqual({ error: 'Not found' })
-  })
-})
-`
+    'worker/index.ts': workerIndex,
+    'worker/index.test.ts': workerIndexTest
   }
 })

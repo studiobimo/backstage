@@ -72,7 +72,7 @@ deploy-branch:
 		echo "$(GLYPH_FAIL) $(ENV) ships from $(DEPLOY_BRANCH_$(ENV)), not $$branch" >&2; \
 		exit 1; }
 
-.PHONY: deploy-envs install dev build build-app preview test typecheck typecheck-app eslint fmt fmt-check budget budget-app audit playwright-install ci check lock clean clean-app deploy-branch
+.PHONY: deploy-envs install dev build build-app preview test typecheck typecheck-app eslint knip fmt fmt-check budget budget-app audit playwright-install ci check lock clean clean-app deploy-branch
 
 install: ## Install the packages pnpm-lock.yaml pins
 	$(PNPM) install --frozen-lockfile
@@ -109,6 +109,9 @@ typecheck-app:
 eslint: ## ESLint over the whole tree, warnings included
 	$(PNPM) exec eslint --max-warnings=0 .
 
+knip: ## Fail on unused files, exports and dependencies
+	$(PNPM) exec knip
+
 fmt: ## Format the web sources with Prettier
 	$(PNPM) exec prettier --write --log-level=warn $(PRETTIER_FILES)
 
@@ -136,7 +139,7 @@ playwright-install: ## Install the browser Playwright drives
 
 # Build before typecheck: a route added without running the dev server only exists in
 # the route tree once the build has written it.
-ci: install build typecheck eslint fmt-check test budget audit ## What the CI workflow runs
+ci: install build typecheck eslint knip duplication fmt-check test budget audit ## What the CI workflow runs
 
 check: lint ci ## Everything CI runs
 
