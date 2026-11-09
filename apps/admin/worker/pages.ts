@@ -30,7 +30,7 @@ import type { Context } from 'hono'
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth'
-import { respondWithError } from './respond'
+import { RESPONSE_STATUS, respondWithError } from './respond'
 
 type PagesContext = Context<AccessEnv>
 
@@ -97,7 +97,7 @@ export const pagesRoutes = (registry: Registry) =>
       if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
       const id = crypto.randomUUID()
       const failure = await failureOf(c, id, await createPage(c.env.DB!, parsed.data, id))
-      return failure ?? c.json({ page: await findPage(c.env.DB!, id) }, 201)
+      return failure ?? c.json({ page: await findPage(c.env.DB!, id) }, RESPONSE_STATUS.created)
     })
     .put('/:id', async (c) => {
       const parsed = await readInput(c)
@@ -109,7 +109,7 @@ export const pagesRoutes = (registry: Registry) =>
     .delete('/:id', async (c) => {
       const id = c.req.param('id')
       const failure = await failureOf(c, id, await deletePage(c.env.DB!, id))
-      return failure ?? c.body(null, 204)
+      return failure ?? c.body(null, RESPONSE_STATUS.noContent)
     })
     .get('/:id/blocks', async (c) => {
       const id = c.req.param('id')
