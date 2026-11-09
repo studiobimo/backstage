@@ -106,6 +106,17 @@ export {
   writePageSeo
 } from './db/pages.ts'
 export type { PageWrite, VersionedWrite } from './db/pages.ts'
+export { planPublish, PUBLISH_PLAN, recordPublished, recordUnpublished } from './db/publishing.ts'
+export type { PublishPlan } from './db/publishing.ts'
+export {
+  publishPageSchema,
+  publishProblemsResponseSchema,
+  snapshotKey,
+  snapshotKeysOf,
+  snapshotSchema,
+  SNAPSHOT
+} from './publishing.ts'
+export type { PublishProblem, Snapshot } from './publishing.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
 export { insertMedia } from './db/media.ts'
 export type { NewMedia } from './db/media.ts'

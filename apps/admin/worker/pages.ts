@@ -31,6 +31,7 @@ import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth'
 import { RESPONSE_STATUS, respondWithError } from './respond'
+import { removeSnapshots } from './snapshots'
 
 type PagesContext = Context<AccessEnv>
 
@@ -49,7 +50,7 @@ const readInput = async (c: PagesContext) => {
   return pageInputSchema.safeParse(body)
 }
 
-const respondStale = async (c: PagesContext, id: string) =>
+export const respondStale = async (c: PagesContext, id: string) =>
   c.json(
     { ...errorBody(API_ERROR.staleVersion), current: await readPageStamp(c.env.DB!, id) },
     API_ERROR.staleVersion.status
@@ -108,6 +109,7 @@ export const pagesRoutes = (registry: Registry) =>
     })
     .delete('/:id', async (c) => {
       const id = c.req.param('id')
+      if ((await findPage(c.env.DB!, id))?.publishedAt) await removeSnapshots(c.env.SITE!, id)
       const failure = await failureOf(c, id, await deletePage(c.env.DB!, id))
       return failure ?? c.body(null, RESPONSE_STATUS.noContent)
     })

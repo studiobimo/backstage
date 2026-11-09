@@ -8,6 +8,8 @@ const migrations = migrationStatements('0000_init', '0003_page_layout', '0004_pa
 
 const { dispose, db, env } = await openTestEnv()
 
+export { db }
+
 export const send = (method: string, path: string, body?: unknown) =>
   app.request(
     `/api/v1/pages${path}`,
@@ -27,9 +29,11 @@ export const regular = (slug: string) => ({
 export const createRegularPage = async () =>
   ((await (await send('POST', '', regular('about'))).json()) as { page: { id: string } }).page.id
 
+export const kv = env.localDevelopment.SITE!
+
 export const home = { isHome: true, titles: { en: 'Home', es: 'Inicio' } }
 
-const tables = ['page_blocks', 'page_locales', 'pages']
+const tables = ['page_blocks', 'page_locales', 'pages', 'media']
 
 export const useFreshPagesDb = () => {
   afterAll(dispose)
@@ -40,6 +44,8 @@ export const useFreshPagesDb = () => {
   })
   beforeEach(async () => {
     await db.batch(tables.map((table) => db.prepare(`DELETE FROM ${table}`)))
+    const { keys } = await kv.list()
+    await Promise.all(keys.map(({ name }) => kv.delete(name)))
   })
 }
 

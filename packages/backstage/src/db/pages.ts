@@ -55,15 +55,21 @@ const guardUnique = async (write: () => Promise<unknown>): Promise<PageWrite> =>
 export const listPages = async (d1: AnyD1Database): Promise<Page[]> => {
   const db = connect(d1)
   const [rows, locales] = await Promise.all([
-    db.select().from(pages).orderBy(pages.createdAt),
+    db
+      .select({ page: pages, publisherName: users.name, publisherEmail: users.email })
+      .from(pages)
+      .leftJoin(users, eq(users.id, pages.publishedBy))
+      .orderBy(pages.createdAt),
     db.select().from(pageLocales)
   ])
-  return rows.map((row) => ({
+  return rows.map(({ page: row, publisherName, publisherEmail }) => ({
     id: row.id,
     isHome: row.isHome,
     version: row.version,
     layout: row.layout,
     updatedAt: row.updatedAt,
+    publishedAt: row.publishedAt,
+    publishedBy: row.publishedAt ? publisherName || publisherEmail || null : null,
     locales: locales
       .filter((locale) => locale.pageId === row.id)
       .map(({ locale, slug, title }) => ({ locale, slug, title }))

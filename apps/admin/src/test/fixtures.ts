@@ -6,6 +6,8 @@ export const aboutPage: PageSummary = {
   version: 1,
   layout: 'default',
   updatedAt: 0,
+  publishedAt: null,
+  publishedBy: null,
   missing: { en: 0, es: 0 },
   locales: [
     { locale: 'en', slug: 'about', title: 'About' },

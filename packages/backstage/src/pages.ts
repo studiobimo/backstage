@@ -36,6 +36,8 @@ export const pageSchema = z.object({
   version: z.number().int(),
   layout: z.string(),
   updatedAt: z.number().int(),
+  publishedAt: z.number().int().nullable(),
+  publishedBy: z.string().nullable(),
   locales: z.array(z.object({ locale: z.string(), slug: z.string().nullable(), title: z.string() }))
 })
 export type Page = z.infer<typeof pageSchema>

@@ -19,6 +19,7 @@
     }
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
+  "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
   "env": {
     "production": {}
   }

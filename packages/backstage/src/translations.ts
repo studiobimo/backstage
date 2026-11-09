@@ -6,9 +6,10 @@ export type TranslatedNode =
       backstage?: string
       properties?: Record<string, TranslatedNode>
       items?: TranslatedNode | TranslatedNode[]
+      additionalProperties?: TranslatedNode
     }
 
-const isRecord = (value: unknown): value is { [key: string]: unknown } =>
+export const isRecord = (value: unknown): value is { [key: string]: unknown } =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
 const isRichText = (value: unknown) => isRecord(value) && value.type === 'doc'
