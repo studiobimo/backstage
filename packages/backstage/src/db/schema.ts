@@ -48,6 +48,7 @@ export const pageLocales = sqliteTable(
     locale: text('locale').notNull(),
     slug: text('slug'),
     title: text('title').notNull().default(''),
+    seoTitle: text('seo_title').notNull().default(''),
     description: text('description').notNull().default(''),
     socialImageId: text('social_image_id').references(() => media.id, { onDelete: 'set null' })
   },

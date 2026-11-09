@@ -33,5 +33,22 @@
       "minimal": "Mínimo",
       "bare": "Sin adornos"
     }
+  },
+  "seo": {
+    "heading": "Buscadores y redes",
+    "missing": "Falta",
+    "title": {
+      "label": "Título SEO",
+      "description": "{{count}} de {{max}} caracteres. Déjalo vacío para usar el título de la página."
+    },
+    "description": {
+      "label": "Descripción",
+      "hint": "{{count}} de {{max}} caracteres."
+    },
+    "image": {
+      "default": "La imagen para redes viene de los ajustes del sitio.",
+      "none": "Aún no hay imagen para redes. Define una por defecto en los ajustes del sitio."
+    },
+    "intro": "Lo que muestran los buscadores y las vistas previas de enlaces, un idioma a la vez."
   }
 }

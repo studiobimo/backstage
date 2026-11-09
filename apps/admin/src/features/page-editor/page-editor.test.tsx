@@ -1,4 +1,4 @@
-import type { Page, PageBlock } from '@studiobimo/backstage'
+import type { Page, PageBlock, PageSeo } from '@studiobimo/backstage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -30,12 +30,25 @@ const saved: PageBlock[] = [
   { id: 'b', block: 'hero', schemaVersion: 1, content: { title: 'Two' } }
 ]
 
+const emptySeo: PageSeo = {
+  en: { title: '', description: '', socialImageId: null },
+  es: { title: '', description: '', socialImageId: null }
+}
+
 const mockApi = (initial: PageBlock[]) => {
   const puts: { blocks: PageBlock[] }[] = []
   const layoutPuts: { layout: string }[] = []
+  const seoPuts: PageSeo[] = []
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/seo')) {
+        if (init?.method === 'PUT') seoPuts.push(JSON.parse(init.body as string))
+        return new Response(JSON.stringify({ seo: seoPuts.at(-1) ?? emptySeo }))
+      }
+      if (url.endsWith('/settings')) {
+        return new Response(JSON.stringify({ settings: { siteName: { en: 'Studio' } } }))
+      }
       if (init?.method === 'PUT' && url.endsWith('/layout')) {
         layoutPuts.push(JSON.parse(init.body as string))
         return new Response(null, { status: 200 })
@@ -55,7 +68,7 @@ const mockApi = (initial: PageBlock[]) => {
       return new Response(JSON.stringify({ pages: [about] }))
     })
   )
-  return Object.assign(puts, { layouts: layoutPuts })
+  return Object.assign(puts, { layouts: layoutPuts, seo: seoPuts })
 }
 
 const renderEditor = () =>
@@ -118,6 +131,22 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     await user.click(await screen.findByRole('option', { name: 'Minimal' }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts.layouts).toEqual([{ layout: 'minimal' }]))
+    expect(puts).toHaveLength(0)
+  })
+
+  it('edits the SEO title and description one language at a time and saves them', async () => {
+    const puts = mockApi(saved)
+    const user = userEvent.setup()
+    renderEditor()
+    const title = await screen.findByRole('textbox', { name: 'SEO title' })
+    expect(title).toHaveAttribute('placeholder', 'About')
+    await user.type(title, 'About the studio')
+    await user.type(screen.getByRole('textbox', { name: 'Description' }), 'Who we are')
+    await user.click(screen.getByRole('tab', { name: /Spanish/ }))
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue(''))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(puts.seo).toHaveLength(1))
+    expect(puts.seo[0]!.en).toMatchObject({ title: 'About the studio', description: 'Who we are' })
     expect(puts).toHaveLength(0)
   })
 })

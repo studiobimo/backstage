@@ -1,4 +1,10 @@
-import { layoutsResponseSchema, pageBlocksSchema, type PageBlock } from '@studiobimo/backstage'
+import {
+  layoutsResponseSchema,
+  pageBlocksSchema,
+  pageSeoResponseSchema,
+  type PageBlock,
+  type PageSeo
+} from '@studiobimo/backstage'
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 
@@ -59,4 +65,26 @@ export const savePageLayoutMutation = (queryClient: QueryClient, pageId: string)
       })
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+  })
+
+const pageSeoKey = (pageId: string) => ['page-seo', pageId] as const
+
+const readSeo = async (response: Response) => pageSeoResponseSchema.parse(await response.json()).seo
+
+export const pageSeoQuery = (pageId: string) =>
+  queryOptions({
+    queryKey: pageSeoKey(pageId),
+    queryFn: async () => readSeo(await apiRequest(`/pages/${pageId}/seo`))
+  })
+
+export const savePageSeoMutation = (queryClient: QueryClient, pageId: string) =>
+  mutationOptions({
+    mutationFn: async (seo: PageSeo) =>
+      readSeo(
+        await apiRequest(`/pages/${pageId}/seo`, { method: 'PUT', body: JSON.stringify(seo) })
+      ),
+    onSuccess: (seo) => {
+      queryClient.setQueryData(pageSeoKey(pageId), seo)
+      return queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+    }
   })

@@ -33,5 +33,22 @@
       "minimal": "Minimal",
       "bare": "Bare"
     }
+  },
+  "seo": {
+    "heading": "Search and social",
+    "missing": "Missing",
+    "title": {
+      "label": "SEO title",
+      "description": "{{count}} of {{max}} characters. Leave empty to use the page title."
+    },
+    "description": {
+      "label": "Description",
+      "hint": "{{count}} of {{max}} characters."
+    },
+    "image": {
+      "default": "The social image comes from the site settings.",
+      "none": "No social image yet. Set a default in the site settings."
+    },
+    "intro": "What search engines and link previews show, one language at a time."
   }
 }

@@ -1,4 +1,4 @@
-import { LAYOUT, type PageBlock } from '@studiobimo/backstage'
+import { LAYOUT, type PageBlock, type PageSeo } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, CopyIcon, PlusIcon, SaveIcon, Trash2Icon } from 'lucide-react'
@@ -19,20 +19,33 @@ import { cn } from '@/lib/utils'
 
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
-import { type BlockOption, duplicateAt, moveBlock, newBlock, removeAt, sameBlocks } from './draft'
+import { settingsQuery } from '../settings/queries'
+import {
+  type BlockOption,
+  duplicateAt,
+  moveBlock,
+  newBlock,
+  removeAt,
+  sameBlocks,
+  sameJson
+} from './draft'
 import {
   blockDescriptionsQuery,
   layoutsQuery,
   pageBlocksQuery,
+  pageSeoQuery,
   savePageBlocksMutation,
-  savePageLayoutMutation
+  savePageLayoutMutation,
+  savePageSeoMutation
 } from './queries'
+import { type SeoDefaults, SeoSection } from './seo-section'
 
 const SortableItems = lazy(() => import('@/components/sortable-items'))
 
-interface SavedPage {
+interface PageDraft {
   blocks: PageBlock[]
   layout: string
+  seo: PageSeo
 }
 
 interface BlockRowProps {
@@ -102,12 +115,13 @@ function BlockPicker({
   )
 }
 
-function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string }, saved: SavedPage) {
+function useSave(pageId: string, draft: PageDraft, saved: PageDraft) {
   const { t } = useTranslation('pageEditor')
   const queryClient = useQueryClient()
   const saveBlocks = useMutation(savePageBlocksMutation(queryClient, pageId))
   const saveLayout = useMutation(savePageLayoutMutation(queryClient, pageId))
-  const error = saveBlocks.error ?? saveLayout.error
+  const saveSeo = useMutation(savePageSeoMutation(queryClient, pageId))
+  const error = saveBlocks.error ?? saveLayout.error ?? saveSeo.error
   const failure = error
     ? t(`errors.${error instanceof ApiError ? error.code : 'internal'}`, {
         defaultValue: t('errors.internal')
@@ -116,8 +130,10 @@ function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string },
   const save = () => {
     if (!sameBlocks(draft.blocks, saved.blocks)) saveBlocks.mutate(draft.blocks)
     if (draft.layout !== saved.layout) saveLayout.mutate(draft.layout)
+    if (!sameJson(draft.seo, saved.seo)) saveSeo.mutate(draft.seo)
   }
-  return { save, saving: saveBlocks.isPending || saveLayout.isPending, failure }
+  const saving = saveBlocks.isPending || saveLayout.isPending || saveSeo.isPending
+  return { save, saving, failure }
 }
 
 function useRowFeedback(blocks: PageBlock[]) {
@@ -255,21 +271,35 @@ function EmptyBlocks() {
   )
 }
 
+function useSeoDefaults(titles: Record<string, string>): SeoDefaults {
+  const { data: settings } = useSuspenseQuery(settingsQuery)
+  return {
+    titles,
+    siteNames: settings.siteName,
+    hasSocialImage: settings.defaultSocialImage !== undefined
+  }
+}
+
 export function PageEditor({ pageId }: { pageId: string }) {
   const { t, i18n } = useTranslation('pageEditor')
   const { data: saved } = useSuspenseQuery(pageBlocksQuery(pageId))
   const { data: options } = useSuspenseQuery(blockDescriptionsQuery)
   const { data: pages } = useSuspenseQuery(pagesQuery)
   const { data: layouts } = useSuspenseQuery(layoutsQuery)
+  const { data: savedSeo } = useSuspenseQuery(pageSeoQuery(pageId))
   const page = pages.find((candidate) => candidate.id === pageId)
   const savedLayout = page?.layout ?? LAYOUT.default
   const [layout, setLayout] = useState(savedLayout)
+  const [seo, setSeo] = useState(savedSeo)
+  const defaults = useSeoDefaults(
+    Object.fromEntries((page?.locales ?? []).map(({ locale, title }) => [locale, title]))
+  )
   const actions = useBlockActions(saved)
   const { blocks, names, listRef } = actions
   const { save, saving, failure } = useSave(
     pageId,
-    { blocks, layout },
-    { blocks: saved, layout: savedLayout }
+    { blocks, layout, seo },
+    { blocks: saved, layout: savedLayout, seo: savedSeo }
   )
 
   const renderRow = (key: string, index: number, slot?: SortableSlot) => (
@@ -288,7 +318,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
     <>
       <EditorHeader
         title={page ? pageLabel(page, i18n.language) : t('title')}
-        dirty={!sameBlocks(blocks, saved) || layout !== savedLayout}
+        dirty={!sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)}
         saving={saving}
         failure={failure}
         onSave={save}
@@ -318,6 +348,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
       <div>
         <BlockPicker options={options} onPick={actions.add} />
       </div>
+      <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
       <p role="status" aria-live="polite" className="sr-only">
         {actions.announcement}
       </p>

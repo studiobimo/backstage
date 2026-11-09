@@ -9,9 +9,12 @@ import {
   pageBlocksSchema,
   pageInputSchema,
   pageLayoutInputSchema,
+  pageSeoSchema,
+  readPageSeo,
   renamePage,
   replacePageBlocks,
   setPageLayout,
+  writePageSeo,
   type Registry,
   type ApiError,
   type PageWrite
@@ -27,7 +30,8 @@ const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok'>, ApiError> = {
   [PAGE_WRITE.slugTaken]: API_ERROR.slugTaken,
   [PAGE_WRITE.homeTaken]: API_ERROR.homeTaken,
   [PAGE_WRITE.notFound]: API_ERROR.notFound,
-  [PAGE_WRITE.homeMismatch]: API_ERROR.invalid
+  [PAGE_WRITE.homeMismatch]: API_ERROR.invalid,
+  [PAGE_WRITE.unknownMedia]: API_ERROR.invalid
 }
 
 const readInput = async (c: PagesContext) => {
@@ -84,4 +88,15 @@ export const pagesRoutes = (registry: Registry) =>
       const id = c.req.param('id')
       const failure = failureOf(c, await setPageLayout(c.env.DB!, id, parsed.data.layout))
       return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
+    })
+    .get('/:id/seo', async (c) => {
+      const seo = await readPageSeo(c.env.DB!, c.req.param('id'))
+      return seo ? c.json({ seo }) : respondWithError(c, API_ERROR.notFound)
+    })
+    .put('/:id/seo', async (c) => {
+      const parsed = pageSeoSchema.safeParse(await c.req.json().catch(() => null))
+      if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
+      const id = c.req.param('id')
+      const failure = failureOf(c, await writePageSeo(c.env.DB!, id, parsed.data))
+      return failure ?? c.json({ seo: await readPageSeo(c.env.DB!, id) })
     })

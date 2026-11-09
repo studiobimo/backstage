@@ -1,8 +1,15 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq, inArray } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
-import { pageSlugsOf, type Page, type PageBlock, type PageInput } from '../pages.ts'
-import { pageBlocks, pageLocales, pages } from './schema.ts'
+import {
+  LOCALES,
+  pageSlugsOf,
+  type Page,
+  type PageBlock,
+  type PageInput,
+  type PageSeo
+} from '../pages.ts'
+import { media, pageBlocks, pageLocales, pages } from './schema.ts'
 
 type Database = ReturnType<typeof drizzle>
 
@@ -11,7 +18,8 @@ export const PAGE_WRITE = {
   slugTaken: 'slug_taken',
   homeTaken: 'home_taken',
   notFound: 'not_found',
-  homeMismatch: 'home_mismatch'
+  homeMismatch: 'home_mismatch',
+  unknownMedia: 'unknown_media'
 } as const
 
 export type PageWrite = (typeof PAGE_WRITE)[keyof typeof PAGE_WRITE]
@@ -20,6 +28,12 @@ const connect = (d1: AnyD1Database): Database => drizzle(d1)
 
 const localeRows = (pageId: string, input: PageInput) =>
   pageSlugsOf(input).map((row) => ({ pageId, ...row }))
+
+const bumpVersion = (db: Database, existing: { id: string; version: number }) =>
+  db
+    .update(pages)
+    .set({ version: existing.version + 1 })
+    .where(eq(pages.id, existing.id))
 
 const isUniqueViolation = (error: unknown) => String(error).includes('UNIQUE')
 
@@ -75,12 +89,13 @@ export const renamePage = async (d1: AnyD1Database, id: string, input: PageInput
   if (existing.isHome !== input.isHome) return PAGE_WRITE.homeMismatch
   return guardUnique(() =>
     db.batch([
-      db.delete(pageLocales).where(eq(pageLocales.pageId, id)),
-      db.insert(pageLocales).values(localeRows(id, input)),
-      db
-        .update(pages)
-        .set({ version: existing.version + 1 })
-        .where(eq(pages.id, id))
+      bumpVersion(db, existing),
+      ...localeRows(id, input).map(({ locale, slug, title }) =>
+        db
+          .update(pageLocales)
+          .set({ slug, title })
+          .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
+      )
     ])
   )
 }
@@ -112,10 +127,7 @@ export const replacePageBlocks = async (d1: AnyD1Database, id: string, blocks: P
   await db.batch([
     db.delete(pageBlocks).where(eq(pageBlocks.pageId, id)),
     ...(rows.length > 0 ? [db.insert(pageBlocks).values(rows)] : []),
-    db
-      .update(pages)
-      .set({ version: existing.version + 1 })
-      .where(eq(pages.id, id))
+    bumpVersion(db, existing)
   ])
   return PAGE_WRITE.ok
 }
@@ -128,5 +140,46 @@ export const setPageLayout = async (d1: AnyD1Database, id: string, layout: strin
     .update(pages)
     .set({ layout, version: existing.version + 1 })
     .where(eq(pages.id, id))
+  return PAGE_WRITE.ok
+}
+
+export const readPageSeo = async (d1: AnyD1Database, id: string): Promise<PageSeo | undefined> => {
+  const db = connect(d1)
+  const [existing] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id))
+  if (!existing) return undefined
+  const rows = await db.select().from(pageLocales).where(eq(pageLocales.pageId, id))
+  const seoOf = (locale: string) => {
+    const row = rows.find((candidate) => candidate.locale === locale)
+    return {
+      title: row?.seoTitle ?? '',
+      description: row?.description ?? '',
+      socialImageId: row?.socialImageId ?? null
+    }
+  }
+  return Object.fromEntries(LOCALES.map((locale) => [locale, seoOf(locale)])) as PageSeo
+}
+
+export const writePageSeo = async (d1: AnyD1Database, id: string, seo: PageSeo) => {
+  const db = connect(d1)
+  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
+  if (!existing) return PAGE_WRITE.notFound
+  const imageIds = LOCALES.flatMap((locale) => seo[locale].socialImageId ?? [])
+  if (imageIds.length > 0) {
+    const known = await db.select({ id: media.id }).from(media).where(inArray(media.id, imageIds))
+    if (new Set(imageIds).size !== known.length) return PAGE_WRITE.unknownMedia
+  }
+  await db.batch([
+    bumpVersion(db, existing),
+    ...LOCALES.map((locale) =>
+      db
+        .update(pageLocales)
+        .set({
+          seoTitle: seo[locale].title,
+          description: seo[locale].description,
+          socialImageId: seo[locale].socialImageId
+        })
+        .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
+    )
+  ])
   return PAGE_WRITE.ok
 }

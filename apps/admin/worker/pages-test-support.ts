@@ -4,7 +4,7 @@ import app from './index'
 import { migrationStatements } from './test-migrations'
 import { openTestEnv } from './test-env'
 
-const migrations = migrationStatements('0000_init', '0003_page_layout')
+const migrations = migrationStatements('0000_init', '0003_page_layout', '0004_page_seo_title')
 
 const { dispose, db, env } = await openTestEnv()
 
@@ -24,6 +24,9 @@ export const regular = (slug: string) => ({
   slugs: { en: slug, es: `${slug}-es` },
   titles: { en: 'About', es: 'Acerca' }
 })
+export const createRegularPage = async () =>
+  ((await (await send('POST', '', regular('about'))).json()) as { page: { id: string } }).page.id
+
 export const home = { isHome: true, titles: { en: 'Home', es: 'Inicio' } }
 
 const tables = ['page_blocks', 'page_locales', 'pages']

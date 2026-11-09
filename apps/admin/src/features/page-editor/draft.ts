@@ -32,5 +32,6 @@ export const moveBlock = (blocks: PageBlock[], from: number, to: number): PageBl
   return next
 }
 
-export const sameBlocks = (a: PageBlock[], b: PageBlock[]) =>
-  JSON.stringify(a) === JSON.stringify(b)
+export const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+export const sameBlocks = (a: PageBlock[], b: PageBlock[]) => sameJson(a, b)
