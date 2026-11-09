@@ -10,7 +10,15 @@ import {
   useFreshPagesDb,
   versionOf
 } from './pages-test-support'
-import { addMedia, hero, publish, publishedPage, snapshotOf } from './publish-test-support'
+import {
+  addMedia,
+  hero,
+  pageKeys,
+  publish,
+  publishedIndex,
+  publishedPage,
+  snapshotOf
+} from './publish-test-support'
 
 describe('publishing API', () => {
   useFreshPagesDb()
@@ -42,6 +50,24 @@ describe('publishing API', () => {
     expect((await snapshotOf(id, 'en')).media.m2).toMatchObject({ key: 'media/m2.png' })
     expect((await snapshotOf(id, 'es')).media).toEqual({})
   })
+  it('lists the page and its slugs in the published index', async () => {
+    const id = await createRegularPage()
+    const { status } = await publish(id)
+    expect(status).toBe(200)
+    const { pages } = await publishedIndex()
+    expect(pages).toHaveLength(1)
+    expect(pages[0]).toMatchObject({
+      pageId: id,
+      isHome: false,
+      slugs: { en: 'about', es: 'about-es' }
+    })
+  })
+  it('keeps one index entry when a page is published again', async () => {
+    const id = await createRegularPage()
+    await publish(id)
+    await publish(id)
+    expect((await publishedIndex()).pages).toHaveLength(1)
+  })
   it('refuses a page whose blocks do not validate and writes nothing', async () => {
     const id = await createRegularPage()
     await saveBlocks(id, [{ ...hero(), content: { title: 'not localized' } }])
@@ -51,7 +77,7 @@ describe('publishing API', () => {
       code: 'unpublishable',
       problems: [{ reason: 'invalid_content', blockId: 'b1' }]
     })
-    expect((await kv.list()).keys).toEqual([])
+    expect(await pageKeys()).toEqual([])
     expect((await publishedPage(id)).publishedAt).toBeNull()
   })
   it('refuses a block that points at missing media', async () => {

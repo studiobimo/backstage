@@ -121,6 +121,18 @@ export {
   SNAPSHOT
 } from './publishing.ts'
 export type { PublishProblem, Snapshot } from './publishing.ts'
+export {
+  alternateLinks,
+  buildRobots,
+  buildSitemap,
+  canonicalUrl,
+  EMPTY_PUBLISHED_INDEX,
+  publishedIndexSchema,
+  removeFromIndex,
+  SEO,
+  upsertIntoIndex
+} from './seo.ts'
+export type { AlternateLink, PublishedIndex, PublishedPage } from './seo.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
 export { insertMedia } from './db/media.ts'
 export type { NewMedia } from './db/media.ts'

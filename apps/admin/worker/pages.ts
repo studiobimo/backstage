@@ -31,7 +31,7 @@ import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth'
 import { RESPONSE_STATUS, respondWithError } from './respond'
-import { removeSnapshots } from './snapshots'
+import { indexUnpublished, removeSnapshots } from './snapshots'
 
 type PagesContext = Context<AccessEnv>
 
@@ -109,7 +109,10 @@ export const pagesRoutes = (registry: Registry) =>
     })
     .delete('/:id', async (c) => {
       const id = c.req.param('id')
-      if ((await findPage(c.env.DB!, id))?.publishedAt) await removeSnapshots(c.env.SITE!, id)
+      if ((await findPage(c.env.DB!, id))?.publishedAt) {
+        await removeSnapshots(c.env.SITE!, id)
+        await indexUnpublished(c.env.SITE!, id)
+      }
       const failure = await failureOf(c, id, await deletePage(c.env.DB!, id))
       return failure ?? c.body(null, RESPONSE_STATUS.noContent)
     })
