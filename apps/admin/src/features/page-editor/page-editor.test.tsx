@@ -154,6 +154,24 @@ describe('PageEditor blocks and layout', SUITE, () => {
     expect(puts[0]!.expectedVersion).toBe(3)
   })
 
+  it('opens a block form, joins edits to the unsaved changes and saves them', async () => {
+    const puts = mockApi(saved)
+    const user = userEvent.setup()
+    renderEditor()
+    await user.click((await screen.findAllByRole('button', { name: 'Edit hero' }))[0]!)
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+    const title = await screen.findByRole('textbox', { name: 'Title' })
+    await user.clear(title)
+    await user.type(title, 'Changed')
+    expect(await screen.findByText('Unsaved changes')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(puts).toHaveLength(1))
+    expect(puts[0]!.blocks.map((block) => block.content)).toEqual([
+      { title: 'Changed' },
+      { title: 'Two' }
+    ])
+  })
+
   it('gives each row a drag handle for pointer, touch and keyboard sorting', async () => {
     mockApi(saved)
     renderEditor()

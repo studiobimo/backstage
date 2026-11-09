@@ -8,7 +8,14 @@ import {
 } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeftIcon, CopyIcon, PlusIcon, SaveIcon, Trash2Icon } from 'lucide-react'
+import {
+  ArrowLeftIcon,
+  ChevronRightIcon,
+  CopyIcon,
+  PlusIcon,
+  SaveIcon,
+  Trash2Icon
+} from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -16,6 +23,7 @@ import { ChoiceSelect } from '@/components/choice-select'
 import { IconButton } from '@/components/icon-button'
 import type { SortableSlot } from '@/components/sortable-items'
 import { Button } from '@/components/ui/button'
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
 import { PageHeader } from '@/components/page-header'
@@ -24,7 +32,9 @@ import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
-import { EditingLocaleContext } from '../block-form/locale-status'
+import { BlockForm } from '../block-form/block-form'
+import { EditingLocaleContext, useEditingLocale } from '../block-form/locale-status'
+import type { BlockValue } from '../block-form/value'
 import { LocaleSwitcher } from '../block-form/locale-switcher'
 import { LeaveGuard } from './leave-guard'
 import { PublishPanel } from './publish-panel'
@@ -70,38 +80,80 @@ interface SavedPage extends PageDraft {
 interface BlockRowProps {
   block: PageBlock
   name: string
+  option?: BlockOption
   position: number
   slot?: SortableSlot
+  onChange: (content: BlockValue) => void
   onDuplicate: () => void
   onRemove: () => void
 }
 
-function BlockRow({ block, name, position, slot, onDuplicate, onRemove }: BlockRowProps) {
+function BlockRow({
+  block,
+  name,
+  option,
+  position,
+  slot,
+  onChange,
+  onDuplicate,
+  onRemove
+}: BlockRowProps) {
   const { t } = useTranslation('pageEditor')
+  const { locales } = useEditingLocale()
   return (
     <li
       ref={slot?.ref}
       data-block-id={block.id}
       tabIndex={-1}
       className={cn(
-        'flex items-center gap-1 rounded-lg border bg-card p-1 shadow-xs/5 outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'rounded-lg border bg-card shadow-xs/5 outline-none focus-visible:ring-2 focus-visible:ring-ring',
         slot?.dragging && 'z-10 shadow-lg ring-2 ring-ring/24'
       )}
     >
-      {slot?.handle}
-      <span
-        className="w-5 shrink-0 text-center text-muted-foreground text-xs tabular-nums"
-        aria-hidden
-      >
-        {position}
-      </span>
-      <span className="min-w-0 flex-1 truncate px-1 font-medium text-sm">{name}</span>
-      <IconButton label={t('block.duplicate', { name })} variant="ghost" onClick={onDuplicate}>
-        <CopyIcon />
-      </IconButton>
-      <IconButton label={t('block.remove', { name })} variant="ghost" onClick={onRemove}>
-        <Trash2Icon />
-      </IconButton>
+      <Collapsible>
+        <div className="flex items-center gap-1 p-1">
+          {slot?.handle}
+          <span
+            className="w-5 shrink-0 text-center text-muted-foreground text-xs tabular-nums"
+            aria-hidden
+          >
+            {position}
+          </span>
+          {option ? (
+            <CollapsibleTrigger
+              aria-label={t('block.edit', { name })}
+              className="group flex min-w-0 flex-1 items-center gap-1 rounded-md px-1 py-1.5 text-left font-medium text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ChevronRightIcon
+                className="size-4 shrink-0 text-muted-foreground transition-transform group-data-panel-open:rotate-90"
+                aria-hidden
+              />
+              <span className="truncate">{name}</span>
+            </CollapsibleTrigger>
+          ) : (
+            <span className="min-w-0 flex-1 truncate px-1 font-medium text-sm">{name}</span>
+          )}
+          <IconButton label={t('block.duplicate', { name })} variant="ghost" onClick={onDuplicate}>
+            <CopyIcon />
+          </IconButton>
+          <IconButton label={t('block.remove', { name })} variant="ghost" onClick={onRemove}>
+            <Trash2Icon />
+          </IconButton>
+        </div>
+        {option && (
+          <CollapsiblePanel>
+            <div className="border-t p-4">
+              <BlockForm
+                schema={option.schema}
+                locales={locales}
+                value={block.content as BlockValue}
+                onChange={onChange}
+                className="max-w-none"
+              />
+            </div>
+          </CollapsiblePanel>
+        )}
+      </Collapsible>
     </li>
   )
 }
@@ -232,9 +284,15 @@ function useBlockActions(saved: PageBlock[]) {
     const message = t('announce.removed', { name: names[index], total: next.length })
     apply(next, message, (next[index] ?? next[index - 1])?.id)
   }
+  const edit = (id: string, content: BlockValue) =>
+    setBlocks((current) =>
+      current.map((block) =>
+        block.id === id ? { ...block, content: content as PageBlock['content'] } : block
+      )
+    )
   const move = (from: number, to: number) => setBlocks((current) => moveBlock(current, from, to))
 
-  return { blocks, names, add, duplicate, remove, move, ...feedback }
+  return { blocks, names, add, duplicate, remove, move, edit, ...feedback }
 }
 
 interface EditorHeaderProps {
@@ -329,15 +387,23 @@ interface PageEditorBodyProps {
   onReload: () => void
 }
 
-function BlockList({ actions }: { actions: ReturnType<typeof useBlockActions> }) {
+function BlockList({
+  actions,
+  options
+}: {
+  actions: ReturnType<typeof useBlockActions>
+  options: BlockOption[]
+}) {
   const { blocks, names, listRef } = actions
   const renderRow = (key: string, index: number, slot?: SortableSlot) => (
     <BlockRow
       key={key}
       block={blocks[index]!}
       name={names[index]!}
+      option={options.find((option) => option.name === names[index])}
       position={index + 1}
       slot={slot}
+      onChange={(content) => actions.edit(blocks[index]!.id, content)}
       onDuplicate={() => actions.duplicate(index)}
       onRemove={() => actions.remove(index)}
     />
@@ -432,7 +498,7 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
         onChange={(next) => setLocale(next as Locale)}
       />
       <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
-      <BlockList actions={actions} />
+      <BlockList actions={actions} options={options} />
       <div>
         <BlockPicker options={options} onPick={actions.add} />
       </div>
