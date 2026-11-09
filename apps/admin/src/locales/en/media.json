@@ -1,0 +1,42 @@
+{
+  "title": "Upload images",
+  "description": "Add photos to reuse on your pages. Each one needs a description for every language, unless it is only decoration.",
+  "locales": {
+    "en": "English",
+    "es": "Español"
+  },
+  "picker": {
+    "label": "Image",
+    "hint": "JPEG, PNG, WebP or AVIF. It is resized and stripped of location and camera data in your browser before it is uploaded.",
+    "processing": "Preparing the image…",
+    "rejected": "That image can't be used"
+  },
+  "rejections": {
+    "unsupported": "Only JPEG, PNG, WebP and AVIF images are accepted.",
+    "too_large": "The image is too large, even after resizing. Try a smaller one.",
+    "unreadable": "Your browser could not read this image. It may be damaged."
+  },
+  "preview": {
+    "details": "{{name}} · {{width}} × {{height}} px · {{size}} KB"
+  },
+  "decorative": {
+    "label": "Decorative image",
+    "hint": "Screen readers skip it, so it needs no description."
+  },
+  "alt": {
+    "label": "Description of the image",
+    "hint": "Say what the image shows, as you would to someone who can't see it.",
+    "needsAttention": "Fix"
+  },
+  "submit": "Upload image",
+  "uploaded": {
+    "title": "Image uploaded"
+  },
+  "errors": {
+    "invalid": "Check the description for each language and try again.",
+    "too_large": "The image is too large. Try a smaller one.",
+    "unsupported_media": "Only JPEG, PNG, WebP and AVIF images are accepted.",
+    "forbidden": "You are not signed in to upload images.",
+    "internal": "The image could not be uploaded. Check your connection and try again."
+  }
+}

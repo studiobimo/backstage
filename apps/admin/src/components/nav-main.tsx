@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { ChevronRight, FileText, House, Settings2, type LucideIcon } from 'lucide-react'
+import { ChevronRight, FileText, House, Image, Settings2, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -14,8 +14,14 @@ import {
   SidebarMenuSubItem
 } from '@/components/ui/sidebar'
 
-const sections: { key: string; icon: LucideIcon; path: '/pages' | '/settings'; item: string }[] = [
+const sections: {
+  key: string
+  icon: LucideIcon
+  path: '/pages' | '/media' | '/settings'
+  item: string
+}[] = [
   { key: 'pages', icon: FileText, path: '/pages', item: 'all' },
+  { key: 'media', icon: Image, path: '/media', item: 'uploads' },
   { key: 'settings', icon: Settings2, path: '/settings', item: 'general' }
 ]
 

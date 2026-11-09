@@ -22,7 +22,7 @@ const failureShape = z.object({
 export const apiRequest = async (path: string, init?: RequestInit) => {
   const response = await fetch(`${API_ROOT}${path}`, {
     ...init,
-    headers: { 'content-type': 'application/json' }
+    headers: init?.body instanceof FormData ? undefined : { 'content-type': 'application/json' }
   })
   if (response.ok) return response
   const failure = failureShape.safeParse(await response.json().catch(() => null))

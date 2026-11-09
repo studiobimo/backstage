@@ -32,6 +32,12 @@
           "all": "All pages"
         }
       },
+      "media": {
+        "title": "Media",
+        "items": {
+          "uploads": "Uploads"
+        }
+      },
       "settings": {
         "title": "Settings",
         "items": {
