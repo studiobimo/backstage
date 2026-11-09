@@ -21,7 +21,7 @@ describe('unpublishing API', () => {
     await publish(id)
     await saveBlocks(id, [])
     await publish(id)
-    expect((await kv.list()).keys).toHaveLength(2)
+    expect((await kv.list()).keys).toHaveLength(4)
     expect((await snapshotOf(id, 'en')).version).toBe(2)
   })
   it('removes the snapshots when a published page is deleted', async () => {

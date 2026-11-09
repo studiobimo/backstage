@@ -41,6 +41,7 @@ export type { FieldKind } from './fields.ts'
 export { RICH_TEXT, richTextDoc } from './rich-text.ts'
 export type { RichTextDoc } from './rich-text.ts'
 export {
+  DEFAULT_LOCALE,
   LOCALES,
   PAGE,
   pageBlockSchema,
@@ -111,8 +112,11 @@ export type { PublishPlan } from './db/publishing.ts'
 export {
   publishPageSchema,
   publishProblemsResponseSchema,
+  routeKey,
+  routeKeysOf,
   snapshotKey,
   snapshotKeysOf,
+  snapshotRecords,
   snapshotSchema,
   SNAPSHOT
 } from './publishing.ts'

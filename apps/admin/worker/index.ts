@@ -5,11 +5,11 @@ import {
   reportError,
   respondHealthy
 } from '@studiobimo/backstage'
+import { registry } from '@studiobimo/backstage/example'
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
 import { requireAccess } from './auth'
-import { registry } from './registry'
 import { respondWithError } from './respond'
 import { v1Routes } from './v1'
 

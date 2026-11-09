@@ -1,3 +1,4 @@
+import { routeKey } from '@studiobimo/backstage'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -29,6 +30,8 @@ describe('publishing API', () => {
     const page = await publishedPage(id)
     expect(page.publishedAt).toBe(en.publishedAt)
     expect(page.publishedBy).toBe('Local developer')
+    expect(await kv.get(routeKey('en', 'about'))).toBe(id)
+    expect(await kv.get(routeKey('es', 'about-es'))).toBe(id)
   })
   it('publishes the social image with the snapshot', async () => {
     await addMedia('m2')
