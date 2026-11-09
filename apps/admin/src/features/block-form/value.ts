@@ -1,3 +1,4 @@
+import { richTextPlain } from '@studiobimo/backstage'
 import { z } from 'zod'
 
 import type { FieldSpec, GroupSpec } from './spec.ts'
@@ -47,22 +48,6 @@ export const isRecord = (value: FieldValue | undefined): value is BlockValue =>
 
 const isRichText = (value: FieldValue | undefined): value is BlockValue =>
   isRecord(value) && value.type === 'doc'
-
-function richTextPlain(value: FieldValue | undefined): string {
-  if (isRecord(value)) {
-    const text = typeof value.text === 'string' ? value.text : ''
-    return text + richTextPlain(value.content)
-  }
-  return Array.isArray(value) ? value.map(richTextPlain).join(' ').trim() : ''
-}
-
-export function isBlank(value: FieldValue | undefined): boolean {
-  if (value === undefined || value === null || value === '') return true
-  if (isRichText(value)) return richTextPlain(value) === ''
-  if (Array.isArray(value)) return value.length === 0
-  if (isRecord(value)) return Object.values(value).every(isBlank)
-  return false
-}
 
 export function initialValue(spec: FieldSpec): FieldValue | undefined {
   if (spec.defaultValue !== undefined) return spec.defaultValue

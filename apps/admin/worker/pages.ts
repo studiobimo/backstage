@@ -5,8 +5,10 @@ import {
   ensureUser,
   errorBody,
   findPage,
+  listMissingTranslations,
   listPageBlocks,
   listPages,
+  LOCALES,
   PAGE_WRITE,
   pageInputSchema,
   readPageSeo,
@@ -20,6 +22,7 @@ import {
   writePageSeo,
   type Registry,
   type ApiError,
+  type MissingByLocale,
   type PageWrite,
   type VersionedWrite
 } from '@studiobimo/backstage'
@@ -30,6 +33,8 @@ import type { AccessEnv } from './auth'
 import { respondWithError } from './respond'
 
 type PagesContext = Context<AccessEnv>
+
+const NO_MISSING = Object.fromEntries(LOCALES.map((locale) => [locale, 0])) as MissingByLocale
 
 const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok' | 'stale'>, ApiError> = {
   [PAGE_WRITE.slugTaken]: API_ERROR.slugTaken,
@@ -79,9 +84,14 @@ const versionedWrite = async (
   editorId: await ensureUser(c.env.DB!, c.get('editor'))
 })
 
+const listPageSummaries = async (d1: D1Database, registry: Registry) => {
+  const [pages, missing] = await Promise.all([listPages(d1), listMissingTranslations(d1, registry)])
+  return pages.map((page) => ({ ...page, missing: missing.get(page.id) ?? NO_MISSING }))
+}
+
 export const pagesRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()
-    .get('/', async (c) => c.json({ pages: await listPages(c.env.DB!) }))
+    .get('/', async (c) => c.json({ pages: await listPageSummaries(c.env.DB!, registry) }))
     .post('/', async (c) => {
       const parsed = await readInput(c)
       if (!parsed.success) return respondWithError(c, API_ERROR.invalid)

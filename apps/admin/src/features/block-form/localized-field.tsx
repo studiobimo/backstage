@@ -1,3 +1,4 @@
+import { isMissingTranslation } from '@studiobimo/backstage'
 import { useStore } from '@tanstack/react-form'
 import { CopyIcon, LanguagesIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 import { FieldNode, type NodeProps } from './field-node.tsx'
-import { isMissing, languageName, useEditingLocale } from './locale-status.ts'
+import { languageName, useEditingLocale } from './locale-status.ts'
 import type { LocalizedSpec } from './spec.ts'
 import type { BlockFormApi } from './validation.ts'
 import { fieldName, isRecord, type Path, readValue, summarize } from './value.ts'
@@ -20,7 +21,7 @@ function useTranslations(form: BlockFormApi, path: Path) {
 function LocaleBadge({ form, path }: { form: BlockFormApi; path: Path }) {
   const { t } = useTranslation('blockForm')
   const { active } = useEditingLocale()
-  const missing = isMissing(useTranslations(form, path), active)
+  const missing = isMissingTranslation(useTranslations(form, path), active)
   return (
     <>
       {missing && <Badge variant="warning">{t('locale.missing')}</Badge>}

@@ -1,4 +1,4 @@
-import type { Page, PageBlock, PageSeo } from '@studiobimo/backstage'
+import type { PageBlock, PageSeo } from '@studiobimo/backstage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { aboutPage } from '@/test/fixtures'
 import { PageEditor } from './page-editor'
 
 const blocker = vi.hoisted(() => ({
@@ -21,14 +22,7 @@ vi.mock('@tanstack/react-router', () => ({
   }
 }))
 
-const about: Page = {
-  id: 'p1',
-  isHome: false,
-  version: 1,
-  layout: 'default',
-  updatedAt: 0,
-  locales: [{ locale: 'en', slug: 'about', title: 'About' }]
-}
+const about = aboutPage
 const hero = {
   name: 'hero',
   version: 1,
