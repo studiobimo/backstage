@@ -1,3 +1,4 @@
+import { publishedIndexSchema, SEO } from '@studiobimo/backstage'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { clearKv, get, heroBlock, platform, publishSnapshots, snapshotOf } from './test-support'
@@ -69,5 +70,34 @@ describe('site worker', () => {
 
   it('has no database binding and no admin secret', () => {
     expect(Object.keys(platform.env).sort()).toEqual(['MEDIA', 'SITE'])
+  })
+
+  describe('search engine files', () => {
+    const HOST = 'https://example.com'
+
+    it('serves a robots.txt that names the sitemap', async () => {
+      const response = await get(`${HOST}/robots.txt`)
+      expect(response.headers.get('Content-Type')).toMatch(/^text\/plain/)
+      expect(await response.text()).toContain(`Sitemap: ${HOST}/sitemap.xml`)
+    })
+
+    it('serves an empty sitemap before anything is published', async () => {
+      const response = await get('/sitemap.xml')
+      expect(response.headers.get('Content-Type')).toMatch(/^application\/xml/)
+      expect(await response.text()).not.toContain('<url>')
+    })
+
+    it('lists the published pages with hreflang alternates', async () => {
+      const index = publishedIndexSchema.parse({
+        format: SEO.format,
+        pages: [
+          { pageId: 'p1', isHome: false, slugs: { en: 'about', es: 'nosotros' }, publishedAt: 0 }
+        ]
+      })
+      await platform.env.SITE!.put(SEO.indexKey, JSON.stringify(index))
+      const xml = await (await get(`${HOST}/sitemap.xml`)).text()
+      expect(xml).toContain(`<loc>${HOST}/about</loc>`)
+      expect(xml).toContain(`hreflang="es" href="${HOST}/es/nosotros"`)
+    })
   })
 })
