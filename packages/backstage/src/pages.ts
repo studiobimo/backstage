@@ -40,7 +40,12 @@ export const pageSchema = z.object({
 })
 export type Page = z.infer<typeof pageSchema>
 
-export const pagesResponseSchema = z.object({ pages: z.array(pageSchema) })
+export const pageSummarySchema = pageSchema.extend({
+  missing: perLocale(z.number().int().min(0))
+})
+export type PageSummary = z.infer<typeof pageSummarySchema>
+
+export const pagesResponseSchema = z.object({ pages: z.array(pageSummarySchema) })
 
 export const pageSlugsOf = (input: PageInput) =>
   LOCALES.map((locale) => ({

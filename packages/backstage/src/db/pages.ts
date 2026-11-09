@@ -12,6 +12,13 @@ import {
   type PageSeo,
   type PageStamp
 } from '../pages.ts'
+import { upgradeBlockContent, type Registry } from '../blocks.ts'
+import {
+  countMissingTranslations,
+  isSeoMissing,
+  type MissingByLocale,
+  type TranslatedNode
+} from '../translations.ts'
 import { media, pageBlocks, pageLocales, pages, users } from './schema.ts'
 
 type Database = ReturnType<typeof drizzle>
@@ -63,6 +70,84 @@ export const listPages = async (d1: AnyD1Database): Promise<Page[]> => {
   }))
 }
 
+const seoFromRows = (
+  rows: { locale: string; seoTitle: string; description: string; socialImageId: string | null }[]
+) =>
+  Object.fromEntries(
+    LOCALES.map((locale) => {
+      const row = rows.find((candidate) => candidate.locale === locale)
+      return [
+        locale,
+        {
+          title: row?.seoTitle ?? '',
+          description: row?.description ?? '',
+          socialImageId: row?.socialImageId ?? null
+        }
+      ]
+    })
+  ) as PageSeo
+
+const toPageBlock = ({
+  id,
+  block,
+  schemaVersion,
+  content
+}: typeof pageBlocks.$inferSelect): PageBlock => ({
+  id,
+  block,
+  schemaVersion,
+  content: content as PageBlock['content']
+})
+
+const blocksMissing = (
+  registry: Registry,
+  schemaOf: (block: string) => TranslatedNode,
+  blocks: PageBlock[],
+  locale: Locale
+) =>
+  blocks.reduce((total, { block, schemaVersion, content }) => {
+    const definition = registry.get(block)
+    const upgraded = definition && upgradeBlockContent(definition, schemaVersion, content)
+    return upgraded?.ok
+      ? total + countMissingTranslations(schemaOf(block), upgraded.content, locale)
+      : total
+  }, 0)
+
+const memoizedSchemas = (registry: Registry) => {
+  const cache = new Map<string, TranslatedNode>()
+  return (block: string) => {
+    const cached = cache.get(block) ?? registry.jsonSchema(block)
+    cache.set(block, cached)
+    return cached
+  }
+}
+
+export const listMissingTranslations = async (
+  d1: AnyD1Database,
+  registry: Registry
+): Promise<Map<string, MissingByLocale>> => {
+  const db = connect(d1)
+  const [locales, blocks] = await Promise.all([
+    db.select().from(pageLocales),
+    db.select().from(pageBlocks).orderBy(asc(pageBlocks.position))
+  ])
+  const pageIds = new Set(locales.map(({ pageId }) => pageId))
+  const schemaOf = memoizedSchemas(registry)
+  return new Map(
+    [...pageIds].map((pageId) => {
+      const seo = seoFromRows(locales.filter((row) => row.pageId === pageId))
+      const own = blocks.filter((row) => row.pageId === pageId).map(toPageBlock)
+      const missing = Object.fromEntries(
+        LOCALES.map((locale) => [
+          locale,
+          blocksMissing(registry, schemaOf, own, locale) + (isSeoMissing(seo, locale) ? 1 : 0)
+        ])
+      ) as MissingByLocale
+      return [pageId, missing]
+    })
+  )
+}
+
 export const findPage = async (d1: AnyD1Database, id: string) =>
   (await listPages(d1)).find((page) => page.id === id)
 
@@ -112,12 +197,7 @@ export const listPageBlocks = async (d1: AnyD1Database, pageId: string): Promise
     .from(pageBlocks)
     .where(eq(pageBlocks.pageId, pageId))
     .orderBy(asc(pageBlocks.position))
-  return rows.map(({ id, block, schemaVersion, content }) => ({
-    id,
-    block,
-    schemaVersion,
-    content: content as PageBlock['content']
-  }))
+  return rows.map(toPageBlock)
 }
 
 export interface VersionedWrite {
@@ -189,15 +269,7 @@ export const readPageSeo = async (d1: AnyD1Database, id: string): Promise<PageSe
   const [existing] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id))
   if (!existing) return undefined
   const rows = await db.select().from(pageLocales).where(eq(pageLocales.pageId, id))
-  const seoOf = (locale: string) => {
-    const row = rows.find((candidate) => candidate.locale === locale)
-    return {
-      title: row?.seoTitle ?? '',
-      description: row?.description ?? '',
-      socialImageId: row?.socialImageId ?? null
-    }
-  }
-  return Object.fromEntries(LOCALES.map((locale) => [locale, seoOf(locale)])) as PageSeo
+  return seoFromRows(rows)
 }
 
 const allMediaExists = async (db: Database, ids: string[]) => {

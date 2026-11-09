@@ -1,7 +1,8 @@
+import { isMissingTranslation } from '@studiobimo/backstage'
 import { createContext, useContext } from 'react'
 
 import type { FieldSpec, GroupSpec } from './spec.ts'
-import { type BlockValue, type FieldValue, isBlank, isRecord, type Path } from './value.ts'
+import { type BlockValue, type FieldValue, isRecord, type Path } from './value.ts'
 
 export interface LocaleStatus {
   missing: number
@@ -40,13 +41,6 @@ function collectLocalized(
 const startsWith = (path: Path, prefix: Path) =>
   prefix.every((segment, index) => path[index] === segment)
 
-export function isMissing(translations: BlockValue, locale: string): boolean {
-  const filledElsewhere = Object.entries(translations).some(
-    ([other, value]) => other !== locale && !isBlank(value)
-  )
-  return filledElsewhere && isBlank(translations[locale])
-}
-
 export function localeStatus(
   root: GroupSpec,
   value: BlockValue,
@@ -55,7 +49,7 @@ export function localeStatus(
 ): Record<string, LocaleStatus> {
   const entries = collectLocalized(root, value, [])
   const statusOf = (locale: string): LocaleStatus => ({
-    missing: entries.filter((entry) => isMissing(entry.value, locale)).length,
+    missing: entries.filter((entry) => isMissingTranslation(entry.value, locale)).length,
     invalid: issuePaths.filter((issuePath) =>
       entries.some((entry) => startsWith(issuePath, [...entry.path, locale]))
     ).length
