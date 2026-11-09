@@ -1,9 +1,10 @@
-import type { Page } from '@studiobimo/backstage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { type ReactNode, Suspense } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { aboutPage } from '@/test/fixtures'
 
 import { PagesPage } from './pages-page'
 
@@ -14,18 +15,6 @@ vi.mock('@tanstack/react-router', () => ({
     </a>
   )
 }))
-
-const about: Page = {
-  id: 'p1',
-  isHome: false,
-  version: 1,
-  layout: 'default',
-  updatedAt: 0,
-  locales: [
-    { locale: 'en', slug: 'about', title: 'About' },
-    { locale: 'es', slug: 'acerca', title: 'Acerca' }
-  ]
-}
 
 const reply = (status: number, body?: unknown) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status })
@@ -76,7 +65,7 @@ afterEach(() => vi.unstubAllGlobals())
 
 describe('PagesPage', { timeout: 15_000 }, () => {
   it('lists pages with their address in each locale', async () => {
-    mockApi(() => reply(200, { pages: [about] }))
+    mockApi(() => reply(200, { pages: [aboutPage] }))
     renderPage()
     expect(await screen.findByText('/en/about')).toBeInTheDocument()
     expect(screen.getByText('/es/acerca')).toBeInTheDocument()
@@ -84,7 +73,7 @@ describe('PagesPage', { timeout: 15_000 }, () => {
 
   it('creates a page, filling each address from its title', async () => {
     const calls = mockApi((method) =>
-      method === 'POST' ? reply(201, { page: about }) : reply(200, { pages: [] })
+      method === 'POST' ? reply(201, { page: aboutPage }) : reply(200, { pages: [] })
     )
     renderPage()
     const user = await fillTitles({ English: 'About us', Español: 'Acerca de' })
@@ -117,7 +106,7 @@ describe('PagesPage', { timeout: 15_000 }, () => {
 
   it('deletes a page after confirming', async () => {
     const calls = mockApi((method) =>
-      method === 'DELETE' ? reply(204) : reply(200, { pages: [about] })
+      method === 'DELETE' ? reply(204) : reply(200, { pages: [aboutPage] })
     )
     const user = userEvent.setup()
     renderPage()
