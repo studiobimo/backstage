@@ -1,8 +1,8 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
-import { pageSlugsOf, type Page, type PageBlock, type PageInput } from '../pages.ts'
-import { pageBlocks, pageLocales, pages } from './schema.ts'
+import { pageSlugsOf, type Page, type PageBlock, type PageInput, type PageStamp } from '../pages.ts'
+import { pageBlocks, pageLocales, pages, users } from './schema.ts'
 
 type Database = ReturnType<typeof drizzle>
 
@@ -11,7 +11,8 @@ export const PAGE_WRITE = {
   slugTaken: 'slug_taken',
   homeTaken: 'home_taken',
   notFound: 'not_found',
-  homeMismatch: 'home_mismatch'
+  homeMismatch: 'home_mismatch',
+  stale: 'stale'
 } as const
 
 export type PageWrite = (typeof PAGE_WRITE)[keyof typeof PAGE_WRITE]
@@ -104,29 +105,66 @@ export const listPageBlocks = async (d1: AnyD1Database, pageId: string): Promise
   }))
 }
 
-export const replacePageBlocks = async (d1: AnyD1Database, id: string, blocks: PageBlock[]) => {
+export interface VersionedWrite {
+  expectedVersion: number
+  editorId: string
+}
+
+const claimVersion = async (
+  db: Database,
+  id: string,
+  { expectedVersion, editorId }: VersionedWrite,
+  changes: { layout?: string } = {}
+): Promise<PageWrite> => {
+  const claimed = await db
+    .update(pages)
+    .set({ ...changes, version: expectedVersion + 1, updatedBy: editorId })
+    .where(and(eq(pages.id, id), eq(pages.version, expectedVersion)))
+    .returning({ id: pages.id })
+  if (claimed.length > 0) return PAGE_WRITE.ok
+  const [existing] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id))
+  return existing ? PAGE_WRITE.stale : PAGE_WRITE.notFound
+}
+
+export const readPageStamp = async (d1: AnyD1Database, id: string): Promise<PageStamp | null> => {
+  const [row] = await connect(d1)
+    .select({
+      version: pages.version,
+      updatedAt: pages.updatedAt,
+      name: users.name,
+      email: users.email
+    })
+    .from(pages)
+    .leftJoin(users, eq(users.id, pages.updatedBy))
+    .where(eq(pages.id, id))
+  if (!row) return null
+  return {
+    version: row.version,
+    updatedAt: row.updatedAt,
+    updatedBy: row.name || row.email || null
+  }
+}
+
+export const replacePageBlocks = async (
+  d1: AnyD1Database,
+  id: string,
+  blocks: PageBlock[],
+  write: VersionedWrite
+) => {
   const db = connect(d1)
-  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
-  if (!existing) return PAGE_WRITE.notFound
+  const claimed = await claimVersion(db, id, write)
+  if (claimed !== PAGE_WRITE.ok) return claimed
   const rows = blocks.map((block, position) => ({ ...block, pageId: id, position }))
   await db.batch([
     db.delete(pageBlocks).where(eq(pageBlocks.pageId, id)),
-    ...(rows.length > 0 ? [db.insert(pageBlocks).values(rows)] : []),
-    db
-      .update(pages)
-      .set({ version: existing.version + 1 })
-      .where(eq(pages.id, id))
+    ...(rows.length > 0 ? [db.insert(pageBlocks).values(rows)] : [])
   ])
   return PAGE_WRITE.ok
 }
 
-export const setPageLayout = async (d1: AnyD1Database, id: string, layout: string) => {
-  const db = connect(d1)
-  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
-  if (!existing) return PAGE_WRITE.notFound
-  await db
-    .update(pages)
-    .set({ layout, version: existing.version + 1 })
-    .where(eq(pages.id, id))
-  return PAGE_WRITE.ok
-}
+export const setPageLayout = (
+  d1: AnyD1Database,
+  id: string,
+  layout: string,
+  write: VersionedWrite
+) => claimVersion(connect(d1), id, write, { layout })

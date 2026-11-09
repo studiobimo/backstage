@@ -33,5 +33,17 @@
       "minimal": "Mínimo",
       "bare": "Sin adornos"
     }
+  },
+  "stale": {
+    "title": "Se guardó una versión más reciente",
+    "description": "{{name}} guardó esta página el {{when}}. Tus cambios no se guardaron. Recarga para ver su versión.",
+    "someone": "Alguien",
+    "reload": "Recargar la última versión"
+  },
+  "leave": {
+    "title": "¿Salir sin guardar?",
+    "description": "Tienes cambios sin guardar en esta página. Si sales ahora, se perderán.",
+    "stay": "Seguir editando",
+    "discard": "Salir y descartar"
   }
 }

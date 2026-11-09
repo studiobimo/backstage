@@ -1,4 +1,4 @@
-import { LAYOUT, type PageBlock } from '@studiobimo/backstage'
+import { API_ERROR, type PageBlock, type PageStamp } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, CopyIcon, PlusIcon, SaveIcon, Trash2Icon } from 'lucide-react'
@@ -17,12 +17,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
+import { LeaveGuard } from './leave-guard'
+import { StaleAlert } from './stale-alert'
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
 import { type BlockOption, duplicateAt, moveBlock, newBlock, removeAt, sameBlocks } from './draft'
 import {
   blockDescriptionsQuery,
   layoutsQuery,
+  pageBlocksKey,
   pageBlocksQuery,
   savePageBlocksMutation,
   savePageLayoutMutation
@@ -33,6 +36,7 @@ const SortableItems = lazy(() => import('@/components/sortable-items'))
 interface SavedPage {
   blocks: PageBlock[]
   layout: string
+  version: number
 }
 
 interface BlockRowProps {
@@ -108,16 +112,36 @@ function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string },
   const saveBlocks = useMutation(savePageBlocksMutation(queryClient, pageId))
   const saveLayout = useMutation(savePageLayoutMutation(queryClient, pageId))
   const error = saveBlocks.error ?? saveLayout.error
-  const failure = error
-    ? t(`errors.${error instanceof ApiError ? error.code : 'internal'}`, {
-        defaultValue: t('errors.internal')
-      })
-    : undefined
-  const save = () => {
-    if (!sameBlocks(draft.blocks, saved.blocks)) saveBlocks.mutate(draft.blocks)
-    if (draft.layout !== saved.layout) saveLayout.mutate(draft.layout)
+  const stale =
+    error instanceof ApiError && error.code === API_ERROR.staleVersion.code ? error : undefined
+  const failure =
+    error && !stale
+      ? t(`errors.${error instanceof ApiError ? error.code : 'internal'}`, {
+          defaultValue: t('errors.internal')
+        })
+      : undefined
+  const save = async () => {
+    saveBlocks.reset()
+    saveLayout.reset()
+    try {
+      let expectedVersion = saved.version
+      if (!sameBlocks(draft.blocks, saved.blocks)) {
+        const result = await saveBlocks.mutateAsync({ blocks: draft.blocks, expectedVersion })
+        expectedVersion = result.version
+      }
+      if (draft.layout !== saved.layout) {
+        await saveLayout.mutateAsync({ layout: draft.layout, expectedVersion })
+      }
+    } catch {
+      return
+    }
   }
-  return { save, saving: saveBlocks.isPending || saveLayout.isPending, failure }
+  return {
+    save,
+    saving: saveBlocks.isPending || saveLayout.isPending,
+    failure,
+    stale: stale && { current: stale.current }
+  }
 }
 
 function useRowFeedback(blocks: PageBlock[]) {
@@ -184,10 +208,20 @@ interface EditorHeaderProps {
   dirty: boolean
   saving: boolean
   failure?: string
+  stale?: { current?: PageStamp }
   onSave: () => void
+  onReload: () => void
 }
 
-function EditorHeader({ title, dirty, saving, failure, onSave }: EditorHeaderProps) {
+function EditorHeader({
+  title,
+  dirty,
+  saving,
+  failure,
+  stale,
+  onSave,
+  onReload
+}: EditorHeaderProps) {
   const { t } = useTranslation('pageEditor')
   return (
     <div className="flex flex-col gap-4">
@@ -210,6 +244,7 @@ function EditorHeader({ title, dirty, saving, failure, onSave }: EditorHeaderPro
           </div>
         }
       />
+      {stale && <StaleAlert current={stale.current} onReload={onReload} />}
       {failure && (
         <p role="alert" className="text-destructive-foreground text-sm">
           {failure}
@@ -255,21 +290,28 @@ function EmptyBlocks() {
   )
 }
 
-export function PageEditor({ pageId }: { pageId: string }) {
+interface PageEditorBodyProps {
+  pageId: string
+  onReload: () => void
+}
+
+function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   const { t, i18n } = useTranslation('pageEditor')
-  const { data: saved } = useSuspenseQuery(pageBlocksQuery(pageId))
+  const { data: savedPage } = useSuspenseQuery(pageBlocksQuery(pageId))
+  const saved = savedPage.blocks
   const { data: options } = useSuspenseQuery(blockDescriptionsQuery)
   const { data: pages } = useSuspenseQuery(pagesQuery)
   const { data: layouts } = useSuspenseQuery(layoutsQuery)
   const page = pages.find((candidate) => candidate.id === pageId)
-  const savedLayout = page?.layout ?? LAYOUT.default
+  const savedLayout = savedPage.layout
   const [layout, setLayout] = useState(savedLayout)
   const actions = useBlockActions(saved)
   const { blocks, names, listRef } = actions
-  const { save, saving, failure } = useSave(
+  const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout
+  const { save, saving, failure, stale } = useSave(
     pageId,
     { blocks, layout },
-    { blocks: saved, layout: savedLayout }
+    { blocks: saved, layout: savedLayout, version: savedPage.version }
   )
 
   const renderRow = (key: string, index: number, slot?: SortableSlot) => (
@@ -288,11 +330,14 @@ export function PageEditor({ pageId }: { pageId: string }) {
     <>
       <EditorHeader
         title={page ? pageLabel(page, i18n.language) : t('title')}
-        dirty={!sameBlocks(blocks, saved) || layout !== savedLayout}
+        dirty={dirty}
         saving={saving}
         failure={failure}
-        onSave={save}
+        stale={stale}
+        onSave={() => void save()}
+        onReload={onReload}
       />
+      <LeaveGuard dirty={dirty} />
       <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
       <div ref={listRef} className="contents">
         {blocks.length === 0 ? (
@@ -323,4 +368,17 @@ export function PageEditor({ pageId }: { pageId: string }) {
       </p>
     </>
   )
+}
+
+export function PageEditor({ pageId }: { pageId: string }) {
+  const queryClient = useQueryClient()
+  const [generation, setGeneration] = useState(0)
+  const reload = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: pageBlocksKey(pageId) }),
+      queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+    ])
+    setGeneration((current) => current + 1)
+  }
+  return <PageEditorBody key={generation} pageId={pageId} onReload={() => void reload()} />
 }
