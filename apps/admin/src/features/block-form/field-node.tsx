@@ -7,6 +7,7 @@ import { type FieldChromeProps, FieldHeading } from '@/components/form/fields'
 import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
 import { cn } from '@/lib/utils'
 
+import { ImageField } from './image-field.tsx'
 import { ListField } from './list-field.tsx'
 import { LocalizedField } from './localized-field.tsx'
 import { RichTextField } from './rich-text-field.tsx'
@@ -157,6 +158,7 @@ export function FieldNode(props: NodeProps) {
   const { spec } = props
   switch (spec.kind) {
     case 'group':
+      if (spec.variant === 'image') return <ImageField {...props} spec={spec} />
       return <GroupNode {...props} spec={spec} />
     case 'list':
       return <ListField {...props} spec={spec} />

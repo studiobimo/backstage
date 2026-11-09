@@ -9,7 +9,8 @@
     "label": "Image",
     "hint": "JPEG, PNG, WebP or AVIF. It is resized and stripped of location and camera data in your browser before it is uploaded.",
     "processing": "Preparing the image…",
-    "rejected": "That image can't be used"
+    "rejected": "That image can't be used",
+    "loadFailed": "The images could not be loaded."
   },
   "rejections": {
     "unsupported": "Only JPEG, PNG, WebP and AVIF images are accepted.",
@@ -38,5 +39,15 @@
     "unsupported_media": "Only JPEG, PNG, WebP and AVIF images are accepted.",
     "forbidden": "You are not signed in to upload images.",
     "internal": "The image could not be uploaded. Check your connection and try again."
+  },
+  "library": {
+    "title": "Choose an image",
+    "description": "Pick one of the images you uploaded.",
+    "label": "Uploaded images",
+    "emptyTitle": "No images uploaded yet",
+    "upload": "Upload an image",
+    "choose": "Choose {{label}}",
+    "change": "Change {{label}}",
+    "remove": "Remove {{label}}"
   }
 }

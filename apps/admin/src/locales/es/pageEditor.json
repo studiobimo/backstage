@@ -58,8 +58,9 @@
       "hint": "{{count}} de {{max}} caracteres."
     },
     "image": {
-      "default": "La imagen para redes viene de los ajustes del sitio.",
-      "none": "Aún no hay imagen para redes. Define una por defecto en los ajustes del sitio."
+      "default": "La imagen social viene de los ajustes del sitio, salvo que elijas una aquí.",
+      "none": "Aún no hay imagen social. Elige una aquí o define una por defecto en los ajustes del sitio.",
+      "label": "Imagen social"
     }
   },
   "publish": {

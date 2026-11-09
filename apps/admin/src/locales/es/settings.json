@@ -23,6 +23,10 @@
     "defaultSocialImage": {
       "title": "Imagen social predeterminada",
       "description": "Se usa cuando una página se comparte sin una imagen propia."
+    },
+    "defaultDescription": {
+      "title": "Descripción por defecto",
+      "description": "Se usa cuando una página no tiene descripción propia."
     }
   },
   "slots": {

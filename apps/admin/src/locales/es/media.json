@@ -9,7 +9,8 @@
     "label": "Imagen",
     "hint": "JPEG, PNG, WebP o AVIF. Se reduce y se le quitan los datos de ubicación y de cámara en tu navegador antes de subirla.",
     "processing": "Preparando la imagen…",
-    "rejected": "No se puede usar esa imagen"
+    "rejected": "No se puede usar esa imagen",
+    "loadFailed": "No se pudieron cargar las imágenes."
   },
   "rejections": {
     "unsupported": "Solo se aceptan imágenes JPEG, PNG, WebP y AVIF.",
@@ -38,5 +39,15 @@
     "unsupported_media": "Solo se aceptan imágenes JPEG, PNG, WebP y AVIF.",
     "forbidden": "No has iniciado sesión para subir imágenes.",
     "internal": "No se pudo subir la imagen. Revisa tu conexión e inténtalo de nuevo."
+  },
+  "library": {
+    "title": "Elige una imagen",
+    "description": "Elige una de las imágenes que subiste.",
+    "label": "Imágenes subidas",
+    "emptyTitle": "Aún no hay imágenes subidas",
+    "upload": "Sube una imagen",
+    "choose": "Elegir {{label}}",
+    "change": "Cambiar {{label}}",
+    "remove": "Quitar {{label}}"
   }
 }

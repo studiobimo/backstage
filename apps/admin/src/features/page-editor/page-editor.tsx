@@ -368,6 +368,7 @@ function useSeoDefaults(titles: Record<string, string>): SeoDefaults {
   return {
     titles,
     siteNames: settings.siteName,
+    descriptions: settings.defaultDescription ?? {},
     hasSocialImage: settings.defaultSocialImage !== undefined
   }
 }
