@@ -61,5 +61,38 @@
       "default": "La imagen para redes viene de los ajustes del sitio.",
       "none": "Aún no hay imagen para redes. Define una por defecto en los ajustes del sitio."
     }
+  },
+  "publish": {
+    "label": "Publicación",
+    "publish": "Publicar",
+    "unpublish": "Despublicar",
+    "cancel": "Cancelar",
+    "status": {
+      "published": "Publicada",
+      "draft": "Borrador"
+    },
+    "notLive": "No está en línea. Los visitantes aún no ven esta página.",
+    "since": "En línea desde {{when}}, publicada por {{name}}.",
+    "someone": "alguien",
+    "saveFirst": "Guarda tus cambios para publicarlos.",
+    "unpublishTitle": "¿Despublicar {{name}}?",
+    "unpublishDescription": "Los visitantes verán la página de error 404 en esta dirección. El borrador se conserva y puedes volver a publicarlo.",
+    "toast": {
+      "published": "Publicada",
+      "unpublished": "Despublicada"
+    },
+    "problems": {
+      "title": "Esta página aún no se puede publicar",
+      "unknown_layout": "El diseño ya no existe. Elige otro y guarda.",
+      "unknown_block": "El bloque {{name}} ya no existe. Quítalo y guarda.",
+      "invalid_content": "El bloque {{name}} tiene contenido no válido. Corrígelo y guarda.",
+      "unknown_media": "Una imagen que usa {{name}} se eliminó de la biblioteca de medios.",
+      "missing_slug": "Un idioma no tiene dirección. Renombra la página para añadirla."
+    },
+    "errors": {
+      "stale_version": "Se guardó una versión más reciente. Recarga la última versión y vuelve a publicar.",
+      "not_found": "Esta página ya no existe.",
+      "internal": "No se pudo hacer el cambio. Revisa tu conexión e inténtalo de nuevo."
+    }
   }
 }

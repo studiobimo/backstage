@@ -36,6 +36,9 @@ function PageRow({ page, onAction }: { page: PageSummary; onAction: (editing: Ed
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
           <span className="truncate">{name}</span>
           {page.isHome && <Badge>{t('list.home')}</Badge>}
+          <Badge variant={page.publishedAt === null ? 'outline' : 'success'}>
+            {t(page.publishedAt === null ? 'list.draft' : 'list.published')}
+          </Badge>
           <MissingBadges missing={page.missing} />
         </p>
         <p className="flex flex-wrap gap-x-3 text-muted-foreground text-xs">

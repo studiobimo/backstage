@@ -13,7 +13,9 @@
     "emptyDescription": "Create the home page, then add the pages around it.",
     "edit": "Edit blocks of {{name}}",
     "missing_one": "{{count}} missing in {{language}}",
-    "missing_other": "{{count}} missing in {{language}}"
+    "missing_other": "{{count}} missing in {{language}}",
+    "published": "Published",
+    "draft": "Draft"
   },
   "form": {
     "createTitle": "New page",

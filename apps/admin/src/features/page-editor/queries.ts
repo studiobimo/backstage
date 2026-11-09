@@ -81,6 +81,27 @@ export const savePageLayoutMutation = (queryClient: QueryClient, pageId: string)
     }
   })
 
+const publishRequest = async (pageId: string, init: RequestInit) =>
+  z
+    .object({ page: pageSchema })
+    .parse(await (await apiRequest(`/pages/${pageId}/publish`, init)).json()).page
+
+const refreshPages = (queryClient: QueryClient) =>
+  queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+
+export const publishPageMutation = (queryClient: QueryClient, pageId: string) =>
+  mutationOptions({
+    mutationFn: (expectedVersion: number) =>
+      publishRequest(pageId, { method: 'POST', body: JSON.stringify({ expectedVersion }) }),
+    onSuccess: () => refreshPages(queryClient)
+  })
+
+export const unpublishPageMutation = (queryClient: QueryClient, pageId: string) =>
+  mutationOptions({
+    mutationFn: () => publishRequest(pageId, { method: 'DELETE' }),
+    onSuccess: () => refreshPages(queryClient)
+  })
+
 export const pageSeoKey = (pageId: string) => ['page-seo', pageId] as const
 
 const readSeo = async (response: Response) => pageSeoResponseSchema.parse(await response.json())

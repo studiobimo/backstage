@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils'
 import { EditingLocaleContext } from '../block-form/locale-status'
 import { LocaleSwitcher } from '../block-form/locale-switcher'
 import { LeaveGuard } from './leave-guard'
+import { PublishPanel } from './publish-panel'
 import { StaleAlert } from './stale-alert'
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
@@ -413,6 +414,15 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
         onReload={onReload}
       />
       <LeaveGuard dirty={dirty} />
+      {page && (
+        <PublishPanel
+          page={page}
+          name={pageLabel(page, i18n.language)}
+          version={savedPage.version}
+          blocks={saved}
+          dirty={dirty}
+        />
+      )}
       <LocaleSwitcher
         locales={LOCALES}
         active={locale}
