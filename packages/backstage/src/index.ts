@@ -25,6 +25,17 @@ export type {
 } from './blocks.ts'
 export { API_ERROR, errorBody } from './errors.ts'
 export type { ApiError } from './errors.ts'
+export {
+  MEDIA,
+  mediaAltSchema,
+  mediaKeyOf,
+  mediaResponseSchema,
+  mediaSchema,
+  mediaTypes,
+  mediaUploadSchema,
+  sniffImageType
+} from './media.ts'
+export type { Media, MediaAlt, MediaType, MediaUpload } from './media.ts'
 export { fieldKinds, image, link, localized, richText } from './fields.ts'
 export type { FieldKind } from './fields.ts'
 export { RICH_TEXT, richTextDoc } from './rich-text.ts'
@@ -93,6 +104,8 @@ export {
 } from './db/pages.ts'
 export type { PageWrite, VersionedWrite } from './db/pages.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
+export { insertMedia } from './db/media.ts'
+export type { NewMedia } from './db/media.ts'
 export { ensureUser } from './db/users.ts'
 export type { Editor } from './db/users.ts'
 export { readSiteSettings, writeSiteSettings } from './db/settings.ts'

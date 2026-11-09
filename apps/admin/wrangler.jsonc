@@ -18,6 +18,7 @@
       "migrations_dir": "../../packages/backstage/migrations"
     }
   ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
   "env": {
     "production": {}
   }

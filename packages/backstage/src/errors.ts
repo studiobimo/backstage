@@ -8,6 +8,12 @@ export const API_ERROR = {
     status: 409,
     message: 'A newer version of this page was saved'
   },
+  tooLarge: { code: 'too_large', status: 413, message: 'The image is too large' },
+  unsupportedMedia: {
+    code: 'unsupported_media',
+    status: 415,
+    message: 'Only JPEG, PNG, WebP and AVIF images are accepted'
+  },
   notFound: { code: 'not_found', status: 404, message: 'Not found' },
   internal: { code: 'internal', status: 500, message: 'Internal error' },
   devAuthOutsideLocal: {
