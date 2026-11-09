@@ -20,7 +20,12 @@ options:
 - The site worker reads the snapshot and **renders it with React on the server**
   (`renderToReadableStream`). A page ships no JavaScript unless one of its blocks needs some, in
   which case the block is loaded as an island.
-- Responses are cached at the edge with a short `s-maxage` and stale-while-revalidate (PUB-4).
+- Publishing also writes one **route key** per locale, `route:<locale>:<slug>` (the home page's slug
+  is empty), whose value is the page id. The site reads the route, then the snapshot, and answers
+  404 when the snapshot's slug no longer matches, so a renamed slug never serves the old page.
+- Responses are cached at the edge with a short `s-maxage` and stale-while-revalidate (PUB-4):
+  `s-maxage=30, stale-while-revalidate=15`. A request the cache holds reads nothing from KV. KV's
+  60 seconds and the cache's 45 add up to 105, inside the two minutes promised.
 - A preview writes the same kind of snapshot under a random key that expires after an hour (PRV-1).
 
 ## Consequences
