@@ -8,7 +8,10 @@ DEPLOY_ENVS := production
 include base.mk
 include vite.mk
 
-# The site has no client bundle, so its budget is the Worker's: 150 KiB gzipped, about twice
-# the measured React renderer (docs/research/react-server-rendering.md). #9 can move it.
+# The site has no client bundle, so its budget is the Worker's. It is one file, so the chunk limit
+# is the file's size. Gzipped it is React (68 KiB) and zod (about 50 KiB, it validates each snapshot
+# and block), measured at 158 KiB when published pages were first rendered. See
+# docs/research/react-server-rendering.md; #9 can move it.
 BUNDLE_DIR@apps/site := dist/backstage_site
-BUNDLE_TOTAL_KIB@apps/site := 150
+BUNDLE_CHUNK_KIB@apps/site := 800
+BUNDLE_TOTAL_KIB@apps/site := 170

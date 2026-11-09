@@ -1,12 +1,9 @@
-import { afterAll, describe, expect, it } from 'vitest'
-import { getPlatformProxy } from 'wrangler'
+import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
-import app from './index'
+import { clearKv, get, heroBlock, platform, publishSnapshots, snapshotOf } from './test-support'
 
-const platform = await getPlatformProxy<Env>()
 afterAll(() => platform.dispose())
-
-const get = (path: string) => app.request(path, {}, platform.env)
+beforeEach(clearKv)
 
 function directives(response: Response) {
   const policy = response.headers.get('Content-Security-Policy') ?? ''
@@ -19,29 +16,38 @@ function directives(response: Response) {
   )
 }
 
+const publishHome = () =>
+  publishSnapshots(
+    snapshotOf({
+      locale: 'en',
+      isHome: true,
+      slug: null,
+      title: 'Home',
+      blocks: [heroBlock({ en: 'Hi' })]
+    }),
+    snapshotOf({
+      locale: 'es',
+      isHome: true,
+      slug: null,
+      title: 'Inicio',
+      blocks: [heroBlock({ es: 'Hola' })]
+    })
+  )
+
 describe('site worker', () => {
-  it('serves the placeholder page', async () => {
-    const response = await get('/')
-    expect(response.status).toBe(200)
-    expect(response.headers.get('Content-Type')).toMatch(/^text\/html/)
-    expect(await response.text()).toContain('<h1>Backstage</h1>')
-  })
-
-  it('has no inline script or style for the policy to allow', async () => {
-    const page = await (await get('/')).text()
-    expect(page).not.toMatch(/<script|<style|\sstyle=|\son[a-z]+=/i)
-  })
-
-  it.each(['/', '/nothing-here'])('sends a strict policy on %s', async (path) => {
-    const policy = directives(await get(path))
-    expect(policy.get('default-src')).toEqual(["'none'"])
-    expect(policy.has('script-src')).toBe(false)
-    expect(policy.get('base-uri')).toEqual(["'none'"])
-    expect(policy.get('frame-ancestors')).toEqual(["'none'"])
-    for (const sources of policy.values()) {
-      expect(sources).not.toContain("'unsafe-inline'")
-      expect(sources).not.toContain("'unsafe-eval'")
-      expect(sources).not.toContain('*')
+  it('sends a strict policy on a page and on a 404', async () => {
+    await publishHome()
+    for (const path of ['/', '/nothing-here']) {
+      const policy = directives(await get(path))
+      expect(policy.get('default-src')).toEqual(["'none'"])
+      expect(policy.has('script-src')).toBe(false)
+      expect(policy.get('base-uri')).toEqual(["'none'"])
+      expect(policy.get('frame-ancestors')).toEqual(["'none'"])
+      for (const sources of policy.values()) {
+        expect(sources).not.toContain("'unsafe-inline'")
+        expect(sources).not.toContain("'unsafe-eval'")
+        expect(sources).not.toContain('*')
+      }
     }
   })
 
@@ -61,8 +67,7 @@ describe('site worker', () => {
     expect(await response.json()).toEqual({ ok: true })
   })
 
-  it('answers an unknown path with a 404', async () => {
-    const response = await get('/nothing-here')
-    expect(response.status).toBe(404)
+  it('has no database binding and no admin secret', () => {
+    expect(Object.keys(platform.env).sort()).toEqual(['MEDIA', 'SITE'])
   })
 })

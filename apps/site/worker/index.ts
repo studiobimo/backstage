@@ -1,6 +1,19 @@
-import { OBSERVABILITY, observe, reportError, respondHealthy } from '@studiobimo/backstage'
+import {
+  API_ERROR,
+  MEDIA,
+  OBSERVABILITY,
+  observe,
+  reportError,
+  respondHealthy
+} from '@studiobimo/backstage'
+import { registry } from '@studiobimo/backstage/example'
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
+
+import { renderPage } from './page'
+import { respondWithError } from './respond'
+import { parseRoute } from './routing'
+import { findPublished, findTranslations } from './store'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -29,29 +42,36 @@ app.use(
 
 app.get(OBSERVABILITY.health.path, respondHealthy)
 
-const placeholder = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>Backstage</title>
-  </head>
-  <body>
-    <main>
-      <h1>Backstage</h1>
-      <p>Nothing has been published yet.</p>
-    </main>
-  </body>
-</html>
-`
+app.get('/media/*', async (c) => {
+  const object = await c.env.MEDIA!.get(c.req.path.slice(1))
+  if (!object) return respondWithError(c, API_ERROR.notFound)
+  return new Response(object.body, {
+    headers: {
+      'Content-Type': object.httpMetadata?.contentType ?? 'application/octet-stream',
+      'Cache-Control': MEDIA.cacheControl
+    }
+  })
+})
 
-app.get('/', (c) => c.html(placeholder))
+app.get('*', async (c) => {
+  const route = parseRoute(c.req.path)
+  const snapshot = route && (await findPublished(c.env.SITE!, route))
+  if (!snapshot) return respondWithError(c, API_ERROR.notFound)
+  return renderPage(
+    {
+      registry,
+      snapshot,
+      translations: await findTranslations(c.env.SITE!, snapshot),
+      origin: new URL(c.req.url).origin
+    },
+    {}
+  )
+})
 
-app.notFound((c) => c.text('Not found', 404))
+app.notFound((c) => respondWithError(c, API_ERROR.notFound))
 app.onError((error, c) => {
   reportError(c, error)
-  return c.text('Internal error', 500)
+  return respondWithError(c, API_ERROR.internal)
 })
 
 export default app
