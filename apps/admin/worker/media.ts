@@ -11,7 +11,7 @@ import {
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth'
-import { respondWithError } from './respond'
+import { RESPONSE_STATUS, respondWithError } from './respond'
 
 type Rejection = { error: ApiError }
 type Upload = { file: File; metadata: ReturnType<typeof mediaUploadSchema.parse> }
@@ -82,5 +82,5 @@ export const mediaRoutes = () =>
       await c.env.MEDIA!.delete(r2Key)
       throw error
     }
-    return c.json({ media: saved }, 201)
+    return c.json({ media: saved }, RESPONSE_STATUS.created)
   })
