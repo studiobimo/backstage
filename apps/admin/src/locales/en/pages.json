@@ -11,7 +11,9 @@
     "delete": "Delete {{name}}",
     "emptyTitle": "No pages yet",
     "emptyDescription": "Create the home page, then add the pages around it.",
-    "edit": "Edit blocks of {{name}}"
+    "edit": "Edit blocks of {{name}}",
+    "missing_one": "{{count}} missing in {{language}}",
+    "missing_other": "{{count}} missing in {{language}}"
   },
   "form": {
     "createTitle": "New page",

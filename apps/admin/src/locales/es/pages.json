@@ -11,7 +11,9 @@
     "delete": "Eliminar {{name}}",
     "emptyTitle": "Aún no hay páginas",
     "emptyDescription": "Crea la página de inicio y luego las demás.",
-    "edit": "Editar bloques de {{name}}"
+    "edit": "Editar bloques de {{name}}",
+    "missing_one": "Falta {{count}} en {{language}}",
+    "missing_other": "Faltan {{count}} en {{language}}"
   },
   "form": {
     "createTitle": "Nueva página",

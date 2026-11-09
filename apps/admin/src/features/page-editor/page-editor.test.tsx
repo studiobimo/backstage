@@ -44,7 +44,10 @@ const emptySeo: PageSeo = {
   es: { title: '', description: '', socialImageId: null }
 }
 
-const mockApi = (initial: PageBlock[], options: { stale?: boolean } = {}) => {
+const mockApi = (
+  initial: PageBlock[],
+  options: { stale?: boolean; seo?: PageSeo; descriptions?: unknown[] } = {}
+) => {
   const puts: { blocks: PageBlock[]; expectedVersion: number }[] = []
   const layoutPuts: { layout: string; expectedVersion: number }[] = []
   const seoPuts: (PageSeo & { expectedVersion: number })[] = []
@@ -56,7 +59,7 @@ const mockApi = (initial: PageBlock[], options: { stale?: boolean } = {}) => {
       }
       if (url.endsWith('/seo')) {
         if (init?.method !== 'PUT')
-          return new Response(JSON.stringify({ seo: emptySeo, version: 3 }))
+          return new Response(JSON.stringify({ seo: options.seo ?? emptySeo, version: 3 }))
         const { expectedVersion, ...seo } = JSON.parse(init.body as string) as PageSeo & {
           expectedVersion: number
         }
@@ -88,7 +91,8 @@ const mockApi = (initial: PageBlock[], options: { stale?: boolean } = {}) => {
       if (url.endsWith('/blocks') && url.includes('/pages/')) {
         return new Response(JSON.stringify({ blocks: initial, version: 3, layout: 'default' }))
       }
-      if (url.endsWith('/blocks')) return new Response(JSON.stringify({ blocks: [hero] }))
+      if (url.endsWith('/blocks'))
+        return new Response(JSON.stringify({ blocks: options.descriptions ?? [hero] }))
       return new Response(JSON.stringify({ pages: [about] }))
     })
   )
@@ -238,12 +242,64 @@ describe('PageEditor SEO', SUITE, () => {
     expect(title).toHaveAttribute('placeholder', 'About')
     await user.type(title, 'About the studio')
     await user.type(screen.getByRole('textbox', { name: 'Description' }), 'Who we are')
-    await user.click(screen.getByRole('tab', { name: /Spanish/ }))
+    await user.click(screen.getByRole('button', { name: /Spanish/ }))
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue(''))
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts.seo).toHaveLength(1))
     expect(puts.seo[0]!.en).toMatchObject({ title: 'About the studio', description: 'Who we are' })
     expect(puts.seo[0]!.expectedVersion).toBe(3)
     expect(puts).toHaveLength(0)
+  })
+})
+
+describe('PageEditor languages', SUITE, () => {
+  const englishOnly: PageSeo = {
+    en: { title: 'About us', description: '', socialImageId: null },
+    es: { title: '', description: '', socialImageId: null }
+  }
+
+  it('flags the language that is missing translations and edits it on request', async () => {
+    mockApi(saved, { seo: englishOnly })
+    const user = userEvent.setup()
+    renderEditor()
+    const spanish = await screen.findByRole('button', { name: /Spanish/ })
+    expect(spanish).toHaveTextContent('1 missing')
+    expect(screen.getByRole('button', { name: /English/ })).not.toHaveTextContent('missing')
+    expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue('About us')
+    await user.click(spanish)
+    expect(spanish).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue('')
+    expect(
+      screen.getByRole('heading', { name: 'Search and social' }).parentElement
+    ).toHaveTextContent('Not translated')
+  })
+
+  it('stays quiet while no language has anything yet', async () => {
+    mockApi(saved)
+    renderEditor()
+    await rows()
+    expect(screen.getByRole('button', { name: /Spanish/ })).not.toHaveTextContent('missing')
+  })
+
+  it('counts a block field that only one language fills', async () => {
+    const localizedHero = {
+      ...hero,
+      schema: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'object',
+            additionalProperties: { type: 'string' },
+            backstage: 'localized'
+          }
+        }
+      }
+    }
+    const content = { title: { en: 'Hi' } }
+    mockApi([{ id: 'a', block: 'hero', schemaVersion: 1, content }], {
+      descriptions: [localizedHero]
+    })
+    renderEditor()
+    expect(await screen.findByRole('button', { name: /Spanish/ })).toHaveTextContent('1 missing')
   })
 })

@@ -1,6 +1,14 @@
-import type { PageBlock } from '@studiobimo/backstage'
+import {
+  countMissingTranslations,
+  isSeoMissing,
+  LOCALES,
+  type Locale,
+  type PageBlock,
+  type PageSeo
+} from '@studiobimo/backstage'
 
 import { type JsonSchema, parseBlockSchema } from '../block-form/spec'
+import type { LocaleStatus } from '../block-form/locale-status'
 import { initialGroup } from '../block-form/value'
 
 export interface BlockOption {
@@ -35,3 +43,24 @@ export const moveBlock = (blocks: PageBlock[], from: number, to: number): PageBl
 export const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
 export const sameBlocks = (a: PageBlock[], b: PageBlock[]) => sameJson(a, b)
+
+const blocksMissing = (blocks: PageBlock[], options: BlockOption[], locale: Locale) =>
+  blocks.reduce((total, { block, content }) => {
+    const option = options.find((candidate) => candidate.name === block)
+    return option ? total + countMissingTranslations(option.schema, content, locale) : total
+  }, 0)
+
+export const localeGaps = (
+  blocks: PageBlock[],
+  options: BlockOption[],
+  seo: PageSeo
+): Record<Locale, LocaleStatus> =>
+  Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      {
+        missing: blocksMissing(blocks, options, locale) + (isSeoMissing(seo, locale) ? 1 : 0),
+        invalid: 0
+      }
+    ])
+  ) as Record<Locale, LocaleStatus>
