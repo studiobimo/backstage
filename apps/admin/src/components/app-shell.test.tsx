@@ -1,77 +1,17 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import i18n from '@/i18n/config'
-import { createAppRouter } from '@/router'
-import { aboutPage } from '@/test/fixtures'
+import { renderShell, resetShell, stubApi } from '@/test/shell'
 
-const apiBodies: Record<string, unknown> = {
-  '/api/v1/pages': { pages: [aboutPage] },
-  '/api/v1/pages/p1/blocks': { blocks: [], layout: 'default', version: 1 },
-  '/api/v1/pages/p1/seo': {
-    seo: {
-      en: { title: '', description: '', socialImageId: null },
-      es: { title: '', description: '', socialImageId: null }
-    },
-    version: 1
-  },
-  '/api/v1/settings': { settings: { siteName: { en: 'Studio' } } },
-  '/api/v1/blocks': { blocks: [] },
-  '/api/v1/layouts': { layouts: ['default'] }
-}
-
-function stubApi() {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(
-      async (url: string) =>
-        new Response(JSON.stringify(apiBodies[new URL(url, 'http://x').pathname]))
-    )
-  )
-}
-
-async function renderShell(path = '/') {
-  const queryClient = new QueryClient()
-  const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }))
-  render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  )
-  await screen.findByRole('heading', { level: 1 })
-}
-
-describe('app shell', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    return i18n.changeLanguage('en')
-  })
+describe('app shell navigation', () => {
+  afterEach(resetShell)
 
   it('has a sidebar with the navigation, a theme toggle and a language switcher', async () => {
     await renderShell()
-    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('link', { name: /Backstage/ })).toHaveAttribute('href', '/')
     expect(screen.getByRole('button', { name: /theme/ })).toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'Language' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
-  })
-
-  it('shows its strings in Spanish when the language changes', async () => {
-    await renderShell()
-    await i18n.changeLanguage('es')
-    expect(await screen.findByRole('link', { name: 'Inicio' })).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Idioma' })).toBeInTheDocument()
-    expect(document.documentElement.lang).toBe('es')
-  })
-
-  it('switches the language from the switcher', async () => {
-    await renderShell()
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('combobox', { name: 'Language' }))
-    await user.click(await screen.findByRole('option', { name: 'Español' }))
-    expect(await screen.findByRole('link', { name: 'Inicio' })).toBeInTheDocument()
   })
 
   it('names the current page in the breadcrumb', async () => {
@@ -84,27 +24,44 @@ describe('app shell', () => {
   it('names the page being edited under its section in the breadcrumb', async () => {
     stubApi()
     await renderShell('/pages/p1')
-    expect(await screen.findByRole('link', { name: 'Pages' })).toHaveAttribute('href', '/pages')
+    const breadcrumb = await screen.findByRole('navigation', { name: 'breadcrumb' })
+    expect(await within(breadcrumb).findByRole('link', { name: 'Pages' })).toHaveAttribute(
+      'href',
+      '/pages'
+    )
     expect(
       await screen.findByText('About', { selector: '[aria-current="page"]' })
     ).toBeInTheDocument()
   })
 
-  it('opens a section of the navigation to show its items', async () => {
+  it('links each single-item section straight to its screen', async () => {
     await renderShell()
-    const user = userEvent.setup()
-    expect(screen.queryByRole('link', { name: 'All pages' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Pages' }))
-    expect(await screen.findByRole('link', { name: 'All pages' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Pages' })).toHaveAttribute('href', '/pages')
+    expect(screen.getByRole('link', { name: 'Media' })).toHaveAttribute('href', '/media')
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings')
+    expect(screen.queryByRole('button', { name: 'Pages' })).not.toBeInTheDocument()
   })
 
-  it('links the settings section to the site settings', async () => {
+  it('has no Home item in the navigation, because the logo goes home', async () => {
     await renderShell()
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Settings' }))
-    expect(await screen.findByRole('link', { name: 'General' })).toHaveAttribute(
-      'href',
-      '/settings'
-    )
+    expect(screen.queryByRole('link', { name: 'Home' })).not.toBeInTheDocument()
+  })
+
+  it('does not repeat the product name in the breadcrumb', async () => {
+    await renderShell('/type')
+    const breadcrumb = screen.getByRole('navigation', { name: 'breadcrumb' })
+    expect(breadcrumb).not.toHaveTextContent('Backstage')
+  })
+
+  it('shows the type specimen link while developing', async () => {
+    await renderShell()
+    expect(screen.getByRole('link', { name: 'Type specimen' })).toHaveAttribute('href', '/type')
+  })
+
+  it('hides the type specimen link outside development', async () => {
+    vi.stubEnv('DEV', false)
+    await renderShell()
+    expect(screen.queryByRole('link', { name: 'Type specimen' })).not.toBeInTheDocument()
+    vi.unstubAllEnvs()
   })
 })

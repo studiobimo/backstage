@@ -13,6 +13,7 @@ import {
 
 export function NavSecondary(props: ComponentProps<typeof SidebarGroup>) {
   const { t } = useTranslation()
+  if (!import.meta.env.DEV) return null
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent>
