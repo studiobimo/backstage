@@ -39,3 +39,18 @@ export const useFreshPagesDb = () => {
     await db.batch(tables.map((table) => db.prepare(`DELETE FROM ${table}`)))
   })
 }
+
+export const versionOf = async (id: string) =>
+  ((await (await send('GET', `/${id}/blocks`)).json()) as { version: number }).version
+
+export const saveBlocks = async (id: string, blocks: unknown[], expectedVersion?: number) =>
+  send('PUT', `/${id}/blocks`, {
+    blocks,
+    expectedVersion: expectedVersion ?? (await versionOf(id))
+  })
+
+export const saveLayout = async (id: string, layout: string, expectedVersion?: number) =>
+  send('PUT', `/${id}/layout`, {
+    layout,
+    expectedVersion: expectedVersion ?? (await versionOf(id))
+  })

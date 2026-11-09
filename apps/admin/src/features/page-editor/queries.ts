@@ -1,4 +1,10 @@
-import { layoutsResponseSchema, pageBlocksSchema, type PageBlock } from '@studiobimo/backstage'
+import {
+  layoutsResponseSchema,
+  pageBlocksResponseSchema,
+  pageSchema,
+  type PageBlock,
+  type PageBlocksResponse
+} from '@studiobimo/backstage'
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 
@@ -18,28 +24,30 @@ export const blockDescriptionsQuery = queryOptions({
     blockDescriptionsSchema.parse(await (await apiRequest('/blocks')).json()).blocks
 })
 
-const pageBlocksKey = (pageId: string) => ['page-blocks', pageId] as const
+export const pageBlocksKey = (pageId: string) => ['page-blocks', pageId] as const
 
 export const pageBlocksQuery = (pageId: string) =>
   queryOptions({
     queryKey: pageBlocksKey(pageId),
+    staleTime: Infinity,
+    gcTime: 0,
     queryFn: async () =>
-      pageBlocksSchema.parse(await (await apiRequest(`/pages/${pageId}/blocks`)).json()).blocks
+      pageBlocksResponseSchema.parse(await (await apiRequest(`/pages/${pageId}/blocks`)).json())
   })
 
 export const savePageBlocksMutation = (queryClient: QueryClient, pageId: string) =>
   mutationOptions({
-    mutationFn: async (blocks: PageBlock[]) =>
-      pageBlocksSchema.parse(
+    mutationFn: async (save: { blocks: PageBlock[]; expectedVersion: number }) =>
+      pageBlocksResponseSchema.parse(
         await (
           await apiRequest(`/pages/${pageId}/blocks`, {
             method: 'PUT',
-            body: JSON.stringify({ blocks })
+            body: JSON.stringify(save)
           })
         ).json()
-      ).blocks,
-    onSuccess: (blocks) => {
-      queryClient.setQueryData(pageBlocksKey(pageId), blocks)
+      ),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(pageBlocksKey(pageId), saved)
       return queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
     }
   })
@@ -52,11 +60,20 @@ export const layoutsQuery = queryOptions({
 
 export const savePageLayoutMutation = (queryClient: QueryClient, pageId: string) =>
   mutationOptions({
-    mutationFn: async (layout: string) => {
-      await apiRequest(`/pages/${pageId}/layout`, {
-        method: 'PUT',
-        body: JSON.stringify({ layout })
-      })
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+    mutationFn: async (save: { layout: string; expectedVersion: number }) =>
+      z.object({ page: pageSchema }).parse(
+        await (
+          await apiRequest(`/pages/${pageId}/layout`, {
+            method: 'PUT',
+            body: JSON.stringify(save)
+          })
+        ).json()
+      ).page,
+    onSuccess: (page) => {
+      queryClient.setQueryData<PageBlocksResponse>(
+        pageBlocksKey(pageId),
+        (current) => current && { ...current, version: page.version, layout: page.layout }
+      )
+      return queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+    }
   })
