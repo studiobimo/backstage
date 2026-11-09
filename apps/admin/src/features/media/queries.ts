@@ -1,5 +1,10 @@
-import { MEDIA, mediaResponseSchema, type MediaAlt } from '@studiobimo/backstage'
-import { mutationOptions } from '@tanstack/react-query'
+import {
+  MEDIA,
+  mediaListResponseSchema,
+  mediaResponseSchema,
+  type MediaAlt
+} from '@studiobimo/backstage'
+import { mutationOptions, queryOptions } from '@tanstack/react-query'
 
 import { apiRequest } from '@/lib/api'
 
@@ -21,3 +26,11 @@ export const uploadMediaMutation = mutationOptions({
     return mediaResponseSchema.parse(await response.json()).media
   }
 })
+
+export const mediaListQuery = queryOptions({
+  queryKey: ['media'],
+  queryFn: async () =>
+    mediaListResponseSchema.parse(await (await apiRequest('/media')).json()).media
+})
+
+export const mediaFileUrl = (id: string) => `/api/v1/media/${id}/file`

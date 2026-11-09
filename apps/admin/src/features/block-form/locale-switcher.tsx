@@ -45,7 +45,7 @@ export function LocaleSwitcher({
               key={locale}
               aria-pressed={locale === active}
               data-pressed={locale === active ? '' : undefined}
-              className="flex-1 sm:flex-none"
+              className="flex-1 text-muted-foreground sm:flex-none"
               onClick={() => onChange(locale)}
             >
               {languageName(locale, i18n.language)}

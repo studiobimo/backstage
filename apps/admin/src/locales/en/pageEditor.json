@@ -58,8 +58,9 @@
       "hint": "{{count}} of {{max}} characters."
     },
     "image": {
-      "default": "The social image comes from the site settings.",
-      "none": "No social image yet. Set a default in the site settings."
+      "default": "The social image comes from the site settings unless you choose one here.",
+      "none": "No social image yet. Choose one here, or set a default in the site settings.",
+      "label": "Social image"
     }
   },
   "publish": {

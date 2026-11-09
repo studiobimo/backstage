@@ -13,11 +13,13 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
+import { MediaPicker } from '../media/media-picker'
 import { useEditingLocale } from '../block-form/locale-status'
 
 export interface SeoDefaults {
   titles: Record<string, string>
   siteNames: Partial<Record<string, string>>
+  descriptions: Partial<Record<string, string>>
   hasSocialImage: boolean
 }
 
@@ -31,6 +33,7 @@ interface LocaleFieldsProps {
   locale: Locale
   value: LocaleSeo
   fallbackTitle: string
+  fallbackDescription: string
   hasSocialImage: boolean
   onChange: (value: LocaleSeo) => void
 }
@@ -39,6 +42,7 @@ function LocaleFields({
   locale,
   value,
   fallbackTitle,
+  fallbackDescription,
   hasSocialImage,
   onChange
 }: LocaleFieldsProps) {
@@ -64,6 +68,7 @@ function LocaleFields({
         <Textarea
           lang={locale}
           value={value.description}
+          placeholder={fallbackDescription}
           maxLength={description.maxLength}
           onChange={(event) => onChange({ ...value, description: event.target.value })}
         />
@@ -74,9 +79,19 @@ function LocaleFields({
           })}
         </FieldDescription>
       </Field>
-      <p className="text-muted-foreground text-sm">
-        {hasSocialImage ? t('seo.image.default') : t('seo.image.none')}
-      </p>
+      <Field>
+        <FieldLabel>{t('seo.image.label')}</FieldLabel>
+        <MediaPicker
+          label={t('seo.image.label')}
+          value={value.socialImageId}
+          onChange={(socialImageId) => onChange({ ...value, socialImageId })}
+        />
+        {!value.socialImageId && (
+          <FieldDescription>
+            {hasSocialImage ? t('seo.image.default') : t('seo.image.none')}
+          </FieldDescription>
+        )}
+      </Field>
     </div>
   )
 }
@@ -107,6 +122,7 @@ export function SeoSection({ value, defaults, onChange }: SeoSectionProps) {
         locale={locale}
         value={value[locale]}
         fallbackTitle={defaults.titles[locale] ?? defaults.siteNames[locale] ?? ''}
+        fallbackDescription={defaults.descriptions[locale] ?? ''}
         hasSocialImage={defaults.hasSocialImage}
         onChange={(next) => onChange({ ...value, [locale]: next })}
       />

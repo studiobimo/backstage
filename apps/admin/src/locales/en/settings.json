@@ -23,6 +23,10 @@
     "defaultSocialImage": {
       "title": "Default social image",
       "description": "Used when a page shares a link without an image of its own."
+    },
+    "defaultDescription": {
+      "title": "Default description",
+      "description": "Used when a page has no description of its own."
     }
   },
   "slots": {

@@ -38,14 +38,13 @@ describe('BlockForm fields', () => {
     expect(screen.getByRole('switch', { name: /Featured/ })).not.toBeChecked()
     expect(screen.getByRole('combobox', { name: 'Theme' })).toHaveTextContent('light')
     expect(within(group('Cta')).getByRole('textbox', { name: 'Address' })).toBeInTheDocument()
-    expect(within(group('Picture')).getByRole('textbox', { name: 'Image' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose Picture' })).toBeInTheDocument()
     expect(within(group('Details')).getByRole('textbox', { name: 'Credit' })).toBeInTheDocument()
     expect(within(group('Items')).getByText('No items yet')).toBeInTheDocument()
   })
 
   it('marks optional fields and counts characters against a limit', async () => {
     const { user } = setup()
-    expect(group('Picture')).toHaveTextContent('Alternative textOptional')
     await user.type(textbox('Slug'), 'abc')
     expect(screen.getByText('3/5')).toBeInTheDocument()
   })
@@ -229,14 +228,13 @@ describe('BlockForm content', () => {
   afterEach(restoreEnglish)
 
   it('submits the typed content once every error is fixed', async () => {
-    const { user, onSubmit } = setup()
+    const { user, onSubmit } = setup({ value: { picture: { id: 'img-1', alt: '' } } })
     await user.type(textbox('Title'), 'Hello')
     await user.type(textbox('Slug'), 'abc')
     await user.type(textbox('Columns'), '3')
     await choose(user, 'Size', 'm')
     await user.click(screen.getByRole('switch', { name: /Featured/ }))
     await user.type(within(group('Cta')).getByRole('textbox', { name: 'Address' }), '/about')
-    await user.type(within(group('Picture')).getByRole('textbox', { name: 'Image' }), 'img-1')
     await user.click(screen.getByRole('button', { name: 'Add item' }))
     await user.keyboard('One')
     await user.click(screen.getByRole('button', { name: 'Save' }))
