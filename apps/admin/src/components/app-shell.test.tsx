@@ -2,10 +2,39 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import i18n from '@/i18n/config'
 import { createAppRouter } from '@/router'
+
+const about = {
+  id: 'p1',
+  isHome: false,
+  version: 1,
+  layout: 'default',
+  updatedAt: 0,
+  locales: [
+    { locale: 'en', slug: 'about', title: 'About' },
+    { locale: 'es', slug: 'acerca', title: 'Acerca' }
+  ]
+}
+
+const apiBodies: Record<string, unknown> = {
+  '/api/v1/pages': { pages: [about] },
+  '/api/v1/pages/p1/blocks': { blocks: [], layout: 'default', version: 1 },
+  '/api/v1/blocks': { blocks: [] },
+  '/api/v1/layouts': { layouts: ['default'] }
+}
+
+function stubApi() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      async (url: string) =>
+        new Response(JSON.stringify(apiBodies[new URL(url, 'http://x').pathname]))
+    )
+  )
+}
 
 async function renderShell(path = '/') {
   const queryClient = new QueryClient()
@@ -19,7 +48,10 @@ async function renderShell(path = '/') {
 }
 
 describe('app shell', () => {
-  afterEach(() => i18n.changeLanguage('en'))
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    return i18n.changeLanguage('en')
+  })
 
   it('has a sidebar with the navigation, a theme toggle and a language switcher', async () => {
     await renderShell()
@@ -49,6 +81,15 @@ describe('app shell', () => {
     await renderShell('/type')
     expect(
       screen.getByText('Type specimen', { selector: '[aria-current="page"]' })
+    ).toBeInTheDocument()
+  })
+
+  it('names the page being edited under its section in the breadcrumb', async () => {
+    stubApi()
+    await renderShell('/pages/p1')
+    expect(await screen.findByRole('link', { name: 'Pages' })).toHaveAttribute('href', '/pages')
+    expect(
+      await screen.findByText('About', { selector: '[aria-current="page"]' })
     ).toBeInTheDocument()
   })
 

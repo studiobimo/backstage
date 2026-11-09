@@ -11,7 +11,7 @@
     "delete": "Delete {{name}}",
     "emptyTitle": "No pages yet",
     "emptyDescription": "Create the home page, then add the pages around it.",
-    "edit": "Edit {{name}}"
+    "edit": "Edit blocks of {{name}}"
   },
   "form": {
     "createTitle": "New page",
@@ -36,6 +36,6 @@
     "slug_taken": "Another page already uses that address in this language.",
     "home_taken": "The home page already exists.",
     "invalid": "Check the fields and try again.",
-    "internal": "Something went wrong. Try again."
+    "internal": "The page could not be saved. Check your connection and try again."
   }
 }

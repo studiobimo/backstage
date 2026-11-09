@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { LifeBuoy, Type } from 'lucide-react'
+import { Type } from 'lucide-react'
 import type { ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -21,12 +21,6 @@ export function NavSecondary(props: ComponentProps<typeof SidebarGroup>) {
             <SidebarMenuButton size="sm" render={<Link to="/type" />}>
               <Type />
               <span>{t('nav.type')}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="sm" render={<button type="button" />}>
-              <LifeBuoy />
-              <span>{t('nav.support')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
