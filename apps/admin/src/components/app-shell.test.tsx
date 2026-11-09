@@ -6,22 +6,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import i18n from '@/i18n/config'
 import { createAppRouter } from '@/router'
-
-const about = {
-  id: 'p1',
-  isHome: false,
-  version: 1,
-  layout: 'default',
-  updatedAt: 0,
-  locales: [
-    { locale: 'en', slug: 'about', title: 'About' },
-    { locale: 'es', slug: 'acerca', title: 'Acerca' }
-  ]
-}
+import { aboutPage } from '@/test/fixtures'
 
 const apiBodies: Record<string, unknown> = {
-  '/api/v1/pages': { pages: [about] },
+  '/api/v1/pages': { pages: [aboutPage] },
   '/api/v1/pages/p1/blocks': { blocks: [], layout: 'default', version: 1 },
+  '/api/v1/pages/p1/seo': {
+    seo: {
+      en: { title: '', description: '', socialImageId: null },
+      es: { title: '', description: '', socialImageId: null }
+    },
+    version: 1
+  },
+  '/api/v1/settings': { settings: { siteName: { en: 'Studio' } } },
   '/api/v1/blocks': { blocks: [] },
   '/api/v1/layouts': { layouts: ['default'] }
 }

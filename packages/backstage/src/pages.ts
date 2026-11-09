@@ -10,7 +10,7 @@ export const PAGE = {
   seo: { title: { maxLength: 70 }, description: { maxLength: 160 } }
 } as const
 
-const perLocale = <T extends z.ZodType>(value: T) =>
+export const perLocale = <T extends z.ZodType>(value: T) =>
   z.object(Object.fromEntries(LOCALES.map((locale) => [locale, value])) as Record<Locale, T>)
 
 const slug = z.string().max(PAGE.slug.maxLength).regex(PAGE.slug.pattern)
