@@ -7,9 +7,10 @@ import {
   respondHealthy
 } from '@studiobimo/backstage'
 import { registry } from '@studiobimo/backstage/example'
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
+import { EDGE_CACHE, edgeCache } from './cache'
 import { renderPage } from './page'
 import { respondWithError } from './respond'
 import { parseRoute } from './routing'
@@ -53,10 +54,13 @@ app.get('/media/*', async (c) => {
   })
 })
 
-app.get('*', async (c) => {
+const respondNotFound = (c: Context) =>
+  respondWithError(c, API_ERROR.notFound, { 'Cache-Control': EDGE_CACHE.control })
+
+app.get('*', edgeCache, async (c) => {
   const route = parseRoute(c.req.path)
   const snapshot = route && (await findPublished(c.env.SITE!, route))
-  if (!snapshot) return respondWithError(c, API_ERROR.notFound)
+  if (!snapshot) return respondNotFound(c)
   return renderPage(
     {
       registry,
@@ -64,7 +68,7 @@ app.get('*', async (c) => {
       translations: await findTranslations(c.env.SITE!, snapshot),
       origin: new URL(c.req.url).origin
     },
-    {}
+    { 'Cache-Control': EDGE_CACHE.control }
   )
 })
 
