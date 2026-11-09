@@ -6,7 +6,8 @@ export type Locale = (typeof LOCALES)[number]
 export const PAGE = {
   slug: { maxLength: 80, pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ },
   title: { maxLength: 120 },
-  blocks: { maxCount: 100 }
+  blocks: { maxCount: 100 },
+  seo: { title: { maxLength: 70 }, description: { maxLength: 160 } }
 } as const
 
 const perLocale = <T extends z.ZodType>(value: T) =>
@@ -96,3 +97,18 @@ export const staleVersionSchema = z.object({
   error: z.string(),
   current: pageStampSchema
 })
+
+const localeSeoSchema = z.object({
+  title: z.string().trim().max(PAGE.seo.title.maxLength),
+  description: z.string().trim().max(PAGE.seo.description.maxLength),
+  socialImageId: z.string().min(1).nullable()
+})
+export type LocaleSeo = z.infer<typeof localeSeoSchema>
+
+export const pageSeoSchema = perLocale(localeSeoSchema)
+export type PageSeo = z.infer<typeof pageSeoSchema>
+
+export const pageSeoResponseSchema = z.object({ seo: pageSeoSchema, version: z.number().int() })
+export type PageSeoResponse = z.infer<typeof pageSeoResponseSchema>
+
+export const savePageSeoSchema = pageSeoSchema.extend({ expectedVersion })

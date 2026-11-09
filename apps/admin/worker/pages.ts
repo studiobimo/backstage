@@ -9,12 +9,15 @@ import {
   listPages,
   PAGE_WRITE,
   pageInputSchema,
+  readPageSeo,
   readPageStamp,
   renamePage,
   replacePageBlocks,
   savePageBlocksSchema,
   savePageLayoutSchema,
+  savePageSeoSchema,
   setPageLayout,
+  writePageSeo,
   type Registry,
   type ApiError,
   type PageWrite,
@@ -32,7 +35,8 @@ const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok' | 'stale'>, ApiError> = {
   [PAGE_WRITE.slugTaken]: API_ERROR.slugTaken,
   [PAGE_WRITE.homeTaken]: API_ERROR.homeTaken,
   [PAGE_WRITE.notFound]: API_ERROR.notFound,
-  [PAGE_WRITE.homeMismatch]: API_ERROR.invalid
+  [PAGE_WRITE.homeMismatch]: API_ERROR.invalid,
+  [PAGE_WRITE.unknownMedia]: API_ERROR.invalid
 }
 
 const readInput = async (c: PagesContext) => {
@@ -60,6 +64,11 @@ const blocksResponse = async (c: PagesContext, id: string) => {
     version: page.version,
     layout: page.layout
   })
+}
+
+const seoResponse = async (c: PagesContext, id: string) => {
+  const [seo, page] = await Promise.all([readPageSeo(c.env.DB!, id), findPage(c.env.DB!, id)])
+  return seo && page ? c.json({ seo, version: page.version }) : null
 }
 
 const versionedWrite = async (
@@ -126,4 +135,17 @@ export const pagesRoutes = (registry: Registry) =>
         await setPageLayout(c.env.DB!, id, parsed.data.layout, write)
       )
       return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
+    })
+    .get('/:id/seo', async (c) => {
+      const id = c.req.param('id')
+      return (await seoResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
+    })
+    .put('/:id/seo', async (c) => {
+      const parsed = savePageSeoSchema.safeParse(await c.req.json().catch(() => null))
+      if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
+      const { expectedVersion, ...seo } = parsed.data
+      const id = c.req.param('id')
+      const write = await versionedWrite(c, expectedVersion)
+      const failure = await failureOf(c, id, await writePageSeo(c.env.DB!, id, seo, write))
+      return failure ?? (await seoResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })

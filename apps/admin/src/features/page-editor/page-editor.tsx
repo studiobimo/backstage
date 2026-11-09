@@ -1,4 +1,4 @@
-import { API_ERROR, type PageBlock, type PageStamp } from '@studiobimo/backstage'
+import { API_ERROR, type PageBlock, type PageSeo, type PageStamp } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, CopyIcon, PlusIcon, SaveIcon, Trash2Icon } from 'lucide-react'
@@ -21,21 +21,38 @@ import { LeaveGuard } from './leave-guard'
 import { StaleAlert } from './stale-alert'
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
-import { type BlockOption, duplicateAt, moveBlock, newBlock, removeAt, sameBlocks } from './draft'
+import { settingsQuery } from '../settings/queries'
+import {
+  type BlockOption,
+  duplicateAt,
+  moveBlock,
+  newBlock,
+  removeAt,
+  sameBlocks,
+  sameJson
+} from './draft'
 import {
   blockDescriptionsQuery,
   layoutsQuery,
   pageBlocksKey,
   pageBlocksQuery,
+  pageSeoKey,
+  pageSeoQuery,
   savePageBlocksMutation,
-  savePageLayoutMutation
+  savePageLayoutMutation,
+  savePageSeoMutation
 } from './queries'
+import { type SeoDefaults, SeoSection } from './seo-section'
 
 const SortableItems = lazy(() => import('@/components/sortable-items'))
 
-interface SavedPage {
+interface PageDraft {
   blocks: PageBlock[]
   layout: string
+  seo: PageSeo
+}
+
+interface SavedPage extends PageDraft {
   version: number
 }
 
@@ -106,12 +123,13 @@ function BlockPicker({
   )
 }
 
-function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string }, saved: SavedPage) {
+function useSave(pageId: string, draft: PageDraft, saved: SavedPage) {
   const { t } = useTranslation('pageEditor')
   const queryClient = useQueryClient()
   const saveBlocks = useMutation(savePageBlocksMutation(queryClient, pageId))
   const saveLayout = useMutation(savePageLayoutMutation(queryClient, pageId))
-  const error = saveBlocks.error ?? saveLayout.error
+  const saveSeo = useMutation(savePageSeoMutation(queryClient, pageId))
+  const error = saveBlocks.error ?? saveLayout.error ?? saveSeo.error
   const stale =
     error instanceof ApiError && error.code === API_ERROR.staleVersion.code ? error : undefined
   const failure =
@@ -123,6 +141,7 @@ function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string },
   const save = async () => {
     saveBlocks.reset()
     saveLayout.reset()
+    saveSeo.reset()
     try {
       let expectedVersion = saved.version
       if (!sameBlocks(draft.blocks, saved.blocks)) {
@@ -130,7 +149,11 @@ function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string },
         expectedVersion = result.version
       }
       if (draft.layout !== saved.layout) {
-        await saveLayout.mutateAsync({ layout: draft.layout, expectedVersion })
+        const result = await saveLayout.mutateAsync({ layout: draft.layout, expectedVersion })
+        expectedVersion = result.version
+      }
+      if (!sameJson(draft.seo, saved.seo)) {
+        await saveSeo.mutateAsync({ seo: draft.seo, expectedVersion })
       }
     } catch {
       return
@@ -138,7 +161,7 @@ function useSave(pageId: string, draft: { blocks: PageBlock[]; layout: string },
   }
   return {
     save,
-    saving: saveBlocks.isPending || saveLayout.isPending,
+    saving: saveBlocks.isPending || saveLayout.isPending || saveSeo.isPending,
     failure,
     stale: stale && { current: stale.current }
   }
@@ -295,25 +318,8 @@ interface PageEditorBodyProps {
   onReload: () => void
 }
 
-function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
-  const { t, i18n } = useTranslation('pageEditor')
-  const { data: savedPage } = useSuspenseQuery(pageBlocksQuery(pageId))
-  const saved = savedPage.blocks
-  const { data: options } = useSuspenseQuery(blockDescriptionsQuery)
-  const { data: pages } = useSuspenseQuery(pagesQuery)
-  const { data: layouts } = useSuspenseQuery(layoutsQuery)
-  const page = pages.find((candidate) => candidate.id === pageId)
-  const savedLayout = savedPage.layout
-  const [layout, setLayout] = useState(savedLayout)
-  const actions = useBlockActions(saved)
+function BlockList({ actions }: { actions: ReturnType<typeof useBlockActions> }) {
   const { blocks, names, listRef } = actions
-  const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout
-  const { save, saving, failure, stale } = useSave(
-    pageId,
-    { blocks, layout },
-    { blocks: saved, layout: savedLayout, version: savedPage.version }
-  )
-
   const renderRow = (key: string, index: number, slot?: SortableSlot) => (
     <BlockRow
       key={key}
@@ -324,6 +330,60 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
       onDuplicate={() => actions.duplicate(index)}
       onRemove={() => actions.remove(index)}
     />
+  )
+  return (
+    <div ref={listRef} className="contents">
+      {blocks.length === 0 ? (
+        <EmptyBlocks />
+      ) : (
+        <Suspense
+          fallback={
+            <ul className="flex flex-col gap-2">
+              {blocks.map((block, index) => renderRow(block.id, index))}
+            </ul>
+          }
+        >
+          <SortableItems keys={blocks.map((block) => block.id)} names={names} onMove={actions.move}>
+            {renderRow}
+          </SortableItems>
+        </Suspense>
+      )}
+    </div>
+  )
+}
+
+function useSeoDefaults(titles: Record<string, string>): SeoDefaults {
+  const { data: settings } = useSuspenseQuery(settingsQuery)
+  return {
+    titles,
+    siteNames: settings.siteName,
+    hasSocialImage: settings.defaultSocialImage !== undefined
+  }
+}
+
+function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
+  const { t, i18n } = useTranslation('pageEditor')
+  const { data: savedPage } = useSuspenseQuery(pageBlocksQuery(pageId))
+  const saved = savedPage.blocks
+  const { data: options } = useSuspenseQuery(blockDescriptionsQuery)
+  const { data: pages } = useSuspenseQuery(pagesQuery)
+  const { data: layouts } = useSuspenseQuery(layoutsQuery)
+  const page = pages.find((candidate) => candidate.id === pageId)
+  const { data: savedSeoPage } = useSuspenseQuery(pageSeoQuery(pageId))
+  const savedSeo = savedSeoPage.seo
+  const savedLayout = savedPage.layout
+  const [layout, setLayout] = useState(savedLayout)
+  const [seo, setSeo] = useState(savedSeo)
+  const defaults = useSeoDefaults(
+    Object.fromEntries((page?.locales ?? []).map(({ locale, title }) => [locale, title]))
+  )
+  const actions = useBlockActions(saved)
+  const { blocks } = actions
+  const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)
+  const { save, saving, failure, stale } = useSave(
+    pageId,
+    { blocks, layout, seo },
+    { blocks: saved, layout: savedLayout, seo: savedSeo, version: savedPage.version }
   )
 
   return (
@@ -339,30 +399,11 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
       />
       <LeaveGuard dirty={dirty} />
       <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
-      <div ref={listRef} className="contents">
-        {blocks.length === 0 ? (
-          <EmptyBlocks />
-        ) : (
-          <Suspense
-            fallback={
-              <ul className="flex flex-col gap-2">
-                {blocks.map((block, index) => renderRow(block.id, index))}
-              </ul>
-            }
-          >
-            <SortableItems
-              keys={blocks.map((block) => block.id)}
-              names={names}
-              onMove={actions.move}
-            >
-              {renderRow}
-            </SortableItems>
-          </Suspense>
-        )}
-      </div>
+      <BlockList actions={actions} />
       <div>
         <BlockPicker options={options} onPick={actions.add} />
       </div>
+      <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
       <p role="status" aria-live="polite" className="sr-only">
         {actions.announcement}
       </p>
@@ -376,6 +417,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
   const reload = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: pageBlocksKey(pageId) }),
+      queryClient.invalidateQueries({ queryKey: pageSeoKey(pageId) }),
       queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
     ])
     setGeneration((current) => current + 1)

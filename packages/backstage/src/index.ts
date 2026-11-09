@@ -37,21 +37,27 @@ export {
   pageBlocksSchema,
   pageInputSchema,
   pageSchema,
+  pageSeoResponseSchema,
+  pageSeoSchema,
   pagesResponseSchema,
   pageStampSchema,
   pageSlugsOf,
   savePageBlocksSchema,
   savePageLayoutSchema,
+  savePageSeoSchema,
   staleVersionSchema,
   slugify
 } from './pages.ts'
 export type {
   Locale,
+  LocaleSeo,
   Page,
   PageBlock,
   PageBlocks,
   PageBlocksResponse,
   PageInput,
+  PageSeo,
+  PageSeoResponse,
   PageStamp
 } from './pages.ts'
 export {
@@ -78,10 +84,12 @@ export {
   listPageBlocks,
   listPages,
   PAGE_WRITE,
+  readPageSeo,
   readPageStamp,
   renamePage,
   replacePageBlocks,
-  setPageLayout
+  setPageLayout,
+  writePageSeo
 } from './db/pages.ts'
 export type { PageWrite, VersionedWrite } from './db/pages.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'

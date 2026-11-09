@@ -1,8 +1,18 @@
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, eq, inArray } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
-import { pageSlugsOf, type Page, type PageBlock, type PageInput, type PageStamp } from '../pages.ts'
-import { pageBlocks, pageLocales, pages, users } from './schema.ts'
+import {
+  LOCALES,
+  pageSlugsOf,
+  type Locale,
+  type LocaleSeo,
+  type Page,
+  type PageBlock,
+  type PageInput,
+  type PageSeo,
+  type PageStamp
+} from '../pages.ts'
+import { media, pageBlocks, pageLocales, pages, users } from './schema.ts'
 
 type Database = ReturnType<typeof drizzle>
 
@@ -12,7 +22,8 @@ export const PAGE_WRITE = {
   homeTaken: 'home_taken',
   notFound: 'not_found',
   homeMismatch: 'home_mismatch',
-  stale: 'stale'
+  stale: 'stale',
+  unknownMedia: 'unknown_media'
 } as const
 
 export type PageWrite = (typeof PAGE_WRITE)[keyof typeof PAGE_WRITE]
@@ -76,12 +87,16 @@ export const renamePage = async (d1: AnyD1Database, id: string, input: PageInput
   if (existing.isHome !== input.isHome) return PAGE_WRITE.homeMismatch
   return guardUnique(() =>
     db.batch([
-      db.delete(pageLocales).where(eq(pageLocales.pageId, id)),
-      db.insert(pageLocales).values(localeRows(id, input)),
       db
         .update(pages)
         .set({ version: existing.version + 1 })
-        .where(eq(pages.id, id))
+        .where(eq(pages.id, id)),
+      ...localeRows(id, input).map(({ locale, slug, title }) =>
+        db
+          .update(pageLocales)
+          .set({ slug, title })
+          .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
+      )
     ])
   )
 }
@@ -168,3 +183,53 @@ export const setPageLayout = (
   layout: string,
   write: VersionedWrite
 ) => claimVersion(connect(d1), id, write, { layout })
+
+export const readPageSeo = async (d1: AnyD1Database, id: string): Promise<PageSeo | undefined> => {
+  const db = connect(d1)
+  const [existing] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id))
+  if (!existing) return undefined
+  const rows = await db.select().from(pageLocales).where(eq(pageLocales.pageId, id))
+  const seoOf = (locale: string) => {
+    const row = rows.find((candidate) => candidate.locale === locale)
+    return {
+      title: row?.seoTitle ?? '',
+      description: row?.description ?? '',
+      socialImageId: row?.socialImageId ?? null
+    }
+  }
+  return Object.fromEntries(LOCALES.map((locale) => [locale, seoOf(locale)])) as PageSeo
+}
+
+const allMediaExists = async (db: Database, ids: string[]) => {
+  if (ids.length === 0) return true
+  const known = await db.select({ id: media.id }).from(media).where(inArray(media.id, ids))
+  return new Set(ids).size === known.length
+}
+
+const localeSeoUpdate = (db: Database, id: string, locale: Locale, seo: LocaleSeo) =>
+  db
+    .update(pageLocales)
+    .set({ seoTitle: seo.title, description: seo.description, socialImageId: seo.socialImageId })
+    .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
+
+export const writePageSeo = async (
+  d1: AnyD1Database,
+  id: string,
+  seo: PageSeo,
+  write: VersionedWrite
+) => {
+  const db = connect(d1)
+  if (
+    !(await allMediaExists(
+      db,
+      LOCALES.flatMap((locale) => seo[locale].socialImageId ?? [])
+    ))
+  ) {
+    return PAGE_WRITE.unknownMedia
+  }
+  const claimed = await claimVersion(db, id, write)
+  if (claimed !== PAGE_WRITE.ok) return claimed
+  const [first, ...rest] = LOCALES.map((locale) => localeSeoUpdate(db, id, locale, seo[locale]))
+  await db.batch([first!, ...rest])
+  return PAGE_WRITE.ok
+}

@@ -1,4 +1,4 @@
-import type { Page, PageBlock } from '@studiobimo/backstage'
+import type { Page, PageBlock, PageSeo } from '@studiobimo/backstage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -45,14 +45,32 @@ const STALE_BODY = {
   current: { version: 4, updatedAt: Date.UTC(2026, 10, 8, 12, 30), updatedBy: 'Ana Ruiz' }
 }
 
+const emptySeo: PageSeo = {
+  en: { title: '', description: '', socialImageId: null },
+  es: { title: '', description: '', socialImageId: null }
+}
+
 const mockApi = (initial: PageBlock[], options: { stale?: boolean } = {}) => {
   const puts: { blocks: PageBlock[]; expectedVersion: number }[] = []
   const layoutPuts: { layout: string; expectedVersion: number }[] = []
+  const seoPuts: (PageSeo & { expectedVersion: number })[] = []
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
       if (init?.method === 'PUT' && options.stale) {
         return new Response(JSON.stringify(STALE_BODY), { status: 409 })
+      }
+      if (url.endsWith('/seo')) {
+        if (init?.method !== 'PUT')
+          return new Response(JSON.stringify({ seo: emptySeo, version: 3 }))
+        const { expectedVersion, ...seo } = JSON.parse(init.body as string) as PageSeo & {
+          expectedVersion: number
+        }
+        seoPuts.push({ ...seo, expectedVersion })
+        return new Response(JSON.stringify({ seo, version: expectedVersion + 1 }))
+      }
+      if (url.endsWith('/settings')) {
+        return new Response(JSON.stringify({ settings: { siteName: { en: 'Studio' } } }))
       }
       if (init?.method === 'PUT' && url.endsWith('/layout')) {
         const body = JSON.parse(init.body as string) as { layout: string; expectedVersion: number }
@@ -80,7 +98,7 @@ const mockApi = (initial: PageBlock[], options: { stale?: boolean } = {}) => {
       return new Response(JSON.stringify({ pages: [about] }))
     })
   )
-  return Object.assign(puts, { layouts: layoutPuts })
+  return Object.assign(puts, { layouts: layoutPuts, seo: seoPuts })
 }
 
 const renderEditor = () =>
@@ -106,7 +124,9 @@ afterEach(() => {
   blocker.state = { status: 'idle' }
 })
 
-describe('PageEditor', { timeout: 15_000 }, () => {
+const SUITE = { timeout: 15_000 }
+
+describe('PageEditor blocks and layout', SUITE, () => {
   it('shows an empty state and adds a block from the picker', async () => {
     mockApi([])
     const user = userEvent.setup()
@@ -154,7 +174,9 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     await waitFor(() => expect(puts.layouts).toEqual([{ layout: 'minimal', expectedVersion: 3 }]))
     expect(puts).toHaveLength(0)
   })
+})
 
+describe('PageEditor saving and leaving', SUITE, () => {
   it('saves the blocks first and the layout on top of the version they produced', async () => {
     const puts = mockApi(saved)
     const user = userEvent.setup()
@@ -210,5 +232,24 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     renderEditor()
     await rows()
     expect(blocker.options?.shouldBlockFn()).toBe(false)
+  })
+})
+
+describe('PageEditor SEO', SUITE, () => {
+  it('edits the SEO title and description one language at a time and saves them', async () => {
+    const puts = mockApi(saved)
+    const user = userEvent.setup()
+    renderEditor()
+    const title = await screen.findByRole('textbox', { name: 'SEO title' })
+    expect(title).toHaveAttribute('placeholder', 'About')
+    await user.type(title, 'About the studio')
+    await user.type(screen.getByRole('textbox', { name: 'Description' }), 'Who we are')
+    await user.click(screen.getByRole('tab', { name: /Spanish/ }))
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue(''))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(puts.seo).toHaveLength(1))
+    expect(puts.seo[0]!.en).toMatchObject({ title: 'About the studio', description: 'Who we are' })
+    expect(puts.seo[0]!.expectedVersion).toBe(3)
+    expect(puts).toHaveLength(0)
   })
 })

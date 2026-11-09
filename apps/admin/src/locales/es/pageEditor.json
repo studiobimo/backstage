@@ -45,5 +45,22 @@
     "description": "Tienes cambios sin guardar en esta página. Si sales ahora, se perderán.",
     "stay": "Seguir editando",
     "discard": "Salir y descartar"
+  },
+  "seo": {
+    "heading": "Buscadores y redes",
+    "intro": "Lo que muestran los buscadores y las vistas previas de enlaces, un idioma a la vez.",
+    "missing": "Falta",
+    "title": {
+      "label": "Título SEO",
+      "description": "{{count}} de {{max}} caracteres. Déjalo vacío para usar el título de la página."
+    },
+    "description": {
+      "label": "Descripción",
+      "hint": "{{count}} de {{max}} caracteres."
+    },
+    "image": {
+      "default": "La imagen para redes viene de los ajustes del sitio.",
+      "none": "Aún no hay imagen para redes. Define una por defecto en los ajustes del sitio."
+    }
   }
 }
