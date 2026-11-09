@@ -146,6 +146,11 @@ This overrides "Comments say why, not what" in the Vite block below.
   export const SESSION = { cookie: { name: 'session', maxAgeSeconds: 3600 } } as const
   ```
 
+- **No magic numbers.** A numeric literal that carries meaning, such as an HTTP status, a limit, a
+  duration or a count, gets a named constant in its domain object (`RESPONSE_STATUS.created`, not
+  `201`). The `repo-health` workflow's `repo-health-magic-number` rule flags them in every file a
+  pull request changes, so fix each warning it reports rather than leaving it for later.
+
 <!-- >>> template:vite -->
 ## Web app: Vite, React and TanStack
 
