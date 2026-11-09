@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useAppForm } from '@/components/form/app-form'
-import { Badge } from '@/components/ui/badge'
+import { fieldErrorsOf } from '@/components/form/locale-errors'
+import { LocaleTabs } from '@/components/form/locale-tabs'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -15,7 +16,6 @@ import {
   SheetPopup,
   SheetTitle
 } from '@/components/ui/sheet'
-import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs'
 import { ApiError } from '@/lib/api'
 
 import { createPageMutation, renamePageMutation } from './queries'
@@ -36,22 +36,6 @@ const valuesOf = (page?: Page) => {
     ) as Record<Locale, string>
   return { isHome: page?.isHome ?? false, slugs: byLocale('slug'), titles: byLocale('title') }
 }
-
-const fieldErrorsOf = (result: ReturnType<typeof pageInputSchema.safeParse>) =>
-  result.success
-    ? undefined
-    : {
-        fields: Object.fromEntries(
-          result.error.issues.map((issue) => [issue.path.join('.'), [issue]])
-        )
-      }
-
-const localesWithErrors = (fieldMeta: Record<string, { errors: unknown[] }>) =>
-  LOCALES.filter((locale) =>
-    Object.entries(fieldMeta).some(
-      ([name, meta]) => name.endsWith(`.${locale}`) && meta.errors.length > 0
-    )
-  )
 
 function usePageForm(page: Page | undefined, onSaved: () => void) {
   const { t } = useTranslation('pages')
@@ -115,32 +99,15 @@ function LocaleFields({ form, locale, page }: { form: PageForm; locale: Locale; 
   )
 }
 
-function LocaleTabs({ form, page }: { form: PageForm; page?: Page }) {
+function PageLocaleTabs({ form, page }: { form: PageForm; page?: Page }) {
   const { t } = useTranslation('pages')
   return (
-    <Tabs defaultValue={LOCALES[0]}>
-      <form.Subscribe selector={(state) => localesWithErrors(state.fieldMeta)}>
-        {(invalid) => (
-          <TabsList className="w-full">
-            {LOCALES.map((locale) => (
-              <TabsTab key={locale} value={locale} className="flex-1 gap-2">
-                {t(`locales.${locale}`)}
-                {invalid.includes(locale) && (
-                  <Badge variant="error" size="sm">
-                    {t('form.needsAttention')}
-                  </Badge>
-                )}
-              </TabsTab>
-            ))}
-          </TabsList>
-        )}
-      </form.Subscribe>
-      {LOCALES.map((locale) => (
-        <TabsPanel key={locale} value={locale} keepMounted className="pt-4">
-          <LocaleFields form={form} locale={locale} page={page} />
-        </TabsPanel>
-      ))}
-    </Tabs>
+    <LocaleTabs
+      form={form}
+      localeLabel={(locale) => t(`locales.${locale}`)}
+      attentionLabel={t('form.needsAttention')}
+      renderLocale={(locale) => <LocaleFields form={form} locale={locale} page={page} />}
+    />
   )
 }
 
@@ -169,7 +136,7 @@ export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) 
                 )}
               </form.AppField>
             )}
-            <LocaleTabs form={form} page={page} />
+            <PageLocaleTabs form={form} page={page} />
             {failure && (
               <p role="alert" className="text-destructive-foreground text-sm">
                 {failure}

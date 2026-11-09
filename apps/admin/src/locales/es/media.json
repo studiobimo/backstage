@@ -1,0 +1,42 @@
+{
+  "title": "Subir imágenes",
+  "description": "Añade fotos para reutilizarlas en tus páginas. Cada una necesita una descripción en cada idioma, salvo que sea solo decorativa.",
+  "locales": {
+    "en": "English",
+    "es": "Español"
+  },
+  "picker": {
+    "label": "Imagen",
+    "hint": "JPEG, PNG, WebP o AVIF. Se reduce y se le quitan los datos de ubicación y de cámara en tu navegador antes de subirla.",
+    "processing": "Preparando la imagen…",
+    "rejected": "No se puede usar esa imagen"
+  },
+  "rejections": {
+    "unsupported": "Solo se aceptan imágenes JPEG, PNG, WebP y AVIF.",
+    "too_large": "La imagen es demasiado grande, incluso reducida. Prueba con una más pequeña.",
+    "unreadable": "Tu navegador no pudo leer esta imagen. Puede estar dañada."
+  },
+  "preview": {
+    "details": "{{name}} · {{width}} × {{height}} px · {{size}} KB"
+  },
+  "decorative": {
+    "label": "Imagen decorativa",
+    "hint": "Los lectores de pantalla la omiten, así que no necesita descripción."
+  },
+  "alt": {
+    "label": "Descripción de la imagen",
+    "hint": "Di qué muestra la imagen, como se lo dirías a alguien que no puede verla.",
+    "needsAttention": "Corregir"
+  },
+  "submit": "Subir imagen",
+  "uploaded": {
+    "title": "Imagen subida"
+  },
+  "errors": {
+    "invalid": "Revisa la descripción de cada idioma e inténtalo de nuevo.",
+    "too_large": "La imagen es demasiado grande. Prueba con una más pequeña.",
+    "unsupported_media": "Solo se aceptan imágenes JPEG, PNG, WebP y AVIF.",
+    "forbidden": "No has iniciado sesión para subir imágenes.",
+    "internal": "No se pudo subir la imagen. Revisa tu conexión e inténtalo de nuevo."
+  }
+}

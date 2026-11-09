@@ -32,6 +32,12 @@
           "all": "Todas las páginas"
         }
       },
+      "media": {
+        "title": "Medios",
+        "items": {
+          "uploads": "Subidas"
+        }
+      },
       "settings": {
         "title": "Ajustes",
         "items": {
