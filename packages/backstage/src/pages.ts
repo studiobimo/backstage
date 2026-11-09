@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const LOCALES = ['en', 'es'] as const
 export type Locale = (typeof LOCALES)[number]
+export const DEFAULT_LOCALE: Locale = LOCALES[0]
 
 export const PAGE = {
   slug: { maxLength: 80, pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ },

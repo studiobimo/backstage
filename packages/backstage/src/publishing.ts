@@ -15,6 +15,20 @@ export const snapshotKey = (pageId: string, locale: Locale) =>
 export const snapshotKeysOf = (pageId: string) =>
   LOCALES.map((locale) => snapshotKey(pageId, locale))
 
+const ROUTE = { key: { prefix: 'route' } } as const
+
+export const routeKey = (locale: Locale, slug: string | null) =>
+  [ROUTE.key.prefix, locale, slug ?? ''].join(SNAPSHOT.key.separator)
+
+export const snapshotRecords = (snapshots: readonly Snapshot[]) =>
+  snapshots.flatMap((snapshot) => [
+    { key: snapshotKey(snapshot.pageId, snapshot.locale), value: JSON.stringify(snapshot) },
+    { key: routeKey(snapshot.locale, snapshot.slug), value: snapshot.pageId }
+  ])
+
+export const routeKeysOf = (snapshots: readonly Pick<Snapshot, 'locale' | 'slug'>[]) =>
+  snapshots.map(({ locale, slug }) => routeKey(locale, slug))
+
 const PUBLISH_PROBLEM = {
   unknownLayout: 'unknown_layout',
   unknownBlock: 'unknown_block',

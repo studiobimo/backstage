@@ -343,6 +343,20 @@ every entry of `APPS`), so run `wrangler` there.
   package.
 <!-- <<< template:cloudflare -->
 
+## Shared constants (this project's own rules)
+
+Before writing a status code, an error message or a limit, look for the constant that already
+holds it (`grep -rn "<value>" packages/backstage/src apps/*/worker`). These sit outside the
+template's managed blocks, so they are this repo's to edit.
+
+- **Errors and their status codes:** `API_ERROR` in `packages/backstage/src/errors.ts`, exported
+  from `@studiobimo/backstage`. Each entry carries `code`, `status` and `message`. The admin
+  Worker answers with `respondWithError` and the site Worker with its own `respondWithError`
+  in `apps/site/worker/respond.ts`. Never write `c.text('Not found', 404)` or a bare `404`.
+- **Success statuses:** `RESPONSE_STATUS` in `apps/admin/worker/respond.ts`.
+- **Other shared values:** `MEDIA`, `OBSERVABILITY` and `RICH_TEXT` in `@studiobimo/backstage`.
+  A value that two places need goes there, grouped as `DOMAIN.group.name`.
+
 ## Admin UI/UX (this project's own rules)
 
 These sit outside the template's managed blocks, so they are this repo's to edit. They apply to
