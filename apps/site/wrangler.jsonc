@@ -6,6 +6,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "upload_source_maps": true,
+  "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
   "env": {
     "production": {}
   }
