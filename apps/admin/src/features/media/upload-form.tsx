@@ -41,6 +41,7 @@ function useSelection() {
       setSelection({ status: 'ready', image, previewUrl: URL.createObjectURL(image.file) })
     } catch (error) {
       setSelection({ status: 'rejected', reason: rejectionReasonOf(error) })
+      setPickerKey((key) => key + 1)
     }
   }
   function clear() {

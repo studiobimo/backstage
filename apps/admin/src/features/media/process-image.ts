@@ -27,7 +27,7 @@ interface DecodedImage extends Size {
 
 export interface ImageCodec {
   decode: (file: Blob) => Promise<DecodedImage>
-  encode: (image: DecodedImage, size: Size, type: MediaType) => Promise<Blob>
+  encode: (image: DecodedImage, size: Size, type: MediaType, quality: number) => Promise<Blob>
 }
 
 export interface ProcessedImage extends Size {
@@ -35,10 +35,11 @@ export interface ProcessedImage extends Size {
   contentType: MediaType
 }
 
-const ENCODE = { quality: 0.85, avifFallback: 'image/webp' } as const satisfies {
-  quality: number
-  avifFallback: MediaType
-}
+const ENCODE = {
+  qualitySteps: [0.85, 0.7, 0.55, 0.4],
+  lossless: 'image/png',
+  avifFallback: 'image/webp'
+} as const satisfies { qualitySteps: number[]; lossless: MediaType; avifFallback: MediaType }
 
 export const fitWithin = ({ width, height }: Size, maxDimension: number): Size => {
   const scale = Math.min(1, maxDimension / Math.max(width, height))
@@ -57,17 +58,34 @@ const isMediaType = (type: string): type is MediaType => type in MEDIA.types
 
 const browserCodec: ImageCodec = {
   decode: (file) => createImageBitmap(file, { imageOrientation: 'from-image' }),
-  encode: async (image, { width, height }, type) => {
+  encode: async (image, { width, height }, type, quality) => {
     const canvas = new OffscreenCanvas(width, height)
     const context = canvas.getContext('2d')
     if (!context) throw new ImageRejected(IMAGE_REJECTION.unreadable)
     context.drawImage(image as unknown as ImageBitmap, 0, 0, width, height)
-    return canvas.convertToBlob({ type, quality: ENCODE.quality })
+    return canvas.convertToBlob({ type, quality })
   }
 }
 
 const sniffBlob = async (file: Blob) =>
   sniffImageType(new Uint8Array(await file.slice(0, MEDIA.sniffBytes).arrayBuffer()))
+
+const qualityStepsFor = (type: MediaType) =>
+  type === ENCODE.lossless ? ENCODE.qualitySteps.slice(0, 1) : ENCODE.qualitySteps
+
+const encodeWithinCap = async (
+  codec: ImageCodec,
+  decoded: DecodedImage,
+  size: Size,
+  type: MediaType
+) => {
+  let encoded = new Blob()
+  for (const quality of qualityStepsFor(type)) {
+    encoded = await codec.encode(decoded, size, type, quality)
+    if (encoded.size <= MEDIA.maxBytes) break
+  }
+  return encoded
+}
 
 const decodeOrReject = async (codec: ImageCodec, file: Blob) => {
   try {
@@ -88,7 +106,7 @@ export const processImage = async (
   const decoded = await decodeOrReject(codec, file)
   try {
     const size = fitWithin(decoded, MEDIA.maxDimension)
-    const encoded = await codec.encode(decoded, size, outputTypeFor(sniffed))
+    const encoded = await encodeWithinCap(codec, decoded, size, outputTypeFor(sniffed))
     if (!isMediaType(encoded.type)) throw new ImageRejected(IMAGE_REJECTION.unsupported)
     if (encoded.size > MEDIA.maxBytes) throw new ImageRejected(IMAGE_REJECTION.tooLarge)
     return {

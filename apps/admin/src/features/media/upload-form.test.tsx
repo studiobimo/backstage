@@ -84,6 +84,16 @@ describe('UploadForm', () => {
     expect(uploadButton()).toBeDisabled()
   })
 
+  it('clears the picker after a refusal so the same file can be chosen again', async () => {
+    vi.mocked(processImage).mockRejectedValue(new ImageRejected(IMAGE_REJECTION.unreadable))
+    renderForm()
+    await pick('broken.jpg')
+    await screen.findByRole('alert')
+    expect((screen.getByLabelText('Image') as HTMLInputElement).files).toHaveLength(0)
+    await pick('broken.jpg')
+    await waitFor(() => expect(processImage).toHaveBeenCalledTimes(2))
+  })
+
   it('requires alt text for each locale and marks the one that is missing', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
