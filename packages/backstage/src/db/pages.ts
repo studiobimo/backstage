@@ -4,12 +4,15 @@ import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 import {
   LOCALES,
   pageSlugsOf,
+  type Locale,
+  type LocaleSeo,
   type Page,
   type PageBlock,
   type PageInput,
-  type PageSeo
+  type PageSeo,
+  type PageStamp
 } from '../pages.ts'
-import { media, pageBlocks, pageLocales, pages } from './schema.ts'
+import { media, pageBlocks, pageLocales, pages, users } from './schema.ts'
 
 type Database = ReturnType<typeof drizzle>
 
@@ -19,6 +22,7 @@ export const PAGE_WRITE = {
   homeTaken: 'home_taken',
   notFound: 'not_found',
   homeMismatch: 'home_mismatch',
+  stale: 'stale',
   unknownMedia: 'unknown_media'
 } as const
 
@@ -28,12 +32,6 @@ const connect = (d1: AnyD1Database): Database => drizzle(d1)
 
 const localeRows = (pageId: string, input: PageInput) =>
   pageSlugsOf(input).map((row) => ({ pageId, ...row }))
-
-const bumpVersion = (db: Database, existing: { id: string; version: number }) =>
-  db
-    .update(pages)
-    .set({ version: existing.version + 1 })
-    .where(eq(pages.id, existing.id))
 
 const isUniqueViolation = (error: unknown) => String(error).includes('UNIQUE')
 
@@ -89,7 +87,10 @@ export const renamePage = async (d1: AnyD1Database, id: string, input: PageInput
   if (existing.isHome !== input.isHome) return PAGE_WRITE.homeMismatch
   return guardUnique(() =>
     db.batch([
-      bumpVersion(db, existing),
+      db
+        .update(pages)
+        .set({ version: existing.version + 1 })
+        .where(eq(pages.id, id)),
       ...localeRows(id, input).map(({ locale, slug, title }) =>
         db
           .update(pageLocales)
@@ -119,29 +120,69 @@ export const listPageBlocks = async (d1: AnyD1Database, pageId: string): Promise
   }))
 }
 
-export const replacePageBlocks = async (d1: AnyD1Database, id: string, blocks: PageBlock[]) => {
+export interface VersionedWrite {
+  expectedVersion: number
+  editorId: string
+}
+
+const claimVersion = async (
+  db: Database,
+  id: string,
+  { expectedVersion, editorId }: VersionedWrite,
+  changes: { layout?: string } = {}
+): Promise<PageWrite> => {
+  const claimed = await db
+    .update(pages)
+    .set({ ...changes, version: expectedVersion + 1, updatedBy: editorId })
+    .where(and(eq(pages.id, id), eq(pages.version, expectedVersion)))
+    .returning({ id: pages.id })
+  if (claimed.length > 0) return PAGE_WRITE.ok
+  const [existing] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id))
+  return existing ? PAGE_WRITE.stale : PAGE_WRITE.notFound
+}
+
+export const readPageStamp = async (d1: AnyD1Database, id: string): Promise<PageStamp | null> => {
+  const [row] = await connect(d1)
+    .select({
+      version: pages.version,
+      updatedAt: pages.updatedAt,
+      name: users.name,
+      email: users.email
+    })
+    .from(pages)
+    .leftJoin(users, eq(users.id, pages.updatedBy))
+    .where(eq(pages.id, id))
+  if (!row) return null
+  return {
+    version: row.version,
+    updatedAt: row.updatedAt,
+    updatedBy: row.name || row.email || null
+  }
+}
+
+export const replacePageBlocks = async (
+  d1: AnyD1Database,
+  id: string,
+  blocks: PageBlock[],
+  write: VersionedWrite
+) => {
   const db = connect(d1)
-  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
-  if (!existing) return PAGE_WRITE.notFound
+  const claimed = await claimVersion(db, id, write)
+  if (claimed !== PAGE_WRITE.ok) return claimed
   const rows = blocks.map((block, position) => ({ ...block, pageId: id, position }))
   await db.batch([
     db.delete(pageBlocks).where(eq(pageBlocks.pageId, id)),
-    ...(rows.length > 0 ? [db.insert(pageBlocks).values(rows)] : []),
-    bumpVersion(db, existing)
+    ...(rows.length > 0 ? [db.insert(pageBlocks).values(rows)] : [])
   ])
   return PAGE_WRITE.ok
 }
 
-export const setPageLayout = async (d1: AnyD1Database, id: string, layout: string) => {
-  const db = connect(d1)
-  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
-  if (!existing) return PAGE_WRITE.notFound
-  await db
-    .update(pages)
-    .set({ layout, version: existing.version + 1 })
-    .where(eq(pages.id, id))
-  return PAGE_WRITE.ok
-}
+export const setPageLayout = (
+  d1: AnyD1Database,
+  id: string,
+  layout: string,
+  write: VersionedWrite
+) => claimVersion(connect(d1), id, write, { layout })
 
 export const readPageSeo = async (d1: AnyD1Database, id: string): Promise<PageSeo | undefined> => {
   const db = connect(d1)
@@ -159,27 +200,36 @@ export const readPageSeo = async (d1: AnyD1Database, id: string): Promise<PageSe
   return Object.fromEntries(LOCALES.map((locale) => [locale, seoOf(locale)])) as PageSeo
 }
 
-export const writePageSeo = async (d1: AnyD1Database, id: string, seo: PageSeo) => {
+const allMediaExists = async (db: Database, ids: string[]) => {
+  if (ids.length === 0) return true
+  const known = await db.select({ id: media.id }).from(media).where(inArray(media.id, ids))
+  return new Set(ids).size === known.length
+}
+
+const localeSeoUpdate = (db: Database, id: string, locale: Locale, seo: LocaleSeo) =>
+  db
+    .update(pageLocales)
+    .set({ seoTitle: seo.title, description: seo.description, socialImageId: seo.socialImageId })
+    .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
+
+export const writePageSeo = async (
+  d1: AnyD1Database,
+  id: string,
+  seo: PageSeo,
+  write: VersionedWrite
+) => {
   const db = connect(d1)
-  const [existing] = await db.select().from(pages).where(eq(pages.id, id))
-  if (!existing) return PAGE_WRITE.notFound
-  const imageIds = LOCALES.flatMap((locale) => seo[locale].socialImageId ?? [])
-  if (imageIds.length > 0) {
-    const known = await db.select({ id: media.id }).from(media).where(inArray(media.id, imageIds))
-    if (new Set(imageIds).size !== known.length) return PAGE_WRITE.unknownMedia
+  if (
+    !(await allMediaExists(
+      db,
+      LOCALES.flatMap((locale) => seo[locale].socialImageId ?? [])
+    ))
+  ) {
+    return PAGE_WRITE.unknownMedia
   }
-  await db.batch([
-    bumpVersion(db, existing),
-    ...LOCALES.map((locale) =>
-      db
-        .update(pageLocales)
-        .set({
-          seoTitle: seo[locale].title,
-          description: seo[locale].description,
-          socialImageId: seo[locale].socialImageId
-        })
-        .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
-    )
-  ])
+  const claimed = await claimVersion(db, id, write)
+  if (claimed !== PAGE_WRITE.ok) return claimed
+  const [first, ...rest] = LOCALES.map((locale) => localeSeoUpdate(db, id, locale, seo[locale]))
+  await db.batch([first!, ...rest])
   return PAGE_WRITE.ok
 }

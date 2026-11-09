@@ -8,8 +8,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PageEditor } from './page-editor'
 
+const blocker = vi.hoisted(() => ({
+  options: undefined as { shouldBlockFn: () => boolean } | undefined,
+  state: { status: 'idle' } as Record<string, unknown>
+}))
+
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children }: { children: ReactNode }) => <a href="/pages">{children}</a>
+  Link: ({ children }: { children: ReactNode }) => <a href="/pages">{children}</a>,
+  useBlocker: (options: { shouldBlockFn: () => boolean }) => {
+    blocker.options = options
+    return blocker.state
+  }
 }))
 
 const about: Page = {
@@ -30,39 +39,60 @@ const saved: PageBlock[] = [
   { id: 'b', block: 'hero', schemaVersion: 1, content: { title: 'Two' } }
 ]
 
+const STALE_BODY = {
+  code: 'stale_version',
+  error: 'A newer version of this page was saved',
+  current: { version: 4, updatedAt: Date.UTC(2026, 10, 8, 12, 30), updatedBy: 'Ana Ruiz' }
+}
+
 const emptySeo: PageSeo = {
   en: { title: '', description: '', socialImageId: null },
   es: { title: '', description: '', socialImageId: null }
 }
 
-const mockApi = (initial: PageBlock[]) => {
-  const puts: { blocks: PageBlock[] }[] = []
-  const layoutPuts: { layout: string }[] = []
-  const seoPuts: PageSeo[] = []
+const mockApi = (initial: PageBlock[], options: { stale?: boolean } = {}) => {
+  const puts: { blocks: PageBlock[]; expectedVersion: number }[] = []
+  const layoutPuts: { layout: string; expectedVersion: number }[] = []
+  const seoPuts: (PageSeo & { expectedVersion: number })[] = []
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT' && options.stale) {
+        return new Response(JSON.stringify(STALE_BODY), { status: 409 })
+      }
       if (url.endsWith('/seo')) {
-        if (init?.method === 'PUT') seoPuts.push(JSON.parse(init.body as string))
-        return new Response(JSON.stringify({ seo: seoPuts.at(-1) ?? emptySeo }))
+        if (init?.method !== 'PUT')
+          return new Response(JSON.stringify({ seo: emptySeo, version: 3 }))
+        const { expectedVersion, ...seo } = JSON.parse(init.body as string) as PageSeo & {
+          expectedVersion: number
+        }
+        seoPuts.push({ ...seo, expectedVersion })
+        return new Response(JSON.stringify({ seo, version: expectedVersion + 1 }))
       }
       if (url.endsWith('/settings')) {
         return new Response(JSON.stringify({ settings: { siteName: { en: 'Studio' } } }))
       }
       if (init?.method === 'PUT' && url.endsWith('/layout')) {
-        layoutPuts.push(JSON.parse(init.body as string))
-        return new Response(null, { status: 200 })
+        const body = JSON.parse(init.body as string) as { layout: string; expectedVersion: number }
+        layoutPuts.push(body)
+        const page = { ...about, layout: body.layout, version: body.expectedVersion + 1 }
+        return new Response(JSON.stringify({ page }))
       }
       if (init?.method === 'PUT') {
-        const body = JSON.parse(init.body as string) as { blocks: PageBlock[] }
+        const body = JSON.parse(init.body as string) as {
+          blocks: PageBlock[]
+          expectedVersion: number
+        }
         puts.push(body)
-        return new Response(JSON.stringify(body))
+        return new Response(
+          JSON.stringify({ ...body, version: body.expectedVersion + 1, layout: 'default' })
+        )
       }
       if (url.endsWith('/layouts')) {
         return new Response(JSON.stringify({ layouts: ['default', 'minimal', 'bare'] }))
       }
       if (url.endsWith('/blocks') && url.includes('/pages/')) {
-        return new Response(JSON.stringify({ blocks: initial }))
+        return new Response(JSON.stringify({ blocks: initial, version: 3, layout: 'default' }))
       }
       if (url.endsWith('/blocks')) return new Response(JSON.stringify({ blocks: [hero] }))
       return new Response(JSON.stringify({ pages: [about] }))
@@ -82,9 +112,17 @@ const renderEditor = () =>
     </QueryClientProvider>
   )
 
+const removeFirstAndSave = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click((await screen.findAllByRole('button', { name: 'Remove hero' }))[0]!)
+  await user.click(screen.getByRole('button', { name: 'Save' }))
+}
+
 const rows = async () => within(await screen.findByRole('list')).getAllByRole('listitem')
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  blocker.state = { status: 'idle' }
+})
 
 describe('PageEditor', { timeout: 15_000 }, () => {
   it('shows an empty state and adds a block from the picker', async () => {
@@ -113,6 +151,7 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts).toHaveLength(1))
     expect(puts[0]!.blocks.map((block) => block.content)).toEqual([{ title: 'One' }])
+    expect(puts[0]!.expectedVersion).toBe(3)
   })
 
   it('gives each row a drag handle for pointer, touch and keyboard sorting', async () => {
@@ -130,8 +169,65 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     await user.click(picker)
     await user.click(await screen.findByRole('option', { name: 'Minimal' }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
-    await waitFor(() => expect(puts.layouts).toEqual([{ layout: 'minimal' }]))
+    await waitFor(() => expect(puts.layouts).toEqual([{ layout: 'minimal', expectedVersion: 3 }]))
     expect(puts).toHaveLength(0)
+  })
+
+  it('saves the blocks first and the layout on top of the version they produced', async () => {
+    const puts = mockApi(saved)
+    const user = userEvent.setup()
+    renderEditor()
+    await user.click(await screen.findByRole('combobox', { name: 'Layout' }))
+    await user.click(await screen.findByRole('option', { name: 'Bare' }))
+    await user.click(screen.getAllByRole('button', { name: 'Remove hero' })[0]!)
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(puts.layouts).toHaveLength(1))
+    expect(puts[0]!.expectedVersion).toBe(3)
+    expect(puts.layouts[0]).toEqual({ layout: 'bare', expectedVersion: 4 })
+  })
+
+  it('refuses to save over a newer version, names who saved it and offers a reload', async () => {
+    mockApi(saved, { stale: true })
+    const user = userEvent.setup()
+    renderEditor()
+    await removeFirstAndSave(user)
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('A newer version was saved')
+    expect(alert).toHaveTextContent('Ana Ruiz saved this page on')
+    expect(within(alert).getByRole('button', { name: 'Reload latest version' })).toBeEnabled()
+  })
+
+  it('drops the draft when the newer version is reloaded', async () => {
+    mockApi(saved, { stale: true })
+    const user = userEvent.setup()
+    renderEditor()
+    await removeFirstAndSave(user)
+    await user.click(await screen.findByRole('button', { name: 'Reload latest version' }))
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+    expect(await rows()).toHaveLength(2)
+  })
+
+  it('blocks leaving only while there are unsaved changes, and asks first', async () => {
+    mockApi(saved)
+    const user = userEvent.setup()
+    renderEditor()
+    await user.click((await screen.findAllByRole('button', { name: 'Remove hero' }))[0]!)
+    expect(blocker.options?.shouldBlockFn()).toBe(true)
+
+    const proceed = vi.fn()
+    const reset = vi.fn()
+    blocker.state = { status: 'blocked', proceed, reset }
+    await user.click(screen.getByRole('button', { name: 'Remove hero' }))
+    expect(await screen.findByText('Leave without saving?')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Leave and discard' }))
+    expect(proceed).toHaveBeenCalled()
+  })
+
+  it('does not block leaving a clean page', async () => {
+    mockApi(saved)
+    renderEditor()
+    await rows()
+    expect(blocker.options?.shouldBlockFn()).toBe(false)
   })
 
   it('edits the SEO title and description one language at a time and saves them', async () => {
@@ -147,6 +243,7 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts.seo).toHaveLength(1))
     expect(puts.seo[0]!.en).toMatchObject({ title: 'About the studio', description: 'Who we are' })
+    expect(puts.seo[0]!.expectedVersion).toBe(3)
     expect(puts).toHaveLength(0)
   })
 })

@@ -33,16 +33,33 @@ export {
   LOCALES,
   PAGE,
   pageBlockSchema,
+  pageBlocksResponseSchema,
   pageBlocksSchema,
   pageInputSchema,
   pageSchema,
   pageSeoResponseSchema,
   pageSeoSchema,
   pagesResponseSchema,
+  pageStampSchema,
   pageSlugsOf,
+  savePageBlocksSchema,
+  savePageLayoutSchema,
+  savePageSeoSchema,
+  staleVersionSchema,
   slugify
 } from './pages.ts'
-export type { Locale, LocaleSeo, Page, PageBlock, PageBlocks, PageInput, PageSeo } from './pages.ts'
+export type {
+  Locale,
+  LocaleSeo,
+  Page,
+  PageBlock,
+  PageBlocks,
+  PageBlocksResponse,
+  PageInput,
+  PageSeo,
+  PageSeoResponse,
+  PageStamp
+} from './pages.ts'
 export {
   EMPTY_SITE_SETTINGS,
   SETTINGS,
@@ -53,7 +70,6 @@ export {
 export type { SiteSettings } from './settings.ts'
 export {
   layoutsResponseSchema,
-  pageLayoutInputSchema,
   siteBlockSchema,
   slotResponseSchema,
   slotSchema,
@@ -69,12 +85,15 @@ export {
   listPages,
   PAGE_WRITE,
   readPageSeo,
+  readPageStamp,
   renamePage,
   replacePageBlocks,
   setPageLayout,
   writePageSeo
 } from './db/pages.ts'
-export type { PageWrite } from './db/pages.ts'
+export type { PageWrite, VersionedWrite } from './db/pages.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
+export { ensureUser } from './db/users.ts'
+export type { Editor } from './db/users.ts'
 export { readSiteSettings, writeSiteSettings } from './db/settings.ts'
 export { readSiteBlocks, writeSiteBlock } from './db/site-blocks.ts'

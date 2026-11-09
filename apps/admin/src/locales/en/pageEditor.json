@@ -34,8 +34,21 @@
       "bare": "Bare"
     }
   },
+  "stale": {
+    "title": "A newer version was saved",
+    "description": "{{name}} saved this page on {{when}}. Your changes were not saved. Reload to get their version.",
+    "someone": "Someone",
+    "reload": "Reload latest version"
+  },
+  "leave": {
+    "title": "Leave without saving?",
+    "description": "You have unsaved changes on this page. If you leave now they are lost.",
+    "stay": "Keep editing",
+    "discard": "Leave and discard"
+  },
   "seo": {
     "heading": "Search and social",
+    "intro": "What search engines and link previews show, one language at a time.",
     "missing": "Missing",
     "title": {
       "label": "SEO title",
@@ -48,7 +61,6 @@
     "image": {
       "default": "The social image comes from the site settings.",
       "none": "No social image yet. Set a default in the site settings."
-    },
-    "intro": "What search engines and link previews show, one language at a time."
+    }
   }
 }

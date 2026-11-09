@@ -74,6 +74,30 @@ export const pageBlocksSchema = z.object({
 })
 export type PageBlocks = z.infer<typeof pageBlocksSchema>
 
+export const pageBlocksResponseSchema = pageBlocksSchema.extend({
+  version: z.number().int(),
+  layout: z.string()
+})
+export type PageBlocksResponse = z.infer<typeof pageBlocksResponseSchema>
+
+const expectedVersion = z.number().int().min(1)
+
+export const savePageBlocksSchema = pageBlocksSchema.extend({ expectedVersion })
+export const savePageLayoutSchema = z.object({ layout: z.string().min(1), expectedVersion })
+
+export const pageStampSchema = z.object({
+  version: z.number().int(),
+  updatedAt: z.number().int(),
+  updatedBy: z.string().nullable()
+})
+export type PageStamp = z.infer<typeof pageStampSchema>
+
+export const staleVersionSchema = z.object({
+  code: z.literal('stale_version'),
+  error: z.string(),
+  current: pageStampSchema
+})
+
 const localeSeoSchema = z.object({
   title: z.string().trim().max(PAGE.seo.title.maxLength),
   description: z.string().trim().max(PAGE.seo.description.maxLength),
@@ -84,4 +108,7 @@ export type LocaleSeo = z.infer<typeof localeSeoSchema>
 export const pageSeoSchema = perLocale(localeSeoSchema)
 export type PageSeo = z.infer<typeof pageSeoSchema>
 
-export const pageSeoResponseSchema = z.object({ seo: pageSeoSchema })
+export const pageSeoResponseSchema = z.object({ seo: pageSeoSchema, version: z.number().int() })
+export type PageSeoResponse = z.infer<typeof pageSeoResponseSchema>
+
+export const savePageSeoSchema = pageSeoSchema.extend({ expectedVersion })

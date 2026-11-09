@@ -22,4 +22,3 @@ export const slotsResponseSchema = z.object({ slots: z.array(slotSchema) })
 export const slotResponseSchema = z.object({ slot: slotSchema })
 
 export const layoutsResponseSchema = z.object({ layouts: z.array(z.string()) })
-export const pageLayoutInputSchema = z.object({ layout: z.string().min(1) })

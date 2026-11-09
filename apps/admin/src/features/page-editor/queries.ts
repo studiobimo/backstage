@@ -1,9 +1,12 @@
 import {
   layoutsResponseSchema,
-  pageBlocksSchema,
+  pageBlocksResponseSchema,
+  pageSchema,
   pageSeoResponseSchema,
   type PageBlock,
-  type PageSeo
+  type PageBlocksResponse,
+  type PageSeo,
+  type PageSeoResponse
 } from '@studiobimo/backstage'
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -24,28 +27,30 @@ export const blockDescriptionsQuery = queryOptions({
     blockDescriptionsSchema.parse(await (await apiRequest('/blocks')).json()).blocks
 })
 
-const pageBlocksKey = (pageId: string) => ['page-blocks', pageId] as const
+export const pageBlocksKey = (pageId: string) => ['page-blocks', pageId] as const
 
 export const pageBlocksQuery = (pageId: string) =>
   queryOptions({
     queryKey: pageBlocksKey(pageId),
+    staleTime: Infinity,
+    gcTime: 0,
     queryFn: async () =>
-      pageBlocksSchema.parse(await (await apiRequest(`/pages/${pageId}/blocks`)).json()).blocks
+      pageBlocksResponseSchema.parse(await (await apiRequest(`/pages/${pageId}/blocks`)).json())
   })
 
 export const savePageBlocksMutation = (queryClient: QueryClient, pageId: string) =>
   mutationOptions({
-    mutationFn: async (blocks: PageBlock[]) =>
-      pageBlocksSchema.parse(
+    mutationFn: async (save: { blocks: PageBlock[]; expectedVersion: number }) =>
+      pageBlocksResponseSchema.parse(
         await (
           await apiRequest(`/pages/${pageId}/blocks`, {
             method: 'PUT',
-            body: JSON.stringify({ blocks })
+            body: JSON.stringify(save)
           })
         ).json()
-      ).blocks,
-    onSuccess: (blocks) => {
-      queryClient.setQueryData(pageBlocksKey(pageId), blocks)
+      ),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(pageBlocksKey(pageId), saved)
       return queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
     }
   })
@@ -58,33 +63,51 @@ export const layoutsQuery = queryOptions({
 
 export const savePageLayoutMutation = (queryClient: QueryClient, pageId: string) =>
   mutationOptions({
-    mutationFn: async (layout: string) => {
-      await apiRequest(`/pages/${pageId}/layout`, {
-        method: 'PUT',
-        body: JSON.stringify({ layout })
-      })
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+    mutationFn: async (save: { layout: string; expectedVersion: number }) =>
+      z.object({ page: pageSchema }).parse(
+        await (
+          await apiRequest(`/pages/${pageId}/layout`, {
+            method: 'PUT',
+            body: JSON.stringify(save)
+          })
+        ).json()
+      ).page,
+    onSuccess: (page) => {
+      queryClient.setQueryData<PageBlocksResponse>(
+        pageBlocksKey(pageId),
+        (current) => current && { ...current, version: page.version, layout: page.layout }
+      )
+      return queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
+    }
   })
 
-const pageSeoKey = (pageId: string) => ['page-seo', pageId] as const
+export const pageSeoKey = (pageId: string) => ['page-seo', pageId] as const
 
-const readSeo = async (response: Response) => pageSeoResponseSchema.parse(await response.json()).seo
+const readSeo = async (response: Response) => pageSeoResponseSchema.parse(await response.json())
 
 export const pageSeoQuery = (pageId: string) =>
   queryOptions({
     queryKey: pageSeoKey(pageId),
+    staleTime: Infinity,
+    gcTime: 0,
     queryFn: async () => readSeo(await apiRequest(`/pages/${pageId}/seo`))
   })
 
 export const savePageSeoMutation = (queryClient: QueryClient, pageId: string) =>
   mutationOptions({
-    mutationFn: async (seo: PageSeo) =>
+    mutationFn: async (save: { seo: PageSeo; expectedVersion: number }) =>
       readSeo(
-        await apiRequest(`/pages/${pageId}/seo`, { method: 'PUT', body: JSON.stringify(seo) })
+        await apiRequest(`/pages/${pageId}/seo`, {
+          method: 'PUT',
+          body: JSON.stringify({ ...save.seo, expectedVersion: save.expectedVersion })
+        })
       ),
-    onSuccess: (seo) => {
-      queryClient.setQueryData(pageSeoKey(pageId), seo)
+    onSuccess: (saved: PageSeoResponse) => {
+      queryClient.setQueryData(pageSeoKey(pageId), saved)
+      queryClient.setQueryData<PageBlocksResponse>(
+        pageBlocksKey(pageId),
+        (current) => current && { ...current, version: saved.version }
+      )
       return queryClient.invalidateQueries({ queryKey: ['pages'], exact: true })
     }
   })

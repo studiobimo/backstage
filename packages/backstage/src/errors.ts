@@ -3,6 +3,11 @@ export const API_ERROR = {
   invalid: { code: 'invalid', status: 400, message: 'Invalid input' },
   slugTaken: { code: 'slug_taken', status: 409, message: 'That slug is already used' },
   homeTaken: { code: 'home_taken', status: 409, message: 'The home page already exists' },
+  staleVersion: {
+    code: 'stale_version',
+    status: 409,
+    message: 'A newer version of this page was saved'
+  },
   notFound: { code: 'not_found', status: 404, message: 'Not found' },
   internal: { code: 'internal', status: 500, message: 'Internal error' },
   devAuthOutsideLocal: {
