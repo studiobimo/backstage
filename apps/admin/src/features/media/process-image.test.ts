@@ -89,7 +89,9 @@ describe('processImage', () => {
     Object.defineProperty(big, 'size', { value: MEDIA.maxSourceBytes + 1 })
     expect(await rejection(processImage(big, codec))).toBe(IMAGE_REJECTION.tooLarge)
   })
+})
 
+describe('processImage size cap', () => {
   it('lowers the quality step by step until a lossy image fits the cap', async () => {
     const { codec, encode } = codecFor({ width: 10, height: 10 }, 'image/jpeg')
     const over = new Blob([new Uint8Array(MEDIA.maxBytes + 1)], { type: 'image/jpeg' })

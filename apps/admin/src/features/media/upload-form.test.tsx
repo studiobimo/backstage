@@ -57,16 +57,16 @@ const pick = async (name = 'chair.jpg') =>
 
 const uploadButton = () => screen.getByRole('button', { name: 'Upload image' })
 
-describe('UploadForm', () => {
-  beforeEach(() => {
-    stubUrls()
-    vi.mocked(processImage).mockResolvedValue(processed as never)
-  })
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.clearAllMocks()
-  })
+beforeEach(() => {
+  stubUrls()
+  vi.mocked(processImage).mockResolvedValue(processed as never)
+})
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.clearAllMocks()
+})
 
+describe('UploadForm picker', () => {
   it('offers only the accepted types and keeps upload disabled until an image is ready', () => {
     renderForm()
     expect(screen.getByLabelText('Image')).toHaveAttribute(
@@ -107,7 +107,9 @@ describe('UploadForm', () => {
     expect(await screen.findByText('Fix')).toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
   })
+})
 
+describe('UploadForm upload', () => {
   it('uploads the processed file with a description per locale', async () => {
     const fetchMock = vi.fn(async () => created(false))
     vi.stubGlobal('fetch', fetchMock)
