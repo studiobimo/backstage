@@ -8,6 +8,11 @@ export const API_ERROR = {
     status: 409,
     message: 'A newer version of this page was saved'
   },
+  unpublishable: {
+    code: 'unpublishable',
+    status: 422,
+    message: 'This page has content that cannot be published'
+  },
   tooLarge: { code: 'too_large', status: 413, message: 'The image is too large' },
   unsupportedMedia: {
     code: 'unsupported_media',

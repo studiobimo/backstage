@@ -1,0 +1,242 @@
+import { z } from 'zod'
+
+import { validateBlockContent, type Registry } from './blocks.ts'
+import { LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
+import { isRecord, type TranslatedNode } from './translations.ts'
+
+export const SNAPSHOT = {
+  format: 1,
+  key: { prefix: 'page', separator: ':' }
+} as const
+
+export const snapshotKey = (pageId: string, locale: Locale) =>
+  [SNAPSHOT.key.prefix, pageId, locale].join(SNAPSHOT.key.separator)
+
+export const snapshotKeysOf = (pageId: string) =>
+  LOCALES.map((locale) => snapshotKey(pageId, locale))
+
+const PUBLISH_PROBLEM = {
+  unknownLayout: 'unknown_layout',
+  unknownBlock: 'unknown_block',
+  invalidContent: 'invalid_content',
+  unknownMedia: 'unknown_media',
+  missingSlug: 'missing_slug'
+} as const
+
+type PublishProblemReason = (typeof PUBLISH_PROBLEM)[keyof typeof PUBLISH_PROBLEM]
+
+const publishProblemSchema = z.object({
+  reason: z.enum(Object.values(PUBLISH_PROBLEM)),
+  blockId: z.string().nullable()
+})
+export type PublishProblem = z.infer<typeof publishProblemSchema>
+
+const snapshotMediaSchema = z.object({
+  key: z.string(),
+  contentType: z.string(),
+  width: z.number().int(),
+  height: z.number().int(),
+  alt: z.string()
+})
+type SnapshotMedia = z.infer<typeof snapshotMediaSchema>
+
+export const snapshotSchema = z.object({
+  format: z.literal(SNAPSHOT.format),
+  pageId: z.string(),
+  locale: z.enum(LOCALES),
+  isHome: z.boolean(),
+  slug: z.string().nullable(),
+  title: z.string(),
+  layout: z.string(),
+  version: z.number().int(),
+  publishedAt: z.number().int(),
+  seo: z.object({
+    title: z.string(),
+    description: z.string(),
+    socialImageId: z.string().nullable()
+  }),
+  blocks: z.array(pageBlockSchema),
+  media: z.record(z.string(), snapshotMediaSchema)
+})
+export type Snapshot = z.infer<typeof snapshotSchema>
+
+export const publishPageSchema = z.object({ expectedVersion: z.number().int().min(1) })
+
+export interface PublishLocaleRow {
+  locale: string
+  slug: string | null
+  title: string
+  seoTitle: string
+  description: string
+  socialImageId: string | null
+}
+
+export interface PublishMediaRow {
+  id: string
+  r2Key: string
+  contentType: string
+  width: number
+  height: number
+  decorative: boolean
+  alt: Record<string, string>
+}
+
+export interface PublishDraft {
+  page: { id: string; isHome: boolean; layout: string; version: number }
+  locales: PublishLocaleRow[]
+  blocks: PageBlock[]
+}
+
+type Checked<T> = { ok: true; value: T } | { ok: false; problem: PublishProblem }
+
+const rejection = (reason: PublishProblemReason, blockId: string | null = null) =>
+  ({ ok: false, problem: { reason, blockId } }) as const
+
+const checkBlock = (registry: Registry, block: PageBlock): Checked<PageBlock> => {
+  const definition = registry.get(block.block)
+  if (!definition || registry.isSlotBlock(block.block)) {
+    return rejection(PUBLISH_PROBLEM.unknownBlock, block.id)
+  }
+  const result = validateBlockContent(definition, block.schemaVersion, block.content)
+  if (!result.ok) return rejection(PUBLISH_PROBLEM.invalidContent, block.id)
+  return {
+    ok: true,
+    value: {
+      ...block,
+      schemaVersion: result.schemaVersion,
+      content: result.content as PageBlock['content']
+    }
+  }
+}
+
+export const checkBlocks = (registry: Registry, blocks: readonly PageBlock[]) => {
+  const checked = blocks.map((block) => checkBlock(registry, block))
+  return {
+    blocks: checked.flatMap((entry) => (entry.ok ? [entry.value] : [])),
+    problems: checked.flatMap((entry) => (entry.ok ? [] : [entry.problem]))
+  }
+}
+
+const mediaIdsIn = (node: TranslatedNode, value: unknown): string[] => {
+  if (typeof node === 'boolean') return []
+  if (node.backstage === 'image') {
+    return isRecord(value) && typeof value.id === 'string' ? [value.id] : []
+  }
+  if (Array.isArray(value)) {
+    const { items } = node
+    return items && !Array.isArray(items) ? value.flatMap((item) => mediaIdsIn(items, item)) : []
+  }
+  if (!isRecord(value)) return []
+  const { properties = {}, additionalProperties } = node
+  return Object.entries(value).flatMap(([key, child]) => {
+    const childNode = properties[key] ?? additionalProperties
+    return childNode === undefined ? [] : mediaIdsIn(childNode, child)
+  })
+}
+
+export const referencedMediaIds = (
+  registry: Registry,
+  blocks: readonly PageBlock[],
+  locales: readonly PublishLocaleRow[]
+) => [
+  ...new Set([
+    ...blocks.flatMap(({ block, content }) => mediaIdsIn(registry.jsonSchema(block), content)),
+    ...locales.flatMap(({ socialImageId }) => socialImageId ?? [])
+  ])
+]
+
+const snapshotMediaOf = (row: PublishMediaRow, locale: Locale): SnapshotMedia => ({
+  key: row.r2Key,
+  contentType: row.contentType,
+  width: row.width,
+  height: row.height,
+  alt: row.decorative ? '' : (row.alt[locale] ?? '')
+})
+
+const mediaFor = (
+  ids: readonly string[],
+  media: ReadonlyMap<string, PublishMediaRow>,
+  locale: Locale
+) =>
+  Object.fromEntries(
+    ids.flatMap((id) => {
+      const row = media.get(id)
+      return row ? [[id, snapshotMediaOf(row, locale)]] : []
+    })
+  )
+
+const referenceProblems = (
+  registry: Registry,
+  draft: PublishDraft,
+  media: ReadonlyMap<string, PublishMediaRow>
+): PublishProblem[] => [
+  ...(registry.hasLayout(draft.page.layout)
+    ? []
+    : [rejection(PUBLISH_PROBLEM.unknownLayout).problem]),
+  ...draft.locales.flatMap(({ slug }) =>
+    draft.page.isHome || slug ? [] : [rejection(PUBLISH_PROBLEM.missingSlug).problem]
+  ),
+  ...draft.blocks.flatMap(({ id, block, content }) =>
+    mediaIdsIn(registry.jsonSchema(block), content).some((mediaId) => !media.has(mediaId))
+      ? [rejection(PUBLISH_PROBLEM.unknownMedia, id).problem]
+      : []
+  ),
+  ...(draft.locales.some(({ socialImageId }) => socialImageId && !media.has(socialImageId))
+    ? [rejection(PUBLISH_PROBLEM.unknownMedia).problem]
+    : [])
+]
+
+export type SnapshotBuild =
+  { ok: true; snapshots: Snapshot[] } | { ok: false; problems: PublishProblem[] }
+
+export const buildSnapshots = (
+  registry: Registry,
+  draft: PublishDraft,
+  media: ReadonlyMap<string, PublishMediaRow>,
+  publishedAt: number
+): SnapshotBuild => {
+  const checked = checkBlocks(registry, draft.blocks)
+  const valid: PublishDraft = { ...draft, blocks: checked.blocks }
+  const problems = [...checked.problems, ...referenceProblems(registry, valid, media)]
+  if (problems.length > 0) return { ok: false, problems }
+  const blockMediaIds = referencedMediaIds(registry, valid.blocks, [])
+  return {
+    ok: true,
+    snapshots: LOCALES.map((locale) => snapshotOf(valid, locale, blockMediaIds, media, publishedAt))
+  }
+}
+
+const snapshotOf = (
+  draft: PublishDraft,
+  locale: Locale,
+  mediaIds: readonly string[],
+  media: ReadonlyMap<string, PublishMediaRow>,
+  publishedAt: number
+): Snapshot => {
+  const row = draft.locales.find((candidate) => candidate.locale === locale)
+  const ids = [...mediaIds, ...(row?.socialImageId ? [row.socialImageId] : [])]
+  return {
+    format: SNAPSHOT.format,
+    pageId: draft.page.id,
+    locale,
+    isHome: draft.page.isHome,
+    slug: row?.slug ?? null,
+    title: row?.title ?? '',
+    layout: draft.page.layout,
+    version: draft.page.version,
+    publishedAt,
+    seo: {
+      title: row?.seoTitle ?? '',
+      description: row?.description ?? '',
+      socialImageId: row?.socialImageId ?? null
+    },
+    blocks: draft.blocks,
+    media: mediaFor(ids, media, locale)
+  }
+}
+
+export const publishProblemsResponseSchema = z.object({
+  error: z.string(),
+  code: z.literal('unpublishable'),
+  problems: z.array(publishProblemSchema)
+})
