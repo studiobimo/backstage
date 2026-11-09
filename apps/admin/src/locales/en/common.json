@@ -4,8 +4,12 @@
     "description": "Lean, reusable CMS for studio marketing sites on Cloudflare's free tier."
   },
   "theme": {
-    "light": "Switch to light theme",
-    "dark": "Switch to dark theme"
+    "label": "Theme",
+    "options": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
   },
   "language": {
     "label": "Language",

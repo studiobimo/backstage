@@ -6,12 +6,37 @@ import { renderShell, resetShell, stubApi } from '@/test/shell'
 describe('app shell navigation', () => {
   afterEach(resetShell)
 
-  it('has a sidebar with the navigation, a theme toggle and a language switcher', async () => {
+  it('has a sidebar with the navigation and a user menu holding the preferences', async () => {
     await renderShell()
     expect(screen.getByRole('link', { name: /Backstage/ })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('button', { name: /theme/ })).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Language' })).toBeInTheDocument()
     expect(screen.getByRole('main')).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'Language' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /theme/i })).not.toBeInTheDocument()
+  })
+
+  it('links each single-item section straight to its screen', async () => {
+    await renderShell()
+    expect(screen.getByRole('link', { name: 'Pages' })).toHaveAttribute('href', '/pages')
+    expect(screen.getByRole('link', { name: 'Media' })).toHaveAttribute('href', '/media')
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings')
+    expect(screen.queryByRole('button', { name: 'Pages' })).not.toBeInTheDocument()
+  })
+
+  it('has no Home item in the navigation, because the logo goes home', async () => {
+    await renderShell()
+    expect(screen.queryByRole('link', { name: 'Home' })).not.toBeInTheDocument()
+  })
+
+  it('shows the type specimen link while developing', async () => {
+    await renderShell()
+    expect(screen.getByRole('link', { name: 'Type specimen' })).toHaveAttribute('href', '/type')
+  })
+
+  it('hides the type specimen link outside development', async () => {
+    vi.stubEnv('DEV', false)
+    await renderShell()
+    expect(screen.queryByRole('link', { name: 'Type specimen' })).not.toBeInTheDocument()
+    vi.unstubAllEnvs()
   })
 
   it('names the current page in the breadcrumb', async () => {
@@ -34,34 +59,9 @@ describe('app shell navigation', () => {
     ).toBeInTheDocument()
   })
 
-  it('links each single-item section straight to its screen', async () => {
-    await renderShell()
-    expect(screen.getByRole('link', { name: 'Pages' })).toHaveAttribute('href', '/pages')
-    expect(screen.getByRole('link', { name: 'Media' })).toHaveAttribute('href', '/media')
-    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings')
-    expect(screen.queryByRole('button', { name: 'Pages' })).not.toBeInTheDocument()
-  })
-
-  it('has no Home item in the navigation, because the logo goes home', async () => {
-    await renderShell()
-    expect(screen.queryByRole('link', { name: 'Home' })).not.toBeInTheDocument()
-  })
-
   it('does not repeat the product name in the breadcrumb', async () => {
     await renderShell('/type')
     const breadcrumb = screen.getByRole('navigation', { name: 'breadcrumb' })
     expect(breadcrumb).not.toHaveTextContent('Backstage')
-  })
-
-  it('shows the type specimen link while developing', async () => {
-    await renderShell()
-    expect(screen.getByRole('link', { name: 'Type specimen' })).toHaveAttribute('href', '/type')
-  })
-
-  it('hides the type specimen link outside development', async () => {
-    vi.stubEnv('DEV', false)
-    await renderShell()
-    expect(screen.queryByRole('link', { name: 'Type specimen' })).not.toBeInTheDocument()
-    vi.unstubAllEnvs()
   })
 })

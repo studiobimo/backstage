@@ -6,8 +6,6 @@ import { useTranslation } from 'react-i18next'
 
 import { AppSidebar } from '@/components/app-sidebar'
 import { IconButton } from '@/components/icon-button'
-import { LanguageSwitcher } from '@/components/language-switcher'
-import { ThemeToggle } from '@/components/theme-toggle'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -105,10 +103,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <SidebarToggle />
                   <Separator orientation="vertical" className="mr-2 h-4" />
                   <PageBreadcrumb />
-                  <div className="ml-auto flex items-center gap-1">
-                    <LanguageSwitcher />
-                    <ThemeToggle />
-                  </div>
                 </header>
               </ContentColumn>
               <ContentColumn className="flex-1 pb-10">
