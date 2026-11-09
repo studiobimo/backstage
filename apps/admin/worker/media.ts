@@ -18,8 +18,14 @@ type Upload = { file: File; metadata: ReturnType<typeof mediaUploadSchema.parse>
 
 const rejection = (error: ApiError): Rejection => ({ error })
 
-const declaredTooLarge = (header: string | undefined) =>
-  Number(header) > MEDIA.maxBytes + MEDIA.metadataSlackBytes
+const declaredTooLarge = (header: string | null) => {
+  const length = Number(header)
+  return (
+    header === null ||
+    !Number.isFinite(length) ||
+    length > MEDIA.maxBytes + MEDIA.metadataSlackBytes
+  )
+}
 
 const parseMetadata = (raw: unknown) => {
   if (typeof raw !== 'string') return null
@@ -31,7 +37,7 @@ const parseMetadata = (raw: unknown) => {
 }
 
 const readUpload = async (request: Request): Promise<Upload | Rejection> => {
-  if (declaredTooLarge(request.headers.get('content-length') ?? undefined)) {
+  if (declaredTooLarge(request.headers.get('content-length'))) {
     return rejection(API_ERROR.tooLarge)
   }
   const form = await request.formData().catch(() => null)

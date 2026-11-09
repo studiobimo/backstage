@@ -30,8 +30,33 @@ const form = (file: Uint8Array | null, metadata: unknown = described, name = 'ch
   return body
 }
 
-const upload = (body: FormData, bindings = env.localDevelopment) =>
-  app.request('/api/v1/media', { method: 'POST', body }, bindings)
+const encoded = async (body: FormData) => {
+  const probe = new Request('http://localhost/', { method: 'POST', body })
+  const bytes = await probe.arrayBuffer()
+  const contentType = probe.headers.get('content-type')!
+  return { bytes, contentType, contentLength: String(bytes.byteLength) }
+}
+
+const upload = async (
+  body: FormData,
+  bindings = env.localDevelopment,
+  headers: (encoded: { contentLength: string }) => Record<string, string> = ({
+    contentLength
+  }) => ({
+    'content-length': contentLength
+  })
+) => {
+  const { bytes, contentType, contentLength } = await encoded(body)
+  return app.request(
+    '/api/v1/media',
+    {
+      method: 'POST',
+      body: bytes,
+      headers: { 'content-type': contentType, ...headers({ contentLength }) }
+    },
+    bindings
+  )
+}
 
 const rows = async () => (await db.prepare('SELECT * FROM media').all()).results
 
@@ -109,6 +134,21 @@ describe('media upload API', () => {
     const before = (await rows()).length
     expect((await upload(body)).status).toBe(400)
     expect(await rows()).toHaveLength(before)
+  })
+
+  it('refuses an upload that does not declare its length', async () => {
+    const before = (await rows()).length
+    const response = await upload(form(pngBytes()), env.localDevelopment, () => ({}))
+    expect(response.status).toBe(413)
+    expect(await response.json()).toMatchObject({ code: 'too_large' })
+    expect(await rows()).toHaveLength(before)
+  })
+
+  it('refuses an upload whose declared length is not a number', async () => {
+    const response = await upload(form(pngBytes()), env.localDevelopment, () => ({
+      'content-length': 'many'
+    }))
+    expect(response.status).toBe(413)
   })
 
   it('refuses a deployed request without Access', async () => {
