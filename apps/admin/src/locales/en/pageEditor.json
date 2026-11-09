@@ -12,7 +12,8 @@
   },
   "block": {
     "duplicate": "Duplicate {{name}}",
-    "remove": "Remove {{name}}"
+    "remove": "Remove {{name}}",
+    "edit": "Edit {{name}}"
   },
   "errors": {
     "invalid": "Some blocks are not valid. Reload and try again.",

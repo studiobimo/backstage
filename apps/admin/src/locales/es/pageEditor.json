@@ -12,7 +12,8 @@
   },
   "block": {
     "duplicate": "Duplicar {{name}}",
-    "remove": "Quitar {{name}}"
+    "remove": "Quitar {{name}}",
+    "edit": "Editar {{name}}"
   },
   "errors": {
     "invalid": "Algunos bloques no son válidos. Recarga e inténtalo de nuevo.",

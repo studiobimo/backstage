@@ -1,5 +1,5 @@
 import { useStore } from '@tanstack/react-form'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,12 @@ import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
 import { GroupFields } from './field-node.tsx'
-import { EditingLocaleContext, hasLocalized, localeStatus } from './locale-status.ts'
+import {
+  EditingLocaleContext,
+  hasLocalized,
+  localeStatus,
+  useEditingLocale
+} from './locale-status.ts'
 import { LocaleSwitcher } from './locale-switcher.tsx'
 import { type GroupSpec, type JsonSchema, parseBlockSchema } from './spec.ts'
 import {
@@ -18,13 +23,21 @@ import {
   ShownIssuesContext,
   useBlockForm
 } from './validation.ts'
-import { type BlockValue, initialGroup, readValue, isRecord } from './value.ts'
+import {
+  type BlockValue,
+  blockValue,
+  initialGroup,
+  isRecord,
+  readValue,
+  withoutUndefined
+} from './value.ts'
 
 export interface BlockFormProps {
   schema: JsonSchema
   locales: readonly string[]
   value?: BlockValue
-  onSubmit: (value: BlockValue) => void | Promise<void>
+  onSubmit?: (value: BlockValue) => void | Promise<void>
+  onChange?: (value: BlockValue) => void
   className?: string
 }
 
@@ -59,21 +72,44 @@ function useLocaleStatus(form: BlockFormApi, parsed: ParsedBlock, locales: reado
   }, [values, parsed, locales])
 }
 
+const cleanValue = (values: unknown): BlockValue => blockValue.parse(withoutUndefined(values))
+
+function useEmitChanges(
+  form: BlockFormApi,
+  initial: BlockValue,
+  onChange?: (value: BlockValue) => void
+) {
+  const values = useStore(form.store, (state) => state.values)
+  const lastEmitted = useRef(JSON.stringify(cleanValue(initial)))
+  useEffect(() => {
+    if (!onChange) return
+    const next = cleanValue(values)
+    const serialized = JSON.stringify(next)
+    if (serialized === lastEmitted.current) return
+    lastEmitted.current = serialized
+    onChange(next)
+  }, [values, onChange])
+}
+
 function SupportedBlockForm({
   parsed,
   locales,
   value,
   onSubmit,
+  onChange,
   className
 }: BlockFormProps & { parsed: ParsedBlock }) {
   const { t } = useTranslation('blockForm')
   const fallback = locales[0] ?? ''
   const [active, setActive] = useState(fallback)
+  const embedded = onChange !== undefined
+  const initial = useMemo(() => ({ ...initialGroup(parsed.root), ...value }), [parsed, value])
   const form = useBlockForm({
     validator: parsed.validator,
-    initial: { ...initialGroup(parsed.root), ...value },
-    onSubmit
+    initial,
+    onSubmit: (submitted) => onSubmit?.(submitted)
   })
+  useEmitChanges(form, initial, onChange)
   const { byLocale: status, issuePaths } = useLocaleStatus(form, parsed, locales)
   const attempted = useStore(form.store, (state) => state.submissionAttempts > 0)
   const submitting = useStore(form.store, (state) => state.isSubmitting)
@@ -87,9 +123,11 @@ function SupportedBlockForm({
     })
   }
 
+  const outerEditing = useEditingLocale()
+
   return (
-    <EditingLocaleContext.Provider value={editing}>
-      <ShownIssuesContext.Provider value={attempted ? issuePaths : noIssues}>
+    <EditingLocaleContext.Provider value={embedded ? outerEditing : editing}>
+      <ShownIssuesContext.Provider value={attempted || embedded ? issuePaths : noIssues}>
         <Form
           noValidate
           className={cn('flex w-full max-w-2xl flex-col gap-6', className)}
@@ -98,7 +136,7 @@ function SupportedBlockForm({
             submit()
           }}
         >
-          {locales.length > 1 && hasLocalized(parsed.root) && (
+          {!embedded && locales.length > 1 && hasLocalized(parsed.root) && (
             <LocaleSwitcher
               locales={locales}
               active={active}
@@ -108,17 +146,19 @@ function SupportedBlockForm({
             />
           )}
           <GroupFields form={form} spec={parsed.root} path={[]} label="" />
-          <div className="sticky bottom-10 z-10 flex items-center justify-end gap-3">
-            {attempted && issuePaths.length > 0 && (
-              <p role="alert" className="text-destructive-foreground text-sm">
-                {t('invalidSummary', { count: issuePaths.length })}
-              </p>
-            )}
-            <Button type="submit" disabled={submitting}>
-              {submitting && <Spinner />}
-              {t('save')}
-            </Button>
-          </div>
+          {!embedded && (
+            <div className="sticky bottom-10 z-10 flex items-center justify-end gap-3">
+              {attempted && issuePaths.length > 0 && (
+                <p role="alert" className="text-destructive-foreground text-sm">
+                  {t('invalidSummary', { count: issuePaths.length })}
+                </p>
+              )}
+              <Button type="submit" disabled={submitting}>
+                {submitting && <Spinner />}
+                {t('save')}
+              </Button>
+            </div>
+          )}
         </Form>
       </ShownIssuesContext.Provider>
     </EditingLocaleContext.Provider>
