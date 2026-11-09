@@ -60,12 +60,12 @@ const upload = async (
 
 const rows = async () => (await db.prepare('SELECT * FROM media').all()).results
 
-describe('media upload API', () => {
-  beforeAll(async () => {
-    await db.batch(['media', 'users'].map((table) => db.prepare(`DROP TABLE IF EXISTS ${table}`)))
-    await db.batch(migrations.map((statement) => db.prepare(statement)))
-  })
+beforeAll(async () => {
+  await db.batch(['media', 'users'].map((table) => db.prepare(`DROP TABLE IF EXISTS ${table}`)))
+  await db.batch(migrations.map((statement) => db.prepare(statement)))
+})
 
+describe('media upload API', () => {
   it('stores the image in R2 under an immutable key and records it', async () => {
     const response = await upload(form(pngBytes()))
     expect(response.status).toBe(201)
@@ -90,6 +90,17 @@ describe('media upload API', () => {
     )
   })
 
+  it('accepts a decorative image without alt text and drops any alt it carries', async () => {
+    const response = await upload(
+      form(pngBytes(), { ...described, decorative: true, alt: { en: 'ignored', es: '' } })
+    )
+    expect(response.status).toBe(201)
+    const { media } = (await response.json()) as { media: { decorative: boolean; alt: object } }
+    expect(media).toMatchObject({ decorative: true, alt: {} })
+  })
+})
+
+describe('media upload API refusals', () => {
   it('trusts the bytes, not the declared type or the file name', async () => {
     const response = await upload(form(new Uint8Array([...GIF, 0, 0, 0]), described, 'chair.png'))
     expect(response.status).toBe(415)
@@ -107,15 +118,6 @@ describe('media upload API', () => {
       form(pngBytes(), { ...described, alt: { en: 'A chair', es: '' } })
     )
     expect(response.status).toBe(400)
-  })
-
-  it('accepts a decorative image without alt text and drops any alt it carries', async () => {
-    const response = await upload(
-      form(pngBytes(), { ...described, decorative: true, alt: { en: 'ignored', es: '' } })
-    )
-    expect(response.status).toBe(201)
-    const { media } = (await response.json()) as { media: { decorative: boolean; alt: object } }
-    expect(media).toMatchObject({ decorative: true, alt: {} })
   })
 
   it.each([
