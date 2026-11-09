@@ -48,8 +48,7 @@
   },
   "seo": {
     "heading": "Search and social",
-    "intro": "What search engines and link previews show, one language at a time.",
-    "missing": "Missing",
+    "intro": "What search engines and link previews show, in the language you are editing.",
     "title": {
       "label": "SEO title",
       "description": "{{count}} of {{max}} characters. Leave empty to use the page title."

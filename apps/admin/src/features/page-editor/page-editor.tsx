@@ -1,8 +1,15 @@
-import { API_ERROR, type PageBlock, type PageSeo, type PageStamp } from '@studiobimo/backstage'
+import {
+  API_ERROR,
+  LOCALES,
+  type Locale,
+  type PageBlock,
+  type PageSeo,
+  type PageStamp
+} from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, CopyIcon, PlusIcon, SaveIcon, Trash2Icon } from 'lucide-react'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ChoiceSelect } from '@/components/choice-select'
@@ -17,6 +24,8 @@ import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
+import { EditingLocaleContext } from '../block-form/locale-status'
+import { LocaleSwitcher } from '../block-form/locale-switcher'
 import { LeaveGuard } from './leave-guard'
 import { StaleAlert } from './stale-alert'
 import { pageLabel } from '../pages/page-label'
@@ -25,6 +34,7 @@ import { settingsQuery } from '../settings/queries'
 import {
   type BlockOption,
   duplicateAt,
+  localeGaps,
   moveBlock,
   newBlock,
   removeAt,
@@ -379,6 +389,11 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   )
   const actions = useBlockActions(saved)
   const { blocks } = actions
+  const [locale, setLocale] = useState<Locale>(LOCALES[0])
+  const editing = useMemo(
+    () => ({ locales: LOCALES, active: locale, fallback: LOCALES[0] }),
+    [locale]
+  )
   const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)
   const { save, saving, failure, stale } = useSave(
     pageId,
@@ -387,7 +402,7 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   )
 
   return (
-    <>
+    <EditingLocaleContext.Provider value={editing}>
       <EditorHeader
         title={page ? pageLabel(page, i18n.language) : t('title')}
         dirty={dirty}
@@ -398,6 +413,13 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
         onReload={onReload}
       />
       <LeaveGuard dirty={dirty} />
+      <LocaleSwitcher
+        locales={LOCALES}
+        active={locale}
+        status={localeGaps(blocks, options, seo)}
+        showInvalid={false}
+        onChange={(next) => setLocale(next as Locale)}
+      />
       <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
       <BlockList actions={actions} />
       <div>
@@ -407,7 +429,7 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
       <p role="status" aria-live="polite" className="sr-only">
         {actions.announcement}
       </p>
-    </>
+    </EditingLocaleContext.Provider>
   )
 }
 

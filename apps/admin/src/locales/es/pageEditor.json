@@ -48,8 +48,7 @@
   },
   "seo": {
     "heading": "Buscadores y redes",
-    "intro": "Lo que muestran los buscadores y las vistas previas de enlaces, un idioma a la vez.",
-    "missing": "Falta",
+    "intro": "Lo que muestran los buscadores y las vistas previas de enlaces, en el idioma que estás editando.",
     "title": {
       "label": "Título SEO",
       "description": "{{count}} de {{max}} caracteres. Déjalo vacío para usar el título de la página."

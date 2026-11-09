@@ -1,4 +1,4 @@
-import { LOCALES, type Page } from '@studiobimo/backstage'
+import { LOCALES, type PageSummary } from '@studiobimo/backstage'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { LayoutList, Pencil, Plus, Trash2 } from 'lucide-react'
@@ -10,22 +10,33 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 
+import { languageName } from '../block-form/locale-status'
 import { DeletePageDialog } from './delete-page-dialog'
 import { pageLabel, pageSlugLabel } from './page-label'
 import { PageFormSheet } from './page-form-sheet'
 import { pagesQuery } from './queries'
 
-type Editing = { kind: 'create' } | { kind: 'rename' | 'delete'; page: Page }
+type Editing = { kind: 'create' } | { kind: 'rename' | 'delete'; page: PageSummary }
 
-function PageRow({ page, onAction }: { page: Page; onAction: (editing: Editing) => void }) {
+function MissingBadges({ missing }: { missing: PageSummary['missing'] }) {
+  const { t, i18n } = useTranslation('pages')
+  return LOCALES.filter((locale) => missing[locale] > 0).map((locale) => (
+    <Badge key={locale} variant="warning">
+      {t('list.missing', { count: missing[locale], language: languageName(locale, i18n.language) })}
+    </Badge>
+  ))
+}
+
+function PageRow({ page, onAction }: { page: PageSummary; onAction: (editing: Editing) => void }) {
   const { t, i18n } = useTranslation('pages')
   const name = pageLabel(page, i18n.language)
   return (
     <li className="flex items-center gap-3 rounded-xl border bg-card p-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="flex items-center gap-2 font-medium">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
           <span className="truncate">{name}</span>
           {page.isHome && <Badge>{t('list.home')}</Badge>}
+          <MissingBadges missing={page.missing} />
         </p>
         <p className="flex flex-wrap gap-x-3 text-muted-foreground text-xs">
           {LOCALES.map((locale) => (

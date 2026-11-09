@@ -1,3 +1,4 @@
+import type { PageSummary } from '@studiobimo/backstage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -69,6 +70,14 @@ describe('PagesPage', { timeout: 15_000 }, () => {
     renderPage()
     expect(await screen.findByText('/en/about')).toBeInTheDocument()
     expect(screen.getByText('/es/acerca')).toBeInTheDocument()
+  })
+
+  it('flags the languages a page is missing translations in', async () => {
+    const team: PageSummary = { ...aboutPage, id: 'p2', missing: { en: 0, es: 3 } }
+    mockApi(() => reply(200, { pages: [aboutPage, team] }))
+    renderPage()
+    expect(await screen.findByText('3 missing in Spanish')).toBeInTheDocument()
+    expect(screen.getAllByText(/missing in/)).toHaveLength(1)
   })
 
   it('creates a page, filling each address from its title', async () => {

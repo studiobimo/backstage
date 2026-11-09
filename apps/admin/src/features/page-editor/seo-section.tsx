@@ -1,13 +1,19 @@
-import { LOCALES, PAGE, type Locale, type LocaleSeo, type PageSeo } from '@studiobimo/backstage'
+import {
+  isSeoMissing,
+  PAGE,
+  type Locale,
+  type LocaleSeo,
+  type PageSeo
+} from '@studiobimo/backstage'
+import { LanguagesIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/components/ui/badge'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
-import { languageName } from '../block-form/locale-status'
+import { useEditingLocale } from '../block-form/locale-status'
 
 export interface SeoDefaults {
   titles: Record<string, string>
@@ -20,11 +26,6 @@ interface SeoSectionProps {
   defaults: SeoDefaults
   onChange: (value: PageSeo) => void
 }
-
-const isEmpty = ({ title, description }: LocaleSeo) => title === '' && description === ''
-
-const isMissing = (value: PageSeo, locale: Locale) =>
-  isEmpty(value[locale]) && LOCALES.some((other) => other !== locale && !isEmpty(value[other]))
 
 interface LocaleFieldsProps {
   locale: Locale
@@ -81,36 +82,34 @@ function LocaleFields({
 }
 
 export function SeoSection({ value, defaults, onChange }: SeoSectionProps) {
-  const { t, i18n } = useTranslation('pageEditor')
+  const { t } = useTranslation(['pageEditor', 'blockForm'])
+  const { active } = useEditingLocale()
+  const locale = active as Locale
   return (
     <section className="flex flex-col gap-3" aria-labelledby="seo-heading">
       <div className="flex flex-col gap-1">
-        <h2 id="seo-heading" className="font-medium text-lg">
-          {t('seo.heading')}
-        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 id="seo-heading" className="font-medium text-lg">
+            {t('seo.heading')}
+          </h2>
+          {isSeoMissing(value, locale) && (
+            <Badge variant="warning">{t('blockForm:locale.missing')}</Badge>
+          )}
+          <Badge variant="outline" title={t('blockForm:locale.perLanguage')}>
+            <LanguagesIcon aria-hidden />
+            {locale.toUpperCase()}
+          </Badge>
+        </div>
         <p className="text-muted-foreground text-sm">{t('seo.intro')}</p>
       </div>
-      <Tabs defaultValue={LOCALES[0]}>
-        <TabsList aria-label={t('seo.heading')}>
-          {LOCALES.map((locale) => (
-            <TabsTab key={locale} value={locale}>
-              {languageName(locale, i18n.language)}
-              {isMissing(value, locale) && <Badge variant="warning">{t('seo.missing')}</Badge>}
-            </TabsTab>
-          ))}
-        </TabsList>
-        {LOCALES.map((locale) => (
-          <TabsPanel key={locale} value={locale} className="pt-3">
-            <LocaleFields
-              locale={locale}
-              value={value[locale]}
-              fallbackTitle={defaults.titles[locale] ?? defaults.siteNames[locale] ?? ''}
-              hasSocialImage={defaults.hasSocialImage}
-              onChange={(next) => onChange({ ...value, [locale]: next })}
-            />
-          </TabsPanel>
-        ))}
-      </Tabs>
+      <LocaleFields
+        key={locale}
+        locale={locale}
+        value={value[locale]}
+        fallbackTitle={defaults.titles[locale] ?? defaults.siteNames[locale] ?? ''}
+        hasSocialImage={defaults.hasSocialImage}
+        onChange={(next) => onChange({ ...value, [locale]: next })}
+      />
     </section>
   )
 }
