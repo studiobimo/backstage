@@ -100,3 +100,5 @@ export const mediaSchema = z.object({
 export type Media = z.infer<typeof mediaSchema>
 
 export const mediaResponseSchema = z.object({ media: mediaSchema })
+
+export const mediaListResponseSchema = z.object({ media: z.array(mediaSchema) })

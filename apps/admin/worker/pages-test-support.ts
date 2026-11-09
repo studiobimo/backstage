@@ -4,7 +4,12 @@ import app from './index'
 import { migrationStatements } from './test-migrations'
 import { openTestEnv } from './test-env'
 
-const migrations = migrationStatements('0000_init', '0003_page_layout', '0004_page_seo_title')
+const migrations = migrationStatements(
+  '0000_init',
+  '0001_site_settings',
+  '0003_page_layout',
+  '0004_page_seo_title'
+)
 
 const { dispose, db, env } = await openTestEnv()
 
@@ -33,12 +38,12 @@ export const kv = env.localDevelopment.SITE!
 
 export const home = { isHome: true, titles: { en: 'Home', es: 'Inicio' } }
 
-const tables = ['page_blocks', 'page_locales', 'pages', 'media']
+const tables = ['page_blocks', 'page_locales', 'pages', 'media', 'site_settings']
 
 export const useFreshPagesDb = () => {
   afterAll(dispose)
   beforeAll(async () => {
-    const dropped = ['page_blocks', 'page_locales', 'pages', 'media', 'users']
+    const dropped = ['page_blocks', 'page_locales', 'pages', 'media', 'users', 'site_settings']
     await db.batch(dropped.map((table) => db.prepare(`DROP TABLE IF EXISTS ${table}`)))
     await db.batch(migrations.map((statement) => db.prepare(statement)))
   })

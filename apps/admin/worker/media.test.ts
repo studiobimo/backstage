@@ -90,6 +90,21 @@ describe('media upload API', () => {
     )
   })
 
+  it('lists the uploaded images and serves their bytes', async () => {
+    const { media } = (await (await upload(form(pngBytes()))).json()) as { media: { id: string } }
+    const listed = await app.request('/api/v1/media', {}, env.localDevelopment)
+    expect(listed.status).toBe(200)
+    expect(((await listed.json()) as { media: { id: string }[] }).media).toContainEqual(
+      expect.objectContaining({ id: media.id, filename: 'chair.png' })
+    )
+    const file = await app.request(`/api/v1/media/${media.id}/file`, {}, env.localDevelopment)
+    expect(file.status).toBe(200)
+    expect(file.headers.get('content-type')).toBe('image/png')
+    expect((await file.arrayBuffer()).byteLength).toBe(64)
+    const missing = await app.request('/api/v1/media/nope/file', {}, env.localDevelopment)
+    expect(missing.status).toBe(404)
+  })
+
   it('accepts a decorative image without alt text and drops any alt it carries', async () => {
     const response = await upload(
       form(pngBytes(), { ...described, decorative: true, alt: { en: 'ignored', es: '' } })

@@ -1,7 +1,9 @@
 import {
   API_ERROR,
   ensureUser,
+  findMediaFileKey,
   insertMedia,
+  listMedia,
   MEDIA,
   mediaKeyOf,
   mediaUploadSchema,
@@ -53,34 +55,47 @@ const sniffFile = async (file: File) =>
   sniffImageType(new Uint8Array(await file.slice(0, MEDIA.sniffBytes).arrayBuffer()))
 
 export const mediaRoutes = () =>
-  new Hono<AccessEnv>().post('/', async (c) => {
-    const upload = await readUpload(c.req.raw)
-    if ('error' in upload) return respondWithError(c, upload.error)
-    const { file, metadata } = upload
-    const contentType = await sniffFile(file)
-    if (!contentType) return respondWithError(c, API_ERROR.unsupportedMedia)
-
-    const id = crypto.randomUUID()
-    const r2Key = mediaKeyOf(id, contentType)
-    await c.env.MEDIA!.put(r2Key, await file.arrayBuffer(), {
-      httpMetadata: { contentType, cacheControl: MEDIA.cacheControl }
+  new Hono<AccessEnv>()
+    .get('/', async (c) => c.json({ media: await listMedia(c.env.DB!) }))
+    .get('/:id/file', async (c) => {
+      const key = await findMediaFileKey(c.env.DB!, c.req.param('id'))
+      const object = key ? await c.env.MEDIA!.get(key) : null
+      if (!object) return respondWithError(c, API_ERROR.notFound)
+      return new Response(object.body, {
+        headers: {
+          'Content-Type': object.httpMetadata?.contentType ?? 'application/octet-stream',
+          'Cache-Control': MEDIA.cacheControl
+        }
+      })
     })
-    const saved = {
-      id,
-      filename: file.name,
-      contentType,
-      size: file.size,
-      width: metadata.width,
-      height: metadata.height,
-      decorative: metadata.decorative,
-      alt: metadata.decorative ? {} : metadata.alt
-    }
-    try {
-      const uploadedBy = await ensureUser(c.env.DB!, c.get('editor'))
-      await insertMedia(c.env.DB!, { ...saved, r2Key, uploadedBy })
-    } catch (error) {
-      await c.env.MEDIA!.delete(r2Key)
-      throw error
-    }
-    return c.json({ media: saved }, RESPONSE_STATUS.created)
-  })
+    .post('/', async (c) => {
+      const upload = await readUpload(c.req.raw)
+      if ('error' in upload) return respondWithError(c, upload.error)
+      const { file, metadata } = upload
+      const contentType = await sniffFile(file)
+      if (!contentType) return respondWithError(c, API_ERROR.unsupportedMedia)
+
+      const id = crypto.randomUUID()
+      const r2Key = mediaKeyOf(id, contentType)
+      await c.env.MEDIA!.put(r2Key, await file.arrayBuffer(), {
+        httpMetadata: { contentType, cacheControl: MEDIA.cacheControl }
+      })
+      const saved = {
+        id,
+        filename: file.name,
+        contentType,
+        size: file.size,
+        width: metadata.width,
+        height: metadata.height,
+        decorative: metadata.decorative,
+        alt: metadata.decorative ? {} : metadata.alt
+      }
+      try {
+        const uploadedBy = await ensureUser(c.env.DB!, c.get('editor'))
+        await insertMedia(c.env.DB!, { ...saved, r2Key, uploadedBy })
+      } catch (error) {
+        await c.env.MEDIA!.delete(r2Key)
+        throw error
+      }
+      return c.json({ media: saved }, RESPONSE_STATUS.created)
+    })
