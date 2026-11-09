@@ -1,13 +1,18 @@
 import { z } from 'zod'
 
 import { image, localized } from './fields.ts'
+import { PAGE } from './pages.ts'
 
 export const SETTINGS = {
-  siteName: { maxLength: 80 }
+  siteName: { maxLength: 80 },
+  defaultDescription: { maxLength: PAGE.seo.description.maxLength }
 } as const
 
 export const siteSettingsSchema = z.object({
   siteName: localized(z.string().trim().min(1).max(SETTINGS.siteName.maxLength)),
+  defaultDescription: localized(
+    z.string().trim().max(SETTINGS.defaultDescription.maxLength)
+  ).optional(),
   defaultSocialImage: image().optional()
 })
 export type SiteSettings = z.infer<typeof siteSettingsSchema>

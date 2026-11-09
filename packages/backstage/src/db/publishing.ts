@@ -10,8 +10,10 @@ import {
   type PublishDraft,
   type PublishMediaRow,
   type PublishProblem,
-  type Snapshot
+  type Snapshot,
+  withSeoDefaults
 } from '../publishing.ts'
+import { readSiteSettings } from './settings.ts'
 import { media, pageBlocks, pageLocales, pages } from './schema.ts'
 
 export const PUBLISH_PLAN = {
@@ -60,8 +62,9 @@ export const planPublish = async (
   expectedVersion: number,
   publishedAt: number
 ): Promise<PublishPlan> => {
-  const draft = await readDraft(d1, id)
-  if (!draft) return { status: PUBLISH_PLAN.notFound }
+  const found = await readDraft(d1, id)
+  if (!found) return { status: PUBLISH_PLAN.notFound }
+  const draft = { ...found, locales: withSeoDefaults(found.locales, await readSiteSettings(d1)) }
   if (draft.page.version !== expectedVersion) return { status: PUBLISH_PLAN.stale }
   const { blocks } = checkBlocks(registry, draft.blocks)
   const mediaRows = await readMedia(d1, referencedMediaIds(registry, blocks, draft.locales))

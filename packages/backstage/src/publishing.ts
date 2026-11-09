@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { validateBlockContent, type Registry } from './blocks.ts'
 import { LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
+import type { SiteSettings } from './settings.ts'
 import { isRecord, type TranslatedNode } from './translations.ts'
 
 export const SNAPSHOT = {
@@ -73,6 +74,16 @@ export const snapshotSchema = z.object({
   media: z.record(z.string(), snapshotMediaSchema)
 })
 export type Snapshot = z.infer<typeof snapshotSchema>
+
+export const withSeoDefaults = (
+  locales: readonly PublishLocaleRow[],
+  settings: SiteSettings
+): PublishLocaleRow[] =>
+  locales.map((row) => ({
+    ...row,
+    description: row.description || settings.defaultDescription?.[row.locale] || '',
+    socialImageId: row.socialImageId ?? settings.defaultSocialImage?.id ?? null
+  }))
 
 export const publishPageSchema = z.object({ expectedVersion: z.number().int().min(1) })
 

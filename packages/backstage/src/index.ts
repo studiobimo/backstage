@@ -29,6 +29,7 @@ export {
   MEDIA,
   mediaAltSchema,
   mediaKeyOf,
+  mediaListResponseSchema,
   mediaResponseSchema,
   mediaSchema,
   mediaTypes,
@@ -134,7 +135,7 @@ export {
 } from './seo.ts'
 export type { AlternateLink, PublishedIndex, PublishedPage } from './seo.ts'
 export { logEvent, OBSERVABILITY, observe, reportError, respondHealthy } from './observability.ts'
-export { insertMedia } from './db/media.ts'
+export { findMediaFileKey, insertMedia, listMedia } from './db/media.ts'
 export type { NewMedia } from './db/media.ts'
 export {
   countMissingTranslations,
