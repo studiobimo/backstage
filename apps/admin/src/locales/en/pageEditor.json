@@ -61,5 +61,38 @@
       "default": "The social image comes from the site settings.",
       "none": "No social image yet. Set a default in the site settings."
     }
+  },
+  "publish": {
+    "label": "Publishing",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "cancel": "Cancel",
+    "status": {
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "notLive": "Not live. Visitors cannot see this page yet.",
+    "since": "Live since {{when}}, published by {{name}}.",
+    "someone": "someone",
+    "saveFirst": "Save your changes to publish them.",
+    "unpublishTitle": "Unpublish {{name}}?",
+    "unpublishDescription": "Visitors see the not found page at this address. Your draft stays here and you can publish it again.",
+    "toast": {
+      "published": "Published",
+      "unpublished": "Unpublished"
+    },
+    "problems": {
+      "title": "This page cannot be published yet",
+      "unknown_layout": "The layout no longer exists. Pick another one and save.",
+      "unknown_block": "The block {{name}} no longer exists. Remove it and save.",
+      "invalid_content": "The block {{name}} has content that is not valid. Fix it and save.",
+      "unknown_media": "An image {{name}} uses was removed from the media library.",
+      "missing_slug": "A language has no address. Rename the page to add one."
+    },
+    "errors": {
+      "stale_version": "A newer version was saved. Reload the latest version, then publish.",
+      "not_found": "This page no longer exists.",
+      "internal": "The change could not be made. Check your connection and try again."
+    }
   }
 }

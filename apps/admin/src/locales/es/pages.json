@@ -13,7 +13,9 @@
     "emptyDescription": "Crea la página de inicio y luego las demás.",
     "edit": "Editar bloques de {{name}}",
     "missing_one": "Falta {{count}} en {{language}}",
-    "missing_other": "Faltan {{count}} en {{language}}"
+    "missing_other": "Faltan {{count}} en {{language}}",
+    "published": "Publicada",
+    "draft": "Borrador"
   },
   "form": {
     "createTitle": "Nueva página",
