@@ -1,4 +1,5 @@
-import { useRouterState } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { Link, useMatch, useRouterState } from '@tanstack/react-router'
 import { PanelLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +11,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator
@@ -19,6 +21,8 @@ import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sideb
 import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { site } from '@/config/site'
+import { pageLabel } from '@/features/pages/page-label'
+import { pagesQuery } from '@/features/pages/queries'
 
 const pageTitles: Record<string, string> = {
   '/type': 'nav.type',
@@ -36,17 +40,43 @@ function SidebarToggle() {
   )
 }
 
+function EditedPageCrumbs({ pageId }: { pageId: string }) {
+  const { t, i18n } = useTranslation()
+  const { data: pages } = useQuery(pagesQuery)
+  const page = pages?.find((candidate) => candidate.id === pageId)
+  return (
+    <>
+      <BreadcrumbItem>
+        <BreadcrumbLink render={<Link to="/pages" />}>
+          {t('nav.sections.pages.title')}
+        </BreadcrumbLink>
+      </BreadcrumbItem>
+      <BreadcrumbSeparator />
+      <BreadcrumbItem>
+        <BreadcrumbPage>
+          {page ? pageLabel(page, i18n.language) : t('title', { ns: 'pageEditor' })}
+        </BreadcrumbPage>
+      </BreadcrumbItem>
+    </>
+  )
+}
+
 function PageBreadcrumb() {
   const { t } = useTranslation()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const editing = useMatch({ from: '/pages_/$pageId', shouldThrow: false })
   return (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem className="hidden md:block">{site.name}</BreadcrumbItem>
         <BreadcrumbSeparator className="hidden md:block" />
-        <BreadcrumbItem>
-          <BreadcrumbPage>{t(pageTitles[pathname] ?? 'nav.home')}</BreadcrumbPage>
-        </BreadcrumbItem>
+        {editing ? (
+          <EditedPageCrumbs pageId={editing.params.pageId} />
+        ) : (
+          <BreadcrumbItem>
+            <BreadcrumbPage>{t(pageTitles[pathname] ?? 'nav.home')}</BreadcrumbPage>
+          </BreadcrumbItem>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   )

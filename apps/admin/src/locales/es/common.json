@@ -21,47 +21,27 @@
     "label": "Principal",
     "home": "Inicio",
     "type": "Muestra tipográfica",
-    "support": "Ayuda",
     "toggle": "Mostrar u ocultar la barra lateral",
-    "more": "Más opciones de {{name}}",
-    "open": "Abrir",
-    "delete": "Eliminar",
     "groups": {
-      "workspace": "Espacio de trabajo",
-      "collections": "Colecciones"
+      "workspace": "Espacio de trabajo"
     },
     "sections": {
       "pages": {
         "title": "Páginas",
         "items": {
-          "all": "Todas las páginas",
-          "drafts": "Borradores"
-        }
-      },
-      "media": {
-        "title": "Medios",
-        "items": {
-          "library": "Biblioteca",
-          "uploads": "Subidas"
+          "all": "Todas las páginas"
         }
       },
       "settings": {
         "title": "Ajustes",
         "items": {
-          "general": "General",
-          "languages": "Idiomas"
+          "general": "General"
         }
       }
-    },
-    "collections": {
-      "journal": "Diario",
-      "team": "Equipo",
-      "services": "Servicios"
     }
   },
   "user": {
     "name": "Editor",
-    "status": "El acceso llegará después",
     "notifications": "Notificaciones",
     "signOut": "Cerrar sesión"
   },

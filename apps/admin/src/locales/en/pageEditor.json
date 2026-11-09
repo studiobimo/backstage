@@ -17,7 +17,7 @@
   "errors": {
     "invalid": "Some blocks are not valid. Reload and try again.",
     "not_found": "This page no longer exists.",
-    "internal": "Something went wrong. Try again."
+    "internal": "The blocks could not be saved. Check your connection and try again."
   },
   "unsaved": "Unsaved changes",
   "announce": {

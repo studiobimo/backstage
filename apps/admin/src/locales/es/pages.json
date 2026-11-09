@@ -11,7 +11,7 @@
     "delete": "Eliminar {{name}}",
     "emptyTitle": "Aún no hay páginas",
     "emptyDescription": "Crea la página de inicio y luego las demás.",
-    "edit": "Editar {{name}}"
+    "edit": "Editar bloques de {{name}}"
   },
   "form": {
     "createTitle": "Nueva página",
@@ -36,6 +36,6 @@
     "slug_taken": "Otra página ya usa esa dirección en este idioma.",
     "home_taken": "La página de inicio ya existe.",
     "invalid": "Revisa los campos e inténtalo de nuevo.",
-    "internal": "Algo salió mal. Inténtalo de nuevo."
+    "internal": "No se pudo guardar la página. Revisa tu conexión e inténtalo de nuevo."
   }
 }

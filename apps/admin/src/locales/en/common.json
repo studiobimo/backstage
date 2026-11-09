@@ -21,47 +21,27 @@
     "label": "Main",
     "home": "Home",
     "type": "Type specimen",
-    "support": "Support",
     "toggle": "Toggle the sidebar",
-    "more": "More for {{name}}",
-    "open": "Open",
-    "delete": "Delete",
     "groups": {
-      "workspace": "Workspace",
-      "collections": "Collections"
+      "workspace": "Workspace"
     },
     "sections": {
       "pages": {
         "title": "Pages",
         "items": {
-          "all": "All pages",
-          "drafts": "Drafts"
-        }
-      },
-      "media": {
-        "title": "Media",
-        "items": {
-          "library": "Library",
-          "uploads": "Uploads"
+          "all": "All pages"
         }
       },
       "settings": {
         "title": "Settings",
         "items": {
-          "general": "General",
-          "languages": "Languages"
+          "general": "General"
         }
       }
-    },
-    "collections": {
-      "journal": "Journal",
-      "team": "Team",
-      "services": "Services"
     }
   },
   "user": {
     "name": "Editor",
-    "status": "Sign-in comes later",
     "notifications": "Notifications",
     "signOut": "Sign out"
   },

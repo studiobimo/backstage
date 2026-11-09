@@ -17,7 +17,7 @@
   "errors": {
     "invalid": "Algunos bloques no son válidos. Recarga e inténtalo de nuevo.",
     "not_found": "Esta página ya no existe.",
-    "internal": "Algo salió mal. Inténtalo de nuevo."
+    "internal": "No se pudieron guardar los bloques. Revisa tu conexión e inténtalo de nuevo."
   },
   "unsaved": "Cambios sin guardar",
   "announce": {

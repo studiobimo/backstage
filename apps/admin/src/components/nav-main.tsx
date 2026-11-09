@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import { ChevronRight, FileText, House, Image, Settings2, type LucideIcon } from 'lucide-react'
+import { ChevronRight, FileText, House, Settings2, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -14,15 +14,9 @@ import {
   SidebarMenuSubItem
 } from '@/components/ui/sidebar'
 
-const itemRoutes: Record<string, '/pages' | '/settings'> = {
-  'pages.all': '/pages',
-  'settings.general': '/settings'
-}
-
-const sections: { key: string; icon: LucideIcon; items: string[]; path?: string }[] = [
-  { key: 'pages', icon: FileText, items: ['all', 'drafts'], path: '/pages' },
-  { key: 'media', icon: Image, items: ['library', 'uploads'] },
-  { key: 'settings', icon: Settings2, items: ['general', 'languages'], path: '/settings' }
+const sections: { key: string; icon: LucideIcon; path: '/pages' | '/settings'; item: string }[] = [
+  { key: 'pages', icon: FileText, path: '/pages', item: 'all' },
+  { key: 'settings', icon: Settings2, path: '/settings', item: 'general' }
 ]
 
 export function NavMain() {
@@ -41,10 +35,10 @@ export function NavMain() {
             <span>{t('nav.home')}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        {sections.map(({ key, icon: Icon, items, path }) => (
+        {sections.map(({ key, icon: Icon, path, item }) => (
           <Collapsible
             key={key}
-            defaultOpen={path !== undefined && pathname.startsWith(path)}
+            defaultOpen={pathname.startsWith(path)}
             render={<SidebarMenuItem />}
           >
             <SidebarMenuButton
@@ -57,21 +51,11 @@ export function NavMain() {
             </SidebarMenuButton>
             <CollapsiblePanel>
               <SidebarMenuSub>
-                {items.map((item) => (
-                  <SidebarMenuSubItem key={item}>
-                    <SidebarMenuSubButton
-                      render={
-                        itemRoutes[`${key}.${item}`] ? (
-                          <Link to={itemRoutes[`${key}.${item}`]} />
-                        ) : (
-                          <button type="button" />
-                        )
-                      }
-                    >
-                      <span>{t(`nav.sections.${key}.items.${item}`)}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                ))}
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton render={<Link to={path} />}>
+                    <span>{t(`nav.sections.${key}.items.${item}`)}</span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
               </SidebarMenuSub>
             </CollapsiblePanel>
           </Collapsible>

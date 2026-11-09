@@ -1,7 +1,7 @@
 import { LOCALES, type Page } from '@studiobimo/backstage'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { Blocks, Pencil, Plus, Trash2 } from 'lucide-react'
+import { LayoutList, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -41,7 +41,7 @@ function PageRow({ page, onAction }: { page: Page; onAction: (editing: Editing) 
         aria-label={t('list.edit', { name })}
         render={<Link to="/pages/$pageId" params={{ pageId: page.id }} />}
       >
-        <Blocks />
+        <LayoutList />
       </Button>
       <Button
         size="icon"
