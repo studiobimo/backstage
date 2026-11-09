@@ -318,6 +318,40 @@ interface PageEditorBodyProps {
   onReload: () => void
 }
 
+function BlockList({ actions }: { actions: ReturnType<typeof useBlockActions> }) {
+  const { blocks, names, listRef } = actions
+  const renderRow = (key: string, index: number, slot?: SortableSlot) => (
+    <BlockRow
+      key={key}
+      block={blocks[index]!}
+      name={names[index]!}
+      position={index + 1}
+      slot={slot}
+      onDuplicate={() => actions.duplicate(index)}
+      onRemove={() => actions.remove(index)}
+    />
+  )
+  return (
+    <div ref={listRef} className="contents">
+      {blocks.length === 0 ? (
+        <EmptyBlocks />
+      ) : (
+        <Suspense
+          fallback={
+            <ul className="flex flex-col gap-2">
+              {blocks.map((block, index) => renderRow(block.id, index))}
+            </ul>
+          }
+        >
+          <SortableItems keys={blocks.map((block) => block.id)} names={names} onMove={actions.move}>
+            {renderRow}
+          </SortableItems>
+        </Suspense>
+      )}
+    </div>
+  )
+}
+
 function useSeoDefaults(titles: Record<string, string>): SeoDefaults {
   const { data: settings } = useSuspenseQuery(settingsQuery)
   return {
@@ -344,24 +378,12 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
     Object.fromEntries((page?.locales ?? []).map(({ locale, title }) => [locale, title]))
   )
   const actions = useBlockActions(saved)
-  const { blocks, names, listRef } = actions
+  const { blocks } = actions
   const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)
   const { save, saving, failure, stale } = useSave(
     pageId,
     { blocks, layout, seo },
     { blocks: saved, layout: savedLayout, seo: savedSeo, version: savedPage.version }
-  )
-
-  const renderRow = (key: string, index: number, slot?: SortableSlot) => (
-    <BlockRow
-      key={key}
-      block={blocks[index]!}
-      name={names[index]!}
-      position={index + 1}
-      slot={slot}
-      onDuplicate={() => actions.duplicate(index)}
-      onRemove={() => actions.remove(index)}
-    />
   )
 
   return (
@@ -377,27 +399,7 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
       />
       <LeaveGuard dirty={dirty} />
       <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
-      <div ref={listRef} className="contents">
-        {blocks.length === 0 ? (
-          <EmptyBlocks />
-        ) : (
-          <Suspense
-            fallback={
-              <ul className="flex flex-col gap-2">
-                {blocks.map((block, index) => renderRow(block.id, index))}
-              </ul>
-            }
-          >
-            <SortableItems
-              keys={blocks.map((block) => block.id)}
-              names={names}
-              onMove={actions.move}
-            >
-              {renderRow}
-            </SortableItems>
-          </Suspense>
-        )}
-      </div>
+      <BlockList actions={actions} />
       <div>
         <BlockPicker options={options} onPick={actions.add} />
       </div>

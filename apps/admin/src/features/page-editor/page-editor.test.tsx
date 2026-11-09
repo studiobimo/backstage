@@ -124,7 +124,9 @@ afterEach(() => {
   blocker.state = { status: 'idle' }
 })
 
-describe('PageEditor', { timeout: 15_000 }, () => {
+const SUITE = { timeout: 15_000 }
+
+describe('PageEditor blocks and layout', SUITE, () => {
   it('shows an empty state and adds a block from the picker', async () => {
     mockApi([])
     const user = userEvent.setup()
@@ -172,7 +174,9 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     await waitFor(() => expect(puts.layouts).toEqual([{ layout: 'minimal', expectedVersion: 3 }]))
     expect(puts).toHaveLength(0)
   })
+})
 
+describe('PageEditor saving and leaving', SUITE, () => {
   it('saves the blocks first and the layout on top of the version they produced', async () => {
     const puts = mockApi(saved)
     const user = userEvent.setup()
@@ -229,7 +233,9 @@ describe('PageEditor', { timeout: 15_000 }, () => {
     await rows()
     expect(blocker.options?.shouldBlockFn()).toBe(false)
   })
+})
 
+describe('PageEditor SEO', SUITE, () => {
   it('edits the SEO title and description one language at a time and saves them', async () => {
     const puts = mockApi(saved)
     const user = userEvent.setup()
