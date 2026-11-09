@@ -47,6 +47,13 @@ describe('edge caching', () => {
     expect(read).not.toHaveBeenCalled()
   })
 
+  it('adds the security headers to a cached response whose headers are read-only', async () => {
+    stored.set('http://localhost/about', Response.redirect('http://localhost/elsewhere', 302))
+    const response = await request('/about')
+    expect(response.status).toBe(302)
+    expect(response.headers.get('Content-Security-Policy')).toBeTruthy()
+  })
+
   it('caches a 404 briefly and not the health check or media', async () => {
     const missing = await request('/nope')
     expect(missing.headers.get('Cache-Control')).toMatch(/s-maxage=30/)

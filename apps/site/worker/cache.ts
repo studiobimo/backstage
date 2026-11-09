@@ -9,7 +9,7 @@ export const edgeCache = createMiddleware(async (c, next) => {
   const cache = typeof caches === 'undefined' ? undefined : caches.default
   if (!cache) return next()
   const hit = await cache.match(c.req.raw)
-  if (hit) return hit
+  if (hit) return new Response(hit.body, hit)
   await next()
   const { res } = c
   if (res.ok || res.status === API_ERROR.notFound.status) {
