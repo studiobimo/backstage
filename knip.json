@@ -3,6 +3,7 @@
   "ignore": [".devtools/**", "**/components/ui/**"],
   "ignoreDependencies": ["shadcn", "tailwindcss", "@cloudflare/vite-plugin"],
   "workspaces": {
+    ".": { "entry": ["e2e/playwright.config.ts", "e2e/*.spec.ts"] },
     "apps/admin": { "entry": ["src/test/setup.ts"] }
   }
 }

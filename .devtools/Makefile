@@ -15,3 +15,7 @@ include vite.mk
 BUNDLE_DIR@apps/site := dist/backstage_site
 BUNDLE_CHUNK_KIB@apps/site := 800
 BUNDLE_TOTAL_KIB@apps/site := 170
+
+.PHONY: e2e
+e2e: build ## Playwright: the publish loop through both Workers, and an axe scan of the page editor
+	pnpm exec playwright test -c e2e/playwright.config.ts
