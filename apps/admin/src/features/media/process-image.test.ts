@@ -23,7 +23,9 @@ const codecFor = (
   bytes = 10
 ) => {
   const close = vi.fn()
-  const encode = vi.fn(async () => new Blob([new Uint8Array(bytes)], { type: encodedType }))
+  const encode = vi.fn<ImageCodec['encode']>(
+    async () => new Blob([new Uint8Array(bytes)], { type: encodedType })
+  )
   const codec: ImageCodec = { decode: async () => ({ ...size, close }), encode }
   return { codec, close, encode }
 }
