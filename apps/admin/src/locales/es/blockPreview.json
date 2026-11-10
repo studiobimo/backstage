@@ -1,0 +1,11 @@
+{
+  "title": "Vistas previas de bloques",
+  "description": "Cada bloque de ejemplo con contenido de muestra, como lo mostraría el sitio.",
+  "language": "Idioma",
+  "width": {
+    "label": "Ancho de la vista previa",
+    "phone": "Móvil",
+    "tablet": "Tableta",
+    "desktop": "Escritorio"
+  }
+}

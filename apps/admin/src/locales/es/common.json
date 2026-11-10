@@ -25,6 +25,7 @@
     "label": "Principal",
     "home": "Inicio",
     "type": "Muestra tipográfica",
+    "blocks": "Vistas previas de bloques",
     "toggle": "Mostrar u ocultar la barra lateral",
     "groups": {
       "workspace": "Espacio de trabajo"

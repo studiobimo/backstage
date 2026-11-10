@@ -25,6 +25,7 @@
     "label": "Main",
     "home": "Home",
     "type": "Type specimen",
+    "blocks": "Block previews",
     "toggle": "Toggle the sidebar",
     "groups": {
       "workspace": "Workspace"
