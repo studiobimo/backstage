@@ -27,6 +27,9 @@ export interface BlockOption {
   name: string
   version: number
   schema: JsonSchema
+  title?: Record<string, string>
+  description?: Record<string, string>
+  thumbnail?: Record<string, string>
 }
 
 export const newBlock = (description: BlockOption): PageBlock => ({

@@ -8,7 +8,9 @@
   },
   "picker": {
     "add": "Add block",
-    "label": "Blocks"
+    "label": "Blocks",
+    "placeholder": "Search blocks",
+    "empty": "No blocks match"
   },
   "block": {
     "duplicate": "Duplicate {{name}}",

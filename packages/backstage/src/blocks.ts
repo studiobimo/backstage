@@ -9,6 +9,9 @@ export interface BlockDefinition<S extends z.ZodType = z.ZodType> {
   schema: S
   component: ComponentType<z.output<S>>
   migrate?: (content: unknown, fromVersion: number) => unknown
+  title?: Readonly<Record<string, string>>
+  description?: Readonly<Record<string, string>>
+  thumbnail?: Readonly<Record<string, string>>
 }
 
 export interface Block<S extends z.ZodType = z.ZodType> extends BlockDefinition<S> {
@@ -127,12 +130,18 @@ export interface BlockDescription {
   name: string
   version: number
   schema: z.core.JSONSchema.BaseSchema
+  title?: Readonly<Record<string, string>>
+  description?: Readonly<Record<string, string>>
+  thumbnail?: Readonly<Record<string, string>>
 }
 
 const describe = (registry: Registry, block: RegisteredBlock): BlockDescription => ({
   name: block.name,
   version: block.version,
-  schema: registry.jsonSchema(block.name)
+  schema: registry.jsonSchema(block.name),
+  title: block.title,
+  description: block.description,
+  thumbnail: block.thumbnail
 })
 
 export function describeBlocks(registry: Registry): BlockDescription[] {

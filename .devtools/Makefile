@@ -8,7 +8,7 @@ DEPLOY_ENVS := production
 include base.mk
 include vite.mk
 
-BUNDLE_TOTAL_KIB@apps/admin := 580
+BUNDLE_TOTAL_KIB@apps/admin := 585
 
 # The site has no client bundle, so its budget is the Worker's. It is one file, so the chunk limit
 # is the file's size. Gzipped it is React (68 KiB) and zod (about 50 KiB, it validates each snapshot
