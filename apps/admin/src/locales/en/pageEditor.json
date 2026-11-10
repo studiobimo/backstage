@@ -37,9 +37,30 @@
   },
   "stale": {
     "title": "A newer version was saved",
-    "description": "{{name}} saved this page on {{when}}. Your changes were not saved. Reload to get their version.",
+    "description": "{{name}} saved this page on {{when}}. Your changes were not saved and are still here. Copy them, or reload to get their version.",
     "someone": "Someone",
-    "reload": "Reload latest version"
+    "reload": "Reload latest version",
+    "copy": {
+      "idle": "Copy my changes",
+      "copied": "Copied",
+      "failed": "Copy failed",
+      "copiedStatus": "Your changes were copied to the clipboard.",
+      "failedStatus": "Your changes could not be copied."
+    },
+    "confirm": {
+      "title": "Reload and discard your changes?",
+      "description": "Reloading replaces this page with the latest saved version. These changes will be lost:",
+      "keep": "Keep my changes",
+      "discard": "Reload and discard"
+    },
+    "changes": {
+      "added": "{{name}} added at position {{position}}",
+      "removed": "{{name}} at position {{position}} removed",
+      "edited": "{{name}} at position {{position}} edited",
+      "reordered": "Blocks reordered",
+      "layout": "Layout changed",
+      "seo": "Search and social changed"
+    }
   },
   "leave": {
     "title": "Leave without saving?",

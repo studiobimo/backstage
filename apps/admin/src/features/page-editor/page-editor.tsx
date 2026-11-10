@@ -3,7 +3,6 @@ import {
   LOCALES,
   type Locale,
   type PageBlock,
-  type PageSeo,
   type PageSummary
 } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
@@ -37,10 +36,13 @@ import { pagesQuery } from '../pages/queries'
 import { settingsQuery } from '../settings/queries'
 import {
   type BlockOption,
+  type DraftChange,
+  describeChanges,
   duplicateAt,
   localeGaps,
   moveBlock,
   newBlock,
+  type PageDraft,
   removeAt,
   sameBlocks,
   sameJson
@@ -59,12 +61,6 @@ import {
 import { type SeoDefaults, SeoSection } from './seo-section'
 
 const SortableItems = lazy(() => import('@/components/sortable-items'))
-
-interface PageDraft {
-  blocks: PageBlock[]
-  layout: string
-  seo: PageSeo
-}
 
 interface SavedPage extends PageDraft {
   version: number
@@ -292,6 +288,8 @@ interface EditorChromeProps {
   page: PageSummary
   title: string
   blocks: PageBlock[]
+  draft: PageDraft
+  changes: DraftChange[]
   version: number
   dirty: boolean
   save: ReturnType<typeof useSave>
@@ -308,6 +306,8 @@ function EditorChrome({
   page,
   title,
   blocks,
+  draft,
+  changes,
   version,
   dirty,
   save,
@@ -340,7 +340,14 @@ function EditorChrome({
           />
         }
       />
-      {save.stale && <StaleAlert current={save.stale.current} onReload={onReload} />}
+      {save.stale && (
+        <StaleAlert
+          current={save.stale.current}
+          draft={draft}
+          changes={changes}
+          onReload={onReload}
+        />
+      )}
       {save.failure && (
         <p role="alert" className="text-destructive-foreground text-sm">
           {save.failure}
@@ -474,11 +481,10 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
     [locale]
   )
   const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)
-  const save = useSave(
-    pageId,
-    { blocks, layout, seo },
-    { blocks: saved, layout: savedLayout, seo: savedSeo, version: savedPage.version }
-  )
+  const draft = { blocks, layout, seo }
+  const savedDraft = { blocks: saved, layout: savedLayout, seo: savedSeo }
+  const save = useSave(pageId, draft, { ...savedDraft, version: savedPage.version })
+  const changes = describeChanges(savedDraft, draft)
 
   return (
     <EditingLocaleContext.Provider value={editing}>
@@ -487,6 +493,8 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
           page={page}
           title={pageLabel(page, i18n.language)}
           blocks={saved}
+          draft={draft}
+          changes={changes}
           version={savedPage.version}
           dirty={dirty}
           save={save}
