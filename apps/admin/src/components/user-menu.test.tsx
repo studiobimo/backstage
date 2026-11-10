@@ -42,17 +42,17 @@ describe('user menu', () => {
     stubApi()
     await renderShell('/pages/p1')
     const user = userEvent.setup()
-    const editing = await screen.findByRole('group', { name: 'Editing language' })
-    await user.click(within(editing).getByRole('button', { name: /spanish/i }))
-    expect(within(editing).getByRole('button', { name: /spanish/i })).toHaveAttribute(
-      'aria-pressed',
+    const editing = await screen.findByRole('tablist', { name: 'Editing language' })
+    await user.click(within(editing).getByRole('tab', { name: /spanish/i }))
+    expect(within(editing).getByRole('tab', { name: /spanish/i })).toHaveAttribute(
+      'aria-selected',
       'true'
     )
     await user.click(screen.getByRole('button', { name: 'Editor' }))
     await user.click(await screen.findByRole('menuitemradio', { name: 'Español' }))
-    const translated = await screen.findByRole('group', { name: 'Idioma de edición' })
-    expect(within(translated).getByRole('button', { name: /español/i })).toHaveAttribute(
-      'aria-pressed',
+    const translated = await screen.findByRole('tablist', { name: 'Idioma de edición' })
+    expect(within(translated).getByRole('tab', { name: /español/i })).toHaveAttribute(
+      'aria-selected',
       'true'
     )
   })

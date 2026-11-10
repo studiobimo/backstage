@@ -1,0 +1,74 @@
+import type { PageBlock, PageSummary } from '@studiobimo/backstage'
+import { CircleAlertIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ApiError } from '@/lib/api'
+import { formatDateTime } from '@/lib/format'
+
+interface PublishNotesProps {
+  page: PageSummary
+  dirty: boolean
+  error: unknown
+  blocks: PageBlock[]
+  hintId: string
+}
+
+function ProblemsAlert({ error, blocks }: { error: ApiError; blocks: PageBlock[] }) {
+  const { t } = useTranslation('pageEditor')
+  return (
+    <Alert variant="error" role="alert">
+      <CircleAlertIcon />
+      <AlertTitle>{t('publish.problems.title')}</AlertTitle>
+      <AlertDescription>
+        <ul className="list-disc pl-4">
+          {error.problems.map(({ reason, blockId }) => (
+            <li key={`${reason}:${blockId}`}>
+              {t(`publish.problems.${reason}`, {
+                name: blocks.find((block) => block.id === blockId)?.block ?? '',
+                defaultValue: t('publish.problems.invalid_content', { name: '' })
+              })}
+            </li>
+          ))}
+        </ul>
+      </AlertDescription>
+    </Alert>
+  )
+}
+
+function PublishNotice({ error, blocks }: { error: unknown; blocks: PageBlock[] }) {
+  const { t } = useTranslation('pageEditor')
+  if (!error) return null
+  if (error instanceof ApiError && error.problems.length > 0) {
+    return <ProblemsAlert error={error} blocks={blocks} />
+  }
+  return (
+    <p role="alert" className="text-destructive-foreground text-sm">
+      {t(`publish.errors.${error instanceof ApiError ? error.code : 'internal'}`, {
+        defaultValue: t('publish.errors.internal')
+      })}
+    </p>
+  )
+}
+
+function usePublishHint(page: PageSummary, dirty: boolean) {
+  const { t, i18n } = useTranslation('pageEditor')
+  if (dirty) return t('publish.saveFirst')
+  if (page.publishedAt === null) return t('publish.notLive')
+  return t('publish.since', {
+    when: formatDateTime(i18n.language, page.publishedAt),
+    name: page.publishedBy ?? t('publish.someone')
+  })
+}
+
+export function PublishNotes({ page, dirty, error, blocks, hintId }: PublishNotesProps) {
+  const { t } = useTranslation('pageEditor')
+  return (
+    <section aria-label={t('publish.label')} className="flex flex-col gap-3">
+      <p id={hintId} className="text-muted-foreground text-sm">
+        {usePublishHint(page, dirty)}
+      </p>
+      <PublishNotice error={error} blocks={blocks} />
+    </section>
+  )
+}

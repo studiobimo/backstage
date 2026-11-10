@@ -101,7 +101,7 @@ test('create, fill, upload, publish and see it on the site', async ({ page }) =>
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
   expect(violations).toEqual([])
 
-  await page.getByRole('button', { name: 'Publish' }).click()
+  await page.getByRole('button', { name: 'Publish', exact: true }).click()
   await expect(page.getByText('Published', { exact: true }).first()).toBeVisible()
 
   await page.goto(`${siteUrl}/${PAGE_UNDER_TEST.slug}`)

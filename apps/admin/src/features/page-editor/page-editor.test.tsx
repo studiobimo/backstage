@@ -260,7 +260,7 @@ describe('PageEditor SEO', SUITE, () => {
     expect(title).toHaveAttribute('placeholder', 'About')
     await user.type(title, 'About the studio')
     await user.type(screen.getByRole('textbox', { name: 'Description' }), 'Who we are')
-    await user.click(screen.getByRole('button', { name: /Spanish/ }))
+    await user.click(screen.getByRole('tab', { name: /Spanish/ }))
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue(''))
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts.seo).toHaveLength(1))
@@ -280,12 +280,12 @@ describe('PageEditor languages', SUITE, () => {
     mockApi(saved, { seo: englishOnly })
     const user = userEvent.setup()
     renderEditor()
-    const spanish = await screen.findByRole('button', { name: /Spanish/ })
+    const spanish = await screen.findByRole('tab', { name: /Spanish/ })
     expect(spanish).toHaveTextContent('1 missing')
-    expect(screen.getByRole('button', { name: /English/ })).not.toHaveTextContent('missing')
+    expect(screen.getByRole('tab', { name: /English/ })).not.toHaveTextContent('missing')
     expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue('About us')
     await user.click(spanish)
-    expect(spanish).toHaveAttribute('aria-pressed', 'true')
+    expect(spanish).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('textbox', { name: 'SEO title' })).toHaveValue('')
     expect(
       screen.getByRole('heading', { name: 'Search and social' }).parentElement
@@ -296,7 +296,7 @@ describe('PageEditor languages', SUITE, () => {
     mockApi(saved)
     renderEditor()
     await rows()
-    expect(screen.getByRole('button', { name: /Spanish/ })).not.toHaveTextContent('missing')
+    expect(screen.getByRole('tab', { name: /Spanish/ })).not.toHaveTextContent('missing')
   })
 
   it('counts a block field that only one language fills', async () => {
@@ -318,6 +318,6 @@ describe('PageEditor languages', SUITE, () => {
       descriptions: [localizedHero]
     })
     renderEditor()
-    expect(await screen.findByRole('button', { name: /Spanish/ })).toHaveTextContent('1 missing')
+    expect(await screen.findByRole('tab', { name: /Spanish/ })).toHaveTextContent('1 missing')
   })
 })
