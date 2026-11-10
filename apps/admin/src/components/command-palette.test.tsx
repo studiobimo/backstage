@@ -47,3 +47,21 @@ describe('command palette', () => {
     expect(await screen.findByRole('button', { name: 'Create page' })).toBeInTheDocument()
   })
 })
+
+describe('sidebar shortcut', () => {
+  beforeEach(stubApi)
+  afterEach(resetShell)
+
+  it('toggles the sidebar from the shortcut registry', async () => {
+    await renderShell()
+    const user = userEvent.setup()
+    const sidebar = () => document.querySelector('[data-slot="sidebar"][data-state]')
+    const before = sidebar()?.getAttribute('data-state')
+    await user.keyboard('{Control>}b{/Control}')
+    expect(sidebar()?.getAttribute('data-state')).not.toBe(before)
+    expect(screen.getByRole('button', { name: 'Toggle the sidebar' })).toHaveAttribute(
+      'aria-keyshortcuts',
+      'Control+B Meta+B'
+    )
+  })
+})
