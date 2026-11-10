@@ -1,6 +1,7 @@
 # ADR-0008: The org's profiles inside a workspace, with coss ui and lineup's styling
 
-- **Status:** Accepted, amended 2026-11-07 (bimo.dev moved to its own repository)
+- **Status:** Accepted, amended 2026-11-07 (bimo.dev moved to its own repository) and 2026-11-10
+  (the site owns its blocks and stylesheet)
 - **Date:** 2026-11-07
 
 ## Context
@@ -35,6 +36,12 @@ look the studio wants to reuse.
   `apps/web/src/index.css` and `components.json` until a shared source exists. An issue on
   `studiobimo/lineup` asks for that source.
 - A gap in a profile is fixed in project-template, not here.
+
+- **The site has its own stylesheet and its own components.** Tailwind v4 with the site's tokens
+  lives in `apps/site/src/`, and nothing in it comes from the admin's `index.css`. coss ui is the
+  site's default component library, in its `components/ui`, and is swappable per consumer.
+- **Motion, the AI SDK, AI Elements and email are per-site additions**, added by a consumer where it
+  needs them. They are not part of the starter.
 
 ## Consequences
 

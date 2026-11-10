@@ -87,7 +87,7 @@ may slip to the next release.
 
 | ID | Story | Acceptance | Priority |
 | --- | --- | --- | --- |
-| BLK-1 | As a dev, I define a block once | A block is a zod schema plus a React component, registered in one registry that both Workers import | Must |
+| BLK-1 | As a dev, I define a block once | A block's zod schema and its React component are defined apart. The site owns its blocks and their samples, and the admin reads the site's schema registry. Each block's component is type-checked against its schema | Must |
 | BLK-2 | The admin builds the block's form | The admin reads the schema as JSON Schema from its API. Supported fields: text, rich text, number, boolean, select, image, link, list of items and nested group | Must |
 | BLK-3 | A field can be localized | A localized field stores one value per locale; other fields are shared across locales | Must |
 | BLK-4 | Invalid content cannot be saved | Each error shows on its field, in the editor's language; the API validates with the same schema | Must |
@@ -121,7 +121,7 @@ may slip to the next release.
 | --- | --- | --- | --- |
 | PUB-1 | I can publish a page | Publishing validates the page, writes its snapshot to KV and records who published it and when. The page is live within two minutes | Must |
 | PUB-2 | I can unpublish a page | The snapshot is removed and the URL returns the site's 404 page | Must |
-| PUB-3 | Pages render on the server | The site worker renders the snapshot with React on the server. A page ships no JavaScript unless one of its blocks needs some | Must |
+| PUB-3 | Pages render on the server | The site worker renders the snapshot with React on the server. The starter ships no client JavaScript; a site that needs interactivity uses TanStack Start in its own repository | Must |
 | PUB-4 | The site is fast and cheap | Responses are cached at the edge with a short `s-maxage` and stale-while-revalidate, so most requests never read KV | Must |
 | PUB-5 | Search engines understand the site | `sitemap.xml`, `robots.txt`, `hreflang` and canonical links are generated from the published pages | Must |
 | PUB-6 | The site cannot see drafts | The site worker has KV and R2 bindings only, with no D1 binding and no admin secret. A test checks its bindings | Must |

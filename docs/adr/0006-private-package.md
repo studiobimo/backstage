@@ -21,6 +21,8 @@ the code public, so that rules it out.
 - A client project installs it with a studiobimo token that has only `read:packages`. The token
   goes in `.npmrc` through an environment variable, in CI as a secret and in Workers Builds as a
   build variable. This token is the access control, so there is no licence system.
+- The prebuilt admin cannot import a consumer's components, so block preview is a frame the site
+  serves ([ADR-0012](0012-block-preview-frame.md)).
 - The publish workflow is a reusable workflow in `studiobimo/.github`, like every other shared
   workflow, so other studio packages can use it too.
 - Releases are cut by release-please, follow SemVer and carry migration notes for breaking
