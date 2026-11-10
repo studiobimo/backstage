@@ -18,8 +18,12 @@ options:
 - Publishing validates the page, resolves its references and writes **one JSON snapshot per page
   and locale to KV**. KV also holds the site settings and an index of published pages.
 - The site worker reads the snapshot and **renders it with React on the server**
-  (`renderToReadableStream`). A page ships no JavaScript unless one of its blocks needs some, in
-  which case the block is loaded as an island.
+  (`renderToReadableStream`), through Hono. The starter ships no client JavaScript, and there are
+  **no islands** in this repository: a custom client build, manifest and props serialization would
+  be thrown away when a site moves to a full framework.
+- A site that needs interactivity uses **TanStack Start in its own repository**, and the starter is
+  revisited once two consumers are on Start. A consumer that hydrates may need a looser
+  Content-Security-Policy, which is that consumer's decision ([risk 11](../RISKS.md)).
 - Publishing also writes one **route key** per locale, `route:<locale>:<slug>` (the home page's slug
   is empty), whose value is the page id. The site reads the route, then the snapshot, and answers
   404 when the snapshot's slug no longer matches, so a renamed slug never serves the old page.
@@ -34,5 +38,5 @@ options:
 - KV takes up to about 60 seconds to reach every location, and the cache adds to that. A publish
   is promised within two minutes.
 - Server-side React counts against the Worker's size and CPU budget, so a spike in M0 measures it.
-- The block components must render on the server. Anything that needs the browser goes in an
-  island.
+- The block components must render on the server in the starter. Anything that needs the browser
+  is a site's own concern, in its own repository.
