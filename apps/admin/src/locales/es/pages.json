@@ -7,19 +7,39 @@
   "list": {
     "create": "Nueva página",
     "home": "Inicio",
-    "rename": "Renombrar {{name}}",
-    "delete": "Eliminar {{name}}",
     "emptyTitle": "Aún no hay páginas",
     "emptyDescription": "Crea la página de inicio y luego las demás.",
-    "edit": "Editar bloques de {{name}}",
     "missing_one": "Falta {{count}} en {{language}}",
     "missing_other": "Faltan {{count}} en {{language}}",
     "published": "Publicada",
-    "draft": "Borrador"
+    "draft": "Borrador",
+    "actions": {
+      "open": "Acciones de {{name}}",
+      "edit": "Editar bloques",
+      "details": "Detalles",
+      "delete": "Eliminar"
+    },
+    "columns": {
+      "title": "Título",
+      "languages": "Idiomas",
+      "status": "Estado",
+      "updated": "Último guardado",
+      "actions": "Acciones"
+    },
+    "filters": {
+      "status": "Filtrar por estado",
+      "all": "Todas",
+      "draft": "Borradores",
+      "published": "Publicadas",
+      "searchLabel": "Buscar páginas",
+      "searchPlaceholder": "Buscar páginas"
+    },
+    "noMatchTitle": "Ninguna página coincide",
+    "noMatchDescription": "Prueba otra búsqueda o un estado distinto."
   },
   "form": {
     "createTitle": "Nueva página",
-    "renameTitle": "Renombrar página",
+    "detailsTitle": "Detalles de la página",
     "description": "Cada idioma tiene su propio título y dirección.",
     "isHome": "Página de inicio",
     "isHomeHint": "La página de inicio no tiene dirección propia.",

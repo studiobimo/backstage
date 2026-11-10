@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { toastManager } from '@/components/ui/toast'
 import { ApiError } from '@/lib/api'
+import { formatDateTime } from '@/lib/format'
 
 import { publishPageMutation, unpublishPageMutation } from './queries'
 
@@ -49,11 +50,7 @@ function PublishStatus({
   const { t, i18n } = useTranslation('pageEditor')
   const { publishedAt } = page
   const published = publishedAt !== null
-  const when = published
-    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(
-        publishedAt
-      )
-    : ''
+  const when = published ? formatDateTime(i18n.language, publishedAt) : ''
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
       <Badge variant={published ? 'success' : 'outline'}>
