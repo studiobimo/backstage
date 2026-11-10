@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { ToastProvider } from '@/components/ui/toast'
 import { aboutPage } from '@/test/fixtures'
 
 import { PublishNotes } from './publish-notes'
@@ -52,7 +53,9 @@ const renderGroup = (props: Partial<HarnessProps> = {}) => {
   const onSave = vi.fn()
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <Harness dirty={false} publishedAt={null} onSave={onSave} {...props} />
+      <ToastProvider>
+        <Harness dirty={false} publishedAt={null} onSave={onSave} {...props} />
+      </ToastProvider>
     </QueryClientProvider>
   )
   return { onSave, user: userEvent.setup() }
@@ -118,5 +121,31 @@ describe('SavePublishGroup', () => {
   it('has no menu for a page that is not live', () => {
     renderGroup()
     expect(screen.queryByRole('button', { name: 'More publishing options' })).toBeNull()
+  })
+})
+
+describe('SavePublishGroup publish feedback', () => {
+  it('says Publishing while the request runs and ends as Published', async () => {
+    let finish: (response: Response) => void = () => undefined
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>((resolve) => (finish = resolve)))
+    )
+    const { user } = renderGroup()
+    await user.click(screen.getByRole('button', { name: 'Publish' }))
+    expect(await screen.findByText('Publishing…')).toBeTruthy()
+    finish(new Response(JSON.stringify({ page: aboutPage })))
+    expect(await screen.findByText('Published')).toBeTruthy()
+    expect(screen.queryByText('Publishing…')).toBeNull()
+  })
+
+  it('ends as a specific error when publishing fails', async () => {
+    mockPublish(
+      new Response(JSON.stringify({ error: 'x', code: 'stale_version' }), { status: 409 })
+    )
+    const { user } = renderGroup()
+    await user.click(screen.getByRole('button', { name: 'Publish' }))
+    expect(await screen.findByText('Could not publish')).toBeTruthy()
+    expect(screen.getAllByText(/A newer version was saved/).length).toBeGreaterThan(0)
   })
 })

@@ -101,8 +101,18 @@
     "unpublishTitle": "¿Despublicar {{name}}?",
     "unpublishDescription": "Los visitantes verán la página de error 404 en esta dirección. El borrador se conserva y puedes volver a publicarlo.",
     "toast": {
-      "published": "Publicada",
-      "unpublished": "Despublicada"
+      "publish": {
+        "pending": "Publicando…",
+        "done": "Publicada",
+        "failed": "No se pudo publicar"
+      },
+      "unpublish": {
+        "pending": "Despublicando…",
+        "done": "Despublicada",
+        "failed": "No se pudo despublicar"
+      },
+      "problems_one": "Hay 1 problema que corregir primero. Abre la página para ver los detalles.",
+      "problems_other": "Hay {{count}} problemas que corregir primero. Abre la página para ver los detalles."
     },
     "problems": {
       "title": "Esta página aún no se puede publicar",
