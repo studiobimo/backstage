@@ -1,5 +1,6 @@
 import { DEFAULT_LOCALE, LOCALES, type Locale, validateBlockContent } from '@studiobimo/backstage'
 import { registry } from '@studiobimo/backstage/example'
+import { components } from '@studiobimo/backstage/example/components'
 import { RenderProvider } from '@studiobimo/backstage/render'
 import { type ComponentType, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,7 +34,7 @@ const previewBlocks = [...registry.blocks.values()].flatMap((block): PreviewBloc
     {
       name: block.name,
       title: block.title ?? {},
-      Component: block.component as ComponentType<Record<string, unknown>>,
+      Component: components.blocks[block.name] as ComponentType<Record<string, unknown>>,
       content: result.content as Record<string, unknown>
     }
   ]

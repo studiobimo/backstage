@@ -16,13 +16,12 @@ export type {
   BlockContentResult,
   BlockDescription,
   LayoutDefinition,
-  LayoutProps,
-  RegisteredBlock,
-  RegisteredLayout,
   Registry,
   RegistryOptions,
   SlotDescription
 } from './blocks.ts'
+export { defineComponents } from './components.ts'
+export type { BlockComponents, ComponentMap, LayoutComponents, LayoutProps } from './components.ts'
 export { API_ERROR, errorBody } from './errors.ts'
 export type { ApiError } from './errors.ts'
 export {
