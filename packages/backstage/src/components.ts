@@ -17,6 +17,7 @@ export type LayoutComponents<L extends readonly LayoutDefinition[]> = {
 }
 
 export interface ComponentMap {
+  readonly registry: Registry
   readonly blocks: Readonly<Record<string, JSXElementConstructor<never>>>
   readonly layouts: Readonly<Record<string, ComponentType<LayoutProps>>>
 }
@@ -25,8 +26,8 @@ export function defineComponents<
   const B extends readonly Block[],
   const L extends readonly LayoutDefinition[]
 >(
-  _registry: Registry<B, L>,
+  registry: Registry<B, L>,
   components: { blocks: BlockComponents<B>; layouts: LayoutComponents<L> }
 ): ComponentMap {
-  return components
+  return { registry, ...components }
 }

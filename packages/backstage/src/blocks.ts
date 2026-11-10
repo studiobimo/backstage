@@ -57,7 +57,7 @@ export interface Registry<
   B extends readonly Block[] = readonly Block[],
   L extends readonly LayoutDefinition[] = readonly LayoutDefinition[]
 > {
-  readonly definitions: { readonly blocks: B; readonly layouts: L }
+  readonly __types?: { readonly blocks: B; readonly layouts: L }
   readonly blocks: ReadonlyMap<string, Block>
   readonly slots: ReadonlyMap<string, readonly string[]>
   readonly layouts: ReadonlyMap<string, LayoutDefinition>
@@ -104,7 +104,6 @@ export function defineRegistry<
   const slotBlocks = new Set([...bySlot.values()].flat())
   const layoutsByName = indexByName(layouts, 'Layout')
   return {
-    definitions: { blocks, layouts },
     blocks: byName,
     slots: bySlot,
     layouts: layoutsByName,

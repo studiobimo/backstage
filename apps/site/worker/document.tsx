@@ -4,7 +4,6 @@ import {
   validateBlockContent,
   type ComponentMap,
   type LayoutProps,
-  type Registry,
   type Snapshot
 } from '@studiobimo/backstage'
 import { RenderProvider } from '@studiobimo/backstage/render'
@@ -14,7 +13,6 @@ import { LOCALE_NAME, SWITCHER_LABEL } from './locales'
 import { pathOf } from './routing'
 
 export interface PageProps {
-  registry: Registry
   components: ComponentMap
   snapshot: Snapshot
   translations: readonly Snapshot[]
@@ -25,27 +23,24 @@ function FallbackLayout({ children }: LayoutProps) {
   return <main>{children}</main>
 }
 
-function Blocks({
-  registry,
-  components,
-  snapshot
-}: Pick<PageProps, 'registry' | 'components' | 'snapshot'>) {
+function Blocks({ components, snapshot }: Pick<PageProps, 'components' | 'snapshot'>) {
   return snapshot.blocks.flatMap((block) => {
+    const { registry } = components
     const definition = registry.get(block.block)
     if (!definition || registry.isSlotBlock(block.block)) return []
     const result = validateBlockContent(definition, block.schemaVersion, block.content)
     if (!result.ok) return []
     const Component = components.blocks[definition.name] as
       ComponentType<Record<string, unknown>> | undefined
-    if (!Component) return []
+    if (!Component) {
+      console.error(`Block "${definition.name}" is registered but has no component`)
+      return []
+    }
     return [<Component key={block.id} {...(result.content as Record<string, unknown>)} />]
   })
 }
 
-function LanguageSwitcher({
-  snapshot,
-  translations
-}: Omit<PageProps, 'registry' | 'components' | 'origin'>) {
+function LanguageSwitcher({ snapshot, translations }: Omit<PageProps, 'components' | 'origin'>) {
   const pages = [snapshot, ...translations].sort(
     (a, b) => Number(b.locale === DEFAULT_LOCALE) - Number(a.locale === DEFAULT_LOCALE)
   )
@@ -69,7 +64,7 @@ function LanguageSwitcher({
   )
 }
 
-function Head({ snapshot, translations, origin }: Omit<PageProps, 'registry' | 'components'>) {
+function Head({ snapshot, translations, origin }: Omit<PageProps, 'components'>) {
   const title = snapshot.seo.title || snapshot.title
   const socialImage = snapshot.seo.socialImageId && snapshot.media[snapshot.seo.socialImageId]
   return (
@@ -96,9 +91,9 @@ function Head({ snapshot, translations, origin }: Omit<PageProps, 'registry' | '
 }
 
 export function Document(props: PageProps) {
-  const { registry, components, snapshot, translations } = props
-  const layout = registry.layouts.get(snapshot.layout) ?? registry.layouts.get(LAYOUT.default)
-  const layoutComponent = (layout && components.layouts[layout.name]) || FallbackLayout
+  const { components, snapshot, translations } = props
+  const layoutComponent =
+    components.layouts[snapshot.layout] ?? components.layouts[LAYOUT.default] ?? FallbackLayout
   return (
     <html lang={snapshot.locale}>
       <Head {...props} />
@@ -108,7 +103,7 @@ export function Document(props: PageProps) {
         >
           {createElement(layoutComponent, {
             slots: {},
-            children: <Blocks registry={registry} components={components} snapshot={snapshot} />
+            children: <Blocks components={components} snapshot={snapshot} />
           })}
         </RenderProvider>
         <LanguageSwitcher snapshot={snapshot} translations={translations} />

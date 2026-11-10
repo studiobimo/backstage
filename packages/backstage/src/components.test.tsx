@@ -18,6 +18,7 @@ describe('defineComponents', () => {
       blocks: { note: Note, quote: Quote },
       layouts: { default: Layout }
     })
+    expect(map.registry).toBe(registry)
     expect(map.blocks.note).toBe(Note)
     expect(map.layouts.default).toBe(Layout)
   })
@@ -28,6 +29,11 @@ describe('defineComponents', () => {
       defineComponents(registry, { blocks: { note: Note }, layouts: { default: Layout } })
       // @ts-expect-error the default layout has no component
       defineComponents(registry, { blocks: { note: Note, quote: Quote }, layouts: {} })
+      defineComponents(registry, {
+        // @ts-expect-error typo is not a registered block
+        blocks: { note: Note, quote: Quote, typo: Note },
+        layouts: { default: Layout }
+      })
       defineComponents(registry, {
         // @ts-expect-error note's props are { text: string }
         blocks: { note: Quote, quote: Quote },
