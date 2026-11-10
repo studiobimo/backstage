@@ -6,17 +6,15 @@ import {
   type PageSummary
 } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { ChevronRightIcon, CopyIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { ChevronRightIcon, CopyIcon, Trash2Icon } from 'lucide-react'
 import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ChoiceSelect } from '@/components/choice-select'
 import { IconButton } from '@/components/icon-button'
 import type { SortableSlot } from '@/components/sortable-items'
-import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
 import { ApiError } from '@/lib/api'
 import { useShortcut } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
@@ -24,7 +22,9 @@ import { cn } from '@/lib/utils'
 import { BlockForm } from '../block-form/block-form'
 import { EditingLocaleContext, useEditingLocale } from '../block-form/locale-status'
 import type { BlockValue } from '../block-form/value'
+import { BlockPicker } from './block-picker'
 import { EditorHeader } from './editor-header'
+import { blockTitle } from './localized-text'
 import { LeaveGuard } from './leave-guard'
 import { PublishNotes } from './publish-notes'
 import { SavePublishGroup } from './save-publish-group'
@@ -147,34 +147,6 @@ function BlockRow({
   )
 }
 
-function BlockPicker({
-  options,
-  onPick
-}: {
-  options: BlockOption[]
-  onPick: (b: BlockOption) => void
-}) {
-  const { t } = useTranslation('pageEditor')
-  return (
-    <Menu>
-      <MenuTrigger
-        data-picker
-        render={<Button variant="outline" disabled={options.length === 0} />}
-      >
-        <PlusIcon aria-hidden />
-        {t('picker.add')}
-      </MenuTrigger>
-      <MenuPopup align="start" aria-label={t('picker.label')}>
-        {options.map((option) => (
-          <MenuItem key={option.name} onClick={() => onPick(option)}>
-            {option.name}
-          </MenuItem>
-        ))}
-      </MenuPopup>
-    </Menu>
-  )
-}
-
 function useSave(pageId: string, draft: PageDraft, saved: SavedPage) {
   const { t } = useTranslation('pageEditor')
   const queryClient = useQueryClient()
@@ -242,11 +214,11 @@ function useRowFeedback(blocks: PageBlock[]) {
   }
 }
 
-function useBlockActions(saved: PageBlock[]) {
+function useBlockActions(saved: PageBlock[], titleOf: (blockName: string) => string) {
   const { t } = useTranslation('pageEditor')
   const [blocks, setBlocks] = useState(saved)
   const feedback = useRowFeedback(blocks)
-  const names = blocks.map((block) => block.block)
+  const names = blocks.map((block) => titleOf(block.block))
 
   const apply = (next: PageBlock[], message: string, focusId?: string) => {
     setBlocks(next)
@@ -256,7 +228,7 @@ function useBlockActions(saved: PageBlock[]) {
   const add = (option: BlockOption) => {
     const created = newBlock(option)
     const total = blocks.length + 1
-    const message = t('announce.added', { name: option.name, position: total, total })
+    const message = t('announce.added', { name: titleOf(option.name), position: total, total })
     apply([...blocks, created], message, created.id)
   }
   const duplicate = (index: number) => {
@@ -422,7 +394,7 @@ function BlockList({
       key={key}
       block={blocks[index]!}
       name={names[index]!}
-      option={options.find((option) => option.name === names[index])}
+      option={options.find((option) => option.name === blocks[index]!.block)}
       position={index + 1}
       slot={slot}
       onChange={(content) => actions.edit(blocks[index]!.id, content)}
@@ -477,9 +449,9 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   const defaults = useSeoDefaults(
     Object.fromEntries((page?.locales ?? []).map(({ locale, title }) => [locale, title]))
   )
-  const actions = useBlockActions(saved)
-  const { blocks } = actions
   const [locale, setLocale] = useState<Locale>(LOCALES[0])
+  const actions = useBlockActions(saved, (name) => blockTitle(options, name, locale, LOCALES[0]))
+  const { blocks } = actions
   const editing = useMemo(
     () => ({ locales: LOCALES, active: locale, fallback: LOCALES[0] }),
     [locale]

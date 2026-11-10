@@ -17,7 +17,14 @@ import type { JsonSchema } from '../block-form/spec'
 
 const blockDescriptionsSchema = z.object({
   blocks: z.array(
-    z.object({ name: z.string(), version: z.number(), schema: z.custom<JsonSchema>() })
+    z.object({
+      name: z.string(),
+      version: z.number(),
+      schema: z.custom<JsonSchema>(),
+      title: z.record(z.string(), z.string()).optional(),
+      description: z.record(z.string(), z.string()).optional(),
+      thumbnail: z.record(z.string(), z.string()).optional()
+    })
   )
 })
 

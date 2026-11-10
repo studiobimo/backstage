@@ -58,7 +58,7 @@ const heroContent = (pictureId: string) => ({
 
 async function addHeroBlock(page: Page) {
   await page.getByRole('button', { name: 'Add block' }).click()
-  await page.getByRole('menuitem', { name: 'hero' }).click()
+  await page.getByRole('option', { name: /hero/ }).click()
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByText('Unsaved changes')).toBeHidden()
 }

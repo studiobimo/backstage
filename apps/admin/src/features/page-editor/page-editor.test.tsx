@@ -131,8 +131,41 @@ describe('PageEditor blocks and layout', SUITE, () => {
     renderEditor()
     expect(await screen.findByText('No blocks yet')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Add block' }))
-    await user.click(await screen.findByRole('menuitem', { name: 'hero' }))
+    await user.click(await screen.findByRole('option', { name: /hero/ }))
     expect(await rows()).toHaveLength(1)
+  })
+
+  it('adds a block from the picker with the keyboard alone and focuses its row', async () => {
+    mockApi([], {
+      descriptions: [
+        hero,
+        { ...hero, name: 'gallery', description: { en: 'Pictures in a grid', es: 'Fotos' } }
+      ]
+    })
+    const user = userEvent.setup()
+    renderEditor()
+    await screen.findByText('No blocks yet')
+    screen.getByRole('button', { name: 'Add block' }).focus()
+    await user.keyboard('{Enter}')
+    expect(await screen.findByText('Pictures in a grid')).toBeInTheDocument()
+    await user.keyboard('grid')
+    expect(screen.queryByRole('option', { name: /hero/ })).not.toBeInTheDocument()
+    await user.keyboard('{Enter}')
+    const [row] = await rows()
+    await waitFor(() => expect(row).toHaveFocus())
+    expect(row).toHaveTextContent('gallery')
+  })
+
+  it('returns focus to the add button when the picker is dismissed', async () => {
+    mockApi([])
+    const user = userEvent.setup()
+    renderEditor()
+    await screen.findByText('No blocks yet')
+    const add = screen.getByRole('button', { name: 'Add block' })
+    await user.click(add)
+    await screen.findByRole('option', { name: /hero/ })
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(add).toHaveFocus())
   })
 
   it('duplicates and removes blocks, then saves the arrangement', async () => {

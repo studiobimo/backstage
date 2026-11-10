@@ -8,7 +8,9 @@
   },
   "picker": {
     "add": "Añadir bloque",
-    "label": "Bloques"
+    "label": "Bloques",
+    "placeholder": "Buscar bloques",
+    "empty": "Ningún bloque coincide"
   },
   "block": {
     "duplicate": "Duplicar {{name}}",
