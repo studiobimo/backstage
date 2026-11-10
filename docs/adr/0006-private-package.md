@@ -21,15 +21,8 @@ the code public, so that rules it out.
 - A client project installs it with a studiobimo token that has only `read:packages`. The token
   goes in `.npmrc` through an environment variable, in CI as a secret and in Workers Builds as a
   build variable. This token is the access control, so there is no licence system.
-- **The prebuilt admin cannot import a consumer's components.** The admin SPA ships prebuilt, so
-  it cannot render a block with a component from one consumer's repository. Block preview is
-  therefore an **iframe that the site serves**: the site has a preview route that renders one block
-  from its sample, and the admin frames it at phone, tablet and desktop widths.
-- The preview route is enabled in production, because editors need it there. The admin reads the
-  site's origin from configuration. The route allows framing from the admin's origin only
-  (`frame-ancestors <admin origin>`), every other route keeps `frame-ancestors 'none'`, and the
-  route is `noindex`, never cached and answers 404 for an unknown block. It renders sample content
-  only, so it can be public. Draft preview ([PRV-1](../PRD.md)) reuses it behind a token.
+- The prebuilt admin cannot import a consumer's components, so block preview is a frame the site
+  serves ([ADR-0012](0012-block-preview-frame.md)).
 - The publish workflow is a reusable workflow in `studiobimo/.github`, like every other shared
   workflow, so other studio packages can use it too.
 - Releases are cut by release-please, follow SemVer and carry migration notes for breaking
@@ -39,7 +32,5 @@ the code public, so that rules it out.
 
 - A client project cannot be installed without the token, and that includes a fork made by the
   client.
-- The admin's Content-Security-Policy allows `frame-src` for the site's origin only, and nothing
-  else of the site's code enters the admin bundle.
 - Each client's token has to be rotated when it leaks or the contract ends ([risk 3](../RISKS.md)).
 - `LICENSE` must match a private package before the first release.

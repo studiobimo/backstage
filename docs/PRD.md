@@ -124,7 +124,7 @@ may slip to the next release.
 | PUB-3 | Pages render on the server | The site worker renders the snapshot with React on the server. The starter ships no client JavaScript; a site that needs interactivity uses TanStack Start in its own repository | Must |
 | PUB-4 | The site is fast and cheap | Responses are cached at the edge with a short `s-maxage` and stale-while-revalidate, so most requests never read KV | Must |
 | PUB-5 | Search engines understand the site | `sitemap.xml`, `robots.txt`, `hreflang` and canonical links are generated from the published pages | Must |
-| PUB-6 | The site cannot see drafts | The site worker has no D1 binding and no admin secret. A test checks that, and passes with any other binding added (AI, Vectorize) | Must |
+| PUB-6 | The site cannot see drafts | The site worker has KV and R2 bindings only, with no D1 binding and no admin secret. A test checks its bindings | Must |
 | PUB-7 | The 404 page is editable | It is an ordinary page, with a reserved slug | Should |
 
 ### E5. Locales
