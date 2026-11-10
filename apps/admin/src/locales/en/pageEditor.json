@@ -101,8 +101,18 @@
     "unpublishTitle": "Unpublish {{name}}?",
     "unpublishDescription": "Visitors see the not found page at this address. Your draft stays here and you can publish it again.",
     "toast": {
-      "published": "Published",
-      "unpublished": "Unpublished"
+      "publish": {
+        "pending": "Publishing…",
+        "done": "Published",
+        "failed": "Could not publish"
+      },
+      "unpublish": {
+        "pending": "Unpublishing…",
+        "done": "Unpublished",
+        "failed": "Could not unpublish"
+      },
+      "problems_one": "1 problem needs fixing first. Open the page for details.",
+      "problems_other": "{{count}} problems need fixing first. Open the page for details."
     },
     "problems": {
       "title": "This page cannot be published yet",
