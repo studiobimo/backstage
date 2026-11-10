@@ -1,11 +1,14 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PageHeader } from '@/components/page-header'
+import { ShortcutHint, ShortcutTooltip } from '@/components/shortcut-hint'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { useShortcut } from '@/hooks/use-shortcut'
+import { ariaKeyShortcuts } from '@/lib/shortcuts'
 
 import { DeletePageDialog } from './delete-page-dialog'
 import { countByStatus, filterPages, PAGE_STATUS, type PageStatusFilter } from './page-filters'
@@ -35,16 +38,21 @@ export function PagesPage() {
   const [status, setStatus] = useState<PageStatusFilter>(PAGE_STATUS.all)
   const [query, setQuery] = useState('')
   const close = () => setEditing(undefined)
+  const startCreate = useCallback(() => setEditing({ kind: 'create' }), [])
+  useShortcut('newPage', true, startCreate)
   const visible = filterPages(pages, status, query)
   return (
     <>
       <PageHeader
         title={t('title')}
         actions={
-          <Button onClick={() => setEditing({ kind: 'create' })}>
-            <Plus />
-            {t('list.create')}
-          </Button>
+          <ShortcutTooltip id="newPage" label={t('list.create')}>
+            <Button aria-keyshortcuts={ariaKeyShortcuts('newPage')} onClick={startCreate}>
+              <Plus />
+              {t('list.create')}
+              <ShortcutHint id="newPage" className="-me-1" />
+            </Button>
+          </ShortcutTooltip>
         }
       />
       {pages.length === 0 ? (

@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
+import { useShortcut } from '@/hooks/use-shortcut'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -29,7 +30,6 @@ import { PublishNotes } from './publish-notes'
 import { SavePublishGroup } from './save-publish-group'
 import { StaleAlert } from './stale-alert'
 import { usePublish } from './use-publish'
-import { useSaveShortcut } from './use-save-shortcut'
 import type { LocaleStatus } from '../block-form/locale-status'
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
@@ -317,7 +317,7 @@ function EditorChrome({
   const hintId = useId()
   const publish = usePublish(page, version)
   const onSave = () => void save.save()
-  useSaveShortcut(dirty && !save.saving, onSave)
+  useShortcut('save', dirty && !save.saving, onSave)
   return (
     <>
       <EditorHeader

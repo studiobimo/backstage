@@ -92,6 +92,13 @@ describe('PagesPage', { timeout: 15_000 }, () => {
     expect(screen.getByText('/es/acerca')).toBeInTheDocument()
   })
 
+  it('opens the new page form from the N shortcut', async () => {
+    const user = renderPages([aboutPage])
+    await screen.findByText('/en/about')
+    await user.keyboard('n')
+    expect(await screen.findByRole('button', { name: 'Create page' })).toBeInTheDocument()
+  })
+
   it('flags the languages a page is missing translations in', async () => {
     const team: PageSummary = { ...aboutPage, id: 'p2', missing: { en: 0, es: 3 } }
     mockApi(() => reply(200, { pages: [aboutPage, team] }))

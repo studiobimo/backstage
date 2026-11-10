@@ -11,12 +11,11 @@ import {
   AlertDialogPopup,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
+import { ShortcutHint, ShortcutTooltip } from '@/components/shortcut-hint'
 import { Button } from '@/components/ui/button'
 import { Group, GroupSeparator } from '@/components/ui/group'
-import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
-
-import { saveShortcutKeys } from './use-save-shortcut'
+import { ariaKeyShortcuts } from '@/lib/shortcuts'
 
 const LABEL = 'sr-only sm:not-sr-only'
 
@@ -46,16 +45,6 @@ function UnpublishDialog({ name, open, onOpenChange, onConfirm }: UnpublishDialo
         </AlertDialogFooter>
       </AlertDialogPopup>
     </AlertDialog>
-  )
-}
-
-function SaveShortcutHint() {
-  return (
-    <KbdGroup aria-hidden className="-me-1 hidden lg:inline-flex">
-      {saveShortcutKeys().map((key) => (
-        <Kbd key={key}>{key}</Kbd>
-      ))}
-    </KbdGroup>
   )
 }
 
@@ -98,17 +87,19 @@ export function SavePublishGroup(props: SavePublishGroupProps) {
   return (
     <>
       <Group aria-label={t('publish.label')}>
-        <Button
-          variant="outline"
-          aria-keyshortcuts="Control+S Meta+S"
-          loading={saving}
-          disabled={!dirty || saving}
-          onClick={props.onSave}
-        >
-          <SaveIcon aria-hidden />
-          <span className={LABEL}>{t('save')}</span>
-          <SaveShortcutHint />
-        </Button>
+        <ShortcutTooltip id="save" label={t('save')}>
+          <Button
+            variant="outline"
+            aria-keyshortcuts={ariaKeyShortcuts('save')}
+            loading={saving}
+            disabled={!dirty || saving}
+            onClick={props.onSave}
+          >
+            <SaveIcon aria-hidden />
+            <span className={LABEL}>{t('save')}</span>
+            <ShortcutHint id="save" className="-me-1 lg:inline-flex" />
+          </Button>
+        </ShortcutTooltip>
         <GroupSeparator />
         <Button
           aria-describedby={props.hintId}
