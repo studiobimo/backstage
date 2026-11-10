@@ -340,29 +340,33 @@ function EditorChrome({
           />
         }
       />
-      {save.stale && (
-        <StaleAlert
-          current={save.stale.current}
-          draft={draft}
-          changes={changes}
-          onReload={onReload}
+      <div className={cn(EDITOR_BODY, 'empty:hidden')}>
+        {save.stale && (
+          <StaleAlert
+            current={save.stale.current}
+            draft={draft}
+            changes={changes}
+            onReload={onReload}
+          />
+        )}
+        {save.failure && (
+          <p role="alert" className="text-destructive-foreground text-sm">
+            {save.failure}
+          </p>
+        )}
+        <PublishNotes
+          page={page}
+          dirty={dirty}
+          error={publish.error}
+          blocks={blocks}
+          hintId={hintId}
         />
-      )}
-      {save.failure && (
-        <p role="alert" className="text-destructive-foreground text-sm">
-          {save.failure}
-        </p>
-      )}
-      <PublishNotes
-        page={page}
-        dirty={dirty}
-        error={publish.error}
-        blocks={blocks}
-        hintId={hintId}
-      />
+      </div>
     </>
   )
 }
+
+const EDITOR_BODY = 'flex w-full max-w-3xl flex-col gap-8'
 
 function LayoutPicker({
   layouts,
@@ -510,15 +514,17 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
         <p role="alert">{t('errors.not_found')}</p>
       )}
       <LeaveGuard dirty={dirty} />
-      <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
-      <BlockList actions={actions} options={options} />
-      <div>
-        <BlockPicker options={options} onPick={actions.add} />
+      <div className={EDITOR_BODY}>
+        <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
+        <BlockList actions={actions} options={options} />
+        <div>
+          <BlockPicker options={options} onPick={actions.add} />
+        </div>
+        <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
+        <p role="status" aria-live="polite" className="sr-only">
+          {actions.announcement}
+        </p>
       </div>
-      <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
-      <p role="status" aria-live="polite" className="sr-only">
-        {actions.announcement}
-      </p>
     </EditingLocaleContext.Provider>
   )
 }

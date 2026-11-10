@@ -11,6 +11,7 @@ export const Route = createFileRoute('/pages_/$pageId')({
       context.queryClient.ensureQueryData(blockDescriptionsQuery),
       context.queryClient.ensureQueryData(pageBlocksQuery(params.pageId))
     ]),
+  staticData: { width: 'wide' },
   component: EditorRoute
 })
 

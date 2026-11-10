@@ -170,7 +170,7 @@ export function CommandPalette() {
   useShortcut('palette', true, toggle)
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandDialogTrigger render={<Button variant="outline" size="sm" />}>
+      <CommandDialogTrigger render={<Button variant="outline" size="sm" className="ms-auto" />}>
         <SearchIcon aria-hidden />
         <span className="sr-only sm:not-sr-only">{t('palette.trigger')}</span>
         <ShortcutHint id="palette" className="-me-1" />

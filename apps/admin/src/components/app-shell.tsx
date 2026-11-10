@@ -22,7 +22,7 @@ import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { pageLabel } from '@/features/pages/page-label'
 import { pagesQuery } from '@/features/pages/queries'
-import { CONTENT_WIDTH, DEFAULT_CONTENT_WIDTH } from '@/lib/content-width'
+import { CONTENT_WIDTH, type ContentWidth, DEFAULT_CONTENT_WIDTH } from '@/lib/content-width'
 import { ariaKeyShortcuts } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 
@@ -90,10 +90,17 @@ function PageBreadcrumb() {
   )
 }
 
-function ContentColumn({ className, children }: { className?: string; children: ReactNode }) {
-  const width = useMatches({
+interface ContentColumnProps {
+  className?: string
+  width?: ContentWidth
+  children: ReactNode
+}
+
+function ContentColumn({ className, width: fixedWidth, children }: ContentColumnProps) {
+  const routeWidth = useMatches({
     select: (matches) => matches.at(-1)?.staticData.width ?? DEFAULT_CONTENT_WIDTH
   })
+  const width = fixedWidth ?? routeWidth
   return (
     <div className={cn('w-full px-gutter sm:px-8', className)}>
       <div className={cn('w-full', CONTENT_WIDTH[width])}>{children}</div>
@@ -109,18 +116,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           <AppSidebar />
           <SidebarInset className="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
             <div className="scroll-fade scroll-fade-10 flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-gutter:stable]">
-              <div className="flex shrink-0 items-center">
-                <ContentColumn className="min-w-0 flex-1">
-                  <header className="flex h-16 items-center gap-2">
-                    <SidebarToggle />
-                    <Separator orientation="vertical" className="mr-2 h-4" />
-                    <PageBreadcrumb />
-                  </header>
-                </ContentColumn>
-                <div className="pe-gutter sm:pe-8">
+              <ContentColumn width="wide">
+                <header className="flex h-16 shrink-0 items-center gap-2">
+                  <SidebarToggle />
+                  <Separator orientation="vertical" className="mr-2 h-4" />
+                  <PageBreadcrumb />
                   <CommandPalette />
-                </div>
-              </div>
+                </header>
+              </ContentColumn>
               <ContentColumn className="flex-1 pb-10">
                 <div className="flex w-full flex-col gap-8">{children}</div>
               </ContentColumn>
