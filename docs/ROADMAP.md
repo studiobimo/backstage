@@ -60,6 +60,56 @@ AUT-1, AUT-2; OPS-3.
 - The free-plan budgets in the PRD hold during a day of normal use of a deployed consumer
   (bimo.dev, in its own repository)
 
+## M1.5: The site owns its blocks
+
+A site should look like the studio it belongs to, not like Backstage. The site owns its blocks,
+samples and stylesheet, the package keeps only a framework-neutral mechanism, and the admin
+previews the site's real blocks in a frame the site serves. It comes before M2 because it changes
+the package's API: `defineBlock` loses its component and the `./example` entry goes away.
+
+The design and its decisions are in
+[#199](https://github.com/studiobimo/backstage/issues/199#issuecomment-6776022613). The starter
+stays on Hono with no client JavaScript; a site that hydrates uses TanStack Start in its own
+repository.
+
+**Stories:** BLK-1, BLK-6, PUB-3 to PUB-6; groundwork for PRV-1.
+
+### Exit criteria
+
+- A block's schema and its component are defined apart, and the admin Worker bundles no block or
+  layout component
+- The site's helpers (KV reads, routing, SEO, media, edge cache) live in the package and import no
+  Hono, and `./render` runs in the browser as well as on the server
+- The example blocks, their samples and the site's stylesheet live in `apps/site`, and
+  `@studiobimo/backstage/example` is gone
+- Lint fails if the site imports from the admin or from Backstage's styles or UI components
+- `/blocks` in a deployed admin frames every site block with the site's real styles at phone,
+  tablet and desktop widths, and the site renders the same blocks with the same stylesheet
+- The preview route can be framed from the admin's origin only, and every other route keeps
+  `frame-ancestors 'none'`
+- The ADRs and the PRD record the split
+
+### Issues
+
+In working order. Status lives in the
+[milestone](https://github.com/studiobimo/backstage/milestone/10).
+
+1. [#201](https://github.com/studiobimo/backstage/issues/201) record the split in the ADRs and PRD
+2. [#202](https://github.com/studiobimo/backstage/issues/202) define a block's schema apart from its component
+3. [#203](https://github.com/studiobimo/backstage/issues/203) define a page layout apart from its component
+4. [#204](https://github.com/studiobimo/backstage/issues/204) render a page's blocks with a shared `<Blocks>`
+5. [#205](https://github.com/studiobimo/backstage/issues/205) read published snapshots and routes without Hono
+6. [#206](https://github.com/studiobimo/backstage/issues/206) build SEO, media and edge cache responses without Hono
+7. [#207](https://github.com/studiobimo/backstage/issues/207) move the example block schemas and samples into the site
+8. [#208](https://github.com/studiobimo/backstage/issues/208) move the example block components into the site
+9. [#209](https://github.com/studiobimo/backstage/issues/209) remove the example entry and test against a fixture registry
+10. [#210](https://github.com/studiobimo/backstage/issues/210) fail lint when the site imports the admin
+11. [#211](https://github.com/studiobimo/backstage/issues/211) style the site's blocks with its own Tailwind stylesheet
+12. [#212](https://github.com/studiobimo/backstage/issues/212) add coss ui as the site's own components
+13. [#213](https://github.com/studiobimo/backstage/issues/213) serve a framable preview of one block from its sample
+14. [#214](https://github.com/studiobimo/backstage/issues/214) frame the site's block preview in `/blocks` (closes #199)
+15. [#215](https://github.com/studiobimo/backstage/issues/215) check the site has no D1 binding and no admin secret
+
 ## M2: Package
 
 Backstage becomes something a client project installs, rather than code it copies.
