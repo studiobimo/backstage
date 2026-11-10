@@ -95,6 +95,7 @@
       "stale_version": "A newer version was saved. Reload the latest version, then publish.",
       "not_found": "This page no longer exists.",
       "internal": "The change could not be made. Check your connection and try again."
-    }
+    },
+    "more": "More publishing options"
   }
 }

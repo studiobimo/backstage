@@ -95,6 +95,7 @@
       "stale_version": "Se guardó una versión más reciente. Recarga la última versión y vuelve a publicar.",
       "not_found": "Esta página ya no existe.",
       "internal": "No se pudo hacer el cambio. Revisa tu conexión e inténtalo de nuevo."
-    }
+    },
+    "more": "Más opciones de publicación"
   }
 }

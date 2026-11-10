@@ -4,19 +4,11 @@ import {
   type Locale,
   type PageBlock,
   type PageSeo,
-  type PageStamp
+  type PageSummary
 } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
-import {
-  ArrowLeftIcon,
-  ChevronRightIcon,
-  CopyIcon,
-  PlusIcon,
-  SaveIcon,
-  Trash2Icon
-} from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronRightIcon, CopyIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ChoiceSelect } from '@/components/choice-select'
@@ -26,19 +18,20 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
-import { PageHeader } from '@/components/page-header'
-import { Badge } from '@/components/ui/badge'
-import { Spinner } from '@/components/ui/spinner'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 import { BlockForm } from '../block-form/block-form'
 import { EditingLocaleContext, useEditingLocale } from '../block-form/locale-status'
 import type { BlockValue } from '../block-form/value'
-import { LocaleSwitcher } from '../block-form/locale-switcher'
+import { EditorHeader } from './editor-header'
 import { LeaveGuard } from './leave-guard'
-import { PublishPanel } from './publish-panel'
+import { PublishNotes } from './publish-notes'
+import { SavePublishGroup } from './save-publish-group'
 import { StaleAlert } from './stale-alert'
+import { usePublish } from './use-publish'
+import { useSaveShortcut } from './use-save-shortcut'
+import type { LocaleStatus } from '../block-form/locale-status'
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
 import { settingsQuery } from '../settings/queries'
@@ -295,54 +288,72 @@ function useBlockActions(saved: PageBlock[]) {
   return { blocks, names, add, duplicate, remove, move, edit, ...feedback }
 }
 
-interface EditorHeaderProps {
+interface EditorChromeProps {
+  page: PageSummary
   title: string
+  blocks: PageBlock[]
+  version: number
   dirty: boolean
-  saving: boolean
-  failure?: string
-  stale?: { current?: PageStamp }
-  onSave: () => void
+  save: ReturnType<typeof useSave>
+  locale: {
+    locales: readonly string[]
+    active: string
+    gaps: Record<string, LocaleStatus>
+    onChange: (locale: string) => void
+  }
   onReload: () => void
 }
 
-function EditorHeader({
+function EditorChrome({
+  page,
   title,
+  blocks,
+  version,
   dirty,
-  saving,
-  failure,
-  stale,
-  onSave,
+  save,
+  locale,
   onReload
-}: EditorHeaderProps) {
-  const { t } = useTranslation('pageEditor')
+}: EditorChromeProps) {
+  const hintId = useId()
+  const publish = usePublish(page, version)
+  const onSave = () => void save.save()
+  useSaveShortcut(dirty && !save.saving, onSave)
   return (
-    <div className="flex flex-col gap-4">
-      <Link
-        to="/pages"
-        className="inline-flex w-fit items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
-      >
-        <ArrowLeftIcon className="size-4" aria-hidden />
-        {t('back')}
-      </Link>
-      <PageHeader
+    <>
+      <EditorHeader
         title={title}
+        published={page.publishedAt !== null}
+        dirty={dirty}
+        locale={locale}
         actions={
-          <div className="flex items-center gap-3">
-            {dirty && <Badge variant="warning">{t('unsaved')}</Badge>}
-            <Button onClick={onSave} disabled={!dirty || saving}>
-              {saving ? <Spinner /> : <SaveIcon aria-hidden />}
-              {t('save')}
-            </Button>
-          </div>
+          <SavePublishGroup
+            name={title}
+            hintId={hintId}
+            dirty={dirty}
+            saving={save.saving}
+            published={page.publishedAt !== null}
+            publishing={publish.publishing}
+            unpublishing={publish.unpublishing}
+            onSave={onSave}
+            onPublish={publish.publish}
+            onUnpublish={publish.unpublish}
+          />
         }
       />
-      {stale && <StaleAlert current={stale.current} onReload={onReload} />}
-      {failure && (
+      {save.stale && <StaleAlert current={save.stale.current} onReload={onReload} />}
+      {save.failure && (
         <p role="alert" className="text-destructive-foreground text-sm">
-          {failure}
+          {save.failure}
         </p>
       )}
-    </div>
+      <PublishNotes
+        page={page}
+        dirty={dirty}
+        error={publish.error}
+        blocks={blocks}
+        hintId={hintId}
+      />
+    </>
   )
 }
 
@@ -463,7 +474,7 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
     [locale]
   )
   const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)
-  const { save, saving, failure, stale } = useSave(
+  const save = useSave(
     pageId,
     { blocks, layout, seo },
     { blocks: saved, layout: savedLayout, seo: savedSeo, version: savedPage.version }
@@ -471,32 +482,26 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
 
   return (
     <EditingLocaleContext.Provider value={editing}>
-      <EditorHeader
-        title={page ? pageLabel(page, i18n.language) : t('title')}
-        dirty={dirty}
-        saving={saving}
-        failure={failure}
-        stale={stale}
-        onSave={() => void save()}
-        onReload={onReload}
-      />
-      <LeaveGuard dirty={dirty} />
-      {page && (
-        <PublishPanel
+      {page ? (
+        <EditorChrome
           page={page}
-          name={pageLabel(page, i18n.language)}
-          version={savedPage.version}
+          title={pageLabel(page, i18n.language)}
           blocks={saved}
+          version={savedPage.version}
           dirty={dirty}
+          save={save}
+          locale={{
+            locales: LOCALES,
+            active: locale,
+            gaps: localeGaps(blocks, options, seo),
+            onChange: (next) => setLocale(next as Locale)
+          }}
+          onReload={onReload}
         />
+      ) : (
+        <p role="alert">{t('errors.not_found')}</p>
       )}
-      <LocaleSwitcher
-        locales={LOCALES}
-        active={locale}
-        status={localeGaps(blocks, options, seo)}
-        showInvalid={false}
-        onChange={(next) => setLocale(next as Locale)}
-      />
+      <LeaveGuard dirty={dirty} />
       <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
       <BlockList actions={actions} options={options} />
       <div>
