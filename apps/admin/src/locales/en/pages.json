@@ -7,19 +7,39 @@
   "list": {
     "create": "New page",
     "home": "Home",
-    "rename": "Rename {{name}}",
-    "delete": "Delete {{name}}",
     "emptyTitle": "No pages yet",
     "emptyDescription": "Create the home page, then add the pages around it.",
-    "edit": "Edit blocks of {{name}}",
     "missing_one": "{{count}} missing in {{language}}",
     "missing_other": "{{count}} missing in {{language}}",
     "published": "Published",
-    "draft": "Draft"
+    "draft": "Draft",
+    "actions": {
+      "open": "Actions for {{name}}",
+      "edit": "Edit blocks",
+      "details": "Details",
+      "delete": "Delete"
+    },
+    "columns": {
+      "title": "Title",
+      "languages": "Languages",
+      "status": "Status",
+      "updated": "Last saved",
+      "actions": "Actions"
+    },
+    "filters": {
+      "status": "Filter by status",
+      "all": "All",
+      "draft": "Drafts",
+      "published": "Published",
+      "searchLabel": "Search pages",
+      "searchPlaceholder": "Search pages"
+    },
+    "noMatchTitle": "No pages match",
+    "noMatchDescription": "Try another search or a different status."
   },
   "form": {
     "createTitle": "New page",
-    "renameTitle": "Rename page",
+    "renameTitle": "Page details",
     "description": "Each language has its own title and address.",
     "isHome": "Home page",
     "isHomeHint": "The home page has no address of its own.",

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { formatDateTime } from '@/lib/format'
 
 interface StaleAlertProps {
   current?: PageStamp
@@ -12,11 +13,7 @@ interface StaleAlertProps {
 
 export function StaleAlert({ current, onReload }: StaleAlertProps) {
   const { t, i18n } = useTranslation('pageEditor')
-  const when = current
-    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(
-        current.updatedAt
-      )
-    : ''
+  const when = current ? formatDateTime(i18n.language, current.updatedAt) : ''
   return (
     <Alert variant="error" role="alert">
       <CircleAlertIcon />

@@ -1,4 +1,4 @@
-import type { Page } from '@studiobimo/backstage'
+import { LOCALES, type Page } from '@studiobimo/backstage'
 
 export const pageLabel = (page: Page, language: string) => {
   const rows = page.locales
@@ -6,7 +6,10 @@ export const pageLabel = (page: Page, language: string) => {
   return row?.title ?? ''
 }
 
-export const pageSlugLabel = (page: Page, locale: string) => {
+const pageSlugLabel = (page: Page, locale: string) => {
   const slug = page.locales.find((row) => row.locale === locale)?.slug
   return slug ? `/${locale}/${slug}` : '/'
 }
+
+export const pageAddresses = (page: Page) =>
+  page.isHome ? ['/'] : LOCALES.map((locale) => pageSlugLabel(page, locale))

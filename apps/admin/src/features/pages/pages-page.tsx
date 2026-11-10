@@ -1,79 +1,30 @@
-import { LOCALES, type PageSummary } from '@studiobimo/backstage'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
-import { LayoutList, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PageHeader } from '@/components/page-header'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 
-import { languageName } from '../block-form/locale-status'
 import { DeletePageDialog } from './delete-page-dialog'
-import { pageLabel, pageSlugLabel } from './page-label'
+import { countByStatus, filterPages, PAGE_STATUS, type PageStatusFilter } from './page-filters'
 import { PageFormSheet } from './page-form-sheet'
+import type { PageAction } from './page-row-actions'
+import { PagesTable } from './pages-table'
+import { PagesToolbar } from './pages-toolbar'
 import { pagesQuery } from './queries'
 
-type Editing = { kind: 'create' } | { kind: 'rename' | 'delete'; page: PageSummary }
+type Editing = { kind: 'create' } | PageAction
 
-function MissingBadges({ missing }: { missing: PageSummary['missing'] }) {
-  const { t, i18n } = useTranslation('pages')
-  return LOCALES.filter((locale) => missing[locale] > 0).map((locale) => (
-    <Badge key={locale} variant="warning">
-      {t('list.missing', { count: missing[locale], language: languageName(locale, i18n.language) })}
-    </Badge>
-  ))
-}
-
-function PageRow({ page, onAction }: { page: PageSummary; onAction: (editing: Editing) => void }) {
-  const { t, i18n } = useTranslation('pages')
-  const name = pageLabel(page, i18n.language)
+function NoPages({ title, description }: { title: string; description: string }) {
   return (
-    <li className="flex items-center gap-3 rounded-xl border bg-card p-3">
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium">
-          <span className="truncate">{name}</span>
-          {page.isHome && <Badge>{t('list.home')}</Badge>}
-          <Badge variant={page.publishedAt === null ? 'outline' : 'success'}>
-            {t(page.publishedAt === null ? 'list.draft' : 'list.published')}
-          </Badge>
-          <MissingBadges missing={page.missing} />
-        </p>
-        <p className="flex flex-wrap gap-x-3 text-muted-foreground text-xs">
-          {LOCALES.map((locale) => (
-            <span key={locale} className="font-mono">
-              {pageSlugLabel(page, locale)}
-            </span>
-          ))}
-        </p>
-      </div>
-      <Button
-        size="icon"
-        variant="ghost"
-        aria-label={t('list.edit', { name })}
-        render={<Link to="/pages/$pageId" params={{ pageId: page.id }} />}
-      >
-        <LayoutList />
-      </Button>
-      <Button
-        size="icon"
-        variant="ghost"
-        aria-label={t('list.rename', { name })}
-        onClick={() => onAction({ kind: 'rename', page })}
-      >
-        <Pencil />
-      </Button>
-      <Button
-        size="icon"
-        variant="ghost"
-        aria-label={t('list.delete', { name })}
-        onClick={() => onAction({ kind: 'delete', page })}
-      >
-        <Trash2 />
-      </Button>
-    </li>
+    <Empty>
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription>{description}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   )
 }
 
@@ -81,7 +32,10 @@ export function PagesPage() {
   const { t } = useTranslation('pages')
   const { data: pages } = useSuspenseQuery(pagesQuery)
   const [editing, setEditing] = useState<Editing>()
+  const [status, setStatus] = useState<PageStatusFilter>(PAGE_STATUS.all)
+  const [query, setQuery] = useState('')
   const close = () => setEditing(undefined)
+  const visible = filterPages(pages, status, query)
   return (
     <>
       <PageHeader
@@ -94,18 +48,22 @@ export function PagesPage() {
         }
       />
       {pages.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>{t('list.emptyTitle')}</EmptyTitle>
-            <EmptyDescription>{t('list.emptyDescription')}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <NoPages title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
       ) : (
-        <ul className="flex flex-col gap-2">
-          {pages.map((page) => (
-            <PageRow key={page.id} page={page} onAction={setEditing} />
-          ))}
-        </ul>
+        <>
+          <PagesToolbar
+            status={status}
+            counts={countByStatus(pages)}
+            query={query}
+            onStatusChange={setStatus}
+            onQueryChange={setQuery}
+          />
+          {visible.length === 0 ? (
+            <NoPages title={t('list.noMatchTitle')} description={t('list.noMatchDescription')} />
+          ) : (
+            <PagesTable pages={visible} onAction={setEditing} />
+          )}
+        </>
       )}
       <PageFormSheet
         key={editing?.kind === 'rename' ? editing.page.id : 'create'}

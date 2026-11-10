@@ -93,7 +93,7 @@ test('create, fill, upload, publish and see it on the site', async ({ page }) =>
   await uploadDecorativeImage(page)
   const pictureId = await idOfLatestUpload(page)
   await createPage(page)
-  await page.getByRole('link', { name: new RegExp(`Edit blocks of .*${run}`) }).click()
+  await page.getByRole('link', { name: PAGE_UNDER_TEST.titles.en }).click()
   await addHeroBlock(page)
   await fillHeroContentThroughTheApi(page, pictureId)
   await setSocialImageAndDescription(page)

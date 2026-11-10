@@ -9,12 +9,15 @@ import { aboutPage } from '@/test/fixtures'
 
 import { PagesPage } from './pages-page'
 
+const navigate = vi.fn()
+
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children, ...props }: { children: ReactNode; 'aria-label'?: string }) => (
-    <a href="/pages/p1" aria-label={props['aria-label']}>
+  Link: ({ children, className }: { children: ReactNode; className?: string }) => (
+    <a href="/pages/p1" className={className}>
       {children}
     </a>
-  )
+  ),
+  useNavigate: () => navigate
 }))
 
 const reply = (status: number, body?: unknown) =>
@@ -62,7 +65,24 @@ const renderPage = () =>
     </QueryClientProvider>
   )
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  navigate.mockClear()
+})
+
+const renderPages = (pages: PageSummary[]) => {
+  mockApi(() => reply(200, { pages }))
+  renderPage()
+  return userEvent.setup()
+}
+
+const choose = async (user: ReturnType<typeof userEvent.setup>, item: string) => {
+  await openRowMenu(user, 'About')
+  await user.click(await screen.findByRole('menuitem', { name: item }))
+}
+
+const openRowMenu = async (user: ReturnType<typeof userEvent.setup>, name: string) =>
+  user.click(await screen.findByRole('button', { name: `Actions for ${name}` }))
 
 describe('PagesPage', { timeout: 15_000 }, () => {
   it('lists pages with their address in each locale', async () => {
@@ -76,8 +96,8 @@ describe('PagesPage', { timeout: 15_000 }, () => {
     const team: PageSummary = { ...aboutPage, id: 'p2', missing: { en: 0, es: 3 } }
     mockApi(() => reply(200, { pages: [aboutPage, team] }))
     renderPage()
-    expect(await screen.findByText('3 missing in Spanish')).toBeInTheDocument()
-    expect(screen.getAllByText(/missing in/)).toHaveLength(1)
+    expect(await screen.findAllByText('3 missing in Spanish')).toHaveLength(2)
+    expect(screen.getAllByText(/missing in/)).toHaveLength(2)
   })
 
   it('creates a page, filling each address from its title', async () => {
@@ -119,8 +139,74 @@ describe('PagesPage', { timeout: 15_000 }, () => {
     )
     const user = userEvent.setup()
     renderPage()
-    await user.click(await screen.findByRole('button', { name: 'Delete About' }))
+    await choose(user, 'Delete')
     await user.click(await screen.findByRole('button', { name: 'Delete page' }))
     await waitFor(() => expect(calls.some((call) => call.method === 'DELETE')).toBe(true))
+  })
+})
+
+describe('PagesPage row actions', { timeout: 15_000 }, () => {
+  it('opens the details of a page from its row menu', async () => {
+    await choose(renderPages([aboutPage]), 'Details')
+    expect(await screen.findByText('Page details')).toBeInTheDocument()
+  })
+
+  it('opens the page editor from the row menu', async () => {
+    await choose(renderPages([aboutPage]), 'Edit blocks')
+    expect(navigate).toHaveBeenCalledWith({ to: '/pages/$pageId', params: { pageId: 'p1' } })
+  })
+
+  it('gives each row one link, the title, that stretches over the row', async () => {
+    renderPages([aboutPage])
+    const row = (await screen.findByRole('link', { name: 'About' })).closest('tr') as HTMLElement
+    expect(within(row).getAllByRole('link')).toHaveLength(1)
+    expect(within(row).getByRole('link')).toHaveClass('after:absolute', 'after:inset-0')
+    expect(within(row).getByRole('button', { name: 'Actions for About' }).closest('a')).toBeNull()
+  })
+})
+
+const homePage: PageSummary = {
+  ...aboutPage,
+  isHome: true,
+  locales: [
+    { locale: 'en', slug: null, title: 'Welcome' },
+    { locale: 'es', slug: null, title: 'Bienvenida' }
+  ]
+}
+
+const livePage: PageSummary = {
+  ...aboutPage,
+  id: 'p2',
+  publishedAt: 1,
+  locales: [
+    { locale: 'en', slug: 'team', title: 'Team' },
+    { locale: 'es', slug: 'equipo', title: 'Equipo' }
+  ]
+}
+
+describe('PagesPage table', { timeout: 15_000 }, () => {
+  it('shows the home page address once', async () => {
+    renderPages([homePage])
+    await screen.findByRole('link', { name: 'Welcome' })
+    expect(screen.getAllByText('/')).toHaveLength(1)
+    expect(screen.getByText('Home')).toBeInTheDocument()
+  })
+
+  it('filters by status with a count on each tab', async () => {
+    const user = renderPages([aboutPage, livePage])
+    expect(await screen.findByRole('tab', { name: /^All ?2$/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /^Published ?1$/ }))
+    expect(screen.queryByRole('link', { name: 'About' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Team' })).toBeInTheDocument()
+  })
+
+  it('searches pages and says when none match', async () => {
+    const user = renderPages([aboutPage])
+    const search = await screen.findByRole('searchbox', { name: 'Search pages' })
+    await user.type(search, 'zzz')
+    expect(screen.getByText('No pages match')).toBeInTheDocument()
+    await user.clear(search)
+    await user.type(search, 'acerca')
+    expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument()
   })
 })
