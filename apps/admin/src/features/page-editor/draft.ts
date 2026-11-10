@@ -11,6 +11,18 @@ import { type JsonSchema, parseBlockSchema } from '../block-form/spec'
 import type { LocaleStatus } from '../block-form/locale-status'
 import { initialGroup } from '../block-form/value'
 
+export interface PageDraft {
+  blocks: PageBlock[]
+  layout: string
+  seo: PageSeo
+}
+
+export interface DraftChange {
+  kind: 'added' | 'removed' | 'edited' | 'reordered' | 'layout' | 'seo'
+  name?: string
+  position?: number
+}
+
 export interface BlockOption {
   name: string
   version: number
@@ -64,3 +76,28 @@ export const localeGaps = (
       }
     ])
   ) as Record<Locale, LocaleStatus>
+
+const blockChanges = (saved: PageBlock[], draft: PageBlock[]): DraftChange[] => {
+  const savedById = new Map(saved.map((block, index) => [block.id, { block, index }]))
+  const draftIds = new Set(draft.map((block) => block.id))
+  const removed = saved.flatMap((block, index): DraftChange[] =>
+    draftIds.has(block.id) ? [] : [{ kind: 'removed', name: block.block, position: index + 1 }]
+  )
+  const others = draft.flatMap((block, index): DraftChange[] => {
+    const before = savedById.get(block.id)
+    if (!before) return [{ kind: 'added', name: block.block, position: index + 1 }]
+    return sameJson(before.block.content, block.content)
+      ? []
+      : [{ kind: 'edited', name: block.block, position: index + 1 }]
+  })
+  const keptSaved = saved.filter((block) => draftIds.has(block.id)).map((block) => block.id)
+  const keptDraft = draft.filter((block) => savedById.has(block.id)).map((block) => block.id)
+  const reordered: DraftChange[] = sameJson(keptSaved, keptDraft) ? [] : [{ kind: 'reordered' }]
+  return [...removed, ...others, ...reordered]
+}
+
+export const describeChanges = (saved: PageDraft, draft: PageDraft): DraftChange[] => [
+  ...blockChanges(saved.blocks, draft.blocks),
+  ...(saved.layout === draft.layout ? [] : [{ kind: 'layout' as const }]),
+  ...(sameJson(saved.seo, draft.seo) ? [] : [{ kind: 'seo' as const }])
+]

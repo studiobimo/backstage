@@ -1,7 +1,7 @@
 import type { PageBlock } from '@studiobimo/backstage'
 import { describe, expect, it } from 'vitest'
 
-import { duplicateAt, moveBlock, newBlock, removeAt, sameBlocks } from './draft'
+import { describeChanges, duplicateAt, moveBlock, newBlock, removeAt, sameBlocks } from './draft'
 
 const block = (id: string): PageBlock => ({
   id,
@@ -42,5 +42,26 @@ describe('page draft', () => {
   it('compares drafts by content', () => {
     expect(sameBlocks([block('a')], [block('a')])).toBe(true)
     expect(sameBlocks([block('a')], [block('b')])).toBe(false)
+  })
+
+  it('describes what differs between the saved page and the draft', () => {
+    const empty = { title: '', description: '', socialImageId: null }
+    const seo = { en: empty, es: empty }
+    const saved = { blocks: [block('a'), block('b'), block('c')], layout: 'default', seo }
+    const edited = { ...block('b'), content: { title: { en: 'changed' } } }
+    const draft = {
+      blocks: [edited, block('d'), block('a')],
+      layout: 'bare',
+      seo: { ...seo, en: { ...empty, title: 'x' } }
+    }
+    expect(describeChanges(saved, draft)).toEqual([
+      { kind: 'removed', name: 'hero', position: 3 },
+      { kind: 'edited', name: 'hero', position: 1 },
+      { kind: 'added', name: 'hero', position: 2 },
+      { kind: 'reordered' },
+      { kind: 'layout' },
+      { kind: 'seo' }
+    ])
+    expect(describeChanges(saved, saved)).toEqual([])
   })
 })

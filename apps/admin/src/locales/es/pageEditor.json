@@ -37,9 +37,30 @@
   },
   "stale": {
     "title": "Se guardó una versión más reciente",
-    "description": "{{name}} guardó esta página el {{when}}. Tus cambios no se guardaron. Recarga para ver su versión.",
+    "description": "{{name}} guardó esta página el {{when}}. Tus cambios no se guardaron y siguen aquí. Cópialos, o recarga para ver su versión.",
     "someone": "Alguien",
-    "reload": "Recargar la última versión"
+    "reload": "Recargar la última versión",
+    "copy": {
+      "idle": "Copiar mis cambios",
+      "copied": "Copiado",
+      "failed": "No se pudo copiar",
+      "copiedStatus": "Tus cambios se copiaron al portapapeles.",
+      "failedStatus": "No se pudieron copiar tus cambios."
+    },
+    "confirm": {
+      "title": "¿Recargar y descartar tus cambios?",
+      "description": "Al recargar, esta página se reemplaza por la última versión guardada. Se perderán estos cambios:",
+      "keep": "Conservar mis cambios",
+      "discard": "Recargar y descartar"
+    },
+    "changes": {
+      "added": "{{name}} añadido en la posición {{position}}",
+      "removed": "{{name}} en la posición {{position}} eliminado",
+      "edited": "{{name}} en la posición {{position}} editado",
+      "reordered": "Bloques reordenados",
+      "layout": "Diseño cambiado",
+      "seo": "Búsqueda y redes cambiado"
+    }
   },
   "leave": {
     "title": "¿Salir sin guardar?",

@@ -206,27 +206,6 @@ describe('PageEditor saving and leaving', SUITE, () => {
     expect(puts.layouts[0]).toEqual({ layout: 'bare', expectedVersion: 4 })
   })
 
-  it('refuses to save over a newer version, names who saved it and offers a reload', async () => {
-    mockApi(saved, { stale: true })
-    const user = userEvent.setup()
-    renderEditor()
-    await removeFirstAndSave(user)
-    const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('A newer version was saved')
-    expect(alert).toHaveTextContent('Ana Ruiz saved this page on')
-    expect(within(alert).getByRole('button', { name: 'Reload latest version' })).toBeEnabled()
-  })
-
-  it('drops the draft when the newer version is reloaded', async () => {
-    mockApi(saved, { stale: true })
-    const user = userEvent.setup()
-    renderEditor()
-    await removeFirstAndSave(user)
-    await user.click(await screen.findByRole('button', { name: 'Reload latest version' }))
-    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
-    expect(await rows()).toHaveLength(2)
-  })
-
   it('blocks leaving only while there are unsaved changes, and asks first', async () => {
     mockApi(saved)
     const user = userEvent.setup()
@@ -248,6 +227,58 @@ describe('PageEditor saving and leaving', SUITE, () => {
     renderEditor()
     await rows()
     expect(blocker.options?.shouldBlockFn()).toBe(false)
+  })
+})
+
+describe('PageEditor refused saves', SUITE, () => {
+  it('refuses to save over a newer version, names who saved it and offers a reload', async () => {
+    mockApi(saved, { stale: true })
+    const user = userEvent.setup()
+    renderEditor()
+    await removeFirstAndSave(user)
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('A newer version was saved')
+    expect(alert).toHaveTextContent('Ana Ruiz saved this page on')
+    expect(within(alert).getByRole('button', { name: 'Reload latest version' })).toBeEnabled()
+  })
+
+  it('keeps the draft when a save is refused and lists what a reload would discard', async () => {
+    mockApi(saved, { stale: true })
+    const user = userEvent.setup()
+    renderEditor()
+    await removeFirstAndSave(user)
+    await screen.findByRole('alert')
+    expect(await rows()).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Reload latest version' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('hero at position 1 removed')
+    await user.click(within(dialog).getByRole('button', { name: 'Keep my changes' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(await rows()).toHaveLength(1)
+  })
+
+  it('copies the draft to the clipboard from the stale alert', async () => {
+    mockApi(saved, { stale: true })
+    const user = userEvent.setup()
+    renderEditor()
+    await removeFirstAndSave(user)
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue()
+    await user.click(await screen.findByRole('button', { name: 'Copy my changes' }))
+    expect(writeText).toHaveBeenCalledOnce()
+    expect(JSON.parse(writeText.mock.calls[0]![0]).blocks).toHaveLength(1)
+    expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument()
+  })
+
+  it('drops the draft only after the reload is confirmed', async () => {
+    mockApi(saved, { stale: true })
+    const user = userEvent.setup()
+    renderEditor()
+    await removeFirstAndSave(user)
+    await user.click(await screen.findByRole('button', { name: 'Reload latest version' }))
+    await user.click(await screen.findByRole('button', { name: 'Reload and discard' }))
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+    expect(await rows()).toHaveLength(2)
   })
 })
 
