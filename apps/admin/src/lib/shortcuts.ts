@@ -1,6 +1,8 @@
 const SHORTCUT = {
   save: { key: 's', withModifier: true, worksInFields: true },
-  newPage: { key: 'n', withModifier: false, worksInFields: false }
+  newPage: { key: 'n', withModifier: false, worksInFields: false },
+  palette: { key: 'k', withModifier: true, worksInFields: true },
+  toggleSidebar: { key: 'b', withModifier: true, worksInFields: true }
 } as const
 
 export type ShortcutId = keyof typeof SHORTCUT

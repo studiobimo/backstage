@@ -62,5 +62,22 @@
     "over": "{{item}} moved to position {{position}} of {{total}}.",
     "dropped": "{{item}} dropped in position {{position}} of {{total}}.",
     "cancelled": "Reordering cancelled. {{item}} went back to position {{position}} of {{total}}."
+  },
+  "palette": {
+    "trigger": "Search",
+    "title": "Command palette",
+    "placeholder": "Search pages and actions…",
+    "empty": "No results found.",
+    "open": "Open",
+    "close": "Close",
+    "navigate": "Navigate",
+    "newPage": "New page",
+    "theme": "Theme: {{theme}}",
+    "groups": {
+      "go": "Go to",
+      "pages": "Pages",
+      "actions": "Actions"
+    },
+    "escape": "Esc"
   }
 }

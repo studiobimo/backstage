@@ -373,6 +373,9 @@ shadcn mcp`). At the start of any UI/UX task, check that its tools are loaded; i
   matching block (`p-<name>-N`) as a pattern. Hand-build only what the registry has no answer
   for, and say what you searched.
 - **Never hand-edit `src/components/ui/**`.** Add or regenerate it with `shadcn add`.
+  One exception: `sidebar.tsx` calls `useShortcut('toggleSidebar', …)` from the shortcut registry
+  instead of its own `keydown` listener. After `shadcn add sidebar --overwrite`, put that back;
+  `components/sidebar-shortcut.test.tsx` fails in `make -C .devtools check` until you do.
 - **Do not change the stack silently.** TanStack Form, Query, Router, zod, i18next and coss/Base
   UI are the stack. A new dependency, or a deviation from anything the owner decided, is asked
   about first, with the trade-off in a sentence or two.

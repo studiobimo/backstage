@@ -31,13 +31,22 @@ function NoPages({ title, description }: { title: string; description: string })
   )
 }
 
-export function PagesPage() {
+interface PagesPageProps {
+  createRequested?: boolean
+  onCreateHandled?: () => void
+}
+
+export function PagesPage({ createRequested = false, onCreateHandled }: PagesPageProps) {
   const { t } = useTranslation('pages')
   const { data: pages } = useSuspenseQuery(pagesQuery)
   const [editing, setEditing] = useState<Editing>()
   const [status, setStatus] = useState<PageStatusFilter>(PAGE_STATUS.all)
   const [query, setQuery] = useState('')
-  const close = () => setEditing(undefined)
+  const close = () => {
+    setEditing(undefined)
+    onCreateHandled?.()
+  }
+  const creating = createRequested || editing?.kind === 'create'
   const startCreate = useCallback(() => setEditing({ kind: 'create' }), [])
   useShortcut('newPage', true, startCreate)
   const visible = filterPages(pages, status, query)
@@ -76,7 +85,7 @@ export function PagesPage() {
       <PageFormSheet
         key={editing?.kind === 'rename' ? editing.page.id : 'create'}
         page={editing?.kind === 'rename' ? editing.page : undefined}
-        open={editing?.kind === 'create' || editing?.kind === 'rename'}
+        open={creating || editing?.kind === 'rename'}
         onOpenChange={(open) => !open && close()}
       />
       {editing?.kind === 'delete' && (

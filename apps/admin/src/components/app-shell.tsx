@@ -5,7 +5,8 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AppSidebar } from '@/components/app-sidebar'
-import { IconButton } from '@/components/icon-button'
+import { CommandPalette } from '@/components/command-palette'
+import { ShortcutTooltip } from '@/components/shortcut-hint'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,6 +15,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from '@/components/ui/breadcrumb'
+import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 import { ToastProvider } from '@/components/ui/toast'
@@ -21,6 +23,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { pageLabel } from '@/features/pages/page-label'
 import { pagesQuery } from '@/features/pages/queries'
 import { CONTENT_WIDTH, DEFAULT_CONTENT_WIDTH } from '@/lib/content-width'
+import { ariaKeyShortcuts } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 
 const pageTitles: Record<string, string> = {
@@ -33,9 +36,17 @@ function SidebarToggle() {
   const { t } = useTranslation()
   const { toggleSidebar } = useSidebar()
   return (
-    <IconButton variant="ghost" label={t('nav.toggle')} onClick={toggleSidebar}>
-      <PanelLeft />
-    </IconButton>
+    <ShortcutTooltip id="toggleSidebar" label={t('nav.toggle')}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t('nav.toggle')}
+        aria-keyshortcuts={ariaKeyShortcuts('toggleSidebar')}
+        onClick={toggleSidebar}
+      >
+        <PanelLeft />
+      </Button>
+    </ShortcutTooltip>
   )
 }
 
@@ -103,6 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <SidebarToggle />
                   <Separator orientation="vertical" className="mr-2 h-4" />
                   <PageBreadcrumb />
+                  <CommandPalette />
                 </header>
               </ContentColumn>
               <ContentColumn className="flex-1 pb-10">
