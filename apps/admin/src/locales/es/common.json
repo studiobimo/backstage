@@ -62,5 +62,22 @@
     "over": "{{item}} está ahora en la posición {{position}} de {{total}}.",
     "dropped": "Has soltado {{item}} en la posición {{position}} de {{total}}.",
     "cancelled": "Reordenación cancelada. {{item}} vuelve a la posición {{position}} de {{total}}."
+  },
+  "palette": {
+    "trigger": "Buscar",
+    "title": "Paleta de comandos",
+    "placeholder": "Buscar páginas y acciones…",
+    "empty": "No se encontraron resultados.",
+    "open": "Abrir",
+    "close": "Cerrar",
+    "navigate": "Navegar",
+    "newPage": "Nueva página",
+    "theme": "Tema: {{theme}}",
+    "groups": {
+      "go": "Ir a",
+      "pages": "Páginas",
+      "actions": "Acciones"
+    },
+    "escape": "Esc"
   }
 }

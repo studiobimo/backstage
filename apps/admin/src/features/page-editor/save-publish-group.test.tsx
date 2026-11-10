@@ -1,4 +1,5 @@
 import type { PageBlock } from '@studiobimo/backstage'
+import { useShortcut } from '@/lib/shortcuts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -10,7 +11,6 @@ import { aboutPage } from '@/test/fixtures'
 import { PublishNotes } from './publish-notes'
 import { SavePublishGroup } from './save-publish-group'
 import { usePublish } from './use-publish'
-import { useSaveShortcut } from './use-save-shortcut'
 
 const blocks: PageBlock[] = [{ id: 'b1', block: 'hero', schemaVersion: 1, content: {} }]
 
@@ -29,7 +29,7 @@ interface HarnessProps {
 function Harness({ dirty, publishedAt, onSave }: HarnessProps) {
   const page = { ...aboutPage, publishedAt, publishedBy: 'Ana Ruiz' }
   const publish = usePublish(page, 3)
-  useSaveShortcut(dirty, onSave)
+  useShortcut('save', dirty, onSave)
   return (
     <>
       <SavePublishGroup

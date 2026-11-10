@@ -33,6 +33,7 @@ AGENTS.md  CLAUDE.md     this guide; CLAUDE.md only imports it
 <!-- Add the project's own directories above, one line each: path, then what lives there. -->
 
 <!-- >>> template:rules -->
+
 ## Non-negotiables
 
 These hold in every studiobimo repo. Git hooks, CI and an agent hook all enforce them, so a
@@ -84,12 +85,12 @@ and `git push` when the PR-size rule is violated, and blocks non-conventional br
 Some files here are not this repo's to edit. Changing them locally only creates drift, which a
 weekly workflow reports as an issue.
 
-| To change | Edit it in | It reaches this repo by |
-| --- | --- | --- |
-| CI behaviour (lint, PR checks, release) | `studiobimo/.github`, `.github/workflows/` | the `@v1` tag moving |
-| Branch and PR-size rules | `studiobimo/.github`, `.devtools/` | the `@v1` tag moving; lefthook refetches it daily |
-| Shared hooks and tool versions | `studiobimo/project-template` | `make -C .devtools sync` |
-| Files and blocks listed in the template's `.template/manifest`, and in the manifest of each profile in `.template-profiles` | `studiobimo/project-template` | `make -C .devtools sync` |
+| To change                                                                                                                   | Edit it in                                 | It reaches this repo by                           |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------- |
+| CI behaviour (lint, PR checks, release)                                                                                     | `studiobimo/.github`, `.github/workflows/` | the `@v1` tag moving                              |
+| Branch and PR-size rules                                                                                                    | `studiobimo/.github`, `.devtools/`         | the `@v1` tag moving; lefthook refetches it daily |
+| Shared hooks and tool versions                                                                                              | `studiobimo/project-template`              | `make -C .devtools sync`                          |
+| Files and blocks listed in the template's `.template/manifest`, and in the manifest of each profile in `.template-profiles` | `studiobimo/project-template`              | `make -C .devtools sync`                          |
 
 A managed block sits between `>>> template:<name>` and `<<< template:<name>` marker lines, like
 this section. Edit outside the markers freely; inside them, change the template instead. If a
@@ -152,6 +153,7 @@ This overrides "Comments say why, not what" in the Vite block below.
   pull request changes, so fix each warning it reports rather than leaving it for later.
 
 <!-- >>> template:vite -->
+
 ## Web app: Vite, React and TanStack
 
 The `vite-react-tanstack` profile keeps this section, the shared configs in `.devtools/vite/`
@@ -299,9 +301,11 @@ make -C .devtools dev       # Vite dev server on http://localhost:5173
 make -C .devtools ci        # build, types, ESLint, knip, jscpd, Prettier, tests, budget, audit
 make -C .devtools fmt       # Prettier over the web sources
 ```
+
 <!-- <<< template:vite -->
 
 <!-- >>> template:cloudflare -->
+
 ## Hosting: Cloudflare Workers
 
 The `cloudflare` profile keeps this section and `.devtools/host/` in step with the template.
@@ -341,6 +345,7 @@ every entry of `APPS`), so run `wrangler` there.
 - **One schema per concept** holds across the boundary: a route validates its input with
   the feature's schema from `src/features/<name>/schema.ts`, or from a workspace's shared
   package.
+
 <!-- <<< template:cloudflare -->
 
 ## Shared constants (this project's own rules)
@@ -373,6 +378,9 @@ shadcn mcp`). At the start of any UI/UX task, check that its tools are loaded; i
   matching block (`p-<name>-N`) as a pattern. Hand-build only what the registry has no answer
   for, and say what you searched.
 - **Never hand-edit `src/components/ui/**`.** Add or regenerate it with `shadcn add`.
+  One exception: `sidebar.tsx` calls `useShortcut('toggleSidebar', …)` from the shortcut registry
+  instead of its own `keydown` listener. After `shadcn add sidebar --overwrite`, put that back;
+  `components/command-palette.test.tsx` fails in `make -C .devtools check` until you do.
 - **Do not change the stack silently.** TanStack Form, Query, Router, zod, i18next and coss/Base
   UI are the stack. A new dependency, or a deviation from anything the owner decided, is asked
   about first, with the trade-off in a sentence or two.

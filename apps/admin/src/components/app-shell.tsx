@@ -5,7 +5,8 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AppSidebar } from '@/components/app-sidebar'
-import { IconButton } from '@/components/icon-button'
+import { CommandPalette } from '@/components/command-palette'
+import { ShortcutTooltip } from '@/components/shortcut-hint'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,13 +15,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from '@/components/ui/breadcrumb'
+import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { pageLabel } from '@/features/pages/page-label'
 import { pagesQuery } from '@/features/pages/queries'
-import { CONTENT_WIDTH, DEFAULT_CONTENT_WIDTH } from '@/lib/content-width'
+import { CONTENT_WIDTH, type ContentWidth, DEFAULT_CONTENT_WIDTH } from '@/lib/content-width'
+import { ariaKeyShortcuts } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 
 const pageTitles: Record<string, string> = {
@@ -33,9 +36,17 @@ function SidebarToggle() {
   const { t } = useTranslation()
   const { toggleSidebar } = useSidebar()
   return (
-    <IconButton variant="ghost" label={t('nav.toggle')} onClick={toggleSidebar}>
-      <PanelLeft />
-    </IconButton>
+    <ShortcutTooltip id="toggleSidebar" label={t('nav.toggle')}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t('nav.toggle')}
+        aria-keyshortcuts={ariaKeyShortcuts('toggleSidebar')}
+        onClick={toggleSidebar}
+      >
+        <PanelLeft />
+      </Button>
+    </ShortcutTooltip>
   )
 }
 
@@ -79,10 +90,17 @@ function PageBreadcrumb() {
   )
 }
 
-function ContentColumn({ className, children }: { className?: string; children: ReactNode }) {
-  const width = useMatches({
+interface ContentColumnProps {
+  className?: string
+  width?: ContentWidth
+  children: ReactNode
+}
+
+function ContentColumn({ className, width: fixedWidth, children }: ContentColumnProps) {
+  const routeWidth = useMatches({
     select: (matches) => matches.at(-1)?.staticData.width ?? DEFAULT_CONTENT_WIDTH
   })
+  const width = fixedWidth ?? routeWidth
   return (
     <div className={cn('w-full px-gutter sm:px-8', className)}>
       <div className={cn('w-full', CONTENT_WIDTH[width])}>{children}</div>
@@ -98,11 +116,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           <AppSidebar />
           <SidebarInset className="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
             <div className="scroll-fade scroll-fade-10 flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-gutter:stable]">
-              <ContentColumn>
+              <ContentColumn width="wide">
                 <header className="flex h-16 shrink-0 items-center gap-2">
                   <SidebarToggle />
                   <Separator orientation="vertical" className="mr-2 h-4" />
                   <PageBreadcrumb />
+                  <CommandPalette />
                 </header>
               </ContentColumn>
               <ContentColumn className="flex-1 pb-10">

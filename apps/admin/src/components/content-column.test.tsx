@@ -21,10 +21,20 @@ describe('content column', () => {
     await renderShell('/type')
     const breadcrumbColumn = screen
       .getByRole('navigation', { name: 'breadcrumb' })
-      .closest('.max-w-3xl')
+      .closest('.max-w-6xl')
     const titleColumn = screen.getByRole('heading', { level: 1 }).closest('.max-w-3xl')
-    expect(breadcrumbColumn?.parentElement?.className).toBe(
-      titleColumn?.parentElement?.className.replace(' flex-1 pb-10', '')
-    )
+    const edge = (column: Element | null | undefined) =>
+      column?.parentElement?.className.replace(' flex-1 pb-10', '')
+    expect(edge(breadcrumbColumn)).toBe(edge(titleColumn))
+  })
+
+  it('ends the header and wide pages on the same right edge', async () => {
+    stubApi()
+    await renderShell('/pages')
+    const headerColumn = screen
+      .getByRole('navigation', { name: 'breadcrumb' })
+      .closest('.max-w-6xl')
+    const titleColumn = screen.getByRole('heading', { level: 1 }).closest('.max-w-6xl')
+    expect(headerColumn?.className).toBe(titleColumn?.className)
   })
 })

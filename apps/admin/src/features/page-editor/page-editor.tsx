@@ -18,6 +18,7 @@ import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
 import { ApiError } from '@/lib/api'
+import { useShortcut } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 
 import { BlockForm } from '../block-form/block-form'
@@ -29,7 +30,6 @@ import { PublishNotes } from './publish-notes'
 import { SavePublishGroup } from './save-publish-group'
 import { StaleAlert } from './stale-alert'
 import { usePublish } from './use-publish'
-import { useSaveShortcut } from './use-save-shortcut'
 import type { LocaleStatus } from '../block-form/locale-status'
 import { pageLabel } from '../pages/page-label'
 import { pagesQuery } from '../pages/queries'
@@ -317,7 +317,7 @@ function EditorChrome({
   const hintId = useId()
   const publish = usePublish(page, version)
   const onSave = () => void save.save()
-  useSaveShortcut(dirty && !save.saving, onSave)
+  useShortcut('save', dirty && !save.saving, onSave)
   return (
     <>
       <EditorHeader
@@ -340,29 +340,33 @@ function EditorChrome({
           />
         }
       />
-      {save.stale && (
-        <StaleAlert
-          current={save.stale.current}
-          draft={draft}
-          changes={changes}
-          onReload={onReload}
+      <div className={cn(EDITOR_BODY, 'empty:hidden')}>
+        {save.stale && (
+          <StaleAlert
+            current={save.stale.current}
+            draft={draft}
+            changes={changes}
+            onReload={onReload}
+          />
+        )}
+        {save.failure && (
+          <p role="alert" className="text-destructive-foreground text-sm">
+            {save.failure}
+          </p>
+        )}
+        <PublishNotes
+          page={page}
+          dirty={dirty}
+          error={publish.error}
+          blocks={blocks}
+          hintId={hintId}
         />
-      )}
-      {save.failure && (
-        <p role="alert" className="text-destructive-foreground text-sm">
-          {save.failure}
-        </p>
-      )}
-      <PublishNotes
-        page={page}
-        dirty={dirty}
-        error={publish.error}
-        blocks={blocks}
-        hintId={hintId}
-      />
+      </div>
     </>
   )
 }
+
+const EDITOR_BODY = 'flex w-full max-w-3xl flex-col gap-8'
 
 function LayoutPicker({
   layouts,
@@ -510,15 +514,17 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
         <p role="alert">{t('errors.not_found')}</p>
       )}
       <LeaveGuard dirty={dirty} />
-      <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
-      <BlockList actions={actions} options={options} />
-      <div>
-        <BlockPicker options={options} onPick={actions.add} />
+      <div className={EDITOR_BODY}>
+        <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
+        <BlockList actions={actions} options={options} />
+        <div>
+          <BlockPicker options={options} onPick={actions.add} />
+        </div>
+        <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
+        <p role="status" aria-live="polite" className="sr-only">
+          {actions.announcement}
+        </p>
       </div>
-      <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
-      <p role="status" aria-live="polite" className="sr-only">
-        {actions.announcement}
-      </p>
     </EditingLocaleContext.Provider>
   )
 }

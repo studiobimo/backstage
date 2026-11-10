@@ -1,11 +1,13 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PageHeader } from '@/components/page-header'
+import { ShortcutHint, ShortcutTooltip } from '@/components/shortcut-hint'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { ariaKeyShortcuts, useShortcut } from '@/lib/shortcuts'
 
 import { DeletePageDialog } from './delete-page-dialog'
 import { countByStatus, filterPages, PAGE_STATUS, type PageStatusFilter } from './page-filters'
@@ -28,23 +30,37 @@ function NoPages({ title, description }: { title: string; description: string })
   )
 }
 
-export function PagesPage() {
+interface PagesPageProps {
+  createRequested?: boolean
+  onCreateHandled?: () => void
+}
+
+export function PagesPage({ createRequested = false, onCreateHandled }: PagesPageProps) {
   const { t } = useTranslation('pages')
   const { data: pages } = useSuspenseQuery(pagesQuery)
   const [editing, setEditing] = useState<Editing>()
   const [status, setStatus] = useState<PageStatusFilter>(PAGE_STATUS.all)
   const [query, setQuery] = useState('')
-  const close = () => setEditing(undefined)
+  const close = () => {
+    setEditing(undefined)
+    onCreateHandled?.()
+  }
+  const creating = createRequested || editing?.kind === 'create'
+  const startCreate = useCallback(() => setEditing({ kind: 'create' }), [])
+  useShortcut('newPage', true, startCreate)
   const visible = filterPages(pages, status, query)
   return (
     <>
       <PageHeader
         title={t('title')}
         actions={
-          <Button onClick={() => setEditing({ kind: 'create' })}>
-            <Plus />
-            {t('list.create')}
-          </Button>
+          <ShortcutTooltip id="newPage" label={t('list.create')}>
+            <Button aria-keyshortcuts={ariaKeyShortcuts('newPage')} onClick={startCreate}>
+              <Plus />
+              {t('list.create')}
+              <ShortcutHint id="newPage" className="-me-1" />
+            </Button>
+          </ShortcutTooltip>
         }
       />
       {pages.length === 0 ? (
@@ -68,7 +84,7 @@ export function PagesPage() {
       <PageFormSheet
         key={editing?.kind === 'rename' ? editing.page.id : 'create'}
         page={editing?.kind === 'rename' ? editing.page : undefined}
-        open={editing?.kind === 'create' || editing?.kind === 'rename'}
+        open={creating || editing?.kind === 'rename'}
         onOpenChange={(open) => !open && close()}
       />
       {editing?.kind === 'delete' && (
