@@ -1,0 +1,11 @@
+{
+  "title": "Block previews",
+  "description": "Every example block with sample content, as the site would render it.",
+  "language": "Language",
+  "width": {
+    "label": "Preview width",
+    "phone": "Phone",
+    "tablet": "Tablet",
+    "desktop": "Desktop"
+  }
+}

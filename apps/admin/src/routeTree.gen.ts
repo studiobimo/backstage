@@ -4,6 +4,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlocksRouteImport } from './routes/blocks'
 import { Route as MediaRouteImport } from './routes/media'
 import { Route as PagesRouteImport } from './routes/pages'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -13,6 +14,11 @@ import { Route as PagesPageIdRouteImport } from './routes/pages_.$pageId'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlocksRoute = BlocksRouteImport.update({
+  id: '/blocks',
+  path: '/blocks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MediaRoute = MediaRouteImport.update({
@@ -43,6 +49,7 @@ const PagesPageIdRoute = PagesPageIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/blocks': typeof BlocksRoute
   '/media': typeof MediaRoute
   '/pages': typeof PagesRoute
   '/settings': typeof SettingsRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/blocks': typeof BlocksRoute
   '/media': typeof MediaRoute
   '/pages': typeof PagesRoute
   '/settings': typeof SettingsRoute
@@ -60,6 +68,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/blocks': typeof BlocksRoute
   '/media': typeof MediaRoute
   '/pages': typeof PagesRoute
   '/settings': typeof SettingsRoute
@@ -69,12 +78,26 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/media' | '/pages' | '/settings' | '/type' | '/pages/$pageId'
+    | '/'
+    | '/blocks'
+    | '/media'
+    | '/pages'
+    | '/settings'
+    | '/type'
+    | '/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/media' | '/pages' | '/settings' | '/type' | '/pages/$pageId'
+  to:
+    | '/'
+    | '/blocks'
+    | '/media'
+    | '/pages'
+    | '/settings'
+    | '/type'
+    | '/pages/$pageId'
   id:
     | '__root__'
     | '/'
+    | '/blocks'
     | '/media'
     | '/pages'
     | '/settings'
@@ -84,6 +107,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BlocksRoute: typeof BlocksRoute
   MediaRoute: typeof MediaRoute
   PagesRoute: typeof PagesRoute
   SettingsRoute: typeof SettingsRoute
@@ -98,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blocks': {
+      id: '/blocks'
+      path: '/blocks'
+      fullPath: '/blocks'
+      preLoaderRoute: typeof BlocksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/media': {
@@ -140,6 +171,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BlocksRoute: BlocksRoute,
   MediaRoute: MediaRoute,
   PagesRoute: PagesRoute,
   SettingsRoute: SettingsRoute,

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Type } from 'lucide-react'
+import { BlocksIcon, Type } from 'lucide-react'
 import type { ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -18,6 +18,12 @@ export function NavSecondary(props: ComponentProps<typeof SidebarGroup>) {
     <SidebarGroup {...props}>
       <SidebarGroupContent>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm" render={<Link to="/blocks" />}>
+              <BlocksIcon />
+              <span>{t('nav.blocks')}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton size="sm" render={<Link to="/type" />}>
               <Type />
