@@ -20,7 +20,6 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { site } from '@/config/site'
 import { pageLabel } from '@/features/pages/page-label'
 import { pagesQuery } from '@/features/pages/queries'
 
@@ -68,8 +67,6 @@ function PageBreadcrumb() {
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem className="hidden md:block">{site.name}</BreadcrumbItem>
-        <BreadcrumbSeparator className="hidden md:block" />
         {editing ? (
           <EditedPageCrumbs pageId={editing.params.pageId} />
         ) : (
