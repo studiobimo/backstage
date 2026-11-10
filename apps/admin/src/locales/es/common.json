@@ -4,8 +4,12 @@
     "description": "Un CMS ligero y reutilizable para los sitios de marketing de un estudio, en el plan gratuito de Cloudflare."
   },
   "theme": {
-    "light": "Cambiar al tema claro",
-    "dark": "Cambiar al tema oscuro"
+    "label": "Tema",
+    "options": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    }
   },
   "language": {
     "label": "Idioma",
