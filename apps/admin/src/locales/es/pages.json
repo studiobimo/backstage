@@ -39,7 +39,7 @@
   },
   "form": {
     "createTitle": "Nueva página",
-    "detailsTitle": "Detalles de la página",
+    "renameTitle": "Detalles de la página",
     "description": "Cada idioma tiene su propio título y dirección.",
     "isHome": "Página de inicio",
     "isHomeHint": "La página de inicio no tiene dirección propia.",

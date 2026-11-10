@@ -125,7 +125,7 @@ export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) 
           }}
         >
           <SheetHeader>
-            <SheetTitle>{page ? t('form.detailsTitle') : t('form.createTitle')}</SheetTitle>
+            <SheetTitle>{page ? t('form.renameTitle') : t('form.createTitle')}</SheetTitle>
             <SheetDescription>{t('form.description')}</SheetDescription>
           </SheetHeader>
           <SheetPanel className="flex flex-col gap-6">

@@ -39,7 +39,7 @@
   },
   "form": {
     "createTitle": "New page",
-    "detailsTitle": "Page details",
+    "renameTitle": "Page details",
     "description": "Each language has its own title and address.",
     "isHome": "Home page",
     "isHomeHint": "The home page has no address of its own.",
