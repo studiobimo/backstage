@@ -11,7 +11,7 @@ describe('page blocks API', () => {
         page: { id: string }
       }
     ).page.id
-  const entry = (id: string) => ({ id, block: 'hero', schemaVersion: 1, content: { id } })
+  const entry = (id: string) => ({ id, block: 'split-hero', schemaVersion: 1, content: { id } })
 
   it('saves blocks in order and reads them back', async () => {
     const id = await createPage()

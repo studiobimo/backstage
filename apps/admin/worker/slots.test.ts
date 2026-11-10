@@ -68,7 +68,9 @@ describe('slots API', () => {
   })
 
   it('refuses a block the slot does not offer, and a slot that does not exist', async () => {
-    expect((await send('PUT', '/slots/header', { ...header, block: 'hero' })).status).toBe(400)
+    expect((await send('PUT', '/slots/header', { ...header, block: 'split-hero' })).status).toBe(
+      400
+    )
     expect((await send('PUT', '/slots/header', { ...header, block: 'site-footer' })).status).toBe(
       400
     )

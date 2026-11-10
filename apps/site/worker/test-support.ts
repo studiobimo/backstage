@@ -26,7 +26,7 @@ export const heroBlock = (
   body: Record<string, unknown> = {}
 ): PageBlock => ({
   id: 'b1',
-  block: 'hero',
+  block: 'split-hero',
   schemaVersion: 1,
   content: {
     title,
