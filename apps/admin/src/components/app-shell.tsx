@@ -109,14 +109,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           <AppSidebar />
           <SidebarInset className="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
             <div className="scroll-fade scroll-fade-10 flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-gutter:stable]">
-              <ContentColumn>
-                <header className="flex h-16 shrink-0 items-center gap-2">
-                  <SidebarToggle />
-                  <Separator orientation="vertical" className="mr-2 h-4" />
-                  <PageBreadcrumb />
+              <div className="flex shrink-0 items-center">
+                <ContentColumn className="min-w-0 flex-1">
+                  <header className="flex h-16 items-center gap-2">
+                    <SidebarToggle />
+                    <Separator orientation="vertical" className="mr-2 h-4" />
+                    <PageBreadcrumb />
+                  </header>
+                </ContentColumn>
+                <div className="pe-gutter sm:pe-8">
                   <CommandPalette />
-                </header>
-              </ContentColumn>
+                </div>
+              </div>
               <ContentColumn className="flex-1 pb-10">
                 <div className="flex w-full flex-col gap-8">{children}</div>
               </ContentColumn>

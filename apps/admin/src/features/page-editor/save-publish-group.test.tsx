@@ -1,11 +1,11 @@
 import type { PageBlock } from '@studiobimo/backstage'
+import { useShortcut } from '@/lib/shortcuts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ToastProvider } from '@/components/ui/toast'
-import { useShortcut } from '@/hooks/use-shortcut'
 import { aboutPage } from '@/test/fixtures'
 
 import { PublishNotes } from './publish-notes'

@@ -23,8 +23,8 @@ describe('content column', () => {
       .getByRole('navigation', { name: 'breadcrumb' })
       .closest('.max-w-3xl')
     const titleColumn = screen.getByRole('heading', { level: 1 }).closest('.max-w-3xl')
-    expect(breadcrumbColumn?.parentElement?.className).toBe(
-      titleColumn?.parentElement?.className.replace(' flex-1 pb-10', '')
-    )
+    const edge = (column: Element | null | undefined) =>
+      column?.parentElement?.className.replace(/ (min-w-0 flex-1|flex-1 pb-10)/, '')
+    expect(edge(breadcrumbColumn)).toBe(edge(titleColumn))
   })
 })

@@ -37,8 +37,8 @@ import {
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { pageLabel } from '@/features/pages/page-label'
 import { pagesQuery } from '@/features/pages/queries'
-import { useShortcut } from '@/hooks/use-shortcut'
 import { setThemePreference, THEME, type ThemePreference } from '@/lib/theme'
+import { useShortcut } from '@/lib/shortcuts'
 
 interface PaletteItem {
   value: string
@@ -170,7 +170,7 @@ export function CommandPalette() {
   useShortcut('palette', true, toggle)
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandDialogTrigger render={<Button variant="outline" size="sm" className="ms-auto" />}>
+      <CommandDialogTrigger render={<Button variant="outline" size="sm" />}>
         <SearchIcon aria-hidden />
         <span className="sr-only sm:not-sr-only">{t('palette.trigger')}</span>
         <ShortcutHint id="palette" className="-me-1" />
@@ -187,7 +187,12 @@ export function CommandPalette() {
                     <CommandGroupLabel>{group.heading}</CommandGroupLabel>
                     <CommandCollection>
                       {(entry: PaletteItem) => (
-                        <CommandItem key={entry.value} value={entry.label} onClick={entry.run}>
+                        <CommandItem
+                          key={entry.value}
+                          value={entry.label}
+                          className="gap-2.5 [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                          onClick={entry.run}
+                        >
                           {entry.icon}
                           <span className="flex-1">{entry.label}</span>
                         </CommandItem>

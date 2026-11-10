@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 const SHORTCUT = {
   save: { key: 's', withModifier: true, worksInFields: true },
   newPage: { key: 'n', withModifier: false, worksInFields: false },
@@ -43,4 +45,17 @@ export const shouldHandleShortcut = (event: KeyboardEvent, id: ShortcutId) => {
   if (event.defaultPrevented || event.repeat || !matchesKey(event, definition)) return false
   if (definition.worksInFields) return true
   return !isEditing(event.target) && !hasOpenDialog()
+}
+
+export function useShortcut(id: ShortcutId, enabled: boolean, onTrigger: () => void) {
+  useEffect(() => {
+    if (!enabled) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!shouldHandleShortcut(event, id)) return
+      event.preventDefault()
+      onTrigger()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [id, enabled, onTrigger])
 }
