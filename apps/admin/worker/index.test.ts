@@ -40,8 +40,15 @@ describe('worker', () => {
         schema: { properties: Record<string, { backstage?: string }> }
       }[]
     }
-    expect(blocks.map((block) => block.name)).toEqual(['hero'])
-    const hero = blocks.find((block) => block.name === 'hero')
+    expect(blocks.map((block) => block.name)).toEqual([
+      'overlay-hero',
+      'split-hero',
+      'one-column-section',
+      'one-column-text',
+      'two-column-section',
+      'two-column-text'
+    ])
+    const hero = blocks.find((block) => block.name === 'split-hero')
     expect(hero?.version).toBe(1)
     expect(
       Object.fromEntries(
@@ -55,7 +62,8 @@ describe('worker', () => {
       body: 'localized',
       cta: 'link',
       picture: 'image',
-      theme: undefined
+      theme: undefined,
+      imageSide: undefined
     })
   })
 })

@@ -7,3 +7,6 @@ extend-exclude = [
   # Spanish, which an English checker reads as typos.
   "apps/admin/src/locales/es/",
 ]
+
+[default.extend-words]
+columnas = "columnas"

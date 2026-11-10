@@ -18,7 +18,7 @@ const listed = async () => ((await (await send('GET', '')).json()) as { pages: S
 
 const hero = (title: Record<string, string>) => ({
   id: crypto.randomUUID(),
-  block: 'hero',
+  block: 'split-hero',
   schemaVersion: 1,
   content: { title, body: {} }
 })

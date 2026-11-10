@@ -3,7 +3,7 @@ import { db, kv, send, versionOf } from './pages-test-support'
 
 export const hero = (pictureId = 'm1') => ({
   id: 'b1',
-  block: 'hero',
+  block: 'split-hero',
   schemaVersion: 1,
   content: {
     title: { en: 'Hello', es: 'Hola' },
