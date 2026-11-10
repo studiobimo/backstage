@@ -33,7 +33,8 @@
 
 .block-preview h1 {
   font-size: 2rem;
-  line-height: 1.15;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .block-preview h2 {
@@ -62,6 +63,22 @@
   display: grid;
   gap: 1rem;
   align-content: start;
+}
+
+.block-preview [data-block='overlay-hero'] > div,
+.block-preview [data-block='split-hero'] > div {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.block-preview h1,
+.block-preview h2 {
+  margin: 0;
+}
+
+.block-preview p {
+  margin: 0;
+  line-height: 1.6;
 }
 
 .block-preview [data-block='overlay-hero'] {
