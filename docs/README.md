@@ -7,6 +7,7 @@ This folder is the source of truth for what Backstage is and why it is built the
 - [Risks](RISKS.md): risks with mitigations, and assumptions
 - Guides:
   - [Put the admin behind Cloudflare Access](guides/cloudflare-access.md): the Zero Trust setup and what the worker checks
+  - [Install the package with a read-only token](guides/package-token.md): `.npmrc`, CI, Workers Builds and rotation
 - Research:
   - [A hosted Backstage](research/hosted-backstage.md): the central `cms.bimo.dev` idea, and why it is set aside
   - [React on the site worker](research/react-server-rendering.md): server rendering measured against the free plan's limits
