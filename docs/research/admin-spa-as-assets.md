@@ -33,7 +33,7 @@ has no Vite build and no copy step.
 
 ```ts
 // apps/admin/worker/index.ts
-import { createAdmin } from '@studiobimo/backstage'
+import { createAdmin } from '@studiobimo/backstage/admin'
 import { registry } from '../../../registry'
 
 export default createAdmin(registry)

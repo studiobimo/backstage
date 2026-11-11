@@ -1,14 +1,14 @@
-import type { Registry } from '@studiobimo/backstage'
+import type { Registry } from '../index.ts'
 import { Hono } from 'hono'
 
-import { blocksRoutes } from './blocks'
-import { layoutsRoutes } from './layouts'
-import { mediaRoutes } from './media'
-import { pagesRoutes } from './pages'
-import { publishRoutes } from './publish'
-import { settingsRoutes } from './settings'
-import { siteOriginRoutes } from './site-origin'
-import { slotsRoutes } from './slots'
+import { blocksRoutes } from './blocks.ts'
+import { layoutsRoutes } from './layouts.ts'
+import { mediaRoutes } from './media.ts'
+import { pagesRoutes } from './pages.ts'
+import { publishRoutes } from './publish.ts'
+import { settingsRoutes } from './settings.ts'
+import { siteOriginRoutes } from './site-origin.ts'
+import { slotsRoutes } from './slots.ts'
 
 export const v1Routes = (registry: Registry) =>
   new Hono<{ Bindings: Env }>()

@@ -9,11 +9,11 @@ import {
   mediaUploadSchema,
   sniffImageType,
   type ApiError
-} from '@studiobimo/backstage'
+} from '../index.ts'
 import { Hono } from 'hono'
 
-import type { AccessEnv } from './auth'
-import { RESPONSE_STATUS, respondWithError } from './respond'
+import type { AccessEnv } from './auth.ts'
+import { RESPONSE_STATUS, respondWithError } from './respond.ts'
 
 type Rejection = { error: ApiError }
 type Upload = { file: File; metadata: ReturnType<typeof mediaUploadSchema.parse> }

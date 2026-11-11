@@ -9,13 +9,13 @@ import {
   recordPublished,
   recordUnpublished,
   type Registry
-} from '@studiobimo/backstage'
+} from '../index.ts'
 import { Hono } from 'hono'
 
-import type { AccessEnv } from './auth'
-import { respondStale } from './pages'
-import { respondWithError } from './respond'
-import { indexPublished, indexUnpublished, removeSnapshots, writeSnapshots } from './snapshots'
+import type { AccessEnv } from './auth.ts'
+import { respondStale } from './pages.ts'
+import { respondWithError } from './respond.ts'
+import { indexPublished, indexUnpublished, removeSnapshots, writeSnapshots } from './snapshots.ts'
 
 export const publishRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()

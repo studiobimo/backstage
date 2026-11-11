@@ -20,6 +20,7 @@ make -C .devtools migrate    # apply the D1 migrations locally (REMOTE=1 ENV=pro
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
 
-## License
+## Licence
 
-[MIT](LICENSE).
+Proprietary. This is a private repository and a private package
+([ADR-0006](docs/adr/0006-private-package.md)); see [LICENSE](LICENSE).
