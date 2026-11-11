@@ -2,7 +2,15 @@
   "name": "@studiobimo/backstage",
   "version": "0.0.0",
   "license": "UNLICENSED",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/studiobimo/backstage.git",
+    "directory": "packages/backstage"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {

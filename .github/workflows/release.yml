@@ -30,3 +30,14 @@ jobs:
       app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
     secrets:
       app-private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+  publish:
+    needs: release
+    if: ${{ needs.release.outputs.release-created == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: studiobimo/.github/.github/workflows/publish-package.yml@v1
+    with:
+      tag-name: ${{ needs.release.outputs.tag-name }}
+      package-directory: packages/backstage
