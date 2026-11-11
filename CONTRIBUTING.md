@@ -83,14 +83,14 @@ breaking commits. A change to a managed file titled `chore`, `docs` or `ci` merg
 `sync`, so title it `fix` or `feat`.
 <!-- <<< template:workflow -->
 
-## Testing a package change in the apps
+## Testing a package change in the site
 
-`apps/admin` and `apps/site` install the published `@studiobimo/backstage`, so an edit under
-`packages/backstage` does not reach them until a release. The package's own tests run on its source.
-To try a change in the apps first:
+`apps/site` installs the published `@studiobimo/backstage`, as a client site does, so an edit under
+`packages/backstage` does not reach it until a release. `apps/admin` stays on the workspace source,
+because the package ships its build as the prebuilt admin SPA. To try a change in the site first:
 
 ```sh
-make -C .devtools link-local     # the apps now use packages/backstage's source
+make -C .devtools link-local     # the site now uses packages/backstage's source
 make -C .devtools unlink-local   # before committing: restores package.json, pnpm-lock.yaml, pnpm-workspace.yaml
 ```
 

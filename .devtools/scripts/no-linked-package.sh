@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel)"
-pattern="@studiobimo/backstage'?:? +link:|^ +version: link:.*packages/backstage"
+pattern="@studiobimo/backstage'?: +link:|^ +specifier: link:.*packages/backstage"
 linked="$(grep -nE "$pattern" "$root/pnpm-workspace.yaml" "$root/pnpm-lock.yaml" || true)"
 
 if [ -n "$linked" ]; then

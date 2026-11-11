@@ -27,7 +27,7 @@ e2e: build ## Playwright: the publish loop through both Workers, and an axe scan
 LINKED_FILES := package.json pnpm-lock.yaml pnpm-workspace.yaml
 
 .PHONY: link-local
-link-local: ## Point the apps at packages/backstage's source (edits LINKED_FILES; unlink-local restores them)
+link-local: ## Point the site at packages/backstage's source (edits LINKED_FILES; unlink-local restores them)
 	cd $(ROOT) && $(MISE) exec -- pnpm link ./packages/backstage
 
 .PHONY: unlink-local
