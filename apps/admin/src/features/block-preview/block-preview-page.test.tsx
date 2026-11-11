@@ -1,32 +1,69 @@
-import { render, screen, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { previewUrl } from '@/lib/preview-url'
 
 import { BlockPreviewPage } from './block-preview-page'
-import { PREVIEW_SAMPLES } from 'backstage-site/samples'
 
-const BLOCK_NAMES = Object.keys(PREVIEW_SAMPLES)
+const SITE = 'https://site.test'
+
+const BLOCKS = [
+  { name: 'split-hero', version: 1, schema: {}, title: { en: 'Split Hero', es: 'Hero dividido' } },
+  { name: 'one-column-text', version: 1, schema: {} }
+]
+
+function renderPage() {
+  const queryClient = new QueryClient()
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BlockPreviewPage />
+    </QueryClientProvider>
+  )
+}
+
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(
+      async (url: string) =>
+        new Response(
+          JSON.stringify(url.endsWith('/site-origin') ? { origin: SITE } : { blocks: BLOCKS })
+        )
+    )
+  )
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('BlockPreviewPage', () => {
-  it('renders every example block with its sample content', () => {
-    render(<BlockPreviewPage />)
-    expect(BLOCK_NAMES).toHaveLength(6)
-    for (const name of BLOCK_NAMES) {
-      const region = screen.getByRole('region', { name: new RegExp(name) })
-      expect(region.querySelector(`[data-block="${name}"]`)).not.toBeNull()
-    }
+  it('builds the frame url from the site origin, block and locale', () => {
+    expect(previewUrl(SITE, 'split-hero', 'es')).toBe(
+      `${SITE}/__preview/blocks/split-hero?locale=es`
+    )
   })
 
-  it('shows the sample copy in the chosen language and width', async () => {
-    const user = userEvent.setup()
-    render(<BlockPreviewPage />)
-    const split = screen.getByRole('region', { name: /split-hero/ })
-    expect(within(split).getByRole('heading', { level: 1 })).toHaveTextContent(
-      'A headline beside the picture'
+  it('frames every block from the registry on the site', async () => {
+    renderPage()
+    const frame = await screen.findByTitle('Split Hero preview')
+    expect(frame).toHaveAttribute('src', previewUrl(SITE, 'split-hero', 'en'))
+    expect(screen.getByTitle('one-column-text preview')).toHaveAttribute(
+      'src',
+      previewUrl(SITE, 'one-column-text', 'en')
     )
+  })
+
+  it('reframes in the chosen language and marks the chosen width', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByTitle('Split Hero preview')
     await user.click(screen.getByRole('button', { name: 'ES' }))
-    expect(within(split).getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Un titular junto a la imagen'
+    expect(await screen.findByTitle('Hero dividido preview')).toHaveAttribute(
+      'src',
+      previewUrl(SITE, 'split-hero', 'es')
     )
     await user.click(screen.getByRole('button', { name: 'Phone' }))
     expect(screen.getByRole('button', { name: 'Phone' })).toHaveAttribute('aria-pressed', 'true')

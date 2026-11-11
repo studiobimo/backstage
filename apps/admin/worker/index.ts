@@ -11,21 +11,32 @@ import { secureHeaders } from 'hono/secure-headers'
 
 import { requireAccess } from './auth'
 import { respondWithError } from './respond'
+import { serveSpa } from './spa'
 import { v1Routes } from './v1'
 
-const app = new Hono<{ Bindings: Env }>().basePath('/api')
+const API_PATH = '/api'
 
-app.use(...observe)
-app.use(secureHeaders())
-app.get(OBSERVABILITY.health.path, respondHealthy)
-app.use(requireAccess)
+const api = new Hono<{ Bindings: Env }>().basePath(API_PATH)
 
-app.route('/v1', v1Routes(registry))
+api.use(...observe)
+api.use(secureHeaders())
+api.get(OBSERVABILITY.health.path, respondHealthy)
+api.use(requireAccess)
 
-app.notFound((c) => respondWithError(c, API_ERROR.notFound))
-app.onError((error, c) => {
+api.route('/v1', v1Routes(registry))
+
+api.notFound((c) => respondWithError(c, API_ERROR.notFound))
+api.onError((error, c) => {
   reportError(c, error)
   return respondWithError(c, API_ERROR.internal)
 })
+
+const app = new Hono<{ Bindings: Env }>()
+
+app.route('/', api)
+app.get('*', (c) =>
+  c.req.path.startsWith(`${API_PATH}/`) ? respondWithError(c, API_ERROR.notFound) : serveSpa(c)
+)
+app.notFound((c) => respondWithError(c, API_ERROR.notFound))
 
 export default app

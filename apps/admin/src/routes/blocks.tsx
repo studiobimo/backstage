@@ -1,19 +1,14 @@
-import { createFileRoute, notFound } from '@tanstack/react-router'
-import { lazy, Suspense } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
 
-const BlockPreviewPage = import.meta.env.DEV
-  ? lazy(async () => ({
-      default: (await import('@/features/block-preview/block-preview-page')).BlockPreviewPage
-    }))
-  : () => null
+import { BlockPreviewPage } from '@/features/block-preview/block-preview-page'
+import { siteOriginQuery } from '@/features/block-preview/queries'
+import { blockDescriptionsQuery } from '@/features/page-editor/queries'
 
 export const Route = createFileRoute('/blocks')({
-  beforeLoad: () => {
-    if (!import.meta.env.DEV) throw notFound()
-  },
-  component: () => (
-    <Suspense fallback={null}>
-      <BlockPreviewPage />
-    </Suspense>
-  )
+  loader: ({ context }) =>
+    Promise.all([
+      context.queryClient.ensureQueryData(blockDescriptionsQuery),
+      context.queryClient.ensureQueryData(siteOriginQuery)
+    ]),
+  component: BlockPreviewPage
 })

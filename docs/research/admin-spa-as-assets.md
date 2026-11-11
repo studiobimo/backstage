@@ -51,14 +51,14 @@ installed it with `pnpm add`, the way GitHub Packages delivers it. Two layouts: 
 and a pnpm workspace where `apps/admin` depends on the package, as the template's will. Wrangler
 4.156.0, the version this repository pins.
 
-| Check | Result |
-| --- | --- |
-| `wrangler deploy --dry-run` reads the directory | Read the package's files through pnpm's symlink, in both layouts |
-| `wrangler dev`: `/` and `/assets/*.js` | 200, from the package |
-| `wrangler dev`: a client route such as `/some/route` | 200, `index.html` (single-page fallback) |
-| `wrangler dev`: `/api/*` | The client's worker answered, and `/api/nope` was the worker's 404, not `index.html` |
-| `.assetsignore` shipped in the package | Honoured: `/.assetsignore` is not served as a file |
-| A `_headers` file shipped in the package | Applied to `/`, with its `Content-Security-Policy` |
+| Check                                                | Result                                                                               |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `wrangler deploy --dry-run` reads the directory      | Read the package's files through pnpm's symlink, in both layouts                     |
+| `wrangler dev`: `/` and `/assets/*.js`               | 200, from the package                                                                |
+| `wrangler dev`: a client route such as `/some/route` | 200, `index.html` (single-page fallback)                                             |
+| `wrangler dev`: `/api/*`                             | The client's worker answered, and `/api/nope` was the worker's 404, not `index.html` |
+| `.assetsignore` shipped in the package               | Honoured: `/.assetsignore` is not served as a file                                   |
+| A `_headers` file shipped in the package             | Applied to `/`, with its `Content-Security-Policy`                                   |
 
 ## Two things that follow
 
@@ -73,6 +73,14 @@ and a pnpm workspace where `apps/admin` depends on the package, as the template'
    says "Backstage" and `backstage.example.com`. The SPA must take the client's name and anything
    else that varies from `/api` at runtime and set `document.title` itself. Build-time metadata is
    harmless in the package, and should not be relied on.
+
+## Update: the worker now serves the HTML
+
+`/blocks` frames the site, so the SPA's policy needs `frame-src <site origin>`, which differs per
+client and cannot ship in `_headers`. The client's `assets` config therefore adds
+`"binding": "ASSETS"` and `run_worker_first` of `["/*", "!/assets/*", ...]`. The admin worker
+fetches the page from `ASSETS` and appends `frame-src` from its `SITE_ORIGIN` var to the policy.
+The rest of the policy still ships in `_headers`.
 
 ## What this does not tell us
 

@@ -8,6 +8,7 @@ export {
   LAYOUT,
   layoutNames,
   SLOT,
+  siteOriginResponseSchema,
   upgradeBlockContent,
   validateBlockContent
 } from './blocks.ts'
