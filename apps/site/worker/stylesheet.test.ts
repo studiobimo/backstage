@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
-import { STYLESHEET } from './stylesheet'
+import { STYLESHEET, stylesheetPathFor } from './stylesheet'
 import { clearKv, get, heroBlock, platform, publishSnapshots, snapshotOf } from './test-support'
 
 afterAll(() => platform.dispose())
@@ -14,6 +14,20 @@ describe('the site stylesheet', () => {
     expect(response.headers.get('Cache-Control')).toBe(STYLESHEET.cacheControl)
   })
 
+  it('is cached for a year as immutable', () => {
+    expect(STYLESHEET.cacheControl).toBe('public, max-age=31536000, immutable')
+  })
+
+  it('has a path that changes when its content changes', () => {
+    expect(STYLESHEET.path).toMatch(/^\/site\.[0-9a-f]{12}\.css$/)
+    expect(stylesheetPathFor('a{}')).toBe(stylesheetPathFor('a{}'))
+    expect(stylesheetPathFor('a{}')).not.toBe(stylesheetPathFor('b{}'))
+  })
+
+  it('is no longer served at an unhashed path', async () => {
+    expect((await get('/site.css')).status).toBe(404)
+  })
+
   it('is linked from a page, whose policy allows only the site for styles', async () => {
     await publishSnapshots(
       snapshotOf({
@@ -25,7 +39,10 @@ describe('the site stylesheet', () => {
       })
     )
     const response = await get('/')
-    expect(await response.text()).toContain(`<link rel="stylesheet" href="${STYLESHEET.path}"/>`)
+    const html = await response.text()
+    expect(html).toContain(`<link rel="stylesheet" href="${STYLESHEET.path}"/>`)
     expect(response.headers.get('Content-Security-Policy')).toMatch(/style-src 'self'(;|$)/)
+    const [, linked] = /<link rel="stylesheet" href="([^"]+)"/.exec(html) ?? []
+    expect((await get(linked!)).status).toBe(200)
   })
 })
