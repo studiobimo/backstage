@@ -1,0 +1,203 @@
+@import 'tailwindcss';
+
+:root {
+  color-scheme: light dark;
+  --background: #ffffff;
+  --foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525b;
+  --inverse: #18181b;
+  --inverse-foreground: #fafafa;
+  --border: #e4e4e7;
+  --link: #1d4ed8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #09090b;
+    --foreground: #fafafa;
+    --muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --inverse: #fafafa;
+    --inverse-foreground: #18181b;
+    --border: #27272a;
+    --link: #93c5fd;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
+  --color-border: var(--border);
+  --color-link: var(--link);
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  a {
+    @apply text-link underline underline-offset-4;
+  }
+
+  h1 {
+    @apply text-4xl font-semibold tracking-tight text-balance sm:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold tracking-tight text-balance sm:text-3xl;
+  }
+
+  p,
+  ul,
+  ol {
+    @apply my-4;
+  }
+
+  img {
+    @apply h-auto max-w-full;
+  }
+}
+
+@layer components {
+  body > nav {
+    @apply border-border border-t px-6 py-4 text-sm;
+  }
+
+  body > nav ul {
+    @apply m-0 flex list-none flex-wrap gap-4 p-0;
+  }
+
+  header {
+    @apply border-border flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4;
+  }
+
+  header ul {
+    @apply m-0 flex list-none flex-wrap gap-6 p-0;
+  }
+
+  header li ul {
+    @apply text-muted-foreground mt-2 flex-col gap-1 text-sm;
+  }
+
+  footer {
+    @apply bg-muted text-muted-foreground grid gap-8 px-6 py-12 text-sm sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  footer ul {
+    @apply m-0 list-none p-0;
+  }
+
+  [data-block] {
+    @apply mx-auto w-full;
+  }
+
+  [data-block='overlay-hero'] {
+    @apply relative isolate grid min-h-96 items-center overflow-hidden px-6 py-16;
+  }
+
+  [data-block='overlay-hero'] > img {
+    @apply absolute inset-0 -z-10 h-full w-full object-cover;
+  }
+
+  [data-block='overlay-hero'] > div {
+    @apply mx-auto w-full max-w-5xl;
+  }
+
+  [data-block='overlay-hero'][data-tint='dark'] {
+    @apply bg-black/50 bg-blend-multiply;
+  }
+
+  [data-block='overlay-hero'][data-tint='dark'],
+  [data-block='overlay-hero'][data-tint='dark'] a {
+    @apply text-white;
+  }
+
+  [data-block='overlay-hero'][data-tint='light'] {
+    @apply bg-white/60 text-black;
+  }
+
+  [data-block='overlay-hero'][data-align='center'] > div {
+    @apply text-center;
+  }
+
+  [data-block='split-hero'] {
+    @apply grid items-center gap-8 px-6 py-16 md:grid-cols-2;
+  }
+
+  [data-block='split-hero'][data-theme='dark'] {
+    @apply bg-inverse text-inverse-foreground;
+  }
+
+  [data-block='split-hero'][data-image-side='start'] > img {
+    @apply md:order-first;
+  }
+
+  [data-block='split-hero'] > img {
+    @apply rounded-lg;
+  }
+
+  [data-spacing='sm'] {
+    @apply px-6 py-8;
+  }
+
+  [data-spacing='md'] {
+    @apply px-6 py-16;
+  }
+
+  [data-spacing='lg'] {
+    @apply px-6 py-24;
+  }
+
+  [data-background='muted'] {
+    @apply bg-muted;
+  }
+
+  [data-background='dark'] {
+    @apply bg-inverse text-inverse-foreground;
+  }
+
+  [data-block='one-column-section'] > *,
+  [data-block='one-column-text'] > * {
+    @apply mx-auto max-w-3xl;
+  }
+
+  [data-block='one-column-text'] {
+    @apply px-6 py-12;
+  }
+
+  [data-block='one-column-text'][data-width='narrow'] > * {
+    @apply max-w-prose;
+  }
+
+  [data-block='one-column-text'][data-width='wide'] > * {
+    @apply max-w-5xl;
+  }
+
+  [data-block='two-column-section'],
+  [data-block='two-column-text'] {
+    @apply mx-auto grid max-w-6xl gap-8 md:grid-cols-2;
+  }
+
+  [data-block='two-column-text'] {
+    @apply px-6 py-12;
+  }
+
+  [data-block='two-column-section'][data-split='left'] {
+    @apply md:grid-cols-[3fr_2fr];
+  }
+
+  [data-block='two-column-section'][data-split='right'] {
+    @apply md:grid-cols-[2fr_3fr];
+  }
+
+  [data-column] > img {
+    @apply rounded-lg;
+  }
+}

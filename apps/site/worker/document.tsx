@@ -10,6 +10,7 @@ import { createElement } from 'react'
 
 import { LOCALE_NAME, SWITCHER_LABEL } from './locales'
 import { pathOf } from './routing'
+import { STYLESHEET } from './stylesheet'
 
 export interface PageProps {
   components: ComponentMap
@@ -54,6 +55,7 @@ function Head({ snapshot, translations, origin }: Omit<PageProps, 'components'>)
       <meta charSet="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title}</title>
+      <link rel="stylesheet" href={STYLESHEET.path} />
       {snapshot.seo.description ? (
         <meta name="description" content={snapshot.seo.description} />
       ) : null}
