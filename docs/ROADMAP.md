@@ -110,6 +110,50 @@ In working order. Status lives in the
 14. [#214](https://github.com/studiobimo/backstage/issues/214) frame the site's block preview in `/blocks` (closes #199)
 15. [#215](https://github.com/studiobimo/backstage/issues/215) check the site has no D1 binding and no admin secret
 
+## M1.6: Hardening
+
+A review of M1, M1.5 and M2 found bugs, races and footguns that a client project would hit on
+its first install. They are fixed before the package goes to client projects, so the first
+installs do not inherit them.
+
+**Stories:** PUB-1 to PUB-5; PAG-1, PAG-3 to PAG-5; BLK-1, BLK-3 to BLK-6; MED-1, MED-2, MED-4;
+LOC-2, LOC-3; AUT-1, AUT-2; OPS-3; PKG-1, PKG-2.
+
+### Exit criteria
+
+- Unpublishing, deleting or renaming one page never changes what another page serves
+- The header, footer and site name an editor saves reach the site through publishing
+- An editor can tell a page whose saved changes are not yet live from one that is up to date
+- Page writes and publishing leave D1 and KV consistent after a failure or concurrent edits,
+  and the sitemap keeps every published page
+- Every environment declares its bindings, and a missing one fails with a clear error
+- Bots cannot use up the free plan's KV reads through query strings or impossible paths
+- Each issue below ships with a test that fails without its fix
+
+### Issues
+
+In working order. Status lives in the
+[milestone](https://github.com/studiobimo/backstage/milestone/11).
+
+1. [#247](https://github.com/studiobimo/backstage/issues/247) keep unpublishing a page from deleting a route another page owns
+2. [#251](https://github.com/studiobimo/backstage/issues/251) allow only one home page at the database level
+3. [#252](https://github.com/studiobimo/backstage/issues/252) save the page version and its content in one transaction
+4. [#253](https://github.com/studiobimo/backstage/issues/253) stop concurrent publishes from losing sitemap entries
+5. [#249](https://github.com/studiobimo/backstage/issues/249) show when a published page has saved changes that are not live
+6. [#248](https://github.com/studiobimo/backstage/issues/248) publish the header, footer and site name to the site
+7. [#250](https://github.com/studiobimo/backstage/issues/250) find images and translations inside nullable and union fields
+8. [#255](https://github.com/studiobimo/backstage/issues/255) localize call-to-action links and image alt overrides
+9. [#254](https://github.com/studiobimo/backstage/issues/254) declare every binding per environment and fail clearly when one is missing
+10. [#256](https://github.com/studiobimo/backstage/issues/256) stop query strings and impossible paths from spending KV reads
+11. [#257](https://github.com/studiobimo/backstage/issues/257) keep the pages list within the free plan's CPU limit
+12. [#258](https://github.com/studiobimo/backstage/issues/258) reject unsafe hrefs in link fields by default
+13. [#259](https://github.com/studiobimo/backstage/issues/259) tighten dev auth, cross-site writes and API request headers
+14. [#264](https://github.com/studiobimo/backstage/issues/264) validate blocks once at publish and log any block the site drops
+15. [#263](https://github.com/studiobimo/backstage/issues/263) read image sizes from the file and fall back to WebP when PNG is too large
+16. [#260](https://github.com/studiobimo/backstage/issues/260) let the site serve its own block thumbnails
+17. [#261](https://github.com/studiobimo/backstage/issues/261) publish the package so consumers need not compile its source
+18. [#262](https://github.com/studiobimo/backstage/issues/262) build canonical and sitemap URLs from a configured site URL
+
 ## M2: Package
 
 Backstage becomes something a client project installs, rather than code it copies.
