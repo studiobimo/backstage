@@ -94,7 +94,7 @@ These are the names the worker's check reads. Leave `DEV_AUTH` out of `wrangler.
 
 ## What the worker checks
 
-On every `/api/*` request, `apps/admin/worker/auth.ts` does this:
+On every `/api/*` request, `packages/backstage/src/admin/auth.ts` does this:
 
 - read the token from the `Cf-Access-Jwt-Assertion` header. Not the `CF_Authorization` cookie,
   which Cloudflare says is not guaranteed to be passed

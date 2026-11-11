@@ -358,7 +358,7 @@ template's managed blocks, so they are this repo's to edit.
   from `@studiobimo/backstage`. Each entry carries `code`, `status` and `message`. The admin
   Worker answers with `respondWithError` and the site Worker with its own `respondWithError`
   in `apps/site/worker/respond.ts`. Never write `c.text('Not found', 404)` or a bare `404`.
-- **Success statuses:** `RESPONSE_STATUS` in `apps/admin/worker/respond.ts`.
+- **Success statuses:** `RESPONSE_STATUS` in `packages/backstage/src/admin/respond.ts`.
 - **Other shared values:** `MEDIA`, `OBSERVABILITY` and `RICH_TEXT` in `@studiobimo/backstage`.
   A value that two places need goes there, grouped as `DOMAIN.group.name`.
 
