@@ -1,5 +1,6 @@
 import {
   API_ERROR,
+  MEDIA,
   BLOCK_PREVIEW,
   DEFAULT_LOCALE,
   LOCALES,
@@ -10,6 +11,8 @@ import {
 import { Hono } from 'hono'
 
 import { components } from '../src/blocks/component-map'
+import photo from '../src/blocks/preview-photo.svg?raw'
+import { PREVIEW_PHOTO } from '../src/blocks/sample-support'
 import { PREVIEW_MEDIA, PREVIEW_SAMPLES } from '../src/blocks/samples'
 import { renderPreview } from './page'
 import { respondWithError } from './respond'
@@ -44,9 +47,11 @@ const snapshotOfSample = (name: string, version: number, locale: Locale): Snapsh
   locale
 })
 
-export const previewRoutes = new Hono<{ Bindings: Env }>().get(
-  `${BLOCK_PREVIEW.path}/:name`,
-  (c) => {
+export const previewRoutes = new Hono<{ Bindings: Env }>()
+  .get(`/${PREVIEW_PHOTO.path}`, (c) =>
+    c.body(photo, 200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': MEDIA.cacheControl })
+  )
+  .get(`${BLOCK_PREVIEW.path}/:name`, (c) => {
     const name = c.req.param('name')
     const block = PREVIEW_SAMPLES[name] === undefined ? undefined : components.registry.get(name)
     if (!block) return respondWithError(c, API_ERROR.notFound, PREVIEW_HEADERS)
@@ -55,5 +60,4 @@ export const previewRoutes = new Hono<{ Bindings: Env }>().get(
       { components, snapshot: snapshotOfSample(name, block.version, locale) },
       PREVIEW_HEADERS
     )
-  }
-)
+  })

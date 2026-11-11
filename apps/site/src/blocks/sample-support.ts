@@ -1,10 +1,10 @@
 import type { RichTextDoc } from '@studiobimo/backstage'
 
-const PHOTO_ID = 'preview-photo'
+export const PREVIEW_PHOTO = { id: 'preview-photo', path: 'block-previews/photo.svg' } as const
 
 export const PREVIEW_MEDIA = {
-  [PHOTO_ID]: {
-    key: 'block-previews/photo.svg',
+  [PREVIEW_PHOTO.id]: {
+    key: PREVIEW_PHOTO.path,
     contentType: 'image/svg+xml',
     width: 1200,
     height: 800,
@@ -21,7 +21,7 @@ export const words = (en: string, es: string) => ({ en, es })
 
 const copy = (en: string, es: string) => ({ en: paragraph(en), es: paragraph(es) })
 
-export const photo = { id: PHOTO_ID, alt: '' }
+export const photo = { id: PREVIEW_PHOTO.id, alt: '' }
 export const cta = { href: '/contact', label: 'Contact' }
 
 export const INTRO = copy(
