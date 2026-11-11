@@ -1,4 +1,4 @@
-import type { Locale } from '@studiobimo/backstage'
+import type { Locale } from '../pages.ts'
 
 export const LOCALE_NAME: Record<Locale, string> = { en: 'English', es: 'Español' }
 
