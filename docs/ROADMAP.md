@@ -119,7 +119,8 @@ Backstage becomes something a client project installs, rather than code it copie
 ### Exit criteria
 
 - `@studiobimo/backstage` is published to GitHub Packages by the reusable workflow in `studiobimo/.github`
-- `apps/admin` and `apps/site` consume the published package, not the workspace source
+- `apps/site` consumes the published package, not the workspace source. `apps/admin` stays on the
+  workspace source, because the package ships its build as the prebuilt admin SPA
 - The `backstage` profile is released in `studiobimo/project-template`
 - On a test Cloudflare account, a fresh repo with the profile and a token reaches a working admin
   and site by following the README alone

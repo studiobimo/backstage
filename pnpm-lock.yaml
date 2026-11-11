@@ -105,8 +105,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       '@studiobimo/backstage':
-        specifier: ^0.1.0
-        version: 0.1.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: workspace:*
+        version: link:../../packages/backstage
       '@tanstack/react-form':
         specifier: ^1.33.5
         version: 1.33.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
