@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 import './block-preview.css'
-import { PREVIEW_MEDIA, PREVIEW_SAMPLES } from './samples'
+import { PREVIEW_MEDIA, PREVIEW_SAMPLES } from 'backstage-site/samples'
 
 const FRAME_WIDTH = { phone: 'max-w-90', tablet: 'max-w-3xl', desktop: 'max-w-none' } as const
 

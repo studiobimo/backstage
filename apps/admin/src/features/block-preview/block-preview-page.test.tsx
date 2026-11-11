@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
 import { BlockPreviewPage } from './block-preview-page'
-import { PREVIEW_SAMPLES } from './samples'
+import { PREVIEW_SAMPLES } from 'backstage-site/samples'
 
 const BLOCK_NAMES = Object.keys(PREVIEW_SAMPLES)
 
