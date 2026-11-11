@@ -19,6 +19,7 @@ make -C .devtools check      # everything CI runs
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
 
-## License
+## Licence
 
-[MIT](LICENSE).
+Proprietary. This is a private repository and a private package
+([ADR-0006](docs/adr/0006-private-package.md)); see [LICENSE](LICENSE).

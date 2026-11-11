@@ -1,6 +1,7 @@
 {
   "name": "@studiobimo/backstage",
   "version": "0.0.0",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "sideEffects": false,
