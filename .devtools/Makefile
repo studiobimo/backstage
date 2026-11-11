@@ -23,3 +23,19 @@ BUNDLE_TOTAL_KIB@apps/site := 185
 .PHONY: e2e
 e2e: build ## Playwright: the publish loop through both Workers, and an axe scan of the page editor
 	cd $(ROOT) && $(MISE) exec -- pnpm exec playwright test -c e2e/playwright.config.ts
+
+LINKED_FILES := package.json pnpm-lock.yaml pnpm-workspace.yaml
+
+.PHONY: link-local
+link-local: ## Point the site at packages/backstage's source (edits LINKED_FILES; unlink-local restores them)
+	cd $(ROOT) && $(MISE) exec -- pnpm link ./packages/backstage
+
+.PHONY: unlink-local
+unlink-local: ## Restore LINKED_FILES from HEAD and install the published package again
+	cd $(ROOT) && git checkout HEAD -- $(LINKED_FILES) && $(MISE) exec -- pnpm install --frozen-lockfile
+
+.PHONY: no-linked-package
+no-linked-package: ## Fail while link-local is in effect
+	cd $(ROOT) && .devtools/scripts/no-linked-package.sh
+
+ci: no-linked-package

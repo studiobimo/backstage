@@ -83,6 +83,19 @@ breaking commits. A change to a managed file titled `chore`, `docs` or `ci` merg
 `sync`, so title it `fix` or `feat`.
 <!-- <<< template:workflow -->
 
+## Testing a package change in the site
+
+`apps/site` installs the published `@studiobimo/backstage`, as a client site does, so an edit under
+`packages/backstage` does not reach it until a release. `apps/admin` stays on the workspace source,
+because the package ships its build as the prebuilt admin SPA. To try a change in the site first:
+
+```sh
+make -C .devtools link-local     # the site now uses packages/backstage's source
+make -C .devtools unlink-local   # before committing: restores package.json, pnpm-lock.yaml, pnpm-workspace.yaml
+```
+
+`unlink-local` restores those three files from `HEAD`, so commit any real change to them first. While the link is in effect, the pre-commit hook and `make -C .devtools ci` fail, so a linked lockfile cannot be merged.
+
 ## Planning: milestones and issues
 
 Each kind of information lives in exactly one place, so nothing has to be kept in step by hand.

@@ -71,3 +71,6 @@ pre-commit:
     - name: sqlfluff
       glob: '*.sql'
       run: mise exec -- sqlfluff lint {staged_files}
+
+    - name: no-linked-package
+      run: make --no-print-directory -C .devtools no-linked-package
