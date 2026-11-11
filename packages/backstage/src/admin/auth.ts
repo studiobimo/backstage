@@ -1,8 +1,8 @@
-import { API_ERROR, logEvent, type Editor } from '@studiobimo/backstage'
+import { API_ERROR, logEvent, type Editor } from '../index.ts'
 import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
 
-import { respondWithError } from './respond'
+import { respondWithError } from './respond.ts'
 
 const ACCESS = {
   header: 'Cf-Access-Jwt-Assertion',

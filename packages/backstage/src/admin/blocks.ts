@@ -1,4 +1,4 @@
-import { describeBlocks, type Registry } from '@studiobimo/backstage'
+import { describeBlocks, type Registry } from '../index.ts'
 import { Hono } from 'hono'
 
 export const blocksRoutes = (registry: Registry) =>

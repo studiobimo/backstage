@@ -1,12 +1,7 @@
-import {
-  API_ERROR,
-  readSiteSettings,
-  siteSettingsSchema,
-  writeSiteSettings
-} from '@studiobimo/backstage'
+import { API_ERROR, readSiteSettings, siteSettingsSchema, writeSiteSettings } from '../index.ts'
 import { Hono } from 'hono'
 
-import { respondWithError } from './respond'
+import { respondWithError } from './respond.ts'
 
 export const settingsRoutes = () =>
   new Hono<{ Bindings: Env }>()

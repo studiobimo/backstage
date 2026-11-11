@@ -8,10 +8,10 @@ import {
   writeSiteBlock,
   type Registry,
   type SiteBlock
-} from '@studiobimo/backstage'
+} from '../index.ts'
 import { Hono } from 'hono'
 
-import { respondWithError } from './respond'
+import { respondWithError } from './respond.ts'
 
 const currentOf = (registry: Registry, stored: SiteBlock | undefined): SiteBlock | null => {
   const block = stored && registry.get(stored.block)

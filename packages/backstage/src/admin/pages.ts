@@ -25,13 +25,13 @@ import {
   type MissingByLocale,
   type PageWrite,
   type VersionedWrite
-} from '@studiobimo/backstage'
+} from '../index.ts'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 
-import type { AccessEnv } from './auth'
-import { RESPONSE_STATUS, respondWithError } from './respond'
-import { indexUnpublished, removeSnapshots } from './snapshots'
+import type { AccessEnv } from './auth.ts'
+import { RESPONSE_STATUS, respondWithError } from './respond.ts'
+import { indexUnpublished, removeSnapshots } from './snapshots.ts'
 
 type PagesContext = Context<AccessEnv>
 

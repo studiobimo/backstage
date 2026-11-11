@@ -10,7 +10,7 @@ import {
   upsertIntoIndex,
   type PublishedIndex,
   type Snapshot
-} from '@studiobimo/backstage'
+} from '../index.ts'
 
 export const writeSnapshots = (kv: KVNamespace, snapshots: readonly Snapshot[]) =>
   Promise.all(snapshotRecords(snapshots).map(({ key, value }) => kv.put(key, value)))

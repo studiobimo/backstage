@@ -140,9 +140,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      hono:
-        specifier: ^4.13.14
-        version: 4.13.14
       i18next:
         specifier: ^26.5.12
         version: 26.5.12(typescript@6.0.3)

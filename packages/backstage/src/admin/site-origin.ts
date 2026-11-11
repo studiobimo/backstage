@@ -1,8 +1,8 @@
-import { API_ERROR } from '@studiobimo/backstage'
+import { API_ERROR } from '../index.ts'
 import { Hono } from 'hono'
 
-import { respondWithError } from './respond'
-import { siteOriginOf } from './spa'
+import { respondWithError } from './respond.ts'
+import { siteOriginOf } from './spa.ts'
 
 export const siteOriginRoutes = () =>
   new Hono<{ Bindings: Env }>().get('/', (c) => {
