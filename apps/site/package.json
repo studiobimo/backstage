@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     "./registry": "./src/blocks/registry.ts",
-    "./components": "./src/blocks/component-map.ts"
+    "./components": "./src/blocks/component-map.ts",
+    "./samples": "./src/blocks/samples.ts"
   },
   "scripts": {
     "dev": "vite",
