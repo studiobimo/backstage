@@ -13,8 +13,8 @@ export const platform = await getPlatformProxy<Env>({ persist: false })
 
 export const kv = platform.env.SITE!
 
-export const get = (path: string, executionCtx?: ExecutionContext) =>
-  app.request(path, {}, platform.env, executionCtx)
+export const get = (path: string, executionCtx?: ExecutionContext, env: Env = platform.env) =>
+  app.request(path, {}, env, executionCtx)
 
 export const richParagraph = (text: string) => ({
   type: 'doc',

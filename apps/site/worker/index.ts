@@ -7,13 +7,14 @@ import {
   respondHealthy
 } from '@studiobimo/backstage'
 import { Hono, type Context } from 'hono'
-import { secureHeaders } from 'hono/secure-headers'
 
 import { components } from '../src/blocks/component-map'
 import { EDGE_CACHE, edgeCache } from './cache'
 import { renderPage } from './page'
+import { previewRoutes } from './preview'
 import { respondWithError } from './respond'
 import { parseRoute } from './routing'
+import { securityHeaders } from './security'
 import { findPublished, findTranslations } from './store'
 import { seoRoutes } from './seo'
 import { stylesheetRoutes } from './stylesheet'
@@ -21,31 +22,12 @@ import { stylesheetRoutes } from './stylesheet'
 const app = new Hono<{ Bindings: Env }>()
 
 app.use(...observe)
-app.use(
-  secureHeaders({
-    contentSecurityPolicy: {
-      defaultSrc: ["'none'"],
-      styleSrc: ["'self'"],
-      imgSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      baseUri: ["'none'"],
-      formAction: ["'self'"],
-      frameAncestors: ["'none'"]
-    },
-    xFrameOptions: 'DENY',
-    permissionsPolicy: {
-      camera: [],
-      geolocation: [],
-      microphone: [],
-      payment: [],
-      usb: []
-    }
-  })
-)
+app.use(securityHeaders)
 
 app.get(OBSERVABILITY.health.path, respondHealthy)
 app.route('/', seoRoutes)
 app.route('/', stylesheetRoutes)
+app.route('/', previewRoutes)
 
 app.get('/media/*', async (c) => {
   const object = await c.env.MEDIA!.get(c.req.path.slice(1))

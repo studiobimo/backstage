@@ -1,4 +1,5 @@
 export {
+  BLOCK_PREVIEW,
   defineBlock,
   defineLayout,
   defineRegistry,

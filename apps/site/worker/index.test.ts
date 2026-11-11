@@ -69,7 +69,7 @@ describe('site worker', () => {
   })
 
   it('has no database binding and no admin secret', () => {
-    expect(Object.keys(platform.env).sort()).toEqual(['MEDIA', 'SITE'])
+    expect(Object.keys(platform.env).sort()).toEqual(['ADMIN_ORIGIN', 'MEDIA', 'SITE'])
   })
 
   describe('search engine files', () => {
