@@ -16,6 +16,7 @@ import { respondWithError } from './respond'
 import { parseRoute } from './routing'
 import { findPublished, findTranslations } from './store'
 import { seoRoutes } from './seo'
+import { stylesheetRoutes } from './stylesheet'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -44,6 +45,7 @@ app.use(
 
 app.get(OBSERVABILITY.health.path, respondHealthy)
 app.route('/', seoRoutes)
+app.route('/', stylesheetRoutes)
 
 app.get('/media/*', async (c) => {
   const object = await c.env.MEDIA!.get(c.req.path.slice(1))
