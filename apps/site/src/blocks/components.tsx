@@ -1,22 +1,15 @@
+import { type LayoutProps, type link, type RichTextDoc, SLOT } from '@studiobimo/backstage'
+import { RichText, useImage, useLocalized } from '@studiobimo/backstage/render'
 import type { z } from 'zod'
 
-import { defineComponents, type LayoutProps } from '../components.ts'
-import { registry } from './registry.ts'
-import type { link } from '../fields.ts'
-import { useImage, useLocalized } from '../render/context.ts'
-import { RichText } from '../render/rich-text.tsx'
-import { SLOT } from '../blocks.ts'
-import type { RichTextDoc } from '../rich-text.ts'
-import type {
-  oneColumnSectionSchema,
-  oneColumnTextSchema,
-  overlayHeroSchema,
-  siteFooterSchema,
-  siteHeaderSchema,
-  splitHeroSchema,
-  twoColumnSectionSchema,
-  twoColumnTextSchema
-} from './schemas.ts'
+import type { oneColumnSectionSchema } from './one-column-section/schema.ts'
+import type { oneColumnTextSchema } from './one-column-text/schema.ts'
+import type { overlayHeroSchema } from './overlay-hero/schema.ts'
+import type { siteFooterSchema } from './site-footer/schema.ts'
+import type { siteHeaderSchema } from './site-header/schema.ts'
+import type { splitHeroSchema } from './split-hero/schema.ts'
+import type { twoColumnSectionSchema } from './two-column-section/schema.ts'
+import type { twoColumnTextSchema } from './two-column-text/schema.ts'
 
 type LinkValue = z.output<ReturnType<typeof link>>
 type Translated<T> = Partial<Record<string, T>>
@@ -243,17 +236,3 @@ export function MinimalLayout({ slots, children }: LayoutProps) {
 export function BareLayout({ children }: LayoutProps) {
   return <main>{children}</main>
 }
-
-export const components = defineComponents(registry, {
-  blocks: {
-    'overlay-hero': OverlayHero,
-    'split-hero': SplitHero,
-    'one-column-section': OneColumnSection,
-    'one-column-text': OneColumnText,
-    'two-column-section': TwoColumnSection,
-    'two-column-text': TwoColumnText,
-    'site-header': SiteHeader,
-    'site-footer': SiteFooter
-  },
-  layouts: { default: DefaultLayout, minimal: MinimalLayout, bare: BareLayout }
-})

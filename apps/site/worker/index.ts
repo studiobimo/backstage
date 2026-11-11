@@ -6,10 +6,10 @@ import {
   reportError,
   respondHealthy
 } from '@studiobimo/backstage'
-import { components } from '@studiobimo/backstage/example/components'
 import { Hono, type Context } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
+import { components } from '../src/blocks/component-map'
 import { EDGE_CACHE, edgeCache } from './cache'
 import { renderPage } from './page'
 import { respondWithError } from './respond'

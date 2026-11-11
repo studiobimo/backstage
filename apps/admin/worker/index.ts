@@ -5,7 +5,7 @@ import {
   reportError,
   respondHealthy
 } from '@studiobimo/backstage'
-import { registry } from '@studiobimo/backstage/example'
+import { registry } from 'backstage-site/registry'
 import { Hono } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
