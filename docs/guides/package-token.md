@@ -21,25 +21,38 @@ in each place the install runs, and how the token is rotated.
 
 ## `.npmrc`, committed
 
-The file holds the variable's name and never its value, so it is safe to commit:
+The file maps the scope to GitHub Packages and holds no credential:
 
 ```ini
 @studiobimo:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${BACKSTAGE_PACKAGE_TOKEN}
 ```
 
-pnpm reads `.npmrc` from the project root and expands `${...}` from the environment. Only
-`@studiobimo/*` goes to GitHub Packages; every other package still comes from npm. `pnpm install`
-fails with a 401 when the variable is unset, which is the intended behaviour for a stranger.
+pnpm 12 ignores a credential in a project `.npmrc`, even one that is an `${...}` reference, so the
+token goes in the environment instead. Only `@studiobimo/*` goes to GitHub Packages; every other
+package still comes from npm. `pnpm install` fails with a 401 when the variable is unset, which is
+the intended behaviour for a stranger.
+
+The registry URL needs its trailing slash. Without it the metadata request is signed and the
+tarball download is not.
+
+```sh
+export pnpm_config__auth='{"https://npm.pkg.github.com/":{"@":{"authToken":"<token>"}}}'
+```
+
+Because the whole value is one variable, a client project sets `BACKSTAGE_PACKAGE_TOKEN` and builds
+this JSON from it in the same place it sets the variable.
+
+pnpm's cooldown (`minimumReleaseAge`) rejects a version younger than a week, and that includes this
+package's own release, so `pnpm-workspace.yaml` lists `@studiobimo/*` under `minimumReleaseAgeExclude`.
 
 ## Where the value comes from
 
-| Where          | How the token gets there                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Locally        | `export BACKSTAGE_PACKAGE_TOKEN=…` in the shell profile, or in mise's `[env]` read from a gitignored file          |
-| GitHub Actions | A repository secret named `BACKSTAGE_PACKAGE_TOKEN`, passed to the install step's `env:`. Never `secrets: inherit` |
-| Workers Builds | A **build variable** named `BACKSTAGE_PACKAGE_TOKEN`, set to a secret, under Settings, Build, Variables            |
-| Dependabot     | A Dependabot secret of the same name, and a `registries` entry in `dependabot.yml` that reads it                   |
+| Where          | How the token gets there                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Locally        | `pnpm_config__auth` in the shell profile, or in mise's `[env]` read from a gitignored file                                      |
+| GitHub Actions | A repository secret named `BACKSTAGE_PACKAGE_TOKEN`, put into `pnpm_config__auth` in the job's `env:`. Never `secrets: inherit` |
+| Workers Builds | A **build variable** named `BACKSTAGE_PACKAGE_TOKEN`, set to a secret, under Settings, Build, Variables                         |
+| Dependabot     | A Dependabot secret of the same name, and a `registries` entry in `dependabot.yml` that reads it                                |
 
 Workers Builds runs `pnpm install` before the build command, with the build variables in its
 environment, so `.npmrc` needs nothing else. The variable is a build variable, not a Worker
