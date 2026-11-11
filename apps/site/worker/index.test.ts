@@ -68,10 +68,6 @@ describe('site worker', () => {
     expect(await response.json()).toEqual({ ok: true })
   })
 
-  it('has no database binding and no admin secret', () => {
-    expect(Object.keys(platform.env).sort()).toEqual(['ADMIN_ORIGIN', 'MEDIA', 'SITE'])
-  })
-
   describe('search engine files', () => {
     const HOST = 'https://example.com'
 

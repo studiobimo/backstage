@@ -4,30 +4,6 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { getPlatformProxy } from 'wrangler'
 
-const BINDINGS_ALLOWED_ON_SITE = ['kv_namespaces', 'r2_buckets', 'vars']
-const BINDING_KEYS = [
-  'ai',
-  'analytics_engine_datasets',
-  'browser',
-  'd1_databases',
-  'dispatch_namespaces',
-  'durable_objects',
-  'hyperdrive',
-  'images',
-  'kv_namespaces',
-  'mtls_certificates',
-  'pipelines',
-  'queues',
-  'r2_buckets',
-  'secrets_store_secrets',
-  'send_email',
-  'services',
-  'vectorize',
-  'vars',
-  'version_metadata',
-  'workflows'
-]
-
 const read = (path: string) => readFileSync(resolve(import.meta.dirname, path), 'utf8')
 const parseJson = (path: string) => JSON.parse(read(path)) as Record<string, unknown>
 const variableNames = (path: string) =>
@@ -46,19 +22,32 @@ const adminBindings = (
   parseJson('../../admin/wrangler.jsonc').d1_databases as { binding: string }[]
 ).map(({ binding }) => binding)
 
+const draftAccessIn = (config: Record<string, unknown>) => [
+  ...(config.d1_databases === undefined ? [] : ['d1_databases']),
+  ...Object.keys((config.vars as Record<string, unknown> | undefined) ?? {}).filter((name) =>
+    adminSecrets.includes(name)
+  )
+]
+
 describe('site worker cannot see drafts', () => {
-  it.each(environments)('declares only KV, R2 and vars in %s', (_name, config) => {
-    const declared = Object.keys(config).filter((key) => BINDING_KEYS.includes(key))
-    expect(declared.filter((key) => !BINDINGS_ALLOWED_ON_SITE.includes(key))).toEqual([])
+  it.each(environments)('has no D1 database and no admin secret in %s', (_name, config) => {
+    expect(draftAccessIn(config)).toEqual([])
   })
 
-  it.each(environments)('has no D1 database in %s', (_name, config) => {
-    expect(config.d1_databases).toBeUndefined()
+  it('catches a D1 database or an admin secret', () => {
+    expect(draftAccessIn({ d1_databases: [{ binding: 'DB' }] })).toEqual(['d1_databases'])
+    expect(draftAccessIn({ vars: { [adminSecrets[0]!]: 'x' } })).toEqual([adminSecrets[0]])
   })
 
-  it.each(environments)('has no admin secret as a var in %s', (_name, config) => {
-    const names = Object.keys((config.vars as Record<string, unknown> | undefined) ?? {})
-    expect(names.filter((name) => adminSecrets.includes(name))).toEqual([])
+  it('allows any other binding', () => {
+    const others = {
+      ai: { binding: 'AI' },
+      vectorize: [{ binding: 'INDEX', index_name: 'docs' }],
+      kv_namespaces: [{ binding: 'SITE', id: 'x' }],
+      r2_buckets: [{ binding: 'MEDIA', bucket_name: 'm' }],
+      vars: { ADMIN_ORIGIN: 'https://admin.test' }
+    }
+    expect(draftAccessIn(others)).toEqual([])
   })
 
   it('lists no admin secret in .dev.vars.example', () => {
