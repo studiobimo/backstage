@@ -90,9 +90,7 @@
       "indexes": {
         "media_r2_key_unique": {
           "name": "media_r2_key_unique",
-          "columns": [
-            "r2_key"
-          ],
+          "columns": ["r2_key"],
           "isUnique": true
         }
       },
@@ -101,12 +99,8 @@
           "name": "media_uploaded_by_users_id_fk",
           "tableFrom": "media",
           "tableTo": "users",
-          "columnsFrom": [
-            "uploaded_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -165,10 +159,7 @@
       "indexes": {
         "page_blocks_page": {
           "name": "page_blocks_page",
-          "columns": [
-            "page_id",
-            "position"
-          ],
+          "columns": ["page_id", "position"],
           "isUnique": false
         }
       },
@@ -177,12 +168,8 @@
           "name": "page_blocks_page_id_pages_id_fk",
           "tableFrom": "page_blocks",
           "tableTo": "pages",
-          "columnsFrom": [
-            "page_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["page_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -242,18 +229,12 @@
       "indexes": {
         "page_locales_pk": {
           "name": "page_locales_pk",
-          "columns": [
-            "page_id",
-            "locale"
-          ],
+          "columns": ["page_id", "locale"],
           "isUnique": true
         },
         "page_locales_slug": {
           "name": "page_locales_slug",
-          "columns": [
-            "locale",
-            "slug"
-          ],
+          "columns": ["locale", "slug"],
           "isUnique": true
         }
       },
@@ -262,12 +243,8 @@
           "name": "page_locales_page_id_pages_id_fk",
           "tableFrom": "page_locales",
           "tableTo": "pages",
-          "columnsFrom": [
-            "page_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["page_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -275,12 +252,8 @@
           "name": "page_locales_social_image_id_media_id_fk",
           "tableFrom": "page_locales",
           "tableTo": "media",
-          "columnsFrom": [
-            "social_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["social_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -357,12 +330,8 @@
           "name": "pages_updated_by_users_id_fk",
           "tableFrom": "pages",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -370,12 +339,8 @@
           "name": "pages_published_by_users_id_fk",
           "tableFrom": "pages",
           "tableTo": "users",
-          "columnsFrom": [
-            "published_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["published_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -505,9 +470,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
