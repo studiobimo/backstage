@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 import { adminUrl, E2E, siteUrl } from './ports'
 
+const PHONE_VIEWPORT = { width: 360, height: 740 }
+
 const wranglerDev = (app: string, worker: string, port: number, extra = '') =>
   `pnpm exec wrangler dev --config apps/${app}/dist/${worker}/wrangler.json --port ${port} ` +
   `--inspector-port ${port + 100} --persist-to ${E2E.stateDir} ${extra}`
@@ -18,7 +20,13 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: adminUrl, trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'phone',
+      use: { ...devices['Pixel 5'], viewport: PHONE_VIEWPORT, hasTouch: true, isMobile: true }
+    }
+  ],
   webServer: [
     {
       command: `${migrate} && ${wranglerDev('admin', 'backstage_admin', E2E.admin.port, '--var DEV_AUTH:true')}`,
