@@ -2,6 +2,8 @@ import type { link, RichTextDoc } from '@studiobimo/backstage'
 import { RichText, useImage, useLocalized } from '@studiobimo/backstage/render'
 import type { z } from 'zod'
 
+import { Button } from '@/components/ui/button'
+
 export type LinkValue = z.output<ReturnType<typeof link>>
 export type Translated<T> = Partial<Record<string, T>>
 
@@ -27,7 +29,17 @@ export function Heading({ value }: { value: Translated<string> | undefined }) {
 }
 
 export function Cta({ value }: { value: LinkValue | undefined }) {
-  return value?.href ? <a href={value.href}>{value.label || value.href}</a> : null
+  return value?.href ? (
+    <Button
+      render={({ children, ...props }) => (
+        <a {...props} href={value.href}>
+          {children}
+        </a>
+      )}
+    >
+      {value.label || value.href}
+    </Button>
+  ) : null
 }
 
 export function Body({ value }: { value: Translated<RichTextDoc> | undefined }) {

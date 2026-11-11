@@ -1,40 +1,58 @@
 @import 'tailwindcss';
 
-:root {
-  color-scheme: light dark;
-  --background: #ffffff;
-  --foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #52525b;
-  --inverse: #18181b;
-  --inverse-foreground: #fafafa;
-  --border: #e4e4e7;
-  --link: #1d4ed8;
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@theme {
+  --radius-lg: 0.625rem;
+  --radius-md: calc(0.625rem - 2px);
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --color-accent: --alpha(var(--color-black) / 4%);
+  --color-accent-foreground: var(--color-neutral-800);
+  --color-background: var(--color-white);
+  --color-border: --alpha(var(--color-black) / 8%);
+  --color-card: var(--color-white);
+  --color-card-foreground: var(--color-neutral-800);
+  --color-destructive: var(--color-red-500);
+  --color-destructive-foreground: var(--color-red-700);
+  --color-foreground: var(--color-neutral-800);
+  --color-input: --alpha(var(--color-black) / 10%);
+  --color-muted: --alpha(var(--color-black) / 4%);
+  --color-muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
+  --color-popover: var(--color-white);
+  --color-popover-foreground: var(--color-neutral-800);
+  --color-primary: var(--color-neutral-800);
+  --color-primary-foreground: var(--color-neutral-50);
+  --color-ring: var(--color-neutral-400);
+  --color-secondary: --alpha(var(--color-black) / 4%);
+  --color-secondary-foreground: var(--color-neutral-800);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --muted: #18181b;
-    --muted-foreground: #a1a1aa;
-    --inverse: #fafafa;
-    --inverse-foreground: #18181b;
-    --border: #27272a;
-    --link: #93c5fd;
+    --color-accent: --alpha(var(--color-white) / 4%);
+    --color-accent-foreground: var(--color-neutral-100);
+    --color-background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
+    --color-border: --alpha(var(--color-white) / 6%);
+    --color-card: color-mix(in srgb, var(--color-background) 98%, var(--color-white));
+    --color-card-foreground: var(--color-neutral-100);
+    --color-destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
+    --color-destructive-foreground: var(--color-red-400);
+    --color-foreground: var(--color-neutral-100);
+    --color-input: --alpha(var(--color-white) / 8%);
+    --color-muted: --alpha(var(--color-white) / 4%);
+    --color-muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
+    --color-popover: color-mix(in srgb, var(--color-background) 98%, var(--color-white));
+    --color-popover-foreground: var(--color-neutral-100);
+    --color-primary: var(--color-neutral-100);
+    --color-primary-foreground: var(--color-neutral-800);
+    --color-ring: var(--color-neutral-500);
+    --color-secondary: --alpha(var(--color-white) / 4%);
+    --color-secondary-foreground: var(--color-neutral-100);
   }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-inverse: var(--inverse);
-  --color-inverse-foreground: var(--inverse-foreground);
-  --color-border: var(--border);
-  --color-link: var(--link);
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
+:root {
+  color-scheme: light dark;
 }
 
 @layer base {
@@ -42,8 +60,8 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  a {
-    @apply text-link underline underline-offset-4;
+  a:not([data-slot='button']) {
+    @apply text-foreground underline underline-offset-4;
   }
 
   h1 {
@@ -115,8 +133,12 @@
   }
 
   [data-block='overlay-hero'][data-tint='dark'],
-  [data-block='overlay-hero'][data-tint='dark'] a {
+  [data-block='overlay-hero'][data-tint='dark'] a:not([data-slot='button']) {
     @apply text-white;
+  }
+
+  [data-block='overlay-hero'][data-tint='dark'] [data-slot='button'] {
+    @apply border-white! bg-white! text-black! hover:bg-white/90!;
   }
 
   [data-block='overlay-hero'][data-tint='light'] {
@@ -132,7 +154,7 @@
   }
 
   [data-block='split-hero'][data-theme='dark'] {
-    @apply bg-inverse text-inverse-foreground;
+    @apply bg-foreground text-background;
   }
 
   [data-block='split-hero'][data-image-side='start'] > img {
@@ -160,7 +182,7 @@
   }
 
   [data-background='dark'] {
-    @apply bg-inverse text-inverse-foreground;
+    @apply bg-foreground text-background;
   }
 
   [data-block='one-column-section'] > *,
