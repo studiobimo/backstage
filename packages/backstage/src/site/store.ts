@@ -1,29 +1,27 @@
-import {
-  LOCALES,
-  routeKey,
-  snapshotKey,
-  snapshotSchema,
-  type Locale,
-  type Snapshot
-} from '@studiobimo/backstage'
+import { LOCALES, type Locale } from '../pages.ts'
+import { routeKey, snapshotKey, snapshotSchema, type Snapshot } from '../publishing.ts'
+import type { Route } from './routing.ts'
 
-import type { Route } from './routing'
+export interface KvReader {
+  get(key: string): Promise<string | null>
+  get(key: string, options: { type: 'json' }): Promise<unknown>
+}
 
-async function readSnapshot(kv: KVNamespace, pageId: string, locale: Locale) {
+async function readSnapshot(kv: KvReader, pageId: string, locale: Locale) {
   const parsed = snapshotSchema.safeParse(
     await kv.get(snapshotKey(pageId, locale), { type: 'json' })
   )
   return parsed.success ? parsed.data : null
 }
 
-export async function findPublished(kv: KVNamespace, { locale, slug }: Route) {
+export async function findPublished(kv: KvReader, { locale, slug }: Route) {
   const pageId = await kv.get(routeKey(locale, slug))
   if (!pageId) return null
   const snapshot = await readSnapshot(kv, pageId, locale)
   return snapshot?.slug === slug ? snapshot : null
 }
 
-export async function findTranslations(kv: KVNamespace, snapshot: Snapshot) {
+export async function findTranslations(kv: KvReader, snapshot: Snapshot) {
   const others = LOCALES.filter((locale) => locale !== snapshot.locale)
   const found = await Promise.all(others.map((locale) => readSnapshot(kv, snapshot.pageId, locale)))
   return found.filter((translation) => translation !== null)

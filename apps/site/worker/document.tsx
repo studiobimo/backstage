@@ -6,10 +6,9 @@ import {
   type Snapshot
 } from '@studiobimo/backstage'
 import { Blocks, RenderProvider } from '@studiobimo/backstage/render'
+import { LOCALE_NAME, pathOf, SWITCHER_LABEL } from '@studiobimo/backstage/site'
 import { createElement, type ReactNode } from 'react'
 
-import { LOCALE_NAME, SWITCHER_LABEL } from './locales'
-import { pathOf } from './routing'
 import { STYLESHEET } from './stylesheet'
 
 export interface PageProps {

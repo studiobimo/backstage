@@ -6,6 +6,7 @@ import {
   reportError,
   respondHealthy
 } from '@studiobimo/backstage'
+import { findPublished, findTranslations, routeOf } from '@studiobimo/backstage/site'
 import { Hono, type Context } from 'hono'
 
 import { components } from '../src/blocks/component-map'
@@ -13,9 +14,7 @@ import { EDGE_CACHE, edgeCache } from './cache'
 import { renderPage } from './page'
 import { previewRoutes } from './preview'
 import { respondWithError } from './respond'
-import { parseRoute } from './routing'
 import { securityHeaders } from './security'
-import { findPublished, findTranslations } from './store'
 import { seoRoutes } from './seo'
 import { stylesheetRoutes } from './stylesheet'
 
@@ -44,7 +43,7 @@ const respondNotFound = (c: Context) =>
   respondWithError(c, API_ERROR.notFound, { 'Cache-Control': EDGE_CACHE.control })
 
 app.get('*', edgeCache, async (c) => {
-  const route = parseRoute(c.req.path)
+  const route = routeOf(c.req.raw)
   const snapshot = route && (await findPublished(c.env.SITE!, route))
   if (!snapshot) return respondNotFound(c)
   return renderPage(

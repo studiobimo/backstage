@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, LOCALES, type Locale } from '@studiobimo/backstage'
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '../pages.ts'
 
 export interface Route {
   locale: Locale
@@ -15,6 +15,8 @@ export function parseRoute(path: string): Route | null {
   if (rest.length > MAX_SLUG_SEGMENTS) return null
   return { locale: prefix ?? DEFAULT_LOCALE, slug: rest[0] ?? null }
 }
+
+export const routeOf = (request: Request) => parseRoute(new URL(request.url).pathname)
 
 export const pathOf = ({ locale, slug }: Route) =>
   ['', ...(locale === DEFAULT_LOCALE ? [] : [locale]), ...(slug ? [slug] : [])].join('/') || '/'
