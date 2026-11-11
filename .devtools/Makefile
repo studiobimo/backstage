@@ -21,4 +21,4 @@ BUNDLE_TOTAL_KIB@apps/site := 185
 
 .PHONY: e2e
 e2e: build ## Playwright: the publish loop through both Workers, and an axe scan of the page editor
-	pnpm exec playwright test -c e2e/playwright.config.ts
+	cd $(ROOT) && $(MISE) exec -- pnpm exec playwright test -c e2e/playwright.config.ts

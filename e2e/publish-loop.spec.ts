@@ -9,7 +9,7 @@ const IMAGE_COLOR = [200, 60, 90] as const
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
-const run = Date.now().toString(36)
+const run = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
 const PAGE_UNDER_TEST = {
   slug: `e2e-${run}`,
   titles: { en: `E2E page ${run}`, es: `Página E2E ${run}` }
@@ -102,7 +102,7 @@ test('create, fill, upload, publish and see it on the site', async ({ page }) =>
   expect(violations).toEqual([])
 
   await page.getByRole('button', { name: 'Publish', exact: true }).click()
-  await expect(page.getByText('Published', { exact: true }).first()).toBeVisible()
+  await expect(page.getByText(/Live since/)).toBeVisible()
 
   await page.goto(`${siteUrl}/${PAGE_UNDER_TEST.slug}`)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(PAGE_UNDER_TEST.titles.en)
