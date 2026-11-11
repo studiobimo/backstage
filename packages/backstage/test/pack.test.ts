@@ -27,6 +27,13 @@ describe('the packed package', () => {
     expect(tar('-tzf').split('\n')).toContain('package/dist/client/index.html')
   })
 
+  it('exports the admin worker beside the SPA it serves', () => {
+    const files = tar('-tzf').split('\n')
+    const manifest = JSON.parse(tar('-xzOf', 'package/package.json'))
+    expect(manifest.exports['./admin']).toBe('./src/admin/index.ts')
+    expect(files).toContain('package/src/admin/index.ts')
+  })
+
   it("ships the SPA's _headers as apps/admin has it", () => {
     const shipped = tar('-xzOf', 'package/dist/client/_headers')
     expect(shipped).toBe(readFileSync(adminHeaders, 'utf8'))
