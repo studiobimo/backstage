@@ -94,7 +94,7 @@ make -C .devtools link-local     # the apps now use packages/backstage's source
 make -C .devtools unlink-local   # before committing: restores package.json, pnpm-lock.yaml, pnpm-workspace.yaml
 ```
 
-`unlink-local` restores those three files from `HEAD`, so commit any real change to them first.
+`unlink-local` restores those three files from `HEAD`, so commit any real change to them first. While the link is in effect, the pre-commit hook and `make -C .devtools ci` fail, so a linked lockfile cannot be merged.
 
 ## Planning: milestones and issues
 
