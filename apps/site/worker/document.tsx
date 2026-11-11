@@ -6,7 +6,7 @@ import {
   type Snapshot
 } from '@studiobimo/backstage'
 import { Blocks, RenderProvider } from '@studiobimo/backstage/render'
-import { createElement } from 'react'
+import { createElement, type ReactNode } from 'react'
 
 import { LOCALE_NAME, SWITCHER_LABEL } from './locales'
 import { pathOf } from './routing'
@@ -18,6 +18,8 @@ export interface PageProps {
   translations: readonly Snapshot[]
   origin: string
 }
+
+export type PreviewProps = Pick<PageProps, 'components' | 'snapshot'>
 
 function FallbackLayout({ children }: LayoutProps) {
   return <main>{children}</main>
@@ -74,6 +76,35 @@ function Head({ snapshot, translations, origin }: Omit<PageProps, 'components'>)
   )
 }
 
+function SnapshotProvider({ snapshot, children }: { snapshot: Snapshot; children: ReactNode }) {
+  return (
+    <RenderProvider
+      value={{ locale: snapshot.locale, defaultLocale: DEFAULT_LOCALE, media: snapshot.media }}
+    >
+      {children}
+    </RenderProvider>
+  )
+}
+
+export function PreviewDocument({ components, snapshot }: PreviewProps) {
+  return (
+    <html lang={snapshot.locale}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
+        <title>{snapshot.title}</title>
+        <link rel="stylesheet" href={STYLESHEET.path} />
+      </head>
+      <body>
+        <SnapshotProvider snapshot={snapshot}>
+          <Blocks components={components} snapshot={snapshot} />
+        </SnapshotProvider>
+      </body>
+    </html>
+  )
+}
+
 export function Document(props: PageProps) {
   const { components, snapshot, translations } = props
   const layoutComponent =
@@ -82,14 +113,12 @@ export function Document(props: PageProps) {
     <html lang={snapshot.locale}>
       <Head {...props} />
       <body>
-        <RenderProvider
-          value={{ locale: snapshot.locale, defaultLocale: DEFAULT_LOCALE, media: snapshot.media }}
-        >
+        <SnapshotProvider snapshot={snapshot}>
           {createElement(layoutComponent, {
             slots: {},
             children: <Blocks components={components} snapshot={snapshot} />
           })}
-        </RenderProvider>
+        </SnapshotProvider>
         <LanguageSwitcher snapshot={snapshot} translations={translations} />
       </body>
     </html>

@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
+export const BLOCK_PREVIEW = { path: '/__preview/blocks', localeParam: 'locale' } as const
+
 export interface BlockDefinition<S extends z.ZodType = z.ZodType, N extends string = string> {
   name: N
   version?: number
