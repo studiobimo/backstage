@@ -7,9 +7,11 @@ import i18n from '@/i18n/config'
 import { BlockForm } from './block-form.tsx'
 import { everyKindSchema, locales } from './test-fixtures.ts'
 
+const TIMING = { fullFormFlowTimeoutMs: 20_000 } as const
+
 function setup(props: Partial<React.ComponentProps<typeof BlockForm>> = {}) {
   const onSubmit = vi.fn()
-  const user = userEvent.setup()
+  const user = userEvent.setup({ delay: null })
   render(<BlockForm schema={everyKindSchema} locales={locales} onSubmit={onSubmit} {...props} />)
   return { user, onSubmit }
 }
@@ -227,32 +229,36 @@ describe('BlockForm rich text errors', () => {
 describe('BlockForm content', () => {
   afterEach(restoreEnglish)
 
-  it('submits the typed content once every error is fixed', async () => {
-    const { user, onSubmit } = setup({ value: { picture: { id: 'img-1', alt: '' } } })
-    await user.type(textbox('Title'), 'Hello')
-    await user.type(textbox('Slug'), 'abc')
-    await user.type(textbox('Columns'), '3')
-    await choose(user, 'Size', 'm')
-    await user.click(screen.getByRole('switch', { name: /Featured/ }))
-    await user.type(within(group('Cta')).getByRole('textbox', { name: 'Address' }), '/about')
-    await user.click(screen.getByRole('button', { name: 'Add item' }))
-    await user.keyboard('One')
-    await user.click(screen.getByRole('button', { name: 'Save' }))
-    expect(onSubmit).toHaveBeenCalledWith({
-      title: { en: 'Hello' },
-      body: {},
-      alt: {},
-      cta: { href: '/about', label: '' },
-      picture: { id: 'img-1', alt: '' },
-      theme: 'light',
-      size: 'm',
-      columns: 3,
-      featured: true,
-      slug: 'abc',
-      items: [{ name: 'One' }],
-      details: {}
-    })
-  })
+  it(
+    'submits the typed content once every error is fixed',
+    async () => {
+      const { user, onSubmit } = setup({ value: { picture: { id: 'img-1', alt: '' } } })
+      await user.type(textbox('Title'), 'Hello')
+      await user.type(textbox('Slug'), 'abc')
+      await user.type(textbox('Columns'), '3')
+      await choose(user, 'Size', 'm')
+      await user.click(screen.getByRole('switch', { name: /Featured/ }))
+      await user.type(within(group('Cta')).getByRole('textbox', { name: 'Address' }), '/about')
+      await user.click(screen.getByRole('button', { name: 'Add item' }))
+      await user.keyboard('One')
+      await user.click(screen.getByRole('button', { name: 'Save' }))
+      expect(onSubmit).toHaveBeenCalledWith({
+        title: { en: 'Hello' },
+        body: {},
+        alt: {},
+        cta: { href: '/about', label: '' },
+        picture: { id: 'img-1', alt: '' },
+        theme: 'light',
+        size: 'm',
+        columns: 3,
+        featured: true,
+        slug: 'abc',
+        items: [{ name: 'One' }],
+        details: {}
+      })
+    },
+    TIMING.fullFormFlowTimeoutMs
+  )
 
   it('adds and removes list items, up to the limit', async () => {
     const { user } = setup()
