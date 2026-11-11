@@ -1,18 +1,5 @@
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '../blocks.ts'
 import {
-  BareLayout,
-  DefaultLayout,
-  MinimalLayout,
-  OneColumnSection,
-  OneColumnText,
-  OverlayHero,
-  SiteFooter,
-  SiteHeader,
-  SplitHero,
-  TwoColumnSection,
-  TwoColumnText
-} from './components.tsx'
-import {
   oneColumnSectionSchema,
   oneColumnTextSchema,
   overlayHeroSchema,
@@ -31,7 +18,6 @@ const thumbnailOf = (name: string) => {
 const overlayHero = defineBlock({
   name: 'overlay-hero',
   schema: overlayHeroSchema,
-  component: OverlayHero,
   title: { en: 'Overlay Hero', es: 'Hero con fondo' },
   description: {
     en: 'A full-width background image with the headline and call to action on top, over an optional tint.',
@@ -43,7 +29,6 @@ const overlayHero = defineBlock({
 const splitHero = defineBlock({
   name: 'split-hero',
   schema: splitHeroSchema,
-  component: SplitHero,
   title: { en: 'Split Hero', es: 'Hero dividido' },
   description: {
     en: 'The headline and call to action on one half, a picture on the other.',
@@ -55,7 +40,6 @@ const splitHero = defineBlock({
 const oneColumnSection = defineBlock({
   name: 'one-column-section',
   schema: oneColumnSectionSchema,
-  component: OneColumnSection,
   title: { en: 'One-Column Section', es: 'Sección de una columna' },
   description: {
     en: 'A full-width section with its own background and spacing, holding a heading, text, a picture and a button.',
@@ -67,7 +51,6 @@ const oneColumnSection = defineBlock({
 const oneColumnText = defineBlock({
   name: 'one-column-text',
   schema: oneColumnTextSchema,
-  component: OneColumnText,
   title: { en: 'One-Column Text', es: 'Texto de una columna' },
   description: {
     en: 'A centered, narrow column of text for articles and announcements.',
@@ -79,7 +62,6 @@ const oneColumnText = defineBlock({
 const twoColumnSection = defineBlock({
   name: 'two-column-section',
   schema: twoColumnSectionSchema,
-  component: TwoColumnSection,
   title: { en: 'Two-Column Section', es: 'Sección de dos columnas' },
   description: {
     en: 'Two side-by-side columns, equal or 60/40, each with a heading, text, a picture and a button.',
@@ -91,7 +73,6 @@ const twoColumnSection = defineBlock({
 const twoColumnText = defineBlock({
   name: 'two-column-text',
   schema: twoColumnTextSchema,
-  component: TwoColumnText,
   title: { en: 'Two-Column Text', es: 'Texto a dos columnas' },
   description: {
     en: 'Two columns of text side by side, for comparing ideas or breaking up long copy.',
@@ -102,13 +83,11 @@ const twoColumnText = defineBlock({
 
 const siteHeader = defineBlock({
   name: 'site-header',
-  schema: siteHeaderSchema,
-  component: SiteHeader
+  schema: siteHeaderSchema
 })
 const siteFooter = defineBlock({
   name: 'site-footer',
-  schema: siteFooterSchema,
-  component: SiteFooter
+  schema: siteFooterSchema
 })
 
 export const registry = defineRegistry(
@@ -125,9 +104,9 @@ export const registry = defineRegistry(
   {
     slots: { [SLOT.header]: [siteHeader.name], [SLOT.footer]: [siteFooter.name] },
     layouts: [
-      defineLayout({ name: 'default', component: DefaultLayout }),
-      defineLayout({ name: 'minimal', component: MinimalLayout }),
-      defineLayout({ name: 'bare', component: BareLayout })
+      defineLayout({ name: 'default' }),
+      defineLayout({ name: 'minimal' }),
+      defineLayout({ name: 'bare' })
     ]
   }
 )

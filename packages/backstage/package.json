@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./render": "./src/render/index.ts",
-    "./example": "./src/example/registry.ts"
+    "./example": "./src/example/registry.ts",
+    "./example/components": "./src/example/components.tsx"
   },
   "files": [
     "dist",

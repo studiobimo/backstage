@@ -1,53 +1,43 @@
-import type { ComponentType, JSXElementConstructor, ReactNode } from 'react'
 import { z } from 'zod'
 
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
-export interface BlockDefinition<S extends z.ZodType = z.ZodType> {
-  name: string
+export interface BlockDefinition<S extends z.ZodType = z.ZodType, N extends string = string> {
+  name: N
   version?: number
   schema: S
-  component: ComponentType<z.output<S>>
   migrate?: (content: unknown, fromVersion: number) => unknown
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
   thumbnail?: Readonly<Record<string, string>>
 }
 
-export interface Block<S extends z.ZodType = z.ZodType> extends BlockDefinition<S> {
+export interface Block<
+  S extends z.ZodType = z.ZodType,
+  N extends string = string
+> extends BlockDefinition<S, N> {
   version: number
 }
 
-export function defineBlock<S extends z.ZodType>(definition: BlockDefinition<S>): Block<S> {
+export function defineBlock<S extends z.ZodType, const N extends string>(
+  definition: BlockDefinition<S, N>
+): Block<S, N> {
   if (!NAME_PATTERN.test(definition.name)) {
     throw new Error(`Block name "${definition.name}" must be lowercase letters, digits and hyphens`)
   }
   return { ...definition, version: definition.version ?? 1 }
 }
 
-export interface RegisteredBlock extends Omit<Block, 'component'> {
-  component: JSXElementConstructor<never>
-}
-
 export const LAYOUT = { default: 'default' } as const
 export const SLOT = { header: 'header', footer: 'footer' } as const
 
-export interface LayoutProps {
-  slots: Readonly<Record<string, ReactNode>>
-  children: ReactNode
+export interface LayoutDefinition<N extends string = string> {
+  name: N
 }
 
-export interface LayoutDefinition {
-  name: string
-  component: ComponentType<LayoutProps>
-}
-
-export interface RegisteredLayout {
-  name: string
-  component: JSXElementConstructor<never>
-}
-
-export function defineLayout(definition: LayoutDefinition): LayoutDefinition {
+export function defineLayout<const N extends string>(
+  definition: LayoutDefinition<N>
+): LayoutDefinition<N> {
   if (!NAME_PATTERN.test(definition.name)) {
     throw new Error(
       `Layout name "${definition.name}" must be lowercase letters, digits and hyphens`
@@ -56,16 +46,22 @@ export function defineLayout(definition: LayoutDefinition): LayoutDefinition {
   return definition
 }
 
-export interface RegistryOptions {
+export interface RegistryOptions<
+  L extends readonly LayoutDefinition[] = readonly LayoutDefinition[]
+> {
   slots?: Readonly<Record<string, readonly string[]>>
-  layouts?: readonly RegisteredLayout[]
+  layouts?: L
 }
 
-export interface Registry {
-  readonly blocks: ReadonlyMap<string, RegisteredBlock>
+export interface Registry<
+  B extends readonly Block[] = readonly Block[],
+  L extends readonly LayoutDefinition[] = readonly LayoutDefinition[]
+> {
+  readonly __types?: { readonly blocks: B; readonly layouts: L }
+  readonly blocks: ReadonlyMap<string, Block>
   readonly slots: ReadonlyMap<string, readonly string[]>
-  readonly layouts: ReadonlyMap<string, RegisteredLayout>
-  get(name: string): RegisteredBlock | undefined
+  readonly layouts: ReadonlyMap<string, LayoutDefinition>
+  get(name: string): Block | undefined
   isSlotBlock(name: string): boolean
   hasLayout(name: string): boolean
   jsonSchema(name: string): z.core.JSONSchema.BaseSchema
@@ -82,7 +78,7 @@ function indexByName<T extends { name: string }>(items: readonly T[], kind: stri
 
 function indexSlots(
   slots: NonNullable<RegistryOptions['slots']>,
-  blocks: ReadonlyMap<string, RegisteredBlock>
+  blocks: ReadonlyMap<string, Block>
 ) {
   const bySlot = new Map<string, readonly string[]>()
   for (const [slot, names] of Object.entries(slots)) {
@@ -98,10 +94,11 @@ function indexSlots(
   return bySlot
 }
 
-export function defineRegistry(
-  blocks: readonly RegisteredBlock[],
-  { slots = {}, layouts = [] }: RegistryOptions = {}
-): Registry {
+export function defineRegistry<
+  const B extends readonly Block[],
+  const L extends readonly LayoutDefinition[] = readonly []
+>(blocks: B, options: RegistryOptions<L> = {}): Registry<B, L> {
+  const { slots = {}, layouts = [] as unknown as L } = options
   const byName = indexByName(blocks, 'Block')
   const bySlot = indexSlots(slots, byName)
   const slotBlocks = new Set([...bySlot.values()].flat())
@@ -135,7 +132,7 @@ export interface BlockDescription {
   thumbnail?: Readonly<Record<string, string>>
 }
 
-const describe = (registry: Registry, block: RegisteredBlock): BlockDescription => ({
+const describe = (registry: Registry, block: Block): BlockDescription => ({
   name: block.name,
   version: block.version,
   schema: registry.jsonSchema(block.name),
@@ -166,7 +163,7 @@ export type BlockContentResult =
   { ok: true; schemaVersion: number; content: unknown } | { ok: false }
 
 export function upgradeBlockContent(
-  block: RegisteredBlock,
+  block: Block,
   schemaVersion: number,
   content: unknown
 ): BlockContentResult {
@@ -177,7 +174,7 @@ export function upgradeBlockContent(
 }
 
 export function validateBlockContent(
-  block: RegisteredBlock,
+  block: Block,
   schemaVersion: number,
   content: unknown
 ): BlockContentResult {

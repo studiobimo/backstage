@@ -16,7 +16,6 @@ import {
   richText
 } from './index.ts'
 
-const Hero = () => null
 const hero = defineBlock({
   name: 'hero',
   schema: z.object({
@@ -25,8 +24,7 @@ const hero = defineBlock({
     cta: link(),
     picture: image(),
     theme: z.enum(['light', 'dark'])
-  }),
-  component: Hero
+  })
 })
 
 type Props = { properties: Record<string, { backstage?: string }> }
@@ -35,9 +33,7 @@ describe('defineBlock', () => {
   it('defaults the version to 1', () => expect(hero.version).toBe(1))
 
   it('rejects names that are not slugs', () => {
-    expect(() =>
-      defineBlock({ name: 'Hero Banner', schema: z.object({}), component: Hero })
-    ).toThrow()
+    expect(() => defineBlock({ name: 'Hero Banner', schema: z.object({}) })).toThrow()
   })
 })
 
@@ -66,8 +62,7 @@ describe('describeBlocks', () => {
   const quote = defineBlock({
     name: 'quote',
     version: 3,
-    schema: z.object({ text: z.string() }),
-    component: Hero
+    schema: z.object({ text: z.string() })
   })
 
   it('lists every block in registration order with its version and JSON Schema', () => {
@@ -87,8 +82,7 @@ describe('describeBlocks', () => {
 describe('slots', () => {
   const header = defineBlock({
     name: 'site-header',
-    schema: z.object({ text: z.string() }),
-    component: Hero
+    schema: z.object({ text: z.string() })
   })
   const registry = defineRegistry([hero, header], { slots: { header: ['site-header'] } })
 
@@ -113,7 +107,7 @@ describe('slots', () => {
 })
 
 describe('layouts', () => {
-  const layout = (name: string) => defineLayout({ name, component: () => null })
+  const layout = (name: string) => defineLayout({ name })
 
   it('always offers the default layout first', () => {
     expect(layoutNames(defineRegistry([]))).toEqual(['default'])
@@ -134,7 +128,6 @@ describe('block content', () => {
     name: 'note',
     version: 2,
     schema: z.object({ text: z.string().min(1) }),
-    component: Hero,
     migrate: (content, from) =>
       from === 1 ? { text: (content as { body: string }).body } : content
   })

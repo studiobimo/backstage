@@ -6,7 +6,7 @@ import {
   reportError,
   respondHealthy
 } from '@studiobimo/backstage'
-import { registry } from '@studiobimo/backstage/example'
+import { components } from '@studiobimo/backstage/example/components'
 import { Hono, type Context } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 
@@ -65,7 +65,7 @@ app.get('*', edgeCache, async (c) => {
   if (!snapshot) return respondNotFound(c)
   return renderPage(
     {
-      registry,
+      components,
       snapshot,
       translations: await findTranslations(c.env.SITE!, snapshot),
       origin: new URL(c.req.url).origin

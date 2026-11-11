@@ -1,5 +1,5 @@
 import { DEFAULT_LOCALE, LOCALES, type Locale, validateBlockContent } from '@studiobimo/backstage'
-import { registry } from '@studiobimo/backstage/example'
+import { components } from '@studiobimo/backstage/example/components'
 import { RenderProvider } from '@studiobimo/backstage/render'
 import { type ComponentType, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -24,16 +24,17 @@ interface PreviewBlock {
   content: Record<string, unknown>
 }
 
-const previewBlocks = [...registry.blocks.values()].flatMap((block): PreviewBlock[] => {
+const previewBlocks = [...components.registry.blocks.values()].flatMap((block): PreviewBlock[] => {
   const sample = PREVIEW_SAMPLES[block.name]
   if (sample === undefined) return []
   const result = validateBlockContent(block, block.version, sample)
-  if (!result.ok) return []
+  const Component = components.blocks[block.name]
+  if (!result.ok || !Component) return []
   return [
     {
       name: block.name,
       title: block.title ?? {},
-      Component: block.component as ComponentType<Record<string, unknown>>,
+      Component: Component as ComponentType<Record<string, unknown>>,
       content: result.content as Record<string, unknown>
     }
   ]
