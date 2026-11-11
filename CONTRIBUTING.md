@@ -83,6 +83,19 @@ breaking commits. A change to a managed file titled `chore`, `docs` or `ci` merg
 `sync`, so title it `fix` or `feat`.
 <!-- <<< template:workflow -->
 
+## Testing a package change in the apps
+
+`apps/admin` and `apps/site` install the published `@studiobimo/backstage`, so an edit under
+`packages/backstage` does not reach them until a release. The package's own tests run on its source.
+To try a change in the apps first:
+
+```sh
+make -C .devtools link-local     # the apps now use packages/backstage's source
+make -C .devtools unlink-local   # before committing: restores package.json, pnpm-lock.yaml, pnpm-workspace.yaml
+```
+
+`unlink-local` restores those three files from `HEAD`, so commit any real change to them first.
+
 ## Planning: milestones and issues
 
 Each kind of information lives in exactly one place, so nothing has to be kept in step by hand.
