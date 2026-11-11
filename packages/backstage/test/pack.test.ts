@@ -27,6 +27,12 @@ describe('the packed package', () => {
     expect(tar('-tzf').split('\n')).toContain('package/dist/client/index.html')
   })
 
+  it('ships the migrations and the make target that applies them', () => {
+    const files = tar('-tzf').split('\n')
+    expect(files).toContain('package/backstage.mk')
+    expect(files).toContain('package/migrations/0000_init.sql')
+  })
+
   it('exports the admin worker beside the SPA it serves', () => {
     const files = tar('-tzf').split('\n')
     const manifest = JSON.parse(tar('-xzOf', 'package/package.json'))

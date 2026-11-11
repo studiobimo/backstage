@@ -7,6 +7,7 @@ DEPLOY_ENVS := production
 
 include base.mk
 include vite.mk
+include ../packages/backstage/backstage.mk
 
 BUNDLE_TOTAL_KIB@apps/admin := 585
 
