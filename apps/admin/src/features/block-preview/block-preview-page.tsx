@@ -1,44 +1,20 @@
-import { DEFAULT_LOCALE, LOCALES, type Locale, validateBlockContent } from '@studiobimo/backstage'
-import { RenderProvider } from '@studiobimo/backstage/render'
-import { components } from 'backstage-site/components'
-import { type ComponentType, useState } from 'react'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '@studiobimo/backstage'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
+import { previewUrl } from '@/lib/preview-url'
+import { blockDescriptionsQuery } from '@/features/page-editor/queries'
+import { siteOriginQuery } from './queries'
 import { cn } from '@/lib/utils'
-
-import './block-preview.css'
-import { PREVIEW_MEDIA, PREVIEW_SAMPLES } from 'backstage-site/samples'
 
 const FRAME_WIDTH = { phone: 'max-w-90', tablet: 'max-w-3xl', desktop: 'max-w-none' } as const
 
 type FrameWidth = keyof typeof FRAME_WIDTH
 
 const WIDTHS = Object.keys(FRAME_WIDTH) as FrameWidth[]
-
-interface PreviewBlock {
-  name: string
-  title: Partial<Record<string, string>>
-  Component: ComponentType<Record<string, unknown>>
-  content: Record<string, unknown>
-}
-
-const previewBlocks = [...components.registry.blocks.values()].flatMap((block): PreviewBlock[] => {
-  const sample = PREVIEW_SAMPLES[block.name]
-  if (sample === undefined) return []
-  const result = validateBlockContent(block, block.version, sample)
-  const Component = components.blocks[block.name]
-  if (!result.ok || !Component) return []
-  return [
-    {
-      name: block.name,
-      title: block.title ?? {},
-      Component: Component as ComponentType<Record<string, unknown>>,
-      content: result.content as Record<string, unknown>
-    }
-  ]
-})
 
 function Choice<T extends string>({
   label,
@@ -70,6 +46,8 @@ function Choice<T extends string>({
 
 export function BlockPreviewPage() {
   const { t } = useTranslation('blockPreview')
+  const { data: blocks } = useSuspenseQuery(blockDescriptionsQuery)
+  const { data: siteOrigin } = useSuspenseQuery(siteOriginQuery)
   const [width, setWidth] = useState<FrameWidth>('desktop')
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
   return (
@@ -94,18 +72,20 @@ export function BlockPreviewPage() {
           </div>
         }
       />
-      <RenderProvider value={{ locale, defaultLocale: DEFAULT_LOCALE, media: PREVIEW_MEDIA }}>
-        {previewBlocks.map(({ name, title, Component, content }) => (
-          <section key={name} aria-labelledby={`preview-${name}`} className="flex flex-col gap-2">
-            <h2 id={`preview-${name}`} className="font-medium text-sm">
-              {title[locale] ?? name} <span className="text-muted-foreground">{name}</span>
-            </h2>
-            <div className={cn('block-preview', FRAME_WIDTH[width])}>
-              <Component {...content} />
-            </div>
-          </section>
-        ))}
-      </RenderProvider>
+      {blocks.map(({ name, title }) => (
+        <section key={name} aria-labelledby={`preview-${name}`} className="flex flex-col gap-2">
+          <h2 id={`preview-${name}`} className="font-medium text-sm">
+            {title?.[locale] ?? name} <span className="text-muted-foreground">{name}</span>
+          </h2>
+          <iframe
+            title={t('frame', { name: title?.[locale] ?? name })}
+            src={previewUrl(siteOrigin, name, locale)}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className={cn('h-136 w-full rounded-lg border bg-background', FRAME_WIDTH[width])}
+          />
+        </section>
+      ))}
     </div>
   )
 }

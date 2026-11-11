@@ -7,6 +7,7 @@ import { mediaRoutes } from './media'
 import { pagesRoutes } from './pages'
 import { publishRoutes } from './publish'
 import { settingsRoutes } from './settings'
+import { siteOriginRoutes } from './site-origin'
 import { slotsRoutes } from './slots'
 
 export const v1Routes = (registry: Registry) =>
@@ -17,4 +18,5 @@ export const v1Routes = (registry: Registry) =>
     .route('/pages', pagesRoutes(registry))
     .route('/pages', publishRoutes(registry))
     .route('/settings', settingsRoutes())
+    .route('/site-origin', siteOriginRoutes())
     .route('/slots', slotsRoutes(registry))

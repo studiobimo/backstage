@@ -19,6 +19,7 @@ const apiBodies: Record<string, unknown> = {
   },
   '/api/v1/settings': { settings: { siteName: { en: 'Studio' } } },
   '/api/v1/blocks': { blocks: [] },
+  '/api/v1/site-origin': { origin: 'https://site.test' },
   '/api/v1/layouts': { layouts: ['default'] }
 }
 

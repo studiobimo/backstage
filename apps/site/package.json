@@ -3,9 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./registry": "./src/blocks/registry.ts",
-    "./components": "./src/blocks/component-map.ts",
-    "./samples": "./src/blocks/samples.ts"
+    "./registry": "./src/blocks/registry.ts"
   },
   "scripts": {
     "dev": "vite",
