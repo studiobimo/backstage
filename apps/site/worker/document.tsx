@@ -1,13 +1,12 @@
 import {
   DEFAULT_LOCALE,
   LAYOUT,
-  validateBlockContent,
   type ComponentMap,
   type LayoutProps,
   type Snapshot
 } from '@studiobimo/backstage'
-import { RenderProvider } from '@studiobimo/backstage/render'
-import { type ComponentType, createElement } from 'react'
+import { Blocks, RenderProvider } from '@studiobimo/backstage/render'
+import { createElement } from 'react'
 
 import { LOCALE_NAME, SWITCHER_LABEL } from './locales'
 import { pathOf } from './routing'
@@ -21,23 +20,6 @@ export interface PageProps {
 
 function FallbackLayout({ children }: LayoutProps) {
   return <main>{children}</main>
-}
-
-function Blocks({ components, snapshot }: Pick<PageProps, 'components' | 'snapshot'>) {
-  return snapshot.blocks.flatMap((block) => {
-    const { registry } = components
-    const definition = registry.get(block.block)
-    if (!definition || registry.isSlotBlock(block.block)) return []
-    const result = validateBlockContent(definition, block.schemaVersion, block.content)
-    if (!result.ok) return []
-    const Component = components.blocks[definition.name] as
-      ComponentType<Record<string, unknown>> | undefined
-    if (!Component) {
-      console.error(`Block "${definition.name}" is registered but has no component`)
-      return []
-    }
-    return [<Component key={block.id} {...(result.content as Record<string, unknown>)} />]
-  })
 }
 
 function LanguageSwitcher({ snapshot, translations }: Omit<PageProps, 'components' | 'origin'>) {
