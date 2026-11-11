@@ -2,6 +2,7 @@ import { BLOCK_PREVIEW } from '@studiobimo/backstage'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { PREVIEW_SAMPLES } from '../src/blocks/samples'
+import { PREVIEW_PHOTO } from '../src/blocks/sample-support'
 import { STYLESHEET } from './stylesheet'
 import { clearKv, get, platform, publishSnapshots, snapshotOf } from './test-support'
 
@@ -73,5 +74,12 @@ describe('block preview route', () => {
     const response = await get(previewPath('split-hero'), undefined, env)
     expect(frameAncestors(response)).toBe("'none'")
     expect(response.headers.get('X-Frame-Options')).toBe('DENY')
+  })
+
+  it('serves the sample picture the blocks point at', async () => {
+    const response = await get(`/${PREVIEW_PHOTO.path}`)
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Type')).toBe('image/svg+xml')
+    expect(await response.text()).toContain('<svg')
   })
 })
