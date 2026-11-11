@@ -5,8 +5,9 @@ name: CI
 # bundle budget and the audit. It is the target a developer runs, at the same versions, so local and CI
 # results match. Managed by studiobimo/project-template (profile vite-react-tanstack).
 #
-# Nothing here reads a secret, so it is safe on pull requests from forks. Deploying is a
-# hosting profile's job, in its own workflow.
+# The only credential is the run's own GITHUB_TOKEN, read-only on packages, which installs
+# @studiobimo/backstage from GitHub Packages. Deploying is a hosting profile's job, in its own
+# workflow.
 
 on:
   push:
@@ -22,6 +23,9 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      packages: read
+    env:
+      pnpm_config__auth: '{"https://npm.pkg.github.com/":{"@":{"authToken":"${{ secrets.GITHUB_TOKEN }}"}}}'
     # Pushing again to a pull request supersedes the run in flight, so it is cancelled rather
     # than billed to the end. A push to main and a merge group always finish.
     concurrency:
