@@ -1,6 +1,6 @@
 import { DEFAULT_LOCALE, LOCALES, type Locale, validateBlockContent } from '@studiobimo/backstage'
-import { components } from '@studiobimo/backstage/example/components'
 import { RenderProvider } from '@studiobimo/backstage/render'
+import { components } from 'backstage-site/components'
 import { type ComponentType, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 

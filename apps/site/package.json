@@ -2,6 +2,10 @@
   "name": "backstage-site",
   "private": true,
   "type": "module",
+  "exports": {
+    "./registry": "./src/blocks/registry.ts",
+    "./components": "./src/blocks/component-map.ts"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -13,7 +17,8 @@
     "@studiobimo/backstage": "workspace:*",
     "hono": "^4.13.14",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

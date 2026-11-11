@@ -1,14 +1,13 @@
-import { defineBlock, defineLayout, defineRegistry, SLOT } from '../blocks.ts'
-import {
-  oneColumnSectionSchema,
-  oneColumnTextSchema,
-  overlayHeroSchema,
-  siteFooterSchema,
-  siteHeaderSchema,
-  splitHeroSchema,
-  twoColumnSectionSchema,
-  twoColumnTextSchema
-} from './schemas.ts'
+import { defineBlock, defineLayout, defineRegistry, SLOT } from '@studiobimo/backstage'
+
+import { oneColumnSectionSchema } from './one-column-section/schema.ts'
+import { oneColumnTextSchema } from './one-column-text/schema.ts'
+import { overlayHeroSchema } from './overlay-hero/schema.ts'
+import { siteFooterSchema } from './site-footer/schema.ts'
+import { siteHeaderSchema } from './site-header/schema.ts'
+import { splitHeroSchema } from './split-hero/schema.ts'
+import { twoColumnSectionSchema } from './two-column-section/schema.ts'
+import { twoColumnTextSchema } from './two-column-text/schema.ts'
 
 const thumbnailOf = (name: string) => {
   const path = `/block-thumbnails/${name}.svg`
