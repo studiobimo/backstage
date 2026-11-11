@@ -27,6 +27,12 @@ describe('the packed package', () => {
     expect(tar('-tzf').split('\n')).toContain('package/dist/client/index.html')
   })
 
+  it('ships the migrations and the make target that applies them', () => {
+    const files = tar('-tzf').split('\n')
+    expect(files).toContain('package/backstage.mk')
+    expect(files).toContain('package/migrations/0000_init.sql')
+  })
+
   it("ships the SPA's _headers as apps/admin has it", () => {
     const shipped = tar('-xzOf', 'package/dist/client/_headers')
     expect(shipped).toBe(readFileSync(adminHeaders, 'utf8'))

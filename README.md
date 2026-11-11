@@ -15,6 +15,7 @@ Requirements: [mise](https://mise.jdx.dev/getting-started.html).
 ```sh
 make -C .devtools setup      # pinned tools + git hooks
 make -C .devtools check      # everything CI runs
+make -C .devtools migrate    # apply the D1 migrations locally (REMOTE=1 ENV=production for a deployed one)
 ```
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.

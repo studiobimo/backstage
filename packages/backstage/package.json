@@ -12,7 +12,8 @@
   "files": [
     "dist",
     "src",
-    "migrations"
+    "migrations",
+    "backstage.mk"
   ],
   "scripts": {
     "prepack": "NODE_ENV=production pnpm --filter backstage-admin build && rm -rf dist && mkdir dist && cp -R ../../apps/admin/dist/client dist/client",
