@@ -4,5 +4,10 @@
     "lib": ["ES2024", "DOM"],
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "test", "vitest.config.ts"]
+  "include": [
+    "src",
+    "test",
+    "vitest.config.ts",
+    "../../apps/admin/worker/worker-configuration.d.ts"
+  ]
 }

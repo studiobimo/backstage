@@ -28,7 +28,6 @@
     "backstage-site": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "hono": "^4.13.14",
     "i18next": "^26.5.12",
     "i18next-browser-languagedetector": "^8.2.4",
     "lucide-react": "^1.66.0",

@@ -1,4 +1,4 @@
-import { layoutNames, type Registry } from '@studiobimo/backstage'
+import { layoutNames, type Registry } from '../index.ts'
 import { Hono } from 'hono'
 
 export const layoutsRoutes = (registry: Registry) =>
