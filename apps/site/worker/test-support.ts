@@ -27,11 +27,14 @@ export const heroBlock = (
 ): PageBlock => ({
   id: 'b1',
   block: 'split-hero',
-  schemaVersion: 1,
+  schemaVersion: 2,
   content: {
     title,
     body,
-    cta: { href: '/contact', label: 'Contact' },
+    cta: {
+      en: { href: '/contact', label: 'Contact' },
+      es: { href: '/contacto', label: 'Contacto' }
+    },
     picture: { id: 'm1', alt: '' },
     theme: 'light'
   } as PageBlock['content']

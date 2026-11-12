@@ -17,14 +17,17 @@ interface ContentFields {
   heading?: Translated<string>
   body?: Translated<RichTextDoc>
   picture?: { id: string; alt: string }
-  cta?: LinkValue
+  cta?: Translated<LinkValue>
 }
 
 export function useHasContent({ heading, body, picture, cta }: ContentFields) {
   const localize = useLocalizer()
   const image = useImage(picture)
   return (
-    Boolean(localize(heading)) || !isBlank(localize(body)) || image !== null || Boolean(cta?.href)
+    Boolean(localize(heading)) ||
+    !isBlank(localize(body)) ||
+    image !== null ||
+    Boolean(localize(cta)?.href)
   )
 }
 

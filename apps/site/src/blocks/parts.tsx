@@ -10,8 +10,8 @@ export function LocalizedLink({ value }: { value: Translated<LinkValue> | undefi
   return target?.href ? <a href={target.href}>{target.label || target.href}</a> : null
 }
 
-export function Picture({ value }: { value: { id: string; alt: string } | undefined }) {
-  const picture = useImage(value)
+export function Picture({ value }: { value: { id: string } | undefined }) {
+  const picture = useImage(value && { id: value.id, alt: '' })
   return picture ? (
     <img src={picture.src} width={picture.width} height={picture.height} alt={picture.alt} />
   ) : null
@@ -26,16 +26,17 @@ export function Heading({ value }: { value: Translated<string> | undefined }) {
   return text ? <h2>{text}</h2> : null
 }
 
-export function Cta({ value }: { value: LinkValue | undefined }) {
-  return value?.href ? (
+export function Cta({ value }: { value: Translated<LinkValue> | undefined }) {
+  const target = useLocalized(value)
+  return target?.href ? (
     <Button
       render={({ children, ...props }) => (
-        <a {...props} href={value.href}>
+        <a {...props} href={target.href}>
           {children}
         </a>
       )}
     >
-      {value.label || value.href}
+      {target.label || target.href}
     </Button>
   ) : null
 }

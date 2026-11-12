@@ -3,6 +3,8 @@ import { z } from 'zod'
 
 export const menuLink = () => localized(link({ strict: true }))
 
+export const ctaLink = () => localized(link())
+
 export const optionalHeading = () => localized(z.string().trim().max(120)).optional()
 
 export const sectionLook = {
@@ -18,5 +20,5 @@ export const sectionColumn = () =>
     heading: optionalHeading(),
     body: localized(richText()),
     picture: image().optional(),
-    cta: link().optional()
+    cta: ctaLink().optional()
   })

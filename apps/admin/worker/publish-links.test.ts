@@ -5,7 +5,7 @@ import { addMedia, hero, pageKeys, publish } from './publish-test-support'
 
 const heroLinking = (href: string) => {
   const block = hero()
-  return { ...block, content: { ...block.content, cta: { href, label: 'Go' } } }
+  return { ...block, content: { ...block.content, cta: { en: { href, label: 'Go' } } } }
 }
 
 describe('publishing a page with unsafe links', () => {
@@ -21,7 +21,7 @@ describe('publishing a page with unsafe links', () => {
       expect(response.status).toBe(422)
       expect(await response.json()).toMatchObject({
         code: 'unpublishable',
-        problems: [{ reason: 'unsafe_link', blockId: 'b1', path: 'cta' }]
+        problems: [{ reason: 'unsafe_link', blockId: 'b1', path: 'cta.en' }]
       })
       expect(await pageKeys()).toEqual([])
     }

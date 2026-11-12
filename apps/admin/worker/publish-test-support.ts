@@ -4,11 +4,11 @@ import { db, kv, send, versionOf } from './pages-test-support'
 export const hero = (pictureId = 'm1') => ({
   id: 'b1',
   block: 'split-hero',
-  schemaVersion: 1,
+  schemaVersion: 2,
   content: {
     title: { en: 'Hello', es: 'Hola' },
     body: {},
-    cta: { href: '/contact', label: 'Contact' },
+    cta: { en: { href: '/contact', label: 'Contact' } },
     picture: { id: pictureId, alt: '' },
     theme: 'light'
   }
