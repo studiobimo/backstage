@@ -16,7 +16,10 @@ options:
 ## Decision
 
 - Publishing validates the page, resolves its references and writes **one JSON snapshot per page
-  and locale to KV**. KV also holds the site settings and an index of published pages.
+  and locale to KV**. KV also holds an index of published pages.
+- Publishing the site is a separate action that writes **one site snapshot per locale**,
+  `site:<locale>`, with the header, the footer, the site name and the SEO defaults
+  ([ADR-0010](0010-global-slots.md)). The site reads it beside each page, through the same cache.
 - The site worker reads the snapshot and **renders it with React on the server**
   (`renderToReadableStream`), through Hono. The starter ships no client JavaScript, and there are
   **no islands** in this repository: a custom client build, manifest and props serialization would
