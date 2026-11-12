@@ -1,3 +1,4 @@
+import { EMPTY_PUBLISHED_INDEX, SEO, upsertIntoIndex } from '@studiobimo/backstage'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -11,25 +12,29 @@ import {
   snapshotOf
 } from './test-support'
 
+const SITE = platform.env.SITE_URL
+
 afterAll(() => platform.dispose())
 beforeEach(clearKv)
 
+const aboutSnapshots = (enBody = {}, esTitle = 'Acerca') => [
+  snapshotOf({
+    locale: 'en',
+    slug: 'about',
+    title: 'About',
+    seo: { title: 'About us', description: 'Who we are', socialImageId: null },
+    blocks: [heroBlock({ en: 'Hello', es: 'Hola' }, enBody)]
+  }),
+  snapshotOf({
+    locale: 'es',
+    slug: 'acerca',
+    title: esTitle,
+    blocks: [heroBlock({ en: 'Hello' })]
+  })
+]
+
 const publishAbout = (enBody = {}, esTitle = 'Acerca') =>
-  publishSnapshots(
-    snapshotOf({
-      locale: 'en',
-      slug: 'about',
-      title: 'About',
-      seo: { title: 'About us', description: 'Who we are', socialImageId: null },
-      blocks: [heroBlock({ en: 'Hello', es: 'Hola' }, enBody)]
-    }),
-    snapshotOf({
-      locale: 'es',
-      slug: 'acerca',
-      title: esTitle,
-      blocks: [heroBlock({ en: 'Hello' })]
-    })
-  )
+  publishSnapshots(...aboutSnapshots(enBody, esTitle))
 
 const html = async (path: string) => (await get(path)).text()
 
@@ -62,9 +67,41 @@ describe('rendering published pages', () => {
     await publishAbout()
     const page = await html('/about')
     expect(page).toContain('<a href="/es/acerca" hrefLang="es" lang="es">')
-    expect(page).toContain('rel="alternate" hrefLang="es" href="http://localhost/es/acerca"')
-    expect(page).toContain('rel="canonical" href="http://localhost/about"')
+    expect(page).toContain(`rel="alternate" hrefLang="es" href="${SITE}/es/acerca"`)
+    expect(page).toContain(`rel="alternate" hrefLang="x-default" href="${SITE}/about"`)
+    expect(page).toContain(`rel="canonical" href="${SITE}/about"`)
     expect(await html('/es/acerca')).toContain('href="/about"')
+  })
+
+  it('uses the configured site url whatever host the request arrives on', async () => {
+    await publishAbout()
+    for (const host of ['https://other.example.net', 'https://backstage-site.workers.dev']) {
+      const page = await (await get(`${host}/about`)).text()
+      expect(page).toContain(`rel="canonical" href="${SITE}/about"`)
+      expect(page).not.toContain(host)
+    }
+  })
+
+  it('declares the same alternates in the head and the sitemap', async () => {
+    await publishAbout()
+    await kv.put(
+      SEO.indexKey,
+      JSON.stringify(upsertIntoIndex(EMPTY_PUBLISHED_INDEX, aboutSnapshots()))
+    )
+    const page = await html('/about')
+    const sitemap = await (await get('/sitemap.xml')).text()
+    const inHead = [...page.matchAll(/rel="alternate" hrefLang="([^"]+)" href="([^"]+)"/g)]
+    const inSitemap = [...sitemap.matchAll(/hreflang="([^"]+)" href="([^"]+)"/g)]
+    expect(inHead.length).toBeGreaterThan(0)
+    expect(inHead.map(([, hreflang, href]) => [hreflang, href])).toEqual(
+      inSitemap.slice(0, inHead.length).map(([, hreflang, href]) => [hreflang, href])
+    )
+  })
+
+  it('fails clearly when SITE_URL is not configured', async () => {
+    await publishAbout()
+    const env = { ...platform.env, SITE_URL: 'not a url' } as unknown as Env
+    expect((await get('/about', undefined, env)).status).toBe(500)
   })
 
   it('uses the SEO title and description', async () => {

@@ -8,12 +8,12 @@
   "upload_source_maps": true,
   "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
-  "vars": { "ADMIN_ORIGIN": "http://localhost:5173" },
+  "vars": { "ADMIN_ORIGIN": "http://localhost:5173", "SITE_URL": "http://localhost:8787" },
   "env": {
     "production": {
       "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
-      "vars": { "ADMIN_ORIGIN": "https://admin.example.com" }
+      "vars": { "ADMIN_ORIGIN": "https://admin.example.com", "SITE_URL": "https://example.com" }
     }
   }
 }

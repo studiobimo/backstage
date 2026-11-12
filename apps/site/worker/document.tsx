@@ -9,13 +9,14 @@ import { Blocks, RenderProvider } from '@studiobimo/backstage/render'
 import { LOCALE_NAME, pathOf, SWITCHER_LABEL } from '@studiobimo/backstage/site'
 import { createElement, type ReactNode } from 'react'
 
+import { linksOf } from './seo'
 import { STYLESHEET } from './stylesheet'
 
 export interface PageProps {
   components: ComponentMap
   snapshot: Snapshot
   translations: readonly Snapshot[]
-  origin: string
+  siteOrigin: string
 }
 
 export type PreviewProps = Pick<PageProps, 'components' | 'snapshot'>
@@ -33,7 +34,10 @@ function PageContent({ components, snapshot }: PreviewProps) {
   )
 }
 
-function LanguageSwitcher({ snapshot, translations }: Omit<PageProps, 'components' | 'origin'>) {
+function LanguageSwitcher({
+  snapshot,
+  translations
+}: Omit<PageProps, 'components' | 'siteOrigin'>) {
   const pages = [snapshot, ...translations].sort(
     (a, b) => Number(b.locale === DEFAULT_LOCALE) - Number(a.locale === DEFAULT_LOCALE)
   )
@@ -57,8 +61,9 @@ function LanguageSwitcher({ snapshot, translations }: Omit<PageProps, 'component
   )
 }
 
-function Head({ snapshot, translations, origin }: Omit<PageProps, 'components'>) {
+function Head({ snapshot, translations, siteOrigin }: Omit<PageProps, 'components'>) {
   const title = snapshot.seo.title || snapshot.title
+  const { canonical, alternates } = linksOf(siteOrigin, snapshot, translations)
   const socialImage = snapshot.seo.socialImageId && snapshot.media[snapshot.seo.socialImageId]
   return (
     <head>
@@ -69,17 +74,14 @@ function Head({ snapshot, translations, origin }: Omit<PageProps, 'components'>)
       {snapshot.seo.description ? (
         <meta name="description" content={snapshot.seo.description} />
       ) : null}
-      <link rel="canonical" href={origin + pathOf(snapshot)} />
-      {[snapshot, ...translations].map(({ locale, slug }) => (
-        <link
-          key={locale}
-          rel="alternate"
-          hrefLang={locale}
-          href={origin + pathOf({ locale, slug })}
-        />
+      <link rel="canonical" href={canonical} />
+      {alternates.map(({ hreflang, href }) => (
+        <link key={hreflang} rel="alternate" hrefLang={hreflang} href={href} />
       ))}
       <meta property="og:title" content={title} />
-      {socialImage ? <meta property="og:image" content={`${origin}/${socialImage.key}`} /> : null}
+      {socialImage ? (
+        <meta property="og:image" content={`${siteOrigin}/${socialImage.key}`} />
+      ) : null}
     </head>
   )
 }
