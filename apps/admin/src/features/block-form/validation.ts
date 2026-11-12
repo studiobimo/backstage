@@ -4,7 +4,14 @@ import { z } from 'zod'
 import { useAppForm } from '@/components/form/app-form'
 
 import type { JsonSchema } from './spec.ts'
-import { type BlockValue, blockValue, fieldName, type Path, withoutUndefined } from './value.ts'
+import {
+  type BlockValue,
+  blockValue,
+  fieldName,
+  isWithinPath,
+  type Path,
+  withoutUndefined
+} from './value.ts'
 
 export const blockValidator = (schema: JsonSchema) =>
   z.preprocess(withoutUndefined, z.fromJSONSchema(schema)).pipe(blockValue)
@@ -34,6 +41,6 @@ export function useHasIssueWithin(name: string): boolean {
   const issues = useContext(ShownIssuesContext)
   return issues.some((path) => {
     const issueName = fieldName(path)
-    return issueName.startsWith(`${name}.`) || issueName.startsWith(`${name}[`)
+    return issueName !== name && isWithinPath(issueName, name)
   })
 }

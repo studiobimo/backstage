@@ -11,7 +11,14 @@ import type { RichTextFieldValue } from './rich-text-field.tsx'
 
 import { parseBlockSchema } from './spec.ts'
 import { everyKindSchema } from './test-fixtures.ts'
-import { fieldName, initialGroup, summarize, type ValueByKind, withoutUndefined } from './value.ts'
+import {
+  fieldName,
+  initialGroup,
+  isWithinPath,
+  summarize,
+  type ValueByKind,
+  withoutUndefined
+} from './value.ts'
 
 describe('initialGroup', () => {
   const initial = initialGroup(parseBlockSchema(everyKindSchema))
@@ -38,6 +45,15 @@ describe('value helpers', () => {
   it('names a path the way the form names its fields', () => {
     expect(fieldName(['items', 0, 'title', 'es'])).toBe('items[0].title.es')
     expect(fieldName(['slug'])).toBe('slug')
+  })
+
+  it('tells what is inside a path by its delimiters, not its prefix', () => {
+    expect(isWithinPath('items[1]', 'items[1]')).toBe(true)
+    expect(isWithinPath('items[1].name', 'items[1]')).toBe(true)
+    expect(isWithinPath('items[1][0]', 'items[1]')).toBe(true)
+    expect(isWithinPath('items[10]', 'items[1]')).toBe(false)
+    expect(isWithinPath('items[10].name', 'items[1]')).toBe(false)
+    expect(isWithinPath('titles', 'title')).toBe(false)
   })
 
   it('drops undefined entries the way JSON would', () => {

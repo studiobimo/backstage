@@ -43,6 +43,9 @@ export const fieldName = (path: Path): string =>
     })
     .join('')
 
+export const isWithinPath = (name: string, container: string): boolean =>
+  name === container || name.startsWith(`${container}.`) || name.startsWith(`${container}[`)
+
 export const isRecord = (value: FieldValue | undefined): value is BlockValue =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
