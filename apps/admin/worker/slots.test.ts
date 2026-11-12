@@ -67,6 +67,24 @@ describe('slots API', () => {
     expect(slots[0]?.current).toMatchObject(header)
   })
 
+  it('answers the issues, with their paths, for content the block schema refuses', async () => {
+    const blank = { link: { en: { href: '/about', label: '   ' } }, dropdown: [] }
+    const response = await send('PUT', '/slots/header', {
+      ...header,
+      content: { navigation: [blank] }
+    })
+    expect(response.status).toBe(400)
+    const body = (await response.json()) as { code: string; issues: { path: unknown[] }[] }
+    expect(body.code).toBe('invalid')
+    expect(body.issues.map(({ path }) => path)).toContainEqual([
+      'navigation',
+      0,
+      'link',
+      'en',
+      'label'
+    ])
+  })
+
   it('refuses a block the slot does not offer, and a slot that does not exist', async () => {
     expect((await send('PUT', '/slots/header', { ...header, block: 'split-hero' })).status).toBe(
       400

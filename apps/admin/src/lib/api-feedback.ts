@@ -1,5 +1,7 @@
+import { fieldIssuesOf, type FieldIssue } from '@studiobimo/backstage'
 import i18n, { type i18n as I18n } from 'i18next'
 import { useTranslation } from 'react-i18next'
+import { ZodError } from 'zod'
 
 import { toastManager } from '@/components/ui/toast'
 
@@ -17,6 +19,15 @@ export function useApiErrorMessage() {
   const { i18n: instance } = useTranslation('common')
   return (error: unknown) => apiErrorMessage(instance, error)
 }
+
+export function fieldIssuesFrom(error: unknown): FieldIssue[] {
+  if (error instanceof ApiError) return error.issues
+  if (error instanceof ZodError) return fieldIssuesOf(error)
+  return []
+}
+
+export const localeOfIssue = (issue: FieldIssue, locales: readonly string[]) =>
+  locales.find((locale) => issue.path.includes(locale))
 
 let openToastId: string | undefined
 

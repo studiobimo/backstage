@@ -40,7 +40,7 @@ function GeneralSection() {
   const { t } = useTranslation('settings')
   const { data: settings } = useSuspenseQuery(settingsQuery)
   const schema = useTranslatedSchema()
-  const { submit, failed } = useSaveSettings()
+  const { submit, failed, issues } = useSaveSettings()
   return (
     <SectionFrame
       id="general"
@@ -54,6 +54,7 @@ function GeneralSection() {
         locales={LOCALES}
         value={blockValue.parse(settings)}
         onSubmit={submit}
+        issues={issues}
         className="max-w-none gap-8"
       />
     </SectionFrame>

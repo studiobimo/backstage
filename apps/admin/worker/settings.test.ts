@@ -60,6 +60,16 @@ describe('settings API', () => {
     expect(await (await send('GET')).json()).toEqual({ settings: saved })
   })
 
+  it('answers the issue and its path for a whitespace-only site name', async () => {
+    const bad = await send('PUT', { siteName: { en: '   ' } })
+    expect(bad.status).toBe(400)
+    expect(await bad.json()).toEqual({
+      error: 'Invalid input',
+      code: 'invalid',
+      issues: [{ path: ['siteName', 'en'], code: 'too_small', origin: 'string', minimum: 1 }]
+    })
+  })
+
   it('refuses a body that is not JSON', async () => {
     const response = await app.request(
       '/api/v1/settings',

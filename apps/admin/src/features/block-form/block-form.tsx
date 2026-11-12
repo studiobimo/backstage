@@ -1,3 +1,4 @@
+import type { FieldIssue } from '@studiobimo/backstage'
 import { useStore } from '@tanstack/react-form'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -5,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { Spinner } from '@/components/ui/spinner'
+import { localeOfIssue } from '@/lib/api-feedback'
 import { cn } from '@/lib/utils'
 
 import { GroupFields } from './field-node.tsx'
@@ -20,12 +22,14 @@ import {
   type BlockFormApi,
   type BlockValidator,
   blockValidator,
+  setServerError,
   ShownIssuesContext,
   useBlockForm
 } from './validation.ts'
 import {
   type BlockValue,
   blockValue,
+  fieldName,
   initialGroup,
   isRecord,
   readValue,
@@ -38,6 +42,7 @@ export interface BlockFormProps {
   value?: BlockValue
   onSubmit?: (value: BlockValue) => void | Promise<void>
   onChange?: (value: BlockValue) => void
+  issues?: readonly FieldIssue[]
   className?: string
 }
 
@@ -56,11 +61,19 @@ function parseOrNull(schema: JsonSchema): ParsedBlock | null {
   }
 }
 
-function useLocaleStatus(form: BlockFormApi, parsed: ParsedBlock, locales: readonly string[]) {
+function useLocaleStatus(
+  form: BlockFormApi,
+  parsed: ParsedBlock,
+  locales: readonly string[],
+  refused: readonly FieldIssue[]
+) {
   const values = useStore(form.store, (state) => state.values)
   return useMemo(() => {
     const result = parsed.validator.safeParse(values)
-    const issuePaths = result.error?.issues.map((issue) => issue.path) ?? []
+    const issuePaths = [
+      ...(result.error?.issues.map((issue) => issue.path) ?? []),
+      ...refused.map((issue) => issue.path)
+    ]
     const current = readValue(values)
     const byLocale = localeStatus(
       parsed.root,
@@ -69,7 +82,23 @@ function useLocaleStatus(form: BlockFormApi, parsed: ParsedBlock, locales: reado
       locales
     )
     return { byLocale, issuePaths }
-  }, [values, parsed, locales])
+  }, [values, parsed, locales, refused])
+}
+
+function useRefusedIssues(
+  form: BlockFormApi,
+  refused: readonly FieldIssue[],
+  locales: readonly string[],
+  showLocale: (locale: string) => void
+) {
+  const placed = useRef<string[]>([])
+  useEffect(() => {
+    for (const name of placed.current) setServerError(form, name, undefined)
+    placed.current = refused.map((issue) => fieldName(issue.path))
+    for (const issue of refused) setServerError(form, fieldName(issue.path), issue)
+    const locale = refused.map((issue) => localeOfIssue(issue, locales)).find(Boolean)
+    if (locale) showLocale(locale)
+  }, [form, refused, locales, showLocale])
 }
 
 const cleanValue = (values: unknown): BlockValue => blockValue.parse(withoutUndefined(values))
@@ -97,6 +126,7 @@ function SupportedBlockForm({
   value,
   onSubmit,
   onChange,
+  issues = noIssues,
   className
 }: BlockFormProps & { parsed: ParsedBlock }) {
   const { t } = useTranslation('blockForm')
@@ -110,7 +140,8 @@ function SupportedBlockForm({
     onSubmit: (submitted) => onSubmit?.(submitted)
   })
   useEmitChanges(form, initial, onChange)
-  const { byLocale: status, issuePaths } = useLocaleStatus(form, parsed, locales)
+  useRefusedIssues(form, issues, locales, setActive)
+  const { byLocale: status, issuePaths } = useLocaleStatus(form, parsed, locales, issues)
   const attempted = useStore(form.store, (state) => state.submissionAttempts > 0)
   const submitting = useStore(form.store, (state) => state.isSubmitting)
   const editing = useMemo(() => ({ locales, active, fallback }), [locales, active, fallback])

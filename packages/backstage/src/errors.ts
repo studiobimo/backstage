@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export const API_ERROR = {
   forbidden: { code: 'forbidden', status: 403, message: 'Forbidden' },
   invalid: { code: 'invalid', status: 400, message: 'Invalid input' },
@@ -36,3 +38,49 @@ export const API_ERROR = {
 export type ApiError = (typeof API_ERROR)[keyof typeof API_ERROR]
 
 export const errorBody = ({ code, message }: ApiError) => ({ error: message, code })
+
+const issuePathSegment = z.union([z.string(), z.number()])
+
+export const fieldIssueSchema = z.object({
+  path: z.array(issuePathSegment),
+  code: z.string(),
+  origin: z.string().optional(),
+  format: z.string().optional(),
+  expected: z.string().optional(),
+  minimum: z.number().optional(),
+  maximum: z.number().optional()
+})
+export type FieldIssue = z.infer<typeof fieldIssueSchema>
+
+export const invalidResponseSchema = z.object({
+  error: z.string(),
+  code: z.literal(API_ERROR.invalid.code),
+  issues: z.array(fieldIssueSchema)
+})
+
+const toNumber = (bound: unknown) =>
+  typeof bound === 'number' || typeof bound === 'bigint' ? Number(bound) : undefined
+
+const stringOrUndefined = (value: unknown) => (typeof value === 'string' ? value : undefined)
+
+const pathSegmentsOf = (path: readonly PropertyKey[]) =>
+  path.map((segment) => (typeof segment === 'number' ? segment : String(segment)))
+
+export const fieldIssuesOf = (error: z.ZodError): FieldIssue[] =>
+  error.issues.map((issue) => {
+    const params: Record<string, unknown> = { ...issue }
+    return fieldIssueSchema.parse({
+      path: pathSegmentsOf(issue.path),
+      code: issue.code,
+      origin: stringOrUndefined(params.origin),
+      format: stringOrUndefined(params.format),
+      expected: stringOrUndefined(params.expected),
+      minimum: toNumber(params.minimum),
+      maximum: toNumber(params.maximum)
+    })
+  })
+
+export const invalidBody = (issues: readonly FieldIssue[]) => ({
+  ...errorBody(API_ERROR.invalid),
+  issues
+})

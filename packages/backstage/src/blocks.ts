@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { fieldIssuesOf, type FieldIssue } from './errors.ts'
 import { unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
 
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
@@ -188,14 +189,14 @@ export function describeSlots(registry: Registry): SlotDescription[] {
 }
 
 export type BlockContentResult =
-  { ok: true; schemaVersion: number; content: unknown } | { ok: false }
+  { ok: true; schemaVersion: number; content: unknown } | { ok: false; issues: FieldIssue[] }
 
 export function upgradeBlockContent(
   block: Block,
   schemaVersion: number,
   content: unknown
 ): BlockContentResult {
-  if (schemaVersion > block.version) return { ok: false }
+  if (schemaVersion > block.version) return { ok: false, issues: [] }
   const upgraded =
     schemaVersion < block.version && block.migrate ? block.migrate(content, schemaVersion) : content
   return { ok: true, schemaVersion: block.version, content: upgraded }
@@ -209,5 +210,7 @@ export function validateBlockContent(
   const upgraded = upgradeBlockContent(block, schemaVersion, content)
   if (!upgraded.ok) return upgraded
   const parsed = block.schema.safeParse(upgraded.content)
-  return parsed.success ? { ...upgraded, content: parsed.data } : { ok: false }
+  return parsed.success
+    ? { ...upgraded, content: parsed.data }
+    : { ok: false, issues: fieldIssuesOf(parsed.error) }
 }
