@@ -1,5 +1,5 @@
 import { LOCALES, type Locale } from '../pages.ts'
-import { routeKey, snapshotKey, snapshotSchema, type Snapshot } from '../publishing.ts'
+import { readableSnapshotSchema, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
 import { siteSnapshotKey, siteSnapshotSchema } from '../site-publishing.ts'
 import type { Route } from './routing.ts'
 
@@ -9,7 +9,7 @@ export interface KvReader {
 }
 
 async function readSnapshot(kv: KvReader, pageId: string, locale: Locale) {
-  const parsed = snapshotSchema.safeParse(
+  const parsed = readableSnapshotSchema.safeParse(
     await kv.get(snapshotKey(pageId, locale), { type: 'json' })
   )
   return parsed.success ? parsed.data : null

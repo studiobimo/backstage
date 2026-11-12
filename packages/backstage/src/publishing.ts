@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { validateBlockContent, type Registry } from './blocks.ts'
-import { LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
+import { DEFAULT_LOCALE, LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
 import { RICH_TEXT } from './rich-text.ts'
 import {
   isRecord,
@@ -26,11 +26,23 @@ const ROUTE = { key: { prefix: 'route' } } as const
 export const routeKey = (locale: Locale, slug: string | null) =>
   [ROUTE.key.prefix, locale, slug ?? ''].join(SNAPSHOT.key.separator)
 
+const recordKeysOf = (pageId: string, locale: Locale, slug: string | null) =>
+  [snapshotKey(pageId, locale), routeKey(locale, slug)] as const
+
+export const SNAPSHOT_RECORDS_PER_LOCALE = recordKeysOf('', DEFAULT_LOCALE, null).length
+
 export const snapshotRecords = (snapshots: readonly Snapshot[]) =>
-  snapshots.flatMap((snapshot) => [
-    { key: snapshotKey(snapshot.pageId, snapshot.locale), value: JSON.stringify(snapshot) },
-    { key: routeKey(snapshot.locale, snapshot.slug), value: snapshot.pageId }
-  ])
+  snapshots.flatMap((snapshot) => {
+    const [snapshotRecordKey, routeRecordKey] = recordKeysOf(
+      snapshot.pageId,
+      snapshot.locale,
+      snapshot.slug
+    )
+    return [
+      { key: snapshotRecordKey, value: JSON.stringify(snapshot) },
+      { key: routeRecordKey, value: snapshot.pageId }
+    ]
+  })
 
 export const routeKeysOf = (snapshots: readonly Pick<Snapshot, 'locale' | 'slug'>[]) =>
   snapshots.map(({ locale, slug }) => routeKey(locale, slug))
@@ -83,6 +95,24 @@ export const snapshotSchema = z.object({
   media: z.record(z.string(), snapshotMediaSchema)
 })
 export type Snapshot = z.infer<typeof snapshotSchema>
+
+type SnapshotUpgrade = (stored: Record<string, unknown>) => Record<string, unknown>
+
+export const SNAPSHOT_UPGRADES: Record<number, SnapshotUpgrade> = {}
+
+export const upgradeSnapshot = (
+  stored: unknown,
+  upgrades: Readonly<Record<number, SnapshotUpgrade>> = SNAPSHOT_UPGRADES
+) => {
+  if (!isRecord(stored) || typeof stored.format !== 'number') return stored
+  const upgrade = upgrades[stored.format]
+  return upgrade ? { ...upgrade(stored), format: SNAPSHOT.format } : stored
+}
+
+export const readableSnapshotSchema = z.preprocess(
+  (stored) => upgradeSnapshot(stored),
+  snapshotSchema
+)
 
 export const publishPageSchema = z.object({ expectedVersion: z.number().int().min(1) })
 
