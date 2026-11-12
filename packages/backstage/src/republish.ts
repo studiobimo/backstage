@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { LOCALES } from './pages.ts'
+import type { Locale } from './locales.ts'
 import { publishProblemsResponseSchema, SNAPSHOT_RECORDS_PER_LOCALE } from './publishing.ts'
 
 export const KV_LIMITS = {
@@ -9,19 +9,24 @@ export const KV_LIMITS = {
   subrequestsPerInvocation: 50
 } as const
 
-const SUBREQUESTS = { perPage: 15, perBatchOverhead: 8 } as const
+const SUBREQUESTS = { perPagePerLocale: 7.5, perBatchOverhead: 8 } as const
 
-export const REPUBLISH = {
-  batchSize: Math.floor(
-    (KV_LIMITS.subrequestsPerInvocation - SUBREQUESTS.perBatchOverhead) / SUBREQUESTS.perPage
-  ),
-  writes: { perIndexRebuild: 1 }
-} as const
+export const REPUBLISH = { writes: { perIndexRebuild: 1 } } as const
 
-export const kvWritesPerPage = LOCALES.length * SNAPSHOT_RECORDS_PER_LOCALE
+export const republishBatchSize = (locales: readonly Locale[]) =>
+  Math.max(
+    1,
+    Math.floor(
+      (KV_LIMITS.subrequestsPerInvocation - SUBREQUESTS.perBatchOverhead) /
+        Math.ceil(SUBREQUESTS.perPagePerLocale * locales.length)
+    )
+  )
 
-export const kvWritesToRepublish = (pageCount: number) =>
-  pageCount === 0 ? 0 : pageCount * kvWritesPerPage + REPUBLISH.writes.perIndexRebuild
+export const kvWritesPerPage = (locales: readonly Locale[]) =>
+  locales.length * SNAPSHOT_RECORDS_PER_LOCALE
+
+export const kvWritesToRepublish = (pageCount: number, locales: readonly Locale[]) =>
+  pageCount === 0 ? 0 : pageCount * kvWritesPerPage(locales) + REPUBLISH.writes.perIndexRebuild
 
 export const republishScopeSchema = z.object({
   since: z.number().int().min(0).nullable(),

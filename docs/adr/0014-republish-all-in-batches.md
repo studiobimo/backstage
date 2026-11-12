@@ -19,9 +19,10 @@ makes at most 50 subrequests (D1 and KV calls).
   progress. `GET /api/v1/republish` returns the pages left, the KV writes they need and the daily
   limit, so the dialog shows the cost before anything starts.
 - **The batch size is derived,** from `KV_LIMITS.subrequestsPerInvocation` and the worst-case
-  subrequests of one page. It is 2 today.
+  subrequests of one page, which grow with the site's locales
+  ([ADR-0007](0007-two-locales.md)). It is 2 for English and Spanish.
 - **The writes shown are counted, not typed in.** One page costs
-  `LOCALES.length * SNAPSHOT_RECORDS_PER_LOCALE` writes (snapshot and route per language), and
+  the site's locales times `SNAPSHOT_RECORDS_PER_LOCALE` writes (snapshot and route per language), and
   the run adds one write for the sitemap index. A test makes the real run and compares the count.
 - **The sitemap index is rebuilt once,** in the request that finishes the run
   ([ADR-0013](0013-sitemap-index-from-d1.md)), not per page. Publishing a page records

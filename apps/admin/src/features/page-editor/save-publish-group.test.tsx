@@ -1,12 +1,13 @@
 import { hasUnpublishedChanges, type PageBlock } from '@studiobimo/backstage'
 import { useShortcut } from '@/lib/shortcuts'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ToastProvider } from '@/components/ui/toast'
 import { aboutPage } from '@/test/fixtures'
+import { testQueryClient } from '@/test/query-client'
 
 import { PublishNotes } from './publish-notes'
 import { SavePublishGroup } from './save-publish-group'
@@ -62,7 +63,7 @@ function Harness({ dirty, publishedAt, publishedVersion = 3, onSave }: HarnessPr
 const renderGroup = (props: Partial<HarnessProps> = {}) => {
   const onSave = vi.fn()
   render(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={testQueryClient()}>
       <ToastProvider>
         <Harness dirty={false} publishedAt={null} onSave={onSave} {...props} />
       </ToastProvider>

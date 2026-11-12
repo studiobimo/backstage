@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { previewUrl } from '@/lib/preview-url'
+import { testQueryClient } from '@/test/query-client'
 
 import { BlockPreviewPage } from './block-preview-page'
 
@@ -14,8 +15,7 @@ const BLOCKS = [
   { name: 'one-column-text', version: 1, schema: {} }
 ]
 
-function renderPage() {
-  const queryClient = new QueryClient()
+function renderPage(queryClient = testQueryClient()) {
   return render(
     <QueryClientProvider client={queryClient}>
       <BlockPreviewPage />
@@ -54,6 +54,15 @@ describe('BlockPreviewPage', () => {
       'src',
       previewUrl(SITE, 'one-column-text', 'en')
     )
+  })
+
+  it('offers no language choice on a site with one language', async () => {
+    renderPage(testQueryClient({ locales: ['fr'], defaultLocale: 'fr' }))
+    expect(await screen.findByTitle('split-hero preview')).toHaveAttribute(
+      'src',
+      previewUrl(SITE, 'split-hero', 'fr')
+    )
+    expect(screen.queryByRole('button', { name: 'FR' })).toBeNull()
   })
 
   it('reframes in the chosen language and marks the chosen width', async () => {
