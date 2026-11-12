@@ -9,7 +9,25 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "types": "./dist/lib/index.d.ts",
+        "default": "./dist/lib/index.js"
+      },
+      "./admin": {
+        "types": "./dist/lib/admin/index.d.ts",
+        "default": "./dist/lib/admin/index.js"
+      },
+      "./render": {
+        "types": "./dist/lib/render/index.d.ts",
+        "default": "./dist/lib/render/index.js"
+      },
+      "./site": {
+        "types": "./dist/lib/site/index.d.ts",
+        "default": "./dist/lib/site/index.js"
+      }
+    }
   },
   "type": "module",
   "sideEffects": false,
@@ -21,12 +39,12 @@
   },
   "files": [
     "dist",
-    "src",
     "migrations",
     "backstage.mk"
   ],
   "scripts": {
-    "prepack": "NODE_ENV=production pnpm --filter backstage-admin build && rm -rf dist && mkdir dist && cp -R ../../apps/admin/dist/client dist/client",
+    "build:lib": "mkdir -p node_modules/.tmp && wrangler types node_modules/.tmp/worker-env.d.ts -c ../../apps/admin/wrangler.jsonc --env-file ../../apps/admin/.dev.vars.example && tsc -p tsconfig.build.json",
+    "prepack": "NODE_ENV=production pnpm --filter backstage-admin build && rm -rf dist && mkdir dist && cp -R ../../apps/admin/dist/client dist/client && pnpm build:lib",
     "test": "vitest"
   },
   "dependencies": {
