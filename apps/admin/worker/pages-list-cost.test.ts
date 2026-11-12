@@ -20,45 +20,58 @@ const hero = (index: number) => ({
   content: { title: index % 2 === 0 ? { en: 'Hello' } : { en: 'Hi', es: 'Hola' }, body: {} }
 })
 
-const insertPage = (page: number) => {
-  const id = crypto.randomUUID()
-  const now = Date.now()
-  return {
-    id,
-    statements: [
-      db
-        .prepare(
-          'INSERT INTO pages (id, is_home, layout, version, created_at, updated_at) VALUES (?, 0, ?, 1, ?, ?)'
-        )
-        .bind(id, 'default', now + page, now),
-      ...['en', 'es'].map((locale) =>
-        db
-          .prepare('INSERT INTO page_locales (page_id, locale, slug, title) VALUES (?, ?, ?, ?)')
-          .bind(id, locale, `${locale}-${page}`, `Page ${page}`)
-      ),
-      ...Array.from({ length: BLOCKS_PER_PAGE }, (_, position) => {
-        const block = hero(position)
-        return db
-          .prepare(
-            'INSERT INTO page_blocks (id, page_id, position, block, schema_version, content) VALUES (?, ?, ?, ?, ?, ?)'
-          )
-          .bind(
-            block.id,
-            id,
-            position,
-            block.block,
-            block.schemaVersion,
-            JSON.stringify(block.content)
-          )
-      })
-    ]
-  }
-}
+const ROWS_PER_STATEMENT = 100
+
+const quoted = (value: string | number) => (typeof value === 'number' ? `${value}` : `'${value}'`)
+
+const valuesOf = (rows: (string | number)[][]) =>
+  rows.map((row) => `(${row.map(quoted).join(', ')})`).join(', ')
+
+const insertAll = (table: string, columns: string[], rows: (string | number)[][]) =>
+  Array.from({ length: Math.ceil(rows.length / ROWS_PER_STATEMENT) }, (_, chunk) =>
+    db.prepare(
+      `INSERT INTO ${table} (${columns.join(', ')}) VALUES ${valuesOf(
+        rows.slice(chunk * ROWS_PER_STATEMENT, (chunk + 1) * ROWS_PER_STATEMENT)
+      )}`
+    )
+  )
 
 const seedSite = async () => {
-  const inserted = Array.from({ length: PAGE_COUNT }, (_, page) => insertPage(page))
-  await Promise.all(inserted.map(({ statements }) => db.batch(statements)))
-  return inserted.map(({ id }) => id)
+  const now = Date.now()
+  const ids = Array.from({ length: PAGE_COUNT }, () => crypto.randomUUID())
+  const blockRows = ids.flatMap((id) =>
+    Array.from({ length: BLOCKS_PER_PAGE }, (_, position) => {
+      const block = hero(position)
+      return [
+        block.id,
+        id,
+        position,
+        block.block,
+        block.schemaVersion,
+        JSON.stringify(block.content)
+      ]
+    })
+  )
+  await db.batch([
+    ...insertAll(
+      'pages',
+      ['id', 'is_home', 'layout', 'version', 'created_at', 'updated_at'],
+      ids.map((id, page) => [id, 0, 'default', 1, now + page, now])
+    ),
+    ...insertAll(
+      'page_locales',
+      ['page_id', 'locale', 'slug', 'title'],
+      ids.flatMap((id, page) =>
+        ['en', 'es'].map((locale) => [id, locale, `${locale}-${page}`, `Page ${page}`])
+      )
+    ),
+    ...insertAll(
+      'page_blocks',
+      ['id', 'page_id', 'position', 'block', 'schema_version', 'content'],
+      blockRows
+    )
+  ])
+  return ids
 }
 
 const missingSpanish = BLOCKS_PER_PAGE / 2
