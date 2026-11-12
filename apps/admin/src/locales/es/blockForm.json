@@ -25,6 +25,7 @@
     "editing": "Idioma de edición",
     "hint": "Los campos con la etiqueta de idioma cambian según el idioma. El resto se comparte.",
     "perLanguage": "Se traduce por separado en cada idioma",
+    "required": "Obligatorio",
     "missing": "Sin traducir",
     "missingCount_one": "{{count}} sin traducir",
     "missingCount_other": "{{count}} sin traducir",

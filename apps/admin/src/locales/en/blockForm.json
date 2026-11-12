@@ -25,6 +25,7 @@
     "editing": "Editing language",
     "hint": "Fields with a language badge change per language. The rest are shared.",
     "perLanguage": "Translated separately for each language",
+    "required": "Required",
     "missing": "Not translated",
     "missingCount_one": "{{count}} missing",
     "missingCount_other": "{{count}} missing",

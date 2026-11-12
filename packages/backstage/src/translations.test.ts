@@ -6,6 +6,7 @@ import {
   isBlank,
   isMissingTranslation,
   isSeoMissing,
+  lacksDefaultLocale,
   markedFieldsIn,
   type TranslatedNode
 } from './translations.ts'
@@ -77,6 +78,7 @@ describe('isSeoMissing', () => {
 describe('markedFieldsIn', () => {
   const link: TranslatedNode = { backstage: 'link' }
   const schema: TranslatedNode = {
+    required: ['cta'],
     properties: {
       cta: link,
       menu: { items: { properties: { target: { additionalProperties: link } } } }
@@ -89,14 +91,46 @@ describe('markedFieldsIn', () => {
       menu: [{ target: { en: { href: '/b' }, es: { href: '/c' } } }, { target: {} }]
     }
     expect(markedFieldsIn(schema, content, 'link')).toEqual([
-      { path: 'cta', value: { href: '/a' } },
-      { path: 'menu[0].target.en', value: { href: '/b' } },
-      { path: 'menu[0].target.es', value: { href: '/c' } }
+      { path: 'cta', value: { href: '/a' }, required: true },
+      { path: 'menu[0].target.en', value: { href: '/b' }, required: true },
+      { path: 'menu[0].target.es', value: { href: '/c' }, required: true }
     ])
   })
 
   it('finds nothing of another kind and tolerates missing content', () => {
     expect(markedFieldsIn(schema, {}, 'image')).toEqual([])
-    expect(markedFieldsIn(schema, undefined, 'link')).toEqual([{ path: 'cta', value: undefined }])
+    expect(markedFieldsIn(schema, undefined, 'link')).toEqual([
+      { path: 'cta', value: undefined, required: true }
+    ])
+  })
+})
+
+describe('required marked fields', () => {
+  const schema: TranslatedNode = {
+    required: ['title'],
+    properties: { title: localized, subtitle: localized }
+  }
+
+  it('tells a field listed as required from one that is not', () => {
+    const required = markedFieldsIn(schema, {}, 'localized').map(({ path, required }) => [
+      path,
+      required
+    ])
+    expect(required).toEqual([
+      ['title', true],
+      ['subtitle', false]
+    ])
+  })
+})
+
+describe('lacksDefaultLocale', () => {
+  it('needs a non-blank value in the default language', () => {
+    expect(lacksDefaultLocale(undefined)).toBe(true)
+    expect(lacksDefaultLocale({})).toBe(true)
+    expect(lacksDefaultLocale({ es: 'Hola' })).toBe(true)
+    expect(lacksDefaultLocale({ en: '' })).toBe(true)
+    expect(lacksDefaultLocale({ en: doc('') })).toBe(true)
+    expect(lacksDefaultLocale({ en: 'Hi' })).toBe(false)
+    expect(lacksDefaultLocale({ es: 'Hola' }, 'es')).toBe(false)
   })
 })

@@ -1,4 +1,4 @@
-import { isMissingTranslation } from '@studiobimo/backstage'
+import { isMissingTranslation, lacksDefaultLocale } from '@studiobimo/backstage'
 import { createContext, useContext } from 'react'
 
 import type { FieldSpec, GroupSpec } from './spec.ts'
@@ -12,6 +12,7 @@ export interface LocaleStatus {
 interface LocalizedEntry {
   path: Path
   value: BlockValue
+  required: boolean
 }
 
 function collectLocalized(
@@ -21,7 +22,7 @@ function collectLocalized(
 ): LocalizedEntry[] {
   switch (spec.kind) {
     case 'localized':
-      return [{ path, value: isRecord(value) ? value : {} }]
+      return [{ path, value: isRecord(value) ? value : {}, required: spec.required }]
     case 'group':
       return spec.fields.flatMap((field) =>
         collectLocalized(field, isRecord(value) ? value[field.key] : undefined, [
@@ -48,8 +49,11 @@ export function localeStatus(
   locales: readonly string[]
 ): Record<string, LocaleStatus> {
   const entries = collectLocalized(root, value, [])
+  const isMissing = (entry: LocalizedEntry, locale: string) =>
+    isMissingTranslation(entry.value, locale) ||
+    (entry.required && locale === locales[0] && lacksDefaultLocale(entry.value, locale))
   const statusOf = (locale: string): LocaleStatus => ({
-    missing: entries.filter((entry) => isMissingTranslation(entry.value, locale)).length,
+    missing: entries.filter((entry) => isMissing(entry, locale)).length,
     invalid: issuePaths.filter((issuePath) =>
       entries.some((entry) => startsWith(issuePath, [...entry.path, locale]))
     ).length
