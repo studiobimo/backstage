@@ -111,8 +111,8 @@ export {
   deletePage,
   findPage,
   listPageBlocks,
-  listMissingTranslations,
-  listPages,
+  listPageSummaries,
+  refreshMissingTranslations,
   PAGE_WRITE,
   readPageSeo,
   readPageStamp,
@@ -157,6 +157,7 @@ export {
   isMissingTranslation,
   lacksDefaultLocale,
   isSeoMissing,
+  NO_MISSING,
   richTextPlain
 } from './translations.ts'
 export type { MissingByLocale, TranslatedNode } from './translations.ts'

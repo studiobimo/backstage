@@ -5,15 +5,14 @@ import {
   ensureUser,
   errorBody,
   findPage,
-  listMissingTranslations,
   listPageBlocks,
-  listPages,
-  LOCALES,
+  listPageSummaries,
   PAGE_WRITE,
   pageInputSchema,
   renamePageSchema,
   readPageSeo,
   readPageStamp,
+  refreshMissingTranslations,
   renamePage,
   replacePageBlocks,
   savePageBlocksSchema,
@@ -23,20 +22,18 @@ import {
   writePageSeo,
   type Registry,
   type ApiError,
-  type MissingByLocale,
   type PageWrite,
   type VersionedWrite
 } from '../index.ts'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
+import { createMiddleware } from 'hono/factory'
 
 import type { AccessEnv } from './auth.ts'
 import { readJsonBody, RESPONSE_STATUS, respondWithError } from './respond.ts'
 import { indexUnpublished, removeSnapshots } from './snapshots.ts'
 
 type PagesContext = Context<AccessEnv>
-
-const NO_MISSING = Object.fromEntries(LOCALES.map((locale) => [locale, 0])) as MissingByLocale
 
 const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok' | 'stale'>, ApiError> = {
   [PAGE_WRITE.slugTaken]: API_ERROR.slugTaken,
@@ -57,6 +54,12 @@ const failureOf = async (c: PagesContext, id: string, outcome: PageWrite) => {
   if (outcome === PAGE_WRITE.stale) return respondStale(c, id)
   return respondWithError(c, WRITE_ERRORS[outcome])
 }
+
+const refreshMissingAfterSave = (registry: Registry) =>
+  createMiddleware<AccessEnv>(async (c, next) => {
+    await next()
+    if (c.res.ok) await refreshMissingTranslations(c.env.DB!, registry, c.req.param('id') ?? '')
+  })
 
 const blocksResponse = async (c: PagesContext, id: string) => {
   const page = await findPage(c.env.DB!, id)
@@ -80,11 +83,6 @@ const versionedWrite = async (
   expectedVersion,
   editorId: await ensureUser(c.env.DB!, c.get('editor'))
 })
-
-const listPageSummaries = async (d1: D1Database, registry: Registry) => {
-  const [pages, missing] = await Promise.all([listPages(d1), listMissingTranslations(d1, registry)])
-  return pages.map((page) => ({ ...page, missing: missing.get(page.id) ?? NO_MISSING }))
-}
 
 export const pagesRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()
@@ -118,7 +116,7 @@ export const pagesRoutes = (registry: Registry) =>
       const id = c.req.param('id')
       return (await blocksResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })
-    .put('/:id/blocks', async (c) => {
+    .put('/:id/blocks', refreshMissingAfterSave(registry), async (c) => {
       const body = await readJsonBody(c, savePageBlocksSchema)
       if (!body.ok) return body.response
       if (
@@ -152,7 +150,7 @@ export const pagesRoutes = (registry: Registry) =>
       const id = c.req.param('id')
       return (await seoResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })
-    .put('/:id/seo', async (c) => {
+    .put('/:id/seo', refreshMissingAfterSave(registry), async (c) => {
       const body = await readJsonBody(c, savePageSeoSchema)
       if (!body.ok) return body.response
       const { expectedVersion, ...seo } = body.data
