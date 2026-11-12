@@ -1,7 +1,6 @@
 import {
   API_ERROR,
   hasUnpublishedChanges,
-  LOCALES,
   type Locale,
   type PageBlock,
   type PageSummary
@@ -34,6 +33,7 @@ import { StaleAlert } from './stale-alert'
 import { usePublish } from './use-publish'
 import type { LocaleStatus } from '../block-form/locale-status'
 import { pageLabel } from '../pages/page-label'
+import { useLocaleConfig } from '../config/queries'
 import { pagesQuery } from '../pages/queries'
 import { settingsQuery } from '../settings/queries'
 import {
@@ -452,12 +452,13 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   const defaults = useSeoDefaults(
     Object.fromEntries((page?.locales ?? []).map(({ locale, title }) => [locale, title]))
   )
-  const [locale, setLocale] = useState<Locale>(LOCALES[0])
-  const actions = useBlockActions(saved, (name) => blockTitle(options, name, locale, LOCALES[0]))
+  const { locales, defaultLocale } = useLocaleConfig()
+  const [locale, setLocale] = useState<Locale>(defaultLocale)
+  const actions = useBlockActions(saved, (name) => blockTitle(options, name, locale, defaultLocale))
   const { blocks } = actions
   const editing = useMemo(
-    () => ({ locales: LOCALES, active: locale, fallback: LOCALES[0] }),
-    [locale]
+    () => ({ locales, active: locale, fallback: defaultLocale }),
+    [locales, locale, defaultLocale]
   )
   const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)
   const draft = { blocks, layout, seo }
@@ -478,9 +479,9 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
           dirty={dirty}
           save={save}
           locale={{
-            locales: LOCALES,
+            locales,
             active: locale,
-            gaps: localeGaps(blocks, options, seo),
+            gaps: localeGaps(blocks, options, seo, locales),
             onChange: (next) => setLocale(next as Locale)
           }}
           onReload={onReload}

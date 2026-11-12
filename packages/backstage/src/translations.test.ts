@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { LOCALES, type PageSeo } from './pages.ts'
+import type { PageSeo } from './pages.ts'
 import {
   countMissingTranslations,
   isBlank,
@@ -63,10 +63,7 @@ describe('countMissingTranslations', () => {
 
 describe('isSeoMissing', () => {
   const entry = (title: string, description = '') => ({ title, description, socialImageId: null })
-  const seo = (en: string, es: string): PageSeo =>
-    Object.fromEntries(
-      LOCALES.map((locale) => [locale, entry(locale === 'en' ? en : es)])
-    ) as PageSeo
+  const seo = (en: string, es: string): PageSeo => ({ en: entry(en), es: entry(es) })
 
   it('flags a language left empty while another has text', () => {
     expect(isSeoMissing(seo('About', ''), 'es')).toBe(true)

@@ -14,6 +14,7 @@ import {
   readRepublishBatch,
   recordPublished,
   REPUBLISH,
+  republishBatchSize,
   republishScopeSchema,
   resolveLocaleConfig,
   type Registry,
@@ -88,8 +89,9 @@ const republishPages = async (
   }
 }
 
-export const republishRoutes = (registry: Registry) =>
-  new Hono<AccessEnv>()
+export const republishRoutes = (registry: Registry) => {
+  const { locales } = resolveLocaleConfig(registry)
+  return new Hono<AccessEnv>()
     .get('/', async (c) => {
       const query = scopeQuerySchema.parse(c.req.query())
       const scope: RepublishScope = {
@@ -101,7 +103,7 @@ export const republishRoutes = (registry: Registry) =>
         status: {
           remaining,
           changed,
-          writes: kvWritesToRepublish(remaining),
+          writes: kvWritesToRepublish(remaining, locales),
           dailyWriteLimit: KV_LIMITS.freePlanWritesPerDay
         }
       })
@@ -113,7 +115,7 @@ export const republishRoutes = (registry: Registry) =>
       const pages = await readRepublishBatch(
         c.env.DB,
         { since, cursor: body.data.cursor },
-        REPUBLISH.batchSize
+        republishBatchSize(locales)
       )
       const progress: BatchProgress = {
         republished: [],
@@ -133,10 +135,11 @@ export const republishRoutes = (registry: Registry) =>
         skipped: progress.skipped,
         remaining,
         writes:
-          progress.republished.length * kvWritesPerPage +
+          progress.republished.length * kvWritesPerPage(locales) +
           (rebuilds ? REPUBLISH.writes.perIndexRebuild : 0),
         done,
         halted: progress.halted
       }
       return c.json(response)
     })
+}

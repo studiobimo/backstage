@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 import { validateBlockContent, type Registry } from './blocks.ts'
-import { resolveLocaleConfig, type Locale } from './locales.ts'
-import { DEFAULT_LOCALE, pageBlockSchema, type PageBlock } from './pages.ts'
+import { LOCALE, resolveLocaleConfig, type Locale } from './locales.ts'
+import { pageBlockSchema, type PageBlock } from './pages.ts'
 import { RICH_TEXT } from './rich-text.ts'
 import {
   isRecord,
@@ -30,7 +30,11 @@ export const routeKey = (locale: Locale, slug: string | null) =>
 const recordKeysOf = (pageId: string, locale: Locale, slug: string | null) =>
   [snapshotKey(pageId, locale), routeKey(locale, slug)] as const
 
-export const SNAPSHOT_RECORDS_PER_LOCALE = recordKeysOf('', DEFAULT_LOCALE, null).length
+export const SNAPSHOT_RECORDS_PER_LOCALE = recordKeysOf(
+  '',
+  LOCALE.default.defaultLocale,
+  null
+).length
 
 export const snapshotRecords = (snapshots: readonly Snapshot[]) =>
   snapshots.flatMap((snapshot) => {

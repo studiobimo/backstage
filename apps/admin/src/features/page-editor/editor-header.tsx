@@ -19,6 +19,7 @@ interface LocaleTabsProps {
 
 function EditorLocaleTabs({ locales, active, gaps, onChange }: LocaleTabsProps) {
   const { t, i18n } = useTranslation('blockForm')
+  if (locales.length < 2) return null
   return (
     <Tabs value={active} onValueChange={(value) => onChange(String(value))}>
       <TabsList size="sm" aria-label={t('locale.editing')}>

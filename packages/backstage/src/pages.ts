@@ -1,10 +1,8 @@
 import { z } from 'zod'
 
-import { LOCALE, perLocaleKeys, type Locale } from './locales.ts'
+import { perLocaleKeys, type Locale } from './locales.ts'
 
 export type { Locale }
-export const LOCALES = LOCALE.default.locales
-export const DEFAULT_LOCALE = LOCALE.default.defaultLocale
 
 export const PAGE = {
   slug: { maxLength: 80, pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ },

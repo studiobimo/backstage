@@ -63,9 +63,7 @@ export type { LocaleConfig } from './locales.ts'
 export { RICH_TEXT, richTextDoc } from './rich-text.ts'
 export type { RichTextDoc } from './rich-text.ts'
 export {
-  DEFAULT_LOCALE,
   hasUnpublishedChanges,
-  LOCALES,
   PAGE,
   pageBlockSchema,
   pageBlocksResponseSchema,
@@ -162,6 +160,7 @@ export {
   kvWritesPerPage,
   kvWritesToRepublish,
   REPUBLISH,
+  republishBatchSize,
   republishBatchSchema,
   republishScopeSchema,
   republishStatusResponseSchema

@@ -1,5 +1,5 @@
 import { blockThumbnailUrl, type PageBlock, type PageSeo } from '@studiobimo/backstage'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { blocker } from '@/test/blocker'
 import { aboutPage } from '@/test/fixtures'
+import { testQueryClient } from '@/test/query-client'
 import { PageEditor } from './page-editor'
 
 vi.mock('@tanstack/react-router', async () => ({
@@ -97,11 +98,9 @@ const mockApi = (
   return Object.assign(puts, { layouts: layoutPuts, seo: seoPuts })
 }
 
-const renderEditor = () =>
+const renderEditor = (client = testQueryClient()) =>
   render(
-    <QueryClientProvider
-      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
-    >
+    <QueryClientProvider client={client}>
       <Suspense>
         <PageEditor pageId="p1" />
       </Suspense>
@@ -344,6 +343,16 @@ describe('PageEditor SEO', SUITE, () => {
     expect(puts.seo[0]!.en).toMatchObject({ title: 'About the studio', description: 'Who we are' })
     expect(puts.seo[0]!.expectedVersion).toBe(3)
     expect(puts).toHaveLength(0)
+  })
+})
+
+describe('PageEditor on a site with one language', SUITE, () => {
+  it('has no language tabs', async () => {
+    mockApi(saved)
+    renderEditor(testQueryClient({ locales: ['en'], defaultLocale: 'en' }))
+    await screen.findByRole('textbox', { name: 'SEO title' })
+    expect(screen.queryByRole('tab', { name: /Spanish/ })).toBeNull()
+    expect(screen.queryByRole('tab', { name: /English/ })).toBeNull()
   })
 })
 

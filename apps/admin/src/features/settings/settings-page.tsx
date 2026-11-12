@@ -1,4 +1,4 @@
-import { LOCALES, siteSettingsJsonSchema, siteSettingsSchema } from '@studiobimo/backstage'
+import { siteSettingsJsonSchema, siteSettingsSchema } from '@studiobimo/backstage'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { GlobeIcon } from 'lucide-react'
 import { useMemo } from 'react'
@@ -10,6 +10,7 @@ import { BlockForm } from '@/features/block-form/block-form.tsx'
 import { SectionFrame } from '@/features/block-form/section-frame.tsx'
 import type { JsonSchema } from '@/features/block-form/spec.ts'
 import { blockValue, type BlockValue } from '@/features/block-form/value.ts'
+import { useLocaleConfig } from '@/features/config/queries'
 
 import { PublishSiteSection } from './publish-site-section'
 import { saveSettingsMutation, settingsQuery, slotsQuery } from './queries'
@@ -45,6 +46,7 @@ function useSaveSettings(expectedVersion: number) {
 function GeneralSection({ reportDirty }: { reportDirty: ReportDirty }) {
   const { t } = useTranslation('settings')
   const { data } = useSuspenseQuery(settingsQuery)
+  const { locales } = useLocaleConfig()
   const schema = useTranslatedSchema()
   const { submit, failed, stale, issues, clearStale } = useSaveSettings(data.version)
   const { generation, reload } = useReloadLatest(settingsQuery.queryKey, clearStale)
@@ -61,7 +63,7 @@ function GeneralSection({ reportDirty }: { reportDirty: ReportDirty }) {
       <BlockForm
         key={generation}
         schema={schema}
-        locales={LOCALES}
+        locales={locales}
         value={blockValue.parse(data.settings)}
         onSubmit={submit}
         onDirtyChange={onDirtyChange}

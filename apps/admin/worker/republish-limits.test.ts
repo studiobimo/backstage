@@ -1,4 +1,4 @@
-import { KV_LIMITS, kvWritesToRepublish } from '@studiobimo/backstage'
+import { KV_LIMITS, kvWritesToRepublish, resolveLocaleConfig } from '@studiobimo/backstage'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { regular, send, sendApi, useFreshPagesDb } from './pages-test-support'
@@ -22,7 +22,7 @@ describe('republish limits', () => {
     const status = await statusOf()
     expect(status).toMatchObject({
       remaining: 5,
-      writes: kvWritesToRepublish(5),
+      writes: kvWritesToRepublish(5, resolveLocaleConfig().locales),
       dailyWriteLimit: KV_LIMITS.freePlanWritesPerDay
     })
     const writes = countKvWrites()

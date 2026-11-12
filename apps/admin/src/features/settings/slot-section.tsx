@@ -18,7 +18,8 @@ import { BlockForm } from '@/features/block-form/block-form.tsx'
 import { SectionFrame } from '@/features/block-form/section-frame.tsx'
 import type { BlockValue } from '@/features/block-form/value.ts'
 import { blockValue } from '@/features/block-form/value.ts'
-import { LOCALES, SLOT, type SiteBlock } from '@studiobimo/backstage'
+import { useLocaleConfig } from '@/features/config/queries'
+import { SLOT, type SiteBlock } from '@studiobimo/backstage'
 
 import { saveSlotMutation, slotsQuery, type SlotView } from './queries'
 import { SaveFailedAlert } from './save-failed-alert'
@@ -84,6 +85,7 @@ function ReplaceVariantConfirm({
 
 export function SlotSection({ slot, reportDirty }: { slot: SlotView; reportDirty: ReportDirty }) {
   const { t } = useTranslation('settings')
+  const { locales } = useLocaleConfig()
   const [choice, setChoice] = useState(slot.current?.block ?? slot.blocks[0]!.name)
   const [pending, setPending] = useState<SlotSave>()
   const { submit, failed, stale, issues, clearStale } = useSaveSlot(slot)
@@ -118,7 +120,7 @@ export function SlotSection({ slot, reportDirty }: { slot: SlotView; reportDirty
       <BlockForm
         key={`${block.name}-${generation}`}
         schema={block.schema}
-        locales={LOCALES}
+        locales={locales}
         value={stored === undefined ? undefined : blockValue.parse(stored)}
         onSubmit={(value) => requestSave({ block, value })}
         onDirtyChange={onDirtyChange}

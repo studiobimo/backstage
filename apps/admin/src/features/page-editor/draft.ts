@@ -1,7 +1,6 @@
 import {
   countMissingTranslations,
   isSeoMissing,
-  LOCALES,
   type Locale,
   type PageBlock,
   type PageSeo
@@ -67,10 +66,11 @@ const blocksMissing = (blocks: PageBlock[], options: BlockOption[], locale: Loca
 export const localeGaps = (
   blocks: PageBlock[],
   options: BlockOption[],
-  seo: PageSeo
+  seo: PageSeo,
+  locales: readonly Locale[]
 ): Record<Locale, LocaleStatus> =>
   Object.fromEntries(
-    LOCALES.map((locale) => [
+    locales.map((locale) => [
       locale,
       {
         missing: blocksMissing(blocks, options, locale) + (isSeoMissing(seo, locale) ? 1 : 0),

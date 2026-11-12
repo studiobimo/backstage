@@ -1,11 +1,12 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { DEFAULT_LOCALE, LOCALES, type Locale } from '@studiobimo/backstage'
+import type { Locale } from '@studiobimo/backstage'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { previewUrl } from '@/lib/preview-url'
+import { useLocaleConfig } from '@/features/config/queries'
 import { blockDescriptionsQuery } from '@/features/page-editor/queries'
 import { siteOriginQuery } from './queries'
 import { cn } from '@/lib/utils'
@@ -49,7 +50,8 @@ export function BlockPreviewPage() {
   const { data: blocks } = useSuspenseQuery(blockDescriptionsQuery)
   const { data: siteOrigin } = useSuspenseQuery(siteOriginQuery)
   const [width, setWidth] = useState<FrameWidth>('desktop')
-  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
+  const { locales, defaultLocale, hasMultipleLocales } = useLocaleConfig()
+  const [locale, setLocale] = useState<Locale>(defaultLocale)
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -63,12 +65,14 @@ export function BlockPreviewPage() {
               options={WIDTHS.map((value) => ({ value, label: t(`width.${value}`) }))}
               onChange={setWidth}
             />
-            <Choice
-              label={t('language')}
-              value={locale}
-              options={LOCALES.map((value) => ({ value, label: value.toUpperCase() }))}
-              onChange={setLocale}
-            />
+            {hasMultipleLocales && (
+              <Choice
+                label={t('language')}
+                value={locale}
+                options={locales.map((value) => ({ value, label: value.toUpperCase() }))}
+                onChange={setLocale}
+              />
+            )}
           </div>
         }
       />
