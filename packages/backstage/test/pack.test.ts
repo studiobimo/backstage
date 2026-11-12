@@ -67,6 +67,16 @@ describe('the packed package', () => {
     expect(tar('-tzf').split('\n')).toContain('package/dist/client/index.html')
   })
 
+  it('ships no site-specific assets in the SPA', () => {
+    const client = tar('-tzf')
+      .split('\n')
+      .filter((file) => file.startsWith('package/dist/client/'))
+    expect(client.filter((file) => /thumbnail/i.test(file))).toEqual([])
+    expect(client.filter((file) => file.endsWith('.svg'))).toEqual([
+      'package/dist/client/favicon.svg'
+    ])
+  })
+
   it('ships the migrations and the make target that applies them', () => {
     const files = tar('-tzf').split('\n')
     expect(files).toContain('package/backstage.mk')

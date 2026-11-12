@@ -1,5 +1,6 @@
 export {
   BLOCK_PREVIEW,
+  blockThumbnailUrl,
   defineBlock,
   defineLayout,
   defineRegistry,

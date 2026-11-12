@@ -16,6 +16,7 @@ import { PREVIEW_PHOTO } from '../src/blocks/sample-support'
 import { PREVIEW_MEDIA, PREVIEW_SAMPLES } from '../src/blocks/samples'
 import { renderPreview } from './page'
 import { respondWithError } from './respond'
+import { THUMBNAIL, thumbnailOf } from './thumbnails'
 
 const PREVIEW_HEADERS = {
   'Cache-Control': 'no-store',
@@ -51,6 +52,14 @@ export const previewRoutes = new Hono<{ Bindings: Env }>()
   .get(`/${PREVIEW_PHOTO.path}`, (c) =>
     c.body(photo, 200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': MEDIA.cacheControl })
   )
+  .get(`${BLOCK_PREVIEW.path}/:name/${THUMBNAIL.file}`, (c) => {
+    const svg = thumbnailOf(c.req.param('name'))
+    if (!svg) return respondWithError(c, API_ERROR.notFound, PREVIEW_HEADERS)
+    return c.body(svg, 200, {
+      'Content-Type': THUMBNAIL.contentType,
+      'Cache-Control': THUMBNAIL.cacheControl
+    })
+  })
   .get(`${BLOCK_PREVIEW.path}/:name`, (c) => {
     const name = c.req.param('name')
     const block = PREVIEW_SAMPLES[name] === undefined ? undefined : components.registry.get(name)

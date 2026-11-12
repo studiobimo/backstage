@@ -1,4 +1,4 @@
-import type { PageBlock, PageSeo } from '@studiobimo/backstage'
+import { blockThumbnailUrl, type PageBlock, type PageSeo } from '@studiobimo/backstage'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -22,6 +22,7 @@ vi.mock('@tanstack/react-router', () => ({
   }
 }))
 
+const SITE_ORIGIN = 'https://site.test'
 const about = aboutPage
 const hero = {
   name: 'hero',
@@ -85,6 +86,7 @@ const mockApi = (
           JSON.stringify({ ...body, version: body.expectedVersion + 1, layout: 'default' })
         )
       }
+      if (url.endsWith('/site-origin')) return new Response(JSON.stringify({ origin: SITE_ORIGIN }))
       if (url.endsWith('/layouts')) {
         return new Response(JSON.stringify({ layouts: ['default', 'minimal', 'bare'] }))
       }
@@ -133,6 +135,21 @@ describe('PageEditor blocks and layout', SUITE, () => {
     await user.click(screen.getByRole('button', { name: 'Add block' }))
     await user.click(await screen.findByRole('option', { name: /hero/ }))
     expect(await rows()).toHaveLength(1)
+  })
+
+  it('shows each block thumbnail from the site origin', async () => {
+    mockApi([])
+    const user = userEvent.setup()
+    renderEditor()
+    await screen.findByText('No blocks yet')
+    await user.click(screen.getByRole('button', { name: 'Add block' }))
+    const option = await screen.findByRole('option', { name: /hero/ })
+    await waitFor(() =>
+      expect(option.querySelector('img')).toHaveAttribute(
+        'src',
+        blockThumbnailUrl(SITE_ORIGIN, 'hero')
+      )
+    )
   })
 
   it('adds a block from the picker with the keyboard alone and focuses its row', async () => {
