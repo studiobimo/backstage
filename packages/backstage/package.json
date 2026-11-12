@@ -43,7 +43,7 @@
     "backstage.mk"
   ],
   "scripts": {
-    "build:lib": "mkdir -p node_modules/.tmp && pnpm --filter backstage-admin exec wrangler types ../../packages/backstage/node_modules/.tmp/worker-env.d.ts --env-file .dev.vars.example && tsc -p tsconfig.build.json",
+    "build:lib": "mkdir -p node_modules/.tmp && wrangler types node_modules/.tmp/worker-env.d.ts -c ../../apps/admin/wrangler.jsonc --env-file ../../apps/admin/.dev.vars.example && tsc -p tsconfig.build.json",
     "prepack": "NODE_ENV=production pnpm --filter backstage-admin build && rm -rf dist && mkdir dist && cp -R ../../apps/admin/dist/client dist/client && pnpm build:lib",
     "test": "vitest"
   },
