@@ -111,45 +111,51 @@ function PageLocaleTabs({ form, page }: { form: PageForm; page?: Page }) {
   )
 }
 
-export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) {
+function PageFormContent({ page, onOpenChange }: Omit<PageFormSheetProps, 'open'>) {
   const { t } = useTranslation('pages')
   const { form, failure } = usePageForm(page, () => onOpenChange(false))
   return (
+    <form
+      className="flex min-h-0 flex-1 flex-col"
+      onSubmit={(event) => {
+        event.preventDefault()
+        void form.handleSubmit()
+      }}
+    >
+      <SheetHeader>
+        <SheetTitle>{page ? t('form.renameTitle') : t('form.createTitle')}</SheetTitle>
+        <SheetDescription>{t('form.description')}</SheetDescription>
+      </SheetHeader>
+      <SheetPanel className="flex flex-col gap-6">
+        {!page && (
+          <form.AppField name="isHome">
+            {(field) => (
+              <field.SwitchField label={t('form.isHome')} description={t('form.isHomeHint')} />
+            )}
+          </form.AppField>
+        )}
+        <PageLocaleTabs form={form} page={page} />
+        {failure && (
+          <p role="alert" className="text-destructive-foreground text-sm">
+            {failure}
+          </p>
+        )}
+      </SheetPanel>
+      <SheetFooter>
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          {t('form.cancel')}
+        </Button>
+        <Button type="submit">{page ? t('form.save') : t('form.create')}</Button>
+      </SheetFooter>
+    </form>
+  )
+}
+
+export function PageFormSheet({ page, open, onOpenChange }: PageFormSheetProps) {
+  return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetPopup>
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void form.handleSubmit()
-          }}
-        >
-          <SheetHeader>
-            <SheetTitle>{page ? t('form.renameTitle') : t('form.createTitle')}</SheetTitle>
-            <SheetDescription>{t('form.description')}</SheetDescription>
-          </SheetHeader>
-          <SheetPanel className="flex flex-col gap-6">
-            {!page && (
-              <form.AppField name="isHome">
-                {(field) => (
-                  <field.SwitchField label={t('form.isHome')} description={t('form.isHomeHint')} />
-                )}
-              </form.AppField>
-            )}
-            <PageLocaleTabs form={form} page={page} />
-            {failure && (
-              <p role="alert" className="text-destructive-foreground text-sm">
-                {failure}
-              </p>
-            )}
-          </SheetPanel>
-          <SheetFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t('form.cancel')}
-            </Button>
-            <Button type="submit">{page ? t('form.save') : t('form.create')}</Button>
-          </SheetFooter>
-        </form>
+        <PageFormContent page={page} onOpenChange={onOpenChange} />
       </SheetPopup>
     </Sheet>
   )

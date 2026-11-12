@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/page-header'
 import { site } from '@/config/site'
 
 export const Route = createFileRoute('/')({
+  staticData: { title: 'nav.home' },
   component: HomeRoute
 })
 

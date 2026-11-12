@@ -17,6 +17,6 @@ function PagesRoute() {
 export const Route = createFileRoute('/pages')({
   validateSearch: pagesSearchSchema,
   loader: ({ context }) => context.queryClient.ensureQueryData(pagesQuery),
-  staticData: { width: 'wide' },
+  staticData: { title: 'nav.sections.pages.title', width: 'wide' },
   component: PagesRoute
 })

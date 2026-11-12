@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { renderShell, resetShell, stubApi } from '@/test/shell'
@@ -57,6 +57,25 @@ describe('app shell navigation', () => {
     expect(
       await screen.findByText('About', { selector: '[aria-current="page"]' })
     ).toBeInTheDocument()
+  })
+
+  it.each([
+    ['/media', 'Media'],
+    ['/blocks', 'Block previews'],
+    ['/pages', 'Pages']
+  ])('names %s in the breadcrumb and the document title', async (path, title) => {
+    stubApi()
+    await renderShell(path)
+    expect(
+      await screen.findByText(title, { selector: '[aria-current="page"]' })
+    ).toBeInTheDocument()
+    await waitFor(() => expect(document.title).toBe(`${title} · Backstage`))
+  })
+
+  it('titles the document with the name of the page being edited', async () => {
+    stubApi()
+    await renderShell('/pages/p1')
+    await waitFor(() => expect(document.title).toBe('About · Backstage'))
   })
 
   it('does not repeat the product name in the breadcrumb', async () => {

@@ -54,6 +54,23 @@ const fillTitles = async (titles: { English: string; Español?: string }) => {
   return user
 }
 
+const BOTH_TITLES = { English: 'About us', Español: 'Acerca de' }
+
+const mockCreation = (created: () => Response) =>
+  mockApi((method) => (method === 'POST' ? created() : reply(200, { pages: [] })))
+
+const createWith = async (titles: Parameters<typeof fillTitles>[0]) => {
+  const user = await fillTitles(titles)
+  await user.click(screen.getByRole('button', { name: 'Create page' }))
+  return user
+}
+
+const reopenForm = async (user: ReturnType<typeof userEvent.setup>) => {
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Create page' })).toBeNull())
+  await user.click(screen.getByRole('button', { name: 'New page' }))
+  return findField(/English/, 'Title')
+}
+
 const renderPage = () =>
   render(
     <QueryClientProvider
@@ -108,12 +125,9 @@ describe('PagesPage', { timeout: 15_000 }, () => {
   })
 
   it('creates a page, filling each address from its title', async () => {
-    const calls = mockApi((method) =>
-      method === 'POST' ? reply(201, { page: aboutPage }) : reply(200, { pages: [] })
-    )
+    const calls = mockCreation(() => reply(201, { page: aboutPage }))
     renderPage()
-    const user = await fillTitles({ English: 'About us', Español: 'Acerca de' })
-    await user.click(screen.getByRole('button', { name: 'Create page' }))
+    await createWith(BOTH_TITLES)
     await waitFor(() => expect(calls.some((call) => call.method === 'POST')).toBe(true))
     expect(JSON.parse(calls.find((call) => call.method === 'POST')?.body ?? '{}')).toEqual({
       isHome: false,
@@ -122,22 +136,37 @@ describe('PagesPage', { timeout: 15_000 }, () => {
     })
   })
 
-  it('flags the locale tab that still needs work', async () => {
-    mockApi(() => reply(200, { pages: [] }))
+  it('reopens the new page form empty after a page was created', async () => {
+    mockCreation(() => reply(201, { page: aboutPage }))
     renderPage()
-    const user = await fillTitles({ English: 'About' })
-    await user.click(screen.getByRole('button', { name: 'Create page' }))
+    const user = await createWith(BOTH_TITLES)
+    expect(await reopenForm(user)).toHaveValue('')
+    expect(getField(/English/, 'Address')).toHaveValue('')
+  })
+
+  it('reopens the new page form empty after it was cancelled half filled', async () => {
+    mockCreation(() => reply(201, { page: aboutPage }))
+    renderPage()
+    const user = await fillTitles({ English: 'About us' })
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(await reopenForm(user)).toHaveValue('')
+  })
+
+  it('flags the locale tab that still needs work', async () => {
+    mockCreation(() => reply(201, { page: aboutPage }))
+    renderPage()
+    await createWith({ English: 'About' })
     expect(await screen.findByRole('tab', { name: /Español/ })).toHaveTextContent('Fix')
   })
 
-  it('shows the server’s refusal of a taken slug', async () => {
-    mockApi((method) =>
-      method === 'POST' ? reply(409, { error: 'x', code: 'slug_taken' }) : reply(200, { pages: [] })
-    )
+  it('shows the server’s refusal of a taken slug, and not again once reopened', async () => {
+    mockCreation(() => reply(409, { error: 'x', code: 'slug_taken' }))
     renderPage()
-    const user = await fillTitles({ English: 'About', Español: 'Acerca' })
-    await user.click(screen.getByRole('button', { name: 'Create page' }))
+    const user = await createWith(BOTH_TITLES)
     expect(await screen.findByRole('alert')).toHaveTextContent('already uses that address')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    await reopenForm(user)
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('deletes a page after confirming', async () => {
