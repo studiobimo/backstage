@@ -267,6 +267,36 @@
   }
 }
 
+@layer base {
+  .ProseMirror {
+    position: relative;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    font-variant-ligatures: none;
+    font-feature-settings: 'liga' 0;
+  }
+  .ProseMirror pre {
+    white-space: pre-wrap;
+  }
+  .ProseMirror li {
+    position: relative;
+  }
+  .ProseMirror-hideselection *::selection {
+    background: transparent;
+  }
+  .ProseMirror-hideselection {
+    caret-color: transparent;
+  }
+  .ProseMirror-selectednode {
+    outline: 2px solid var(--ring);
+  }
+  .ProseMirror img.ProseMirror-separator {
+    display: inline !important;
+    border: none !important;
+    margin: 0 !important;
+  }
+}
+
 @layer utilities {
   .border-input,
   [data-slot='input-control'],

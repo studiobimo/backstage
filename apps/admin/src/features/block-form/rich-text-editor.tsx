@@ -14,7 +14,7 @@ import {
   type LucideIcon,
   TextQuoteIcon
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -219,6 +219,16 @@ export interface RichTextEditorProps {
 const contentStyles =
   'min-h-28 px-3 py-2 text-base outline-none sm:text-sm [&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_h2]:font-semibold [&_h2]:text-lg [&_h3]:font-semibold [&_h3]:text-base [&_ol]:list-decimal [&_ol]:ps-5 [&_ul]:list-disc [&_ul]:ps-5 [&_a]:text-primary [&_a]:underline [&>*+*]:mt-2'
 
+const sameDocument = (editor: Editor, value: BlockValue | undefined) =>
+  value === undefined ? editor.isEmpty : JSON.stringify(editor.getJSON()) === JSON.stringify(value)
+
+function useExternalValue(editor: Editor, value: BlockValue | undefined) {
+  useEffect(() => {
+    if (sameDocument(editor, value)) return
+    editor.commands.setContent(value ?? '', { emitUpdate: false })
+  }, [editor, value])
+}
+
 export default function RichTextEditor({
   value,
   onChange,
@@ -231,6 +241,7 @@ export default function RichTextEditor({
   const editor = useEditor({
     extensions: richTextExtensions,
     content: value ?? '',
+    injectCSS: false,
     onUpdate: ({ editor: current }) => {
       const json = blockValue.safeParse(current.getJSON())
       onChange(current.isEmpty || !json.success ? undefined : json.data)
@@ -247,6 +258,7 @@ export default function RichTextEditor({
       }
     }
   })
+  useExternalValue(editor, value)
   return (
     <div
       className={cn(

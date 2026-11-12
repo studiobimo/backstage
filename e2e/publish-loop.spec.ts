@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from './fixtures'
 import { solidPng } from './png'
 import { siteUrl } from './ports'
 
@@ -80,6 +81,12 @@ async function fillHeroContentThroughTheApi(page: Page, pictureId: string) {
   await page.reload()
 }
 
+async function expectRichTextEditorStyled(page: Page) {
+  await page.getByRole('button', { name: 'Edit Split Hero' }).click()
+  await expect(page.locator('.ProseMirror').first()).toHaveCSS('white-space', 'pre-wrap')
+  await page.keyboard.press('Escape')
+}
+
 async function setSocialImageAndDescription(page: Page) {
   await page.getByLabel('Description', { exact: true }).fill('A page made by the end to end test')
   await page.getByRole('button', { name: 'Choose Social image' }).click()
@@ -96,6 +103,7 @@ test('create, fill, upload, publish and see it on the site', async ({ page }) =>
   await page.getByRole('link', { name: PAGE_UNDER_TEST.titles.en }).click()
   await addHeroBlock(page)
   await fillHeroContentThroughTheApi(page, pictureId)
+  await expectRichTextEditorStyled(page)
   await setSocialImageAndDescription(page)
 
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()

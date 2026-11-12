@@ -203,6 +203,33 @@ describe('BlockForm rich text', () => {
   })
 })
 
+describe('BlockForm rich text copied from another locale', () => {
+  afterEach(restoreEnglish)
+
+  it('shows the copied body in the editor and saves it', async () => {
+    const { user, onSubmit } = setup({
+      value: {
+        body: { en: richDoc },
+        title: { en: 'Fresh', es: 'Fresh' },
+        slug: 'abc',
+        columns: 1,
+        size: 's',
+        cta: { href: '/' },
+        picture: { id: 'i' },
+        items: [{ name: 'x' }]
+      }
+    })
+    await user.click(screen.getByRole('button', { name: /Spanish/ }))
+    expect(await screen.findByRole('textbox', { name: /Body/ })).not.toHaveTextContent('Menu')
+    await user.click(screen.getByRole('button', { name: 'Copy English' }))
+    expect(await screen.findByRole('textbox', { name: /Body/ })).toHaveTextContent('Menu')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { en: richDoc, es: richDoc } })
+    )
+  })
+})
+
 describe('BlockForm rich text errors', () => {
   afterEach(restoreEnglish)
 
