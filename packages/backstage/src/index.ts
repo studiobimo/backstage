@@ -27,6 +27,7 @@ export { classifyField } from './field-shapes.ts'
 export type { FieldShape } from './field-shapes.ts'
 export { defineComponents } from './components.ts'
 export type { BlockComponents, ComponentMap, LayoutComponents, LayoutProps } from './components.ts'
+export { pathOf } from './site/routing.ts'
 export { readImageSize } from './image-size.ts'
 export type { ImageSize } from './image-size.ts'
 export {
