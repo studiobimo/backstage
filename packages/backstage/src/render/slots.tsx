@@ -3,7 +3,7 @@ import type { ComponentType, ReactNode } from 'react'
 import { validateBlockContent } from '../blocks.ts'
 import type { ComponentMap } from '../components.ts'
 import { logLine } from '../observability.ts'
-import { DEFAULT_LOCALE } from '../pages.ts'
+import { resolveLocaleConfig } from '../locales.ts'
 import type { SiteSnapshot } from '../site-publishing.ts'
 import { RenderProvider } from './context.ts'
 
@@ -42,7 +42,11 @@ const slotNode = (
       slot,
       <RenderProvider
         key={slot}
-        value={{ locale: site.locale, defaultLocale: DEFAULT_LOCALE, media: site.media }}
+        value={{
+          locale: site.locale,
+          defaultLocale: resolveLocaleConfig(registry).defaultLocale,
+          media: site.media
+        }}
       >
         <Component {...(result.content as Record<string, unknown>)} />
       </RenderProvider>

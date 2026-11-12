@@ -5,6 +5,7 @@ import {
   planPublish,
   PUBLISH_PLAN,
   publishPageSchema,
+  resolveLocaleConfig,
   recordPublished,
   recordUnpublished,
   type Registry
@@ -29,7 +30,7 @@ export const publishRoutes = (registry: Registry) =>
       if (plan.status === PUBLISH_PLAN.invalid) {
         return respondUnpublishable(c, plan.problems)
       }
-      await writeSnapshots(c.env.SITE, plan.snapshots)
+      await writeSnapshots(c.env.SITE, plan.snapshots, resolveLocaleConfig(registry).locales)
       await recordPublished(
         c.env.DB,
         id,
@@ -43,7 +44,7 @@ export const publishRoutes = (registry: Registry) =>
     .delete('/:id/publish', async (c) => {
       const id = c.req.param('id')
       if (!(await findPage(c.env.DB, id))) return respondWithError(c, API_ERROR.notFound)
-      await removeSnapshots(c.env.SITE, id)
+      await removeSnapshots(c.env.SITE, id, resolveLocaleConfig(registry).locales)
       await recordUnpublished(c.env.DB, id)
       await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return c.json({ page: await findPage(c.env.DB, id) })

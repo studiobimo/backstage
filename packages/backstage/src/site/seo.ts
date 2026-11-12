@@ -1,3 +1,5 @@
+import type { LocaleConfig } from '../locales.ts'
+import { LOCALE } from '../locales.ts'
 import { buildRobots, buildSitemap, publishedIndexSchema, SEO } from '../seo.ts'
 import type { KvReader } from './store.ts'
 
@@ -16,8 +18,12 @@ export const readPublishedPages = async (kv: KvReader) => {
   return parsed.success ? parsed.data.pages : []
 }
 
-export const respondWithSitemap = async (kv: KvReader, request: Request) =>
-  new Response(buildSitemap(originOf(request), await readPublishedPages(kv)), {
+export const respondWithSitemap = async (
+  kv: KvReader,
+  request: Request,
+  config: LocaleConfig = LOCALE.default
+) =>
+  new Response(buildSitemap(originOf(request), await readPublishedPages(kv), config), {
     headers: headersFor(XML_CONTENT_TYPE)
   })
 

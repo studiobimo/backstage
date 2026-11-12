@@ -59,6 +59,10 @@ describe('reading published pages', () => {
   it('finds the other locales of a page', async () => {
     expect(await findTranslations(published, en)).toEqual([es])
   })
+
+  it('looks only for the locales the site serves', async () => {
+    expect(await findTranslations(published, en, ['en'])).toEqual([])
+  })
 })
 
 const siteEn: SiteSnapshot = {

@@ -15,6 +15,7 @@ import {
   recordPublished,
   REPUBLISH,
   republishScopeSchema,
+  resolveLocaleConfig,
   type Registry,
   type RepublishBatch,
   type RepublishScope,
@@ -52,7 +53,7 @@ const republishPage = async (
 ): Promise<RepublishSkipped | null> => {
   const plan = await planPublish(c.env.DB, registry, page.id, page.version, publishedAt)
   if (plan.status === PUBLISH_PLAN.ready) {
-    await writeSnapshots(c.env.SITE, plan.snapshots)
+    await writeSnapshots(c.env.SITE, plan.snapshots, resolveLocaleConfig(registry).locales)
     await recordPublished(c.env.DB, page.id, editorId, publishedAt, page.version)
     return null
   }

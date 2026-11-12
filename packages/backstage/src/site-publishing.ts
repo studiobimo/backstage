@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { validateBlockContent, type Registry } from './blocks.ts'
-import { DEFAULT_LOCALE, LOCALES, type Locale } from './pages.ts'
+import { resolveLocaleConfig, type Locale } from './locales.ts'
 import {
   contentProblems,
   mediaFor,
@@ -25,7 +25,7 @@ export const siteSnapshotKey = (locale: Locale) =>
 
 export const siteSnapshotSchema = z.object({
   format: z.literal(SITE_SNAPSHOT.format),
-  locale: z.enum(LOCALES),
+  locale: z.string(),
   publishedAt: z.number().int(),
   siteName: z.string(),
   seo: z.object({
@@ -107,9 +107,13 @@ const slotProblems = (
   media: ReadonlyMap<string, PublishMediaRow>
 ) =>
   checked.ok
-    ? contentProblems(registry.jsonSchema(checked.value.block), checked.value.content, media, {
-        slot
-      })
+    ? contentProblems(
+        registry.jsonSchema(checked.value.block),
+        checked.value.content,
+        media,
+        { slot },
+        resolveLocaleConfig(registry).defaultLocale
+      )
     : [checked.problem]
 
 export const buildSiteSnapshots = (
@@ -120,7 +124,13 @@ export const buildSiteSnapshots = (
 ): SiteSnapshotBuild => {
   const slots = slotsToPublish(registry, draft)
   const problems = [
-    ...contentProblems(siteSettingsJsonSchema(), draft.settings, media, {}),
+    ...contentProblems(
+      siteSettingsJsonSchema(),
+      draft.settings,
+      media,
+      {},
+      resolveLocaleConfig(registry).defaultLocale
+    ),
     ...slots.flatMap(({ slot, checked }) => slotProblems(registry, slot, checked, media))
   ]
   if (problems.length > 0) return { ok: false, problems }
@@ -129,13 +139,14 @@ export const buildSiteSnapshots = (
   )
   const mediaIds = siteMediaIds(registry, draft)
   const { siteName, defaultDescription, defaultSocialImage } = draft.settings
+  const { locales, defaultLocale } = resolveLocaleConfig(registry)
   return {
     ok: true,
-    snapshots: LOCALES.map((locale) => ({
+    snapshots: locales.map((locale) => ({
       format: SITE_SNAPSHOT.format,
       locale,
       publishedAt,
-      siteName: siteName[locale] || siteName[DEFAULT_LOCALE] || '',
+      siteName: siteName[locale] || siteName[defaultLocale] || '',
       seo: {
         description: defaultDescription?.[locale] ?? '',
         socialImageId: defaultSocialImage?.id ?? null

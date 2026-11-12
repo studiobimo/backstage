@@ -1,5 +1,5 @@
 import type { FieldKind } from './fields.ts'
-import { DEFAULT_LOCALE, LOCALES, type Locale, type PageSeo } from './pages.ts'
+import type { Locale, LocaleSeo, PageSeo } from './pages.ts'
 
 export type TranslatedNode =
   | boolean
@@ -50,7 +50,7 @@ export interface MarkedField {
   required: boolean
 }
 
-export function lacksDefaultLocale(translations: unknown, defaultLocale: string = DEFAULT_LOCALE) {
+export function lacksDefaultLocale(translations: unknown, defaultLocale: string) {
   return !isRecord(translations) || isBlank(translations[defaultLocale])
 }
 
@@ -148,8 +148,11 @@ export function countMissingTranslations(node: TranslatedNode, content: unknown,
 }
 
 export const isSeoMissing = (seo: PageSeo, locale: Locale) => {
-  const isEmpty = ({ title, description }: PageSeo[Locale]) => title === '' && description === ''
-  return isEmpty(seo[locale]) && LOCALES.some((other) => other !== locale && !isEmpty(seo[other]))
+  const isEmpty = ({ title, description }: LocaleSeo) => title === '' && description === ''
+  return (
+    isEmpty(seo[locale]) &&
+    Object.entries(seo).some(([other, entry]) => other !== locale && !isEmpty(entry))
+  )
 }
 
 export type MissingByLocale = Record<Locale, number>

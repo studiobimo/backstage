@@ -13,6 +13,7 @@ import {
   readPageSeo,
   readPageStamp,
   renamePage,
+  resolveLocaleConfig,
   replacePageBlocks,
   savePageBlocksSchema,
   savePageLayoutSchema,
@@ -100,7 +101,7 @@ export const pagesRoutes = (registry: Registry) =>
     .delete('/:id', async (c) => {
       const id = c.req.param('id')
       const wasPublished = Boolean((await findPage(c.env.DB, id))?.publishedAt)
-      if (wasPublished) await removeSnapshots(c.env.SITE, id)
+      if (wasPublished) await removeSnapshots(c.env.SITE, id, resolveLocaleConfig(registry).locales)
       const failure = await failureOf(c, id, await deletePage(c.env.DB, id))
       if (wasPublished) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return failure ?? c.body(null, RESPONSE_STATUS.noContent)

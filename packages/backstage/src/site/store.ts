@@ -1,4 +1,4 @@
-import { LOCALES, type Locale } from '../pages.ts'
+import { LOCALE, type Locale } from '../locales.ts'
 import { readableSnapshotSchema, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
 import { siteSnapshotKey, siteSnapshotSchema } from '../site-publishing.ts'
 import type { Route } from './routing.ts'
@@ -22,8 +22,12 @@ export async function findPublished(kv: KvReader, { locale, slug }: Route) {
   return snapshot?.slug === slug ? snapshot : null
 }
 
-export async function findTranslations(kv: KvReader, snapshot: Snapshot) {
-  const others = LOCALES.filter((locale) => locale !== snapshot.locale)
+export async function findTranslations(
+  kv: KvReader,
+  snapshot: Snapshot,
+  locales: readonly Locale[] = LOCALE.default.locales
+) {
+  const others = locales.filter((locale) => locale !== snapshot.locale)
   const found = await Promise.all(others.map((locale) => readSnapshot(kv, snapshot.pageId, locale)))
   return found.filter((translation) => translation !== null)
 }

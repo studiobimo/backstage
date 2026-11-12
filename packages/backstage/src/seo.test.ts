@@ -48,6 +48,26 @@ describe('alternateLinks', () => {
   })
 })
 
+describe('with Spanish as the default locale', () => {
+  const spanishFirst = { locales: ['es', 'en'], defaultLocale: 'es' }
+
+  it('serves the default locale at the root and links x-default to it', () => {
+    expect(canonicalUrl(SITE, about, 'es', 'es')).toBe('https://example.com/nosotros')
+    expect(canonicalUrl(SITE, about, 'en', 'es')).toBe('https://example.com/en/about')
+    expect(alternateLinks(SITE, about, spanishFirst)).toEqual([
+      { hreflang: 'es', href: 'https://example.com/nosotros' },
+      { hreflang: 'en', href: 'https://example.com/en/about' },
+      { hreflang: 'x-default', href: 'https://example.com/nosotros' }
+    ])
+  })
+
+  it('lists a url for each configured locale only', () => {
+    const sitemap = buildSitemap(SITE, [about], { locales: ['es'], defaultLocale: 'es' })
+    expect(sitemap.match(/<url>/g)).toHaveLength(1)
+    expect(sitemap).not.toContain('/en/about')
+  })
+})
+
 describe('buildSitemap', () => {
   const sitemap = buildSitemap(SITE, [home, about])
 

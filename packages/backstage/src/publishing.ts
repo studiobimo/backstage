@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 import { validateBlockContent, type Registry } from './blocks.ts'
-import { DEFAULT_LOCALE, LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
+import { resolveLocaleConfig, type Locale } from './locales.ts'
+import { DEFAULT_LOCALE, pageBlockSchema, type PageBlock } from './pages.ts'
 import { RICH_TEXT } from './rich-text.ts'
 import {
   isRecord,
@@ -18,8 +19,8 @@ export const SNAPSHOT = {
 export const snapshotKey = (pageId: string, locale: Locale) =>
   [SNAPSHOT.key.prefix, pageId, locale].join(SNAPSHOT.key.separator)
 
-export const snapshotKeysOf = (pageId: string) =>
-  LOCALES.map((locale) => snapshotKey(pageId, locale))
+export const snapshotKeysOf = (pageId: string, locales: readonly Locale[]) =>
+  locales.map((locale) => snapshotKey(pageId, locale))
 
 const ROUTE = { key: { prefix: 'route' } } as const
 
@@ -79,7 +80,7 @@ export type SnapshotMedia = z.infer<typeof snapshotMediaSchema>
 export const snapshotSchema = z.object({
   format: z.literal(SNAPSHOT.format),
   pageId: z.string(),
-  locale: z.enum(LOCALES),
+  locale: z.string(),
   isHome: z.boolean(),
   slug: z.string().nullable(),
   title: z.string(),
@@ -199,9 +200,13 @@ const unsafeLinkPathsIn = (node: TranslatedNode, value: unknown): string[] =>
       : []
   )
 
-const missingDefaultLocalePathsIn = (node: TranslatedNode, value: unknown): string[] =>
+const missingDefaultLocalePathsIn = (
+  node: TranslatedNode,
+  value: unknown,
+  defaultLocale: Locale
+): string[] =>
   markedFieldsIn(node, value, 'localized').flatMap(({ path, value: entry, required }) =>
-    required && lacksDefaultLocale(entry) ? [path] : []
+    required && lacksDefaultLocale(entry, defaultLocale) ? [path] : []
   )
 
 export const referencedMediaIds = (
@@ -239,7 +244,8 @@ export const contentProblems = (
   node: TranslatedNode,
   content: unknown,
   media: ReadonlyMap<string, unknown>,
-  location: ProblemLocation
+  location: ProblemLocation,
+  defaultLocale: Locale
 ): PublishProblem[] => [
   ...(mediaIdsIn(node, content).some((mediaId) => !media.has(mediaId))
     ? [problemOf(PUBLISH_PROBLEM.unknownMedia, location)]
@@ -247,7 +253,7 @@ export const contentProblems = (
   ...unsafeLinkPathsIn(node, content).map((path) =>
     problemOf(PUBLISH_PROBLEM.unsafeLink, { ...location, path })
   ),
-  ...missingDefaultLocalePathsIn(node, content).map((path) =>
+  ...missingDefaultLocalePathsIn(node, content, defaultLocale).map((path) =>
     problemOf(PUBLISH_PROBLEM.missingDefaultLocale, { ...location, path })
   )
 ]
@@ -262,7 +268,13 @@ const referenceProblems = (
     draft.page.isHome || slug ? [] : [problemOf(PUBLISH_PROBLEM.missingSlug)]
   ),
   ...draft.blocks.flatMap(({ id, block, content }) =>
-    contentProblems(registry.jsonSchema(block), content, media, { blockId: id })
+    contentProblems(
+      registry.jsonSchema(block),
+      content,
+      media,
+      { blockId: id },
+      resolveLocaleConfig(registry).defaultLocale
+    )
   ),
   ...(draft.locales.some(({ socialImageId }) => socialImageId && !media.has(socialImageId))
     ? [problemOf(PUBLISH_PROBLEM.unknownMedia)]
@@ -285,7 +297,9 @@ export const buildSnapshots = (
   const blockMediaIds = referencedMediaIds(registry, valid.blocks, [])
   return {
     ok: true,
-    snapshots: LOCALES.map((locale) => snapshotOf(valid, locale, blockMediaIds, media, publishedAt))
+    snapshots: resolveLocaleConfig(registry).locales.map((locale) =>
+      snapshotOf(valid, locale, blockMediaIds, media, publishedAt)
+    )
   }
 }
 

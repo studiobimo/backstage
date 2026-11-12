@@ -13,13 +13,13 @@ import {
   type Snapshot
 } from '../index.ts'
 
-const readSnapshots = async (kv: KVNamespace, pageId: string) =>
-  (await Promise.all(snapshotKeysOf(pageId).map((key) => kv.get(key, { type: 'json' })))).flatMap(
-    (stored) => {
-      const parsed = readableSnapshotSchema.safeParse(stored)
-      return parsed.success ? [parsed.data] : []
-    }
-  )
+const readSnapshots = async (kv: KVNamespace, pageId: string, locales: readonly string[]) =>
+  (
+    await Promise.all(snapshotKeysOf(pageId, locales).map((key) => kv.get(key, { type: 'json' })))
+  ).flatMap((stored) => {
+    const parsed = readableSnapshotSchema.safeParse(stored)
+    return parsed.success ? [parsed.data] : []
+  })
 
 const deleteRoutesOwnedBy = (kv: KVNamespace, pageId: string, routes: readonly string[]) =>
   Promise.all(
@@ -28,9 +28,13 @@ const deleteRoutesOwnedBy = (kv: KVNamespace, pageId: string, routes: readonly s
     })
   )
 
-export const writeSnapshots = async (kv: KVNamespace, snapshots: readonly Snapshot[]) => {
+export const writeSnapshots = async (
+  kv: KVNamespace,
+  snapshots: readonly Snapshot[],
+  locales: readonly string[]
+) => {
   const [first] = snapshots
-  const previous = first ? routeKeysOf(await readSnapshots(kv, first.pageId)) : []
+  const previous = first ? routeKeysOf(await readSnapshots(kv, first.pageId, locales)) : []
   await Promise.all(snapshotRecords(snapshots).map(({ key, value }) => kv.put(key, value)))
   const current = new Set(routeKeysOf(snapshots))
   await deleteRoutesOwnedBy(
@@ -40,9 +44,13 @@ export const writeSnapshots = async (kv: KVNamespace, snapshots: readonly Snapsh
   )
 }
 
-export const removeSnapshots = async (kv: KVNamespace, pageId: string) => {
-  const routes = routeKeysOf(await readSnapshots(kv, pageId))
-  await Promise.all(snapshotKeysOf(pageId).map((key) => kv.delete(key)))
+export const removeSnapshots = async (
+  kv: KVNamespace,
+  pageId: string,
+  locales: readonly string[]
+) => {
+  const routes = routeKeysOf(await readSnapshots(kv, pageId, locales))
+  await Promise.all(snapshotKeysOf(pageId, locales).map((key) => kv.delete(key)))
   await deleteRoutesOwnedBy(kv, pageId, routes)
 }
 

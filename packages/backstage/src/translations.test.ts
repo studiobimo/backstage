@@ -125,12 +125,12 @@ describe('required marked fields', () => {
 
 describe('lacksDefaultLocale', () => {
   it('needs a non-blank value in the default language', () => {
-    expect(lacksDefaultLocale(undefined)).toBe(true)
-    expect(lacksDefaultLocale({})).toBe(true)
-    expect(lacksDefaultLocale({ es: 'Hola' })).toBe(true)
-    expect(lacksDefaultLocale({ en: '' })).toBe(true)
-    expect(lacksDefaultLocale({ en: doc('') })).toBe(true)
-    expect(lacksDefaultLocale({ en: 'Hi' })).toBe(false)
+    expect(lacksDefaultLocale(undefined, 'en')).toBe(true)
+    expect(lacksDefaultLocale({}, 'en')).toBe(true)
+    expect(lacksDefaultLocale({ es: 'Hola' }, 'en')).toBe(true)
+    expect(lacksDefaultLocale({ en: '' }, 'en')).toBe(true)
+    expect(lacksDefaultLocale({ en: doc('') }, 'en')).toBe(true)
+    expect(lacksDefaultLocale({ en: 'Hi' }, 'en')).toBe(false)
     expect(lacksDefaultLocale({ es: 'Hola' }, 'es')).toBe(false)
   })
 })

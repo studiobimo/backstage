@@ -30,6 +30,24 @@ describe('routing', () => {
     expect(parseRoute(path)).toBeNull()
   })
 
+  describe('with Spanish as the default locale', () => {
+    const spanishFirst = { locales: ['es', 'en'], defaultLocale: 'es' }
+
+    it('serves Spanish at the root and English under /en', () => {
+      expect(parseRoute('/nosotros', spanishFirst)).toEqual({ locale: 'es', slug: 'nosotros' })
+      expect(parseRoute('/en/about', spanishFirst)).toEqual({ locale: 'en', slug: 'about' })
+      expect(parseRoute('/es/nosotros', spanishFirst)).toBeNull()
+      expect(pathOf({ locale: 'es', slug: null }, spanishFirst)).toBe('/')
+      expect(pathOf({ locale: 'en', slug: 'about' }, spanishFirst)).toBe('/en/about')
+    })
+  })
+
+  it('serves a site with one locale at the root only', () => {
+    const onlyFrench = { locales: ['fr'], defaultLocale: 'fr' }
+    expect(parseRoute('/about', onlyFrench)).toEqual({ locale: 'fr', slug: 'about' })
+    expect(parseRoute('/fr/about', onlyFrench)).toBeNull()
+  })
+
   it('reads the route from a plain Request', () => {
     expect(routeOf(new Request('https://example.com/es/nosotros?x=1'))).toEqual({
       locale: 'es',
