@@ -59,6 +59,7 @@
   "errors": {
     "slug_taken": "Another page already uses that address in this language.",
     "home_taken": "The home page already exists.",
+    "stale_version": "A newer version of this page was saved. Close this panel and try again.",
     "invalid": "Check the fields and try again.",
     "internal": "The page could not be saved. Check your connection and try again."
   }

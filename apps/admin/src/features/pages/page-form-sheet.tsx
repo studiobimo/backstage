@@ -50,7 +50,7 @@ function usePageForm(page: Page | undefined, onSaved: () => void) {
       setFailure(undefined)
       const input = pageInputSchema.parse(value)
       try {
-        if (page) await rename.mutateAsync({ id: page.id, input })
+        if (page) await rename.mutateAsync({ id: page.id, input, expectedVersion: page.version })
         else await create.mutateAsync(input)
         onSaved()
       } catch (error) {

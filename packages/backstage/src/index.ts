@@ -57,6 +57,7 @@ export {
   pageSummarySchema,
   pageStampSchema,
   pageSlugsOf,
+  renamePageSchema,
   savePageBlocksSchema,
   savePageLayoutSchema,
   savePageSeoSchema,

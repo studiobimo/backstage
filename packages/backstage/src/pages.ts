@@ -90,6 +90,7 @@ export type PageBlocksResponse = z.infer<typeof pageBlocksResponseSchema>
 
 const expectedVersion = z.number().int().min(1)
 
+export const renamePageSchema = z.intersection(pageInputSchema, z.object({ expectedVersion }))
 export const savePageBlocksSchema = pageBlocksSchema.extend({ expectedVersion })
 export const savePageLayoutSchema = z.object({ layout: z.string().min(1), expectedVersion })
 

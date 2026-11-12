@@ -1,4 +1,5 @@
-import { and, asc, eq, inArray } from 'drizzle-orm'
+import { and, asc, eq, exists, inArray, sql, type SQL } from 'drizzle-orm'
+import type { BatchItem } from 'drizzle-orm/batch'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import {
@@ -40,14 +41,20 @@ const connect = (d1: AnyD1Database): Database => drizzle(d1)
 const localeRows = (pageId: string, input: PageInput) =>
   pageSlugsOf(input).map((row) => ({ pageId, ...row }))
 
-const isUniqueViolation = (error: unknown) => String(error).includes('UNIQUE')
+const UNIQUE_VIOLATION = { marker: 'UNIQUE', homeColumn: 'pages.is_home' } as const
 
-const guardUnique = async (write: () => Promise<unknown>): Promise<PageWrite> => {
+const uniqueOutcome = (error: unknown): PageWrite | null => {
+  const message = String(error)
+  if (!message.includes(UNIQUE_VIOLATION.marker)) return null
+  return message.includes(UNIQUE_VIOLATION.homeColumn) ? PAGE_WRITE.homeTaken : PAGE_WRITE.slugTaken
+}
+
+const guardUnique = async (write: () => Promise<PageWrite>): Promise<PageWrite> => {
   try {
-    await write()
-    return PAGE_WRITE.ok
+    return await write()
   } catch (error) {
-    if (isUniqueViolation(error)) return PAGE_WRITE.slugTaken
+    const outcome = uniqueOutcome(error)
+    if (outcome) return outcome
     throw error
   }
 }
@@ -159,36 +166,34 @@ export const findPage = async (d1: AnyD1Database, id: string) =>
 
 export const createPage = async (d1: AnyD1Database, input: PageInput, id: string) => {
   const db = connect(d1)
-  if (input.isHome) {
-    const existing = await db.select({ id: pages.id }).from(pages).where(eq(pages.isHome, true))
-    if (existing.length > 0) return PAGE_WRITE.homeTaken
-  }
-  return guardUnique(() =>
-    db.batch([
+  return guardUnique(async () => {
+    await db.batch([
       db.insert(pages).values({ id, isHome: input.isHome }),
       db.insert(pageLocales).values(localeRows(id, input))
     ])
-  )
+    return PAGE_WRITE.ok
+  })
 }
 
-export const renamePage = async (d1: AnyD1Database, id: string, input: PageInput) => {
+export const renamePage = async (
+  d1: AnyD1Database,
+  id: string,
+  input: PageInput,
+  write: VersionedWrite
+) => {
   const db = connect(d1)
   const [existing] = await db.select().from(pages).where(eq(pages.id, id))
   if (!existing) return PAGE_WRITE.notFound
   if (existing.isHome !== input.isHome) return PAGE_WRITE.homeMismatch
   return guardUnique(() =>
-    db.batch([
-      db
-        .update(pages)
-        .set({ version: existing.version + 1 })
-        .where(eq(pages.id, id)),
-      ...localeRows(id, input).map(({ locale, slug, title }) =>
+    writeVersioned(db, id, write, {}, (versionMatches) =>
+      localeRows(id, input).map(({ locale, slug, title }) =>
         db
           .update(pageLocales)
           .set({ slug, title })
-          .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
+          .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale), versionMatches))
       )
-    ])
+    )
   )
 }
 
@@ -211,18 +216,31 @@ export interface VersionedWrite {
   editorId: string
 }
 
-const claimVersion = async (
+const versionMatches = (db: Database, id: string, expectedVersion: number) =>
+  exists(
+    db
+      .select({ id: pages.id })
+      .from(pages)
+      .where(and(eq(pages.id, id), eq(pages.version, expectedVersion)))
+  )
+
+type ContentWrites = (versionMatches: SQL) => BatchItem<'sqlite'>[]
+
+const writeVersioned = async (
   db: Database,
   id: string,
   { expectedVersion, editorId }: VersionedWrite,
-  changes: { layout?: string } = {}
+  changes: { layout?: string },
+  contentWrites: ContentWrites
 ): Promise<PageWrite> => {
-  const claimed = await db
+  const claim = db
     .update(pages)
     .set({ ...changes, version: expectedVersion + 1, updatedBy: editorId })
     .where(and(eq(pages.id, id), eq(pages.version, expectedVersion)))
     .returning({ id: pages.id })
-  if (claimed.length > 0) return PAGE_WRITE.ok
+  const statements = [...contentWrites(versionMatches(db, id, expectedVersion)), claim]
+  const results = await db.batch(statements as [BatchItem<'sqlite'>, ...BatchItem<'sqlite'>[]])
+  if ((results.at(-1) as { id: string }[]).length > 0) return PAGE_WRITE.ok
   const [existing] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id))
   return existing ? PAGE_WRITE.stale : PAGE_WRITE.notFound
 }
@@ -246,6 +264,27 @@ export const readPageStamp = async (d1: AnyD1Database, id: string): Promise<Page
   }
 }
 
+const insertBlockIfMatched = (
+  db: Database,
+  pageId: string,
+  { id, block, schemaVersion, content }: PageBlock,
+  position: number,
+  { expectedVersion }: VersionedWrite
+) =>
+  db.insert(pageBlocks).select(
+    db
+      .select({
+        id: sql<string>`${id}`.as('id'),
+        pageId: sql<string>`${pageId}`.as('page_id'),
+        position: sql<number>`${position}`.as('position'),
+        block: sql<string>`${block}`.as('block'),
+        schemaVersion: sql<number>`${schemaVersion}`.as('schema_version'),
+        content: sql<string>`${JSON.stringify(content)}`.as('content')
+      })
+      .from(pages)
+      .where(and(eq(pages.id, pageId), eq(pages.version, expectedVersion)))
+  )
+
 export const replacePageBlocks = async (
   d1: AnyD1Database,
   id: string,
@@ -253,14 +292,10 @@ export const replacePageBlocks = async (
   write: VersionedWrite
 ) => {
   const db = connect(d1)
-  const claimed = await claimVersion(db, id, write)
-  if (claimed !== PAGE_WRITE.ok) return claimed
-  const rows = blocks.map((block, position) => ({ ...block, pageId: id, position }))
-  await db.batch([
-    db.delete(pageBlocks).where(eq(pageBlocks.pageId, id)),
-    ...(rows.length > 0 ? [db.insert(pageBlocks).values(rows)] : [])
+  return writeVersioned(db, id, write, {}, (matches) => [
+    db.delete(pageBlocks).where(and(eq(pageBlocks.pageId, id), matches)),
+    ...blocks.map((block, position) => insertBlockIfMatched(db, id, block, position, write))
   ])
-  return PAGE_WRITE.ok
 }
 
 export const setPageLayout = (
@@ -268,7 +303,7 @@ export const setPageLayout = (
   id: string,
   layout: string,
   write: VersionedWrite
-) => claimVersion(connect(d1), id, write, { layout })
+) => writeVersioned(connect(d1), id, write, { layout }, () => [])
 
 export const readPageSeo = async (d1: AnyD1Database, id: string): Promise<PageSeo | undefined> => {
   const db = connect(d1)
@@ -284,11 +319,17 @@ const allMediaExists = async (db: Database, ids: string[]) => {
   return new Set(ids).size === known.length
 }
 
-const localeSeoUpdate = (db: Database, id: string, locale: Locale, seo: LocaleSeo) =>
+const localeSeoUpdate = (
+  db: Database,
+  id: string,
+  locale: Locale,
+  seo: LocaleSeo,
+  versionMatches: SQL
+) =>
   db
     .update(pageLocales)
     .set({ seoTitle: seo.title, description: seo.description, socialImageId: seo.socialImageId })
-    .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale)))
+    .where(and(eq(pageLocales.pageId, id), eq(pageLocales.locale, locale), versionMatches))
 
 export const writePageSeo = async (
   d1: AnyD1Database,
@@ -305,9 +346,7 @@ export const writePageSeo = async (
   ) {
     return PAGE_WRITE.unknownMedia
   }
-  const claimed = await claimVersion(db, id, write)
-  if (claimed !== PAGE_WRITE.ok) return claimed
-  const [first, ...rest] = LOCALES.map((locale) => localeSeoUpdate(db, id, locale, seo[locale]))
-  await db.batch([first!, ...rest])
-  return PAGE_WRITE.ok
+  return writeVersioned(db, id, write, {}, (matches) =>
+    LOCALES.map((locale) => localeSeoUpdate(db, id, locale, seo[locale], matches))
+  )
 }

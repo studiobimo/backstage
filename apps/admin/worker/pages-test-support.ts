@@ -8,7 +8,8 @@ const migrations = migrationStatements(
   '0000_init',
   '0001_site_settings',
   '0003_page_layout',
-  '0004_page_seo_title'
+  '0004_page_seo_title',
+  '0005_pages_single_home'
 )
 
 const { dispose, db, env } = await openTestEnv()

@@ -11,6 +11,7 @@ import {
   LOCALES,
   PAGE_WRITE,
   pageInputSchema,
+  renamePageSchema,
   readPageSeo,
   readPageStamp,
   renamePage,
@@ -101,10 +102,12 @@ export const pagesRoutes = (registry: Registry) =>
       return failure ?? c.json({ page: await findPage(c.env.DB!, id) }, RESPONSE_STATUS.created)
     })
     .put('/:id', async (c) => {
-      const parsed = await readInput(c)
+      const parsed = renamePageSchema.safeParse(await c.req.json().catch(() => null))
       if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
       const id = c.req.param('id')
-      const failure = await failureOf(c, id, await renamePage(c.env.DB!, id, parsed.data))
+      const { expectedVersion, ...input } = parsed.data
+      const write = await versionedWrite(c, expectedVersion)
+      const failure = await failureOf(c, id, await renamePage(c.env.DB!, id, input, write))
       return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
     })
     .delete('/:id', async (c) => {
