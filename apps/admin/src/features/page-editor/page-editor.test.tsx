@@ -6,20 +6,13 @@ import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { blocker } from '@/test/blocker'
 import { aboutPage } from '@/test/fixtures'
 import { PageEditor } from './page-editor'
 
-const blocker = vi.hoisted(() => ({
-  options: undefined as { shouldBlockFn: () => boolean } | undefined,
-  state: { status: 'idle' } as Record<string, unknown>
-}))
-
-vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children }: { children: ReactNode }) => <a href="/pages">{children}</a>,
-  useBlocker: (options: { shouldBlockFn: () => boolean }) => {
-    blocker.options = options
-    return blocker.state
-  }
+vi.mock('@tanstack/react-router', async () => ({
+  ...(await import('@/test/blocker')).blockerRouterMock,
+  Link: ({ children }: { children: ReactNode }) => <a href="/pages">{children}</a>
 }))
 
 const SITE_ORIGIN = 'https://site.test'

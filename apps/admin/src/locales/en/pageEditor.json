@@ -59,12 +59,6 @@
       "seo": "Search and social changed"
     }
   },
-  "leave": {
-    "title": "Leave without saving?",
-    "description": "You have unsaved changes on this page. If you leave now they are lost.",
-    "stay": "Keep editing",
-    "discard": "Leave and discard"
-  },
   "seo": {
     "heading": "Search and social",
     "intro": "What search engines and link previews show, in the language you are editing.",
