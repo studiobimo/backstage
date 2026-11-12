@@ -7,7 +7,7 @@ export type { MediaObject, MediaReader } from './media.ts'
 export { parseRoute, pathOf, routeOf } from './routing.ts'
 export type { Route } from './routing.ts'
 export { readPublishedPages, respondWithRobots, respondWithSitemap } from './seo.ts'
-export { findPublished, findTranslations } from './store.ts'
+export { findPublished, findSiteSnapshot, findTranslations } from './store.ts'
 export type { KvReader } from './store.ts'
 
 export interface SiteEnv {

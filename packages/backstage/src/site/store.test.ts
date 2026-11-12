@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { SNAPSHOT, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
+import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../site-publishing.ts'
 import { routeOf } from './routing.ts'
-import { findPublished, findTranslations, type KvReader } from './store.ts'
+import { findPublished, findSiteSnapshot, findTranslations, type KvReader } from './store.ts'
 
 const snapshotOf = (locale: 'en' | 'es', slug: string | null): Snapshot => ({
   format: SNAPSHOT.format,
@@ -57,5 +58,28 @@ describe('reading published pages', () => {
 
   it('finds the other locales of a page', async () => {
     expect(await findTranslations(published, en)).toEqual([es])
+  })
+})
+
+const siteEn: SiteSnapshot = {
+  format: SITE_SNAPSHOT.format,
+  locale: 'en',
+  publishedAt: 1,
+  siteName: 'Studio',
+  seo: { description: '', socialImageId: null },
+  slots: {},
+  media: {}
+}
+
+describe('reading the published site', () => {
+  it('finds the site snapshot of a locale', async () => {
+    const kv = memoryKv({ [siteSnapshotKey('en')]: siteEn })
+    expect(await findSiteSnapshot(kv, 'en')).toEqual(siteEn)
+  })
+
+  it('finds nothing for a locale not published, or for a snapshot in another shape', async () => {
+    const kv = memoryKv({ [siteSnapshotKey('es')]: { format: 99 } })
+    expect(await findSiteSnapshot(kv, 'en')).toBeNull()
+    expect(await findSiteSnapshot(kv, 'es')).toBeNull()
   })
 })
