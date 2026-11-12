@@ -1,4 +1,4 @@
-import { LOCALES, MEDIA, mediaAltSchema, mediaTypes, type MediaAlt } from '@studiobimo/backstage'
+import { MEDIA, mediaAltSchema, mediaTypes, perLocaleKeys } from '@studiobimo/backstage'
 import { useMutation } from '@tanstack/react-query'
 import { CircleAlertIcon, LoaderCircleIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -12,12 +12,17 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { toastManager } from '@/components/ui/toast'
+import { useLocaleConfig } from '@/features/config/queries'
 import { useApiErrorMessage } from '@/lib/api-feedback'
 
+import { languageName } from '../block-form/locale-status'
 import { ImageRejected, processImage, type ProcessedImage } from './process-image'
 import { uploadMediaMutation } from './queries'
 
-const EMPTY_VALUES: MediaAlt = { decorative: false, alt: { en: '', es: '' } }
+const emptyValuesOf = (locales: readonly string[]) => ({
+  decorative: false,
+  alt: perLocaleKeys(locales, () => '')
+})
 
 type Selection =
   | { status: 'empty' }
@@ -56,10 +61,11 @@ function useUploadForm(selection: Selection, onUploaded: () => void) {
   const messageOf = useApiErrorMessage()
   const [failure, setFailure] = useState<string>()
   const upload = useMutation(uploadMediaMutation)
+  const { locales } = useLocaleConfig()
   const form = useAppForm({
-    defaultValues: EMPTY_VALUES,
+    defaultValues: emptyValuesOf(locales),
     validators: {
-      onSubmit: ({ value }) => fieldErrorsOf(mediaAltSchema(LOCALES).safeParse(value))
+      onSubmit: ({ value }) => fieldErrorsOf(mediaAltSchema(locales).safeParse(value))
     },
     onSubmit: async ({ value }) => {
       if (selection.status !== 'ready') return
@@ -67,7 +73,7 @@ function useUploadForm(selection: Selection, onUploaded: () => void) {
       try {
         await upload.mutateAsync({
           image: selection.image,
-          ...mediaAltSchema(LOCALES).parse(value)
+          ...mediaAltSchema(locales).parse(value)
         })
         toastManager.add({ type: 'success', title: t('uploaded.title') })
         form.reset()
@@ -145,11 +151,13 @@ function Picker({ onSelect }: { onSelect: (file: File | undefined) => void }) {
 }
 
 function AltTabs({ form }: { form: UploadFormApi }) {
-  const { t } = useTranslation('media')
+  const { t, i18n } = useTranslation('media')
   return (
     <LocaleTabs
       form={form}
-      localeLabel={(locale) => t(`locales.${locale}`)}
+      localeLabel={(locale) =>
+        t(`locales.${locale}`, { defaultValue: languageName(locale, i18n.language) })
+      }
       attentionLabel={t('alt.needsAttention')}
       renderLocale={(locale) => (
         <form.AppField name={`alt.${locale}`}>

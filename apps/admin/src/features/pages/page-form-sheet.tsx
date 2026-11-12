@@ -1,4 +1,4 @@
-import { LOCALES, pageInputSchema, slugify, type Locale, type Page } from '@studiobimo/backstage'
+import { pageInputSchema, slugify, type Locale, type Page } from '@studiobimo/backstage'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -16,8 +16,10 @@ import {
   SheetPopup,
   SheetTitle
 } from '@/components/ui/sheet'
+import { useLocaleConfig } from '@/features/config/queries'
 import { useApiErrorMessage } from '@/lib/api-feedback'
 
+import { languageName } from '../block-form/locale-status'
 import { slugPrefix } from './page-label'
 import { createPageMutation, renamePageMutation } from './queries'
 
@@ -27,10 +29,10 @@ interface PageFormSheetProps {
   onOpenChange: (open: boolean) => void
 }
 
-const valuesOf = (page?: Page) => {
+const valuesOf = (locales: readonly Locale[], page?: Page) => {
   const byLocale = (field: 'slug' | 'title') =>
     Object.fromEntries(
-      LOCALES.map((locale) => [
+      locales.map((locale) => [
         locale,
         page?.locales.find((row) => row.locale === locale)?.[field] ?? ''
       ])
@@ -42,16 +44,17 @@ function usePageForm(page: Page | undefined, onSaved: () => void) {
   const messageOf = useApiErrorMessage()
   const queryClient = useQueryClient()
   const [failure, setFailure] = useState<string>()
+  const { locales } = useLocaleConfig()
   const create = useMutation(createPageMutation(queryClient))
   const rename = useMutation(renamePageMutation(queryClient))
   const form = useAppForm({
-    defaultValues: valuesOf(page),
+    defaultValues: valuesOf(locales, page),
     validators: {
-      onSubmit: ({ value }) => fieldErrorsOf(pageInputSchema(LOCALES).safeParse(value))
+      onSubmit: ({ value }) => fieldErrorsOf(pageInputSchema(locales).safeParse(value))
     },
     onSubmit: async ({ value }) => {
       setFailure(undefined)
-      const input = pageInputSchema(LOCALES).parse(value)
+      const input = pageInputSchema(locales).parse(value)
       try {
         if (page) await rename.mutateAsync({ id: page.id, input, expectedVersion: page.version })
         else await create.mutateAsync(input)
@@ -68,6 +71,7 @@ type PageForm = ReturnType<typeof usePageForm>['form']
 
 function LocaleFields({ form, locale, page }: { form: PageForm; locale: Locale; page?: Page }) {
   const { t } = useTranslation('pages')
+  const config = useLocaleConfig()
   const slugName = `slugs.${locale}` as const
   return (
     <div className="flex flex-col gap-4">
@@ -91,7 +95,7 @@ function LocaleFields({ form, locale, page }: { form: PageForm; locale: Locale; 
                 <field.TextField
                   label={t('form.slug')}
                   description={t('form.slugHint')}
-                  icon={<span className="font-mono">{slugPrefix(locale)}</span>}
+                  icon={<span className="font-mono">{slugPrefix(locale, config)}</span>}
                 />
               )}
             </form.AppField>
@@ -103,11 +107,13 @@ function LocaleFields({ form, locale, page }: { form: PageForm; locale: Locale; 
 }
 
 function PageLocaleTabs({ form, page }: { form: PageForm; page?: Page }) {
-  const { t } = useTranslation('pages')
+  const { t, i18n } = useTranslation('pages')
   return (
     <LocaleTabs
       form={form}
-      localeLabel={(locale) => t(`locales.${locale}`)}
+      localeLabel={(locale) =>
+        t(`locales.${locale}`, { defaultValue: languageName(locale, i18n.language) })
+      }
       attentionLabel={t('form.needsAttention')}
       renderLocale={(locale) => <LocaleFields form={form} locale={locale} page={page} />}
     />

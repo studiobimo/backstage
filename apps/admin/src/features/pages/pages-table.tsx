@@ -1,4 +1,4 @@
-import { hasUnpublishedChanges, LOCALES, type PageSummary } from '@studiobimo/backstage'
+import { hasUnpublishedChanges, type PageSummary } from '@studiobimo/backstage'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
+import { useLocaleConfig } from '@/features/config/queries'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -36,13 +37,14 @@ function LanguageBadges({
   className?: string
 }) {
   const { t, i18n } = useTranslation('pages')
-  const locales = LOCALES.filter((locale) => !onlyMissing || missing[locale] > 0)
-  if (locales.length === 0) return null
+  const config = useLocaleConfig()
+  const locales = config.locales.filter((locale) => !onlyMissing || (missing[locale] ?? 0) > 0)
+  if (!config.hasMultipleLocales || locales.length === 0) return null
   return (
     <span className={cn('flex gap-1', className)}>
       {locales.map((locale) => {
         const language = languageName(locale, i18n.language)
-        const count = missing[locale]
+        const count = missing[locale] ?? 0
         return (
           <Badge key={locale} variant={count > 0 ? 'warning' : 'outline'}>
             <span aria-hidden className="uppercase">
@@ -76,6 +78,7 @@ function StatusBadge({ page }: { page: PageSummary }) {
 
 function TitleCell({ page, name }: { page: PageSummary; name: string }) {
   const { t } = useTranslation('pages')
+  const config = useLocaleConfig()
   return (
     <TableCell className="w-full max-w-0 sm:w-auto sm:max-w-none">
       <div className="flex min-w-0 flex-col gap-1.5">
@@ -91,7 +94,7 @@ function TitleCell({ page, name }: { page: PageSummary; name: string }) {
         </div>
         <LanguageBadges missing={page.missing} onlyMissing className="sm:hidden" />
         <p className="flex gap-x-3 truncate font-mono text-muted-foreground text-xs">
-          {pageAddresses(page).map((address) => (
+          {pageAddresses(page, config).map((address) => (
             <span key={address}>{address}</span>
           ))}
         </p>
@@ -108,13 +111,16 @@ function PageRow({
   onAction: (action: PageAction) => void
 }) {
   const { i18n } = useTranslation('pages')
+  const { hasMultipleLocales } = useLocaleConfig()
   const name = pageLabel(page, i18n.language)
   return (
     <TableRow>
       <TitleCell page={page} name={name} />
-      <TableCell className={COLUMN.languages}>
-        <LanguageBadges missing={page.missing} />
-      </TableCell>
+      {hasMultipleLocales && (
+        <TableCell className={COLUMN.languages}>
+          <LanguageBadges missing={page.missing} />
+        </TableCell>
+      )}
       <TableCell>
         <StatusBadge page={page} />
       </TableCell>
@@ -135,13 +141,16 @@ interface PagesTableProps {
 
 export function PagesTable({ pages, onAction }: PagesTableProps) {
   const { t } = useTranslation('pages')
+  const { hasMultipleLocales } = useLocaleConfig()
   return (
     <Frame>
       <Table variant="card">
         <TableHeader>
           <TableRow>
             <TableHead>{t('list.columns.title')}</TableHead>
-            <TableHead className={COLUMN.languages}>{t('list.columns.languages')}</TableHead>
+            {hasMultipleLocales && (
+              <TableHead className={COLUMN.languages}>{t('list.columns.languages')}</TableHead>
+            )}
             <TableHead>{t('list.columns.status')}</TableHead>
             <TableHead className={COLUMN.updated}>{t('list.columns.updated')}</TableHead>
             <TableHead>

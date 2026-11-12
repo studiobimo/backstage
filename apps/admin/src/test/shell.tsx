@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
@@ -6,8 +6,10 @@ import { vi } from 'vitest'
 import i18n from '@/i18n/config'
 import { createAppRouter } from '@/router'
 import { aboutPage } from '@/test/fixtures'
+import { DEFAULT_TEST_CONFIG, testQueryClient } from '@/test/query-client'
 
 const apiBodies: Record<string, unknown> = {
+  '/api/v1/config': DEFAULT_TEST_CONFIG,
   '/api/v1/pages': { pages: [aboutPage] },
   '/api/v1/pages/p1/blocks': { blocks: [], layout: 'default', version: 1 },
   '/api/v1/pages/p1/seo': {
@@ -34,7 +36,7 @@ export function stubApi() {
 }
 
 export async function renderShell(path = '/') {
-  const queryClient = new QueryClient()
+  const queryClient = testQueryClient()
   const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }))
   render(
     <QueryClientProvider client={queryClient}>
