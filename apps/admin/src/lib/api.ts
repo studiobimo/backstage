@@ -9,6 +9,8 @@ import { z } from 'zod'
 
 const API_ROOT = '/api/v1'
 
+export const SESSION_EXPIRED = { code: 'session_expired', message: 'The session ended' } as const
+
 export class ApiError extends Error {
   readonly code: string
   readonly current?: PageStamp
@@ -18,6 +20,12 @@ export class ApiError extends Error {
     this.code = code
     this.current = current
     this.problems = problems
+  }
+}
+
+export class SessionExpiredError extends ApiError {
+  constructor() {
+    super(SESSION_EXPIRED.code, SESSION_EXPIRED.message)
   }
 }
 
@@ -37,7 +45,12 @@ const requestHeaders = (init?: RequestInit) => {
 }
 
 export const apiRequest = async (path: string, init?: RequestInit) => {
-  const response = await fetch(`${API_ROOT}${path}`, { ...init, headers: requestHeaders(init) })
+  const response = await fetch(`${API_ROOT}${path}`, {
+    ...init,
+    redirect: 'manual',
+    headers: requestHeaders(init)
+  })
+  if (response.type === 'opaqueredirect') throw new SessionExpiredError()
   if (response.ok) return response
   const failure = failureShape.safeParse(await response.json().catch(() => null))
   const { code, error, current, problems } = failure.success

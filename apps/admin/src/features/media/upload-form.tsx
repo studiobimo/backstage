@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { toastManager } from '@/components/ui/toast'
-import { ApiError } from '@/lib/api'
+import { useApiErrorMessage } from '@/lib/api-feedback'
 
 import { ImageRejected, processImage, type ProcessedImage } from './process-image'
 import { uploadMediaMutation } from './queries'
@@ -53,6 +53,7 @@ function useSelection() {
 
 function useUploadForm(selection: Selection, onUploaded: () => void) {
   const { t } = useTranslation('media')
+  const messageOf = useApiErrorMessage()
   const [failure, setFailure] = useState<string>()
   const upload = useMutation(uploadMediaMutation)
   const form = useAppForm({
@@ -67,7 +68,7 @@ function useUploadForm(selection: Selection, onUploaded: () => void) {
         form.reset()
         onUploaded()
       } catch (error) {
-        setFailure(error instanceof ApiError ? t(`errors.${error.code}`) : t('errors.internal'))
+        setFailure(messageOf(error))
       }
     }
   })

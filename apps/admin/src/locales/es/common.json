@@ -80,5 +80,26 @@
       "actions": "Acciones"
     },
     "escape": "Esc"
+  },
+  "apiErrors": {
+    "invalid": "Revisa los campos e inténtalo de nuevo.",
+    "forbidden": "No tienes acceso para hacer eso. Inicia sesión de nuevo y reintenta.",
+    "slug_taken": "Otra página ya usa esa dirección en este idioma.",
+    "home_taken": "La página de inicio ya existe.",
+    "stale_version": "Se guardó una versión más reciente. Recarga la última versión e inténtalo de nuevo.",
+    "unpublishable": "Esta página tiene contenido que no se puede publicar. Revisa sus bloques e inténtalo de nuevo.",
+    "too_large": "La imagen es demasiado grande. Prueba con una más pequeña.",
+    "unsupported_media": "Solo se aceptan imágenes JPEG, PNG, WebP y AVIF.",
+    "unsupported_content_type": "No se entendió la solicitud. Recarga la página e inténtalo de nuevo.",
+    "not_found": "Este elemento ya no existe.",
+    "internal": "Algo salió mal en el servidor. Inténtalo de nuevo en un momento.",
+    "dev_auth_outside_local": "El servidor está mal configurado. Avisa a quien administra este sitio.",
+    "session_expired": "Tu sesión terminó. Inicia sesión de nuevo y reintenta. Lo que escribiste se conserva.",
+    "fallback": "Algo salió mal. Revisa tu conexión e inténtalo de nuevo."
+  },
+  "session": {
+    "title": "Tu sesión terminó",
+    "description": "Inicia sesión de nuevo en una pestaña nueva, vuelve y reintenta. Tus cambios aquí se conservan.",
+    "signIn": "Iniciar sesión de nuevo"
   }
 }

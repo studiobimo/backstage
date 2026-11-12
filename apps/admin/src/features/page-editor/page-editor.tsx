@@ -16,6 +16,7 @@ import type { SortableSlot } from '@/components/sortable-items'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { ApiError } from '@/lib/api'
+import { useApiErrorMessage } from '@/lib/api-feedback'
 import { useShortcut } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 
@@ -148,7 +149,7 @@ function BlockRow({
 }
 
 function useSave(pageId: string, draft: PageDraft, saved: SavedPage) {
-  const { t } = useTranslation('pageEditor')
+  const messageOf = useApiErrorMessage()
   const queryClient = useQueryClient()
   const saveBlocks = useMutation(savePageBlocksMutation(queryClient, pageId))
   const saveLayout = useMutation(savePageLayoutMutation(queryClient, pageId))
@@ -156,12 +157,7 @@ function useSave(pageId: string, draft: PageDraft, saved: SavedPage) {
   const error = saveBlocks.error ?? saveLayout.error ?? saveSeo.error
   const stale =
     error instanceof ApiError && error.code === API_ERROR.staleVersion.code ? error : undefined
-  const failure =
-    error && !stale
-      ? t(`errors.${error instanceof ApiError ? error.code : 'internal'}`, {
-          defaultValue: t('errors.internal')
-        })
-      : undefined
+  const failure = error && !stale ? messageOf(error) : undefined
   const save = async () => {
     saveBlocks.reset()
     saveLayout.reset()
@@ -483,7 +479,7 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
           onReload={onReload}
         />
       ) : (
-        <p role="alert">{t('errors.not_found')}</p>
+        <p role="alert">{t('apiErrors.not_found', { ns: 'common' })}</p>
       )}
       <LeaveGuard dirty={dirty} />
       <div className={EDITOR_BODY}>

@@ -33,13 +33,6 @@
   "uploaded": {
     "title": "Image uploaded"
   },
-  "errors": {
-    "invalid": "Check the description for each language and try again.",
-    "too_large": "The image is too large. Try a smaller one.",
-    "unsupported_media": "Only JPEG, PNG, WebP and AVIF images are accepted.",
-    "forbidden": "You are not signed in to upload images.",
-    "internal": "The image could not be uploaded. Check your connection and try again."
-  },
   "library": {
     "title": "Choose an image",
     "description": "Pick one of the images you uploaded.",

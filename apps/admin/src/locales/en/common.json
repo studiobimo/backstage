@@ -80,5 +80,26 @@
       "actions": "Actions"
     },
     "escape": "Esc"
+  },
+  "apiErrors": {
+    "invalid": "Check the fields and try again.",
+    "forbidden": "You do not have access to do that. Sign in again and retry.",
+    "slug_taken": "Another page already uses that address in this language.",
+    "home_taken": "The home page already exists.",
+    "stale_version": "A newer version was saved. Reload the latest version and try again.",
+    "unpublishable": "This page has content that cannot be published. Check its blocks and try again.",
+    "too_large": "The image is too large. Try a smaller one.",
+    "unsupported_media": "Only JPEG, PNG, WebP and AVIF images are accepted.",
+    "unsupported_content_type": "The request was not understood. Reload the page and try again.",
+    "not_found": "This item no longer exists.",
+    "internal": "Something went wrong on the server. Try again in a moment.",
+    "dev_auth_outside_local": "The server is misconfigured. Tell whoever runs this site.",
+    "session_expired": "Your session ended. Sign in again, then retry. What you typed is kept.",
+    "fallback": "Something went wrong. Check your connection and try again."
+  },
+  "session": {
+    "title": "Your session ended",
+    "description": "Sign in again in a new tab, then come back and retry. Your changes here are kept.",
+    "signIn": "Sign in again"
   }
 }
