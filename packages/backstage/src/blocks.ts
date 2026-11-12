@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import type { TranslatedNode } from './translations.ts'
+
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
 export const siteOriginResponseSchema = z.object({ origin: z.url() })
@@ -98,12 +100,62 @@ function indexSlots(
   return bySlot
 }
 
+const SCALAR_TYPES = new Set(['string', 'number', 'integer', 'boolean'])
+const OPAQUE_KINDS = new Set(['richText', 'image', 'link'])
+
+const joinPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)
+
+type SchemaNode = Exclude<TranslatedNode, boolean>
+
+function childrenOf(node: SchemaNode, path: string): [SchemaNode, string][] {
+  const { items, additionalProperties, properties = {} } = node
+  const children: [TranslatedNode | undefined, string][] = [
+    [Array.isArray(items) ? undefined : items, path],
+    [additionalProperties, path],
+    ...Object.entries(properties).map(([key, child]): [TranslatedNode, string] => [
+      child,
+      joinPath(path, key)
+    ])
+  ]
+  return children.flatMap(([child, childPath]) =>
+    child === undefined || typeof child === 'boolean' ? [] : [[child, childPath]]
+  )
+}
+
+function unrenderableFieldIn(node: SchemaNode, path: string): string | undefined {
+  if (node.backstage && OPAQUE_KINDS.has(node.backstage)) return undefined
+  const isScalar = typeof node.type === 'string' && SCALAR_TYPES.has(node.type)
+  const isContainer = node.type === 'object' || node.type === 'array'
+  if (!isScalar && !isContainer && !('enum' in node)) return path
+  return childrenOf(node, path)
+    .map(([child, childPath]) => unrenderableFieldIn(child, childPath))
+    .find((found) => found !== undefined)
+}
+
+function assertRenderable(block: Block) {
+  let schema: SchemaNode
+  try {
+    schema = z.toJSONSchema(block.schema, { io: 'input', cycles: 'throw' }) as SchemaNode
+  } catch {
+    throw new Error(
+      `Block "${block.name}" has a schema the admin cannot describe (recursive or unrepresentable)`
+    )
+  }
+  const field = unrenderableFieldIn(schema, '')
+  if (field !== undefined) {
+    throw new Error(
+      `Block "${block.name}" field "${field || '(root)'}" uses a schema shape the admin form cannot render (unions, nullable and referenced fields are not supported)`
+    )
+  }
+}
+
 export function defineRegistry<
   const B extends readonly Block[],
   const L extends readonly LayoutDefinition[] = readonly []
 >(blocks: B, options: RegistryOptions<L> = {}): Registry<B, L> {
   const { slots = {}, layouts = [] as unknown as L } = options
   const byName = indexByName(blocks, 'Block')
+  byName.forEach(assertRenderable)
   const bySlot = indexSlots(slots, byName)
   const slotBlocks = new Set([...bySlot.values()].flat())
   const layoutsByName = indexByName(layouts, 'Layout')
@@ -117,7 +169,7 @@ export function defineRegistry<
     jsonSchema(name) {
       const block = byName.get(name)
       if (!block) throw new Error(`Unknown block "${name}"`)
-      return z.toJSONSchema(block.schema, { io: 'input' })
+      return z.toJSONSchema(block.schema, { io: 'input', cycles: 'throw' })
     }
   }
 }

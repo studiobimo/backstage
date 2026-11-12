@@ -49,6 +49,33 @@ describe('defineRegistry', () => {
     expect(() => defineRegistry([hero, hero])).toThrow(/twice/)
   })
 
+  it.each([
+    ['nullable', z.object({ picture: image().nullable() }), 'picture'],
+    ['union', z.object({ hero: z.union([image(), link()]) }), 'hero'],
+    [
+      'nested nullable',
+      z.object({ items: z.array(z.object({ title: z.string().nullable() })) }),
+      'items.title'
+    ]
+  ])('rejects a %s field naming the block and field', (_, schema, field) => {
+    const block = defineBlock({ name: 'card', schema })
+    expect(() => defineRegistry([block])).toThrow(`Block "card" field "${field}"`)
+  })
+
+  it('rejects a recursive schema', () => {
+    type Node = { children: Node[] }
+    const node: z.ZodType<Node> = z.object({ children: z.lazy(() => z.array(node)) })
+    expect(() => defineRegistry([defineBlock({ name: 'tree', schema: node })])).toThrow(/"tree"/)
+  })
+
+  it('accepts optional fields and defaults', () => {
+    const block = defineBlock({
+      name: 'card',
+      schema: z.object({ picture: image().optional(), note: z.string().default('') })
+    })
+    expect(() => defineRegistry([block])).not.toThrow()
+  })
+
   it('emits the field kinds as markers in the JSON Schema', () => {
     const { properties } = registry.jsonSchema('hero') as unknown as Props
     expect(properties.title?.backstage).toBe('localized')
