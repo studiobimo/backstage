@@ -20,10 +20,11 @@ import type { BlockValue } from '@/features/block-form/value.ts'
 import { blockValue } from '@/features/block-form/value.ts'
 import { LOCALES, SLOT, type SiteBlock } from '@studiobimo/backstage'
 
-import { saveSlotMutation, type SlotView } from './queries'
+import { saveSlotMutation, slotsQuery, type SlotView } from './queries'
 import { SaveFailedAlert } from './save-failed-alert'
 import { useSectionDirty, type ReportDirty } from './use-dirty-sections'
-import { useSaveFeedback } from './use-save-feedback'
+import { StaleAlert } from '../page-editor/stale-alert'
+import { useReloadLatest, useSaveFeedback } from './use-save-feedback'
 
 const SLOT_ICONS: Record<string, ReactNode> = {
   [SLOT.header]: <PanelTopIcon />,
@@ -35,9 +36,12 @@ function useSaveSlot(slot: SlotView) {
   return useSaveFeedback(
     async ({ block, value }: { block: SlotView['blocks'][number]; value: BlockValue }) =>
       save.mutateAsync({
-        block: block.name,
-        schemaVersion: block.version,
-        content: value as SiteBlock['content']
+        block: {
+          block: block.name,
+          schemaVersion: block.version,
+          content: value as SiteBlock['content']
+        },
+        expectedVersion: slot.version
       })
   )
 }
@@ -82,7 +86,8 @@ export function SlotSection({ slot, reportDirty }: { slot: SlotView; reportDirty
   const { t } = useTranslation('settings')
   const [choice, setChoice] = useState(slot.current?.block ?? slot.blocks[0]!.name)
   const [pending, setPending] = useState<SlotSave>()
-  const { submit, failed, issues } = useSaveSlot(slot)
+  const { submit, failed, stale, issues, clearStale } = useSaveSlot(slot)
+  const { generation, reload } = useReloadLatest(slotsQuery.queryKey, clearStale)
   const onDirtyChange = useSectionDirty(slot.name, reportDirty)
   const block = slot.blocks.find(({ name }) => name === choice) ?? slot.blocks[0]!
   const stored = slot.current?.block === block.name ? slot.current.content : undefined
@@ -109,8 +114,9 @@ export function SlotSection({ slot, reportDirty }: { slot: SlotView; reportDirty
         />
       )}
       {failed && <SaveFailedAlert />}
+      {stale && <StaleAlert scope="settings" current={stale.current} onReload={reload} />}
       <BlockForm
-        key={block.name}
+        key={`${block.name}-${generation}`}
         schema={block.schema}
         locales={LOCALES}
         value={stored === undefined ? undefined : blockValue.parse(stored)}

@@ -18,6 +18,7 @@ export const slotSchema = z.object({
       schema: z.record(z.string(), z.unknown())
     })
   ),
+  version: z.number().int(),
   current: siteBlockSchema.nullable()
 })
 export type Slot = z.infer<typeof slotSchema>

@@ -48,7 +48,8 @@
       "title": "Reload and discard your changes?",
       "description": "Reloading replaces this page with the latest saved version. These changes will be lost:",
       "keep": "Keep my changes",
-      "discard": "Reload and discard"
+      "discard": "Reload and discard",
+      "description_settings": "Reloading replaces what is on screen with the latest saved version. Your unsaved changes here will be lost."
     },
     "changes": {
       "added": "{{name}} added at position {{position}}",
@@ -57,7 +58,8 @@
       "reordered": "Blocks reordered",
       "layout": "Layout changed",
       "seo": "Search and social changed"
-    }
+    },
+    "description_settings": "{{name}} saved this on {{when}}. Your changes were not saved and are still here. Reload to get their version."
   },
   "seo": {
     "heading": "Search and social",

@@ -23,12 +23,11 @@ export const saveSiteSettingsSchema = siteSettingsSchema.extend({
   expectedVersion: expectedSiteVersion
 })
 
-export const siteSettingsResponseSchema = z.object({ settings: siteSettingsSchema })
-
-export interface VersionedSiteSettings {
-  settings: SiteSettings
-  version: number
-}
+export const siteSettingsResponseSchema = z.object({
+  settings: siteSettingsSchema,
+  version: z.number().int()
+})
+export type VersionedSiteSettings = z.infer<typeof siteSettingsResponseSchema>
 
 export const EMPTY_SITE_SETTINGS: SiteSettings = { siteName: {} }
 

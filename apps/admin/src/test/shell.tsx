@@ -17,7 +17,7 @@ const apiBodies: Record<string, unknown> = {
     },
     version: 1
   },
-  '/api/v1/settings': { settings: { siteName: { en: 'Studio' } } },
+  '/api/v1/settings': { settings: { siteName: { en: 'Studio' } }, version: 1 },
   '/api/v1/blocks': { blocks: [] },
   '/api/v1/site-origin': { origin: 'https://site.test' },
   '/api/v1/layouts': { layouts: ['default'] }

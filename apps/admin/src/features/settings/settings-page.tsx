@@ -14,8 +14,9 @@ import { blockValue, type BlockValue } from '@/features/block-form/value.ts'
 import { saveSettingsMutation, settingsQuery, slotsQuery } from './queries'
 import { SaveFailedAlert } from './save-failed-alert'
 import { SlotSection } from './slot-section'
+import { StaleAlert } from '../page-editor/stale-alert'
 import { useDirtySections, useSectionDirty, type ReportDirty } from './use-dirty-sections'
-import { useSaveFeedback } from './use-save-feedback'
+import { useReloadLatest, useSaveFeedback } from './use-save-feedback'
 import { type CopyOf, translateSchema } from './translate-schema'
 
 const SETTINGS_SCHEMA = siteSettingsJsonSchema() as JsonSchema
@@ -33,16 +34,19 @@ function useTranslatedSchema() {
   }, [t, i18n])
 }
 
-function useSaveSettings() {
+function useSaveSettings(expectedVersion: number) {
   const save = useMutation(saveSettingsMutation(useQueryClient()))
-  return useSaveFeedback((value: BlockValue) => save.mutateAsync(siteSettingsSchema.parse(value)))
+  return useSaveFeedback((value: BlockValue) =>
+    save.mutateAsync({ settings: siteSettingsSchema.parse(value), expectedVersion })
+  )
 }
 
 function GeneralSection({ reportDirty }: { reportDirty: ReportDirty }) {
   const { t } = useTranslation('settings')
-  const { data: settings } = useSuspenseQuery(settingsQuery)
+  const { data } = useSuspenseQuery(settingsQuery)
   const schema = useTranslatedSchema()
-  const { submit, failed, issues } = useSaveSettings()
+  const { submit, failed, stale, issues, clearStale } = useSaveSettings(data.version)
+  const { generation, reload } = useReloadLatest(settingsQuery.queryKey, clearStale)
   const onDirtyChange = useSectionDirty('general', reportDirty)
   return (
     <SectionFrame
@@ -52,10 +56,12 @@ function GeneralSection({ reportDirty }: { reportDirty: ReportDirty }) {
       icon={<GlobeIcon />}
     >
       {failed && <SaveFailedAlert />}
+      {stale && <StaleAlert scope="settings" current={stale.current} onReload={reload} />}
       <BlockForm
+        key={generation}
         schema={schema}
         locales={LOCALES}
-        value={blockValue.parse(settings)}
+        value={blockValue.parse(data.settings)}
         onSubmit={submit}
         onDirtyChange={onDirtyChange}
         issues={issues}

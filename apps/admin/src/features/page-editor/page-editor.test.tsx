@@ -61,7 +61,9 @@ const mockApi = (
         return new Response(JSON.stringify({ seo, version: expectedVersion + 1 }))
       }
       if (url.endsWith('/settings')) {
-        return new Response(JSON.stringify({ settings: { siteName: { en: 'Studio' } } }))
+        return new Response(
+          JSON.stringify({ settings: { siteName: { en: 'Studio' } }, version: 1 })
+        )
       }
       if (init?.method === 'PUT' && url.endsWith('/layout')) {
         const body = JSON.parse(init.body as string) as { layout: string; expectedVersion: number }
