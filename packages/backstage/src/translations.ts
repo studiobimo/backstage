@@ -1,3 +1,4 @@
+import type { FieldKind } from './fields.ts'
 import { LOCALES, type Locale, type PageSeo } from './pages.ts'
 
 export type TranslatedNode =
@@ -37,17 +38,39 @@ export function isMissingTranslation(translations: Record<string, unknown>, loca
   return filledElsewhere && isBlank(translations[locale])
 }
 
-function localizedEntries(node: TranslatedNode, value: unknown): Record<string, unknown>[] {
-  if (typeof node === 'boolean') return []
-  if (node.backstage === 'localized') return [isRecord(value) ? value : {}]
-  const { items } = node
-  if (items && !Array.isArray(items)) {
-    return Array.isArray(value) ? value.flatMap((item) => localizedEntries(items, item)) : []
-  }
-  return Object.entries(node.properties ?? {}).flatMap(([key, child]) =>
-    localizedEntries(child, isRecord(value) ? value[key] : undefined)
-  )
+export interface MarkedField {
+  path: string
+  value: unknown
 }
+
+const childPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)
+
+export function markedFieldsIn(
+  node: TranslatedNode,
+  value: unknown,
+  kind: FieldKind,
+  path = ''
+): MarkedField[] {
+  if (typeof node === 'boolean') return []
+  if (node.backstage === kind) return [{ path, value }]
+  const { items, properties = {}, additionalProperties } = node
+  if (items && !Array.isArray(items)) {
+    return Array.isArray(value)
+      ? value.flatMap((item, index) => markedFieldsIn(items, item, kind, `${path}[${index}]`))
+      : []
+  }
+  const record = isRecord(value) ? value : {}
+  const extraKeys = additionalProperties === undefined ? [] : Object.keys(record)
+  return [...new Set([...Object.keys(properties), ...extraKeys])].flatMap((key) => {
+    const child = properties[key] ?? additionalProperties
+    return child === undefined ? [] : markedFieldsIn(child, record[key], kind, childPath(path, key))
+  })
+}
+
+const localizedEntries = (node: TranslatedNode, value: unknown) =>
+  markedFieldsIn(node, value, 'localized').map((field) =>
+    isRecord(field.value) ? field.value : {}
+  )
 
 export function countMissingTranslations(node: TranslatedNode, content: unknown, locale: string) {
   return localizedEntries(node, content).filter((entry) => isMissingTranslation(entry, locale))

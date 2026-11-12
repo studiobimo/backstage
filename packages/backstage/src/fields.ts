@@ -13,11 +13,11 @@ export const image = () =>
 
 export const richText = () => marked(richTextDoc, 'richText')
 
-export const link = ({ strict = false } = {}) =>
+export const link = ({ requireLabel = false } = {}) =>
   marked(
     z.object({
-      href: strict ? z.string().regex(RICH_TEXT.safeHref) : z.string().min(1),
-      label: strict ? z.string().trim().min(1) : z.string().default('')
+      href: z.string().regex(RICH_TEXT.safeHref),
+      label: requireLabel ? z.string().trim().min(1) : z.string().default('')
     }),
     'link'
   )

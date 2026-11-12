@@ -22,10 +22,11 @@ function ProblemsAlert({ error, blocks }: { error: ApiError; blocks: PageBlock[]
       <AlertTitle>{t('publish.problems.title')}</AlertTitle>
       <AlertDescription>
         <ul className="list-disc pl-4">
-          {error.problems.map(({ reason, blockId }) => (
-            <li key={`${reason}:${blockId}`}>
+          {error.problems.map(({ reason, blockId, path }) => (
+            <li key={`${reason}:${blockId}:${path}`}>
               {t(`publish.problems.${reason}`, {
                 name: blocks.find((block) => block.id === blockId)?.block ?? '',
+                path: path ?? '',
                 defaultValue: t('publish.problems.invalid_content', { name: '' })
               })}
             </li>

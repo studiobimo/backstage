@@ -6,6 +6,7 @@ import {
   isBlank,
   isMissingTranslation,
   isSeoMissing,
+  markedFieldsIn,
   type TranslatedNode
 } from './translations.ts'
 
@@ -70,5 +71,32 @@ describe('isSeoMissing', () => {
     expect(isSeoMissing(seo('About', ''), 'es')).toBe(true)
     expect(isSeoMissing(seo('', ''), 'es')).toBe(false)
     expect(isSeoMissing(seo('About', 'Acerca'), 'es')).toBe(false)
+  })
+})
+
+describe('markedFieldsIn', () => {
+  const link: TranslatedNode = { backstage: 'link' }
+  const schema: TranslatedNode = {
+    properties: {
+      cta: link,
+      menu: { items: { properties: { target: { additionalProperties: link } } } }
+    }
+  }
+
+  it('returns each marked field with its path', () => {
+    const content = {
+      cta: { href: '/a' },
+      menu: [{ target: { en: { href: '/b' }, es: { href: '/c' } } }, { target: {} }]
+    }
+    expect(markedFieldsIn(schema, content, 'link')).toEqual([
+      { path: 'cta', value: { href: '/a' } },
+      { path: 'menu[0].target.en', value: { href: '/b' } },
+      { path: 'menu[0].target.es', value: { href: '/c' } }
+    ])
+  })
+
+  it('finds nothing of another kind and tolerates missing content', () => {
+    expect(markedFieldsIn(schema, {}, 'image')).toEqual([])
+    expect(markedFieldsIn(schema, undefined, 'link')).toEqual([{ path: 'cta', value: undefined }])
   })
 })

@@ -163,4 +163,23 @@ describe('field helpers', () => {
     expect(link().parse({ href: '/about' })).toEqual({ href: '/about', label: '' })
     expect(image().safeParse({ id: 'a1' }).success).toBe(true)
   })
+
+  it.each(['javascript:alert(1)', 'data:text/html,x', 'ftp://example.com'])(
+    'rejects the unsafe href %s',
+    (href) => {
+      expect(link().safeParse({ href }).success).toBe(false)
+    }
+  )
+
+  it.each(['https://example.com', 'mailto:a@b.co', 'tel:+34123', '/about', '#top'])(
+    'accepts the safe href %s',
+    (href) => {
+      expect(link().safeParse({ href }).success).toBe(true)
+    }
+  )
+
+  it('requires a label only when asked to', () => {
+    expect(link({ requireLabel: true }).safeParse({ href: '/a', label: ' ' }).success).toBe(false)
+    expect(link({ requireLabel: true }).safeParse({ href: '/a', label: 'A' }).success).toBe(true)
+  })
 })
