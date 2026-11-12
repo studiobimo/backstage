@@ -39,6 +39,7 @@ const slots = [
   {
     name: 'header',
     blocks: [{ name: 'site-header', version: 1, schema: headerSchema }],
+    version: 0,
     current: null
   },
   {
@@ -47,6 +48,7 @@ const slots = [
       { name: 'site-footer', version: 1, schema: footerSchema('tagline') },
       { name: 'site-footer-wide', version: 2, schema: footerSchema('motto') }
     ],
+    version: 3,
     current: { block: 'site-footer', schemaVersion: 1, content: { tagline: 'Made by hand' } }
   }
 ]
@@ -65,7 +67,9 @@ const mockApi = (
       if (method === 'PUT') puts.push({ url, body: JSON.parse(init?.body as string) })
       return (
         handler(method, url) ??
-        (url.endsWith('/slots') ? reply(200, { slots }) : reply(200, { settings: saved }))
+        (url.endsWith('/slots')
+          ? reply(200, { slots })
+          : reply(200, { settings: saved, version: 4 }))
       )
     })
   )
@@ -116,7 +120,7 @@ describe('SettingsPage saving', { timeout: 15_000 }, () => {
     expect(await screen.findByText('Settings saved')).toBeInTheDocument()
     expect(puts).toHaveLength(1)
     expect(puts[0]!.url).toMatch(/\/settings$/)
-    expect(puts[0]!.body).toMatchObject({ siteName: { en: 'Bimo' } })
+    expect(puts[0]!.body).toMatchObject({ siteName: { en: 'Bimo' }, expectedVersion: 4 })
   })
 
   it('saves a slot as its block, with the block version', async () => {
@@ -134,7 +138,8 @@ describe('SettingsPage saving', { timeout: 15_000 }, () => {
     expect(puts[0]!.body).toEqual({
       block: 'site-footer',
       schemaVersion: 1,
-      content: { tagline: 'Still by hand' }
+      content: { tagline: 'Still by hand' },
+      expectedVersion: 3
     })
   })
 
@@ -226,6 +231,71 @@ describe('SettingsPage guards', { timeout: 15_000 }, () => {
     await user.click(header.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts).toHaveLength(1))
     expect(screen.queryByText('Replace the saved design?')).not.toBeInTheDocument()
+  })
+})
+
+const newerSave = { version: 5, updatedAt: Date.UTC(2026, 10, 12, 15, 0), updatedBy: 'Ana' }
+
+const refusedAsStale = (method: string) =>
+  method === 'PUT'
+    ? reply(409, { error: 'Stale', code: 'stale_version', current: newerSave })
+    : undefined
+
+describe('SettingsPage newer saves', { timeout: 15_000 }, () => {
+  it('keeps the edit and says who saved first when the settings changed underneath', async () => {
+    const puts = mockApi(refusedAsStale)
+    renderPage()
+    const user = userEvent.setup()
+    const name = await screen.findByLabelText('Site name')
+    await user.clear(name)
+    await user.type(name, 'Mine')
+    await user.click(
+      within(screen.getByRole('region', { name: 'General' })).getByRole('button', { name: 'Save' })
+    )
+    const alert = await screen.findByText('A newer version was saved')
+    expect(alert).toBeInTheDocument()
+    expect(screen.getByText(/Ana saved this on/)).toBeInTheDocument()
+    expect(puts[0]!.body).toMatchObject({ expectedVersion: 4 })
+    expect(screen.getByLabelText('Site name')).toHaveValue('Mine')
+    expect(screen.queryByText('Settings saved')).not.toBeInTheDocument()
+    expect(screen.queryByText('Could not save the settings')).not.toBeInTheDocument()
+  })
+
+  it('names the slot whose save was refused, and leaves the others alone', async () => {
+    mockApi(refusedAsStale)
+    renderPage()
+    const user = userEvent.setup()
+    const tagline = await screen.findByLabelText('Tagline')
+    await user.type(tagline, '!')
+    const footer = within(screen.getByRole('region', { name: 'Footer' }))
+    await user.click(footer.getByRole('button', { name: 'Save' }))
+    expect(await footer.findByText('A newer version was saved')).toBeInTheDocument()
+    const general = within(screen.getByRole('region', { name: 'General' }))
+    expect(general.queryByText('A newer version was saved')).not.toBeInTheDocument()
+  })
+
+  it('reloads their version only after confirming the discard', async () => {
+    let latest = false
+    mockApi((method, url) => {
+      if (method === 'PUT') return refusedAsStale(method)
+      if (latest && !url.endsWith('/slots')) {
+        return reply(200, { settings: { siteName: { en: 'Theirs' } }, version: 5 })
+      }
+      return undefined
+    })
+    renderPage()
+    const user = userEvent.setup()
+    const name = await screen.findByLabelText('Site name')
+    await user.type(name, '!')
+    await user.click(
+      within(screen.getByRole('region', { name: 'General' })).getByRole('button', { name: 'Save' })
+    )
+    await user.click(await screen.findByRole('button', { name: 'Reload latest version' }))
+    expect(await screen.findByText('Reload and discard your changes?')).toBeInTheDocument()
+    latest = true
+    await user.click(screen.getByRole('button', { name: 'Reload and discard' }))
+    await waitFor(() => expect(screen.getByLabelText('Site name')).toHaveValue('Theirs'))
+    expect(screen.queryByText('A newer version was saved')).not.toBeInTheDocument()
   })
 })
 

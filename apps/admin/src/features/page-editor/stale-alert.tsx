@@ -21,14 +21,15 @@ import type { DraftChange, PageDraft } from './draft'
 
 interface StaleAlertProps {
   current?: PageStamp
-  draft: PageDraft
-  changes: DraftChange[]
+  draft?: PageDraft
+  changes?: DraftChange[]
+  scope?: 'settings'
   onReload: () => void
 }
 
 type CopyState = 'idle' | 'copied' | 'failed'
 
-function useCopyDraft(draft: PageDraft) {
+function useCopyDraft(draft?: PageDraft) {
   const [state, setState] = useState<CopyState>('idle')
   const copy = async () => {
     try {
@@ -54,7 +55,11 @@ function ChangeList({ changes }: { changes: DraftChange[] }) {
   )
 }
 
-function ReloadConfirm({ changes, onReload }: Pick<StaleAlertProps, 'changes' | 'onReload'>) {
+function ReloadConfirm({
+  changes,
+  scope,
+  onReload
+}: Pick<StaleAlertProps, 'changes' | 'scope' | 'onReload'>) {
   const { t } = useTranslation('pageEditor')
   return (
     <AlertDialog>
@@ -65,11 +70,15 @@ function ReloadConfirm({ changes, onReload }: Pick<StaleAlertProps, 'changes' | 
       <AlertDialogPopup>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('stale.confirm.title')}</AlertDialogTitle>
-          <AlertDialogDescription>{t('stale.confirm.description')}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {t('stale.confirm.description', { context: scope })}
+          </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="px-6 pb-2">
-          <ChangeList changes={changes} />
-        </div>
+        {changes && (
+          <div className="px-6 pb-2">
+            <ChangeList changes={changes} />
+          </div>
+        )}
         <AlertDialogFooter>
           <AlertDialogClose render={<Button variant="outline" />}>
             {t('stale.confirm.keep')}
@@ -83,7 +92,7 @@ function ReloadConfirm({ changes, onReload }: Pick<StaleAlertProps, 'changes' | 
   )
 }
 
-export function StaleAlert({ current, draft, changes, onReload }: StaleAlertProps) {
+export function StaleAlert({ current, draft, changes, scope, onReload }: StaleAlertProps) {
   const { t, i18n } = useTranslation('pageEditor')
   const { state, copy } = useCopyDraft(draft)
   const when = current ? formatDateTime(i18n.language, current.updatedAt) : ''
@@ -92,7 +101,11 @@ export function StaleAlert({ current, draft, changes, onReload }: StaleAlertProp
       <CircleAlertIcon />
       <AlertTitle>{t('stale.title')}</AlertTitle>
       <AlertDescription>
-        {t('stale.description', { name: current?.updatedBy ?? t('stale.someone'), when })}
+        {t('stale.description', {
+          name: current?.updatedBy ?? t('stale.someone'),
+          when,
+          context: scope
+        })}
         {state !== 'idle' && (
           <span className="sr-only" role="status">
             {t(`stale.copy.${state}Status`)}
@@ -100,11 +113,13 @@ export function StaleAlert({ current, draft, changes, onReload }: StaleAlertProp
         )}
       </AlertDescription>
       <AlertAction>
-        <Button variant="outline" size="sm" onClick={() => void copy()}>
-          {state === 'copied' ? <CheckIcon aria-hidden /> : <ClipboardIcon aria-hidden />}
-          {t(`stale.copy.${state}`)}
-        </Button>
-        <ReloadConfirm changes={changes} onReload={onReload} />
+        {draft && (
+          <Button variant="outline" size="sm" onClick={() => void copy()}>
+            {state === 'copied' ? <CheckIcon aria-hidden /> : <ClipboardIcon aria-hidden />}
+            {t(`stale.copy.${state}`)}
+          </Button>
+        )}
+        <ReloadConfirm changes={changes} scope={scope} onReload={onReload} />
       </AlertAction>
     </Alert>
   )

@@ -15,20 +15,28 @@ import type { BlockOption } from '../page-editor/draft'
 const SETTINGS_API = { path: '/settings', queryKey: ['settings'] } as const
 
 const readSettings = async (response: Response) =>
-  siteSettingsResponseSchema.parse(await response.json()).settings
+  siteSettingsResponseSchema.parse(await response.json())
 
 export const settingsQuery = queryOptions({
   queryKey: SETTINGS_API.queryKey,
   queryFn: async () => readSettings(await apiRequest(SETTINGS_API.path))
 })
 
+export interface SettingsSave {
+  settings: SiteSettings
+  expectedVersion: number
+}
+
 export const saveSettingsMutation = (queryClient: QueryClient) =>
   mutationOptions({
-    mutationFn: async (settings: SiteSettings) =>
+    mutationFn: async ({ settings, expectedVersion }: SettingsSave) =>
       readSettings(
-        await apiRequest(SETTINGS_API.path, { method: 'PUT', body: JSON.stringify(settings) })
+        await apiRequest(SETTINGS_API.path, {
+          method: 'PUT',
+          body: JSON.stringify({ ...settings, expectedVersion })
+        })
       ),
-    onSuccess: (settings) => queryClient.setQueryData(SETTINGS_API.queryKey, settings)
+    onSuccess: (saved) => queryClient.setQueryData(SETTINGS_API.queryKey, saved)
   })
 
 const SLOTS_API = { path: '/slots', queryKey: ['slots'] } as const
@@ -43,14 +51,19 @@ export const slotsQuery = queryOptions({
   queryFn: async () => readSlots(await apiRequest(SLOTS_API.path))
 })
 
+export interface SlotSave {
+  block: SiteBlock
+  expectedVersion: number
+}
+
 export const saveSlotMutation = (queryClient: QueryClient, slotName: string) =>
   mutationOptions({
-    mutationFn: async (block: SiteBlock) =>
+    mutationFn: async ({ block, expectedVersion }: SlotSave) =>
       slotResponseSchema.parse(
         await (
           await apiRequest(`${SLOTS_API.path}/${slotName}`, {
             method: 'PUT',
-            body: JSON.stringify(block)
+            body: JSON.stringify({ ...block, expectedVersion })
           })
         ).json()
       ).slot as SlotView,

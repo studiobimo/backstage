@@ -48,7 +48,8 @@
       "title": "¿Recargar y descartar tus cambios?",
       "description": "Al recargar, esta página se reemplaza por la última versión guardada. Se perderán estos cambios:",
       "keep": "Conservar mis cambios",
-      "discard": "Recargar y descartar"
+      "discard": "Recargar y descartar",
+      "description_settings": "Recargar reemplaza lo que ves por la última versión guardada. Los cambios sin guardar aquí se perderán."
     },
     "changes": {
       "added": "{{name}} añadido en la posición {{position}}",
@@ -57,7 +58,8 @@
       "reordered": "Bloques reordenados",
       "layout": "Diseño cambiado",
       "seo": "Búsqueda y redes cambiado"
-    }
+    },
+    "description_settings": "{{name}} lo guardó el {{when}}. Tus cambios no se guardaron y siguen aquí. Recarga para ver su versión."
   },
   "seo": {
     "heading": "Buscadores y redes",

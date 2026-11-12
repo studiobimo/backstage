@@ -420,7 +420,9 @@ function BlockList({
 }
 
 function useSeoDefaults(titles: Record<string, string>): SeoDefaults {
-  const { data: settings } = useSuspenseQuery(settingsQuery)
+  const {
+    data: { settings }
+  } = useSuspenseQuery(settingsQuery)
   return {
     titles,
     siteNames: settings.siteName,
