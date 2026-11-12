@@ -4,6 +4,16 @@ import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ChoiceSelect } from '@/components/choice-select'
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import { BlockForm } from '@/features/block-form/block-form.tsx'
 import { SectionFrame } from '@/features/block-form/section-frame.tsx'
 import type { BlockValue } from '@/features/block-form/value.ts'
@@ -12,6 +22,7 @@ import { LOCALES, SLOT, type SiteBlock } from '@studiobimo/backstage'
 
 import { saveSlotMutation, type SlotView } from './queries'
 import { SaveFailedAlert } from './save-failed-alert'
+import { useSectionDirty, type ReportDirty } from './use-dirty-sections'
 import { useSaveFeedback } from './use-save-feedback'
 
 const SLOT_ICONS: Record<string, ReactNode> = {
@@ -31,12 +42,56 @@ function useSaveSlot(slot: SlotView) {
   )
 }
 
-export function SlotSection({ slot }: { slot: SlotView }) {
+type SlotSave = Parameters<ReturnType<typeof useSaveSlot>['submit']>[0]
+
+function ReplaceVariantConfirm({
+  pending,
+  storedName,
+  onConfirm,
+  onCancel
+}: {
+  pending: SlotSave | undefined
+  storedName: string | undefined
+  onConfirm: (save: SlotSave) => void
+  onCancel: () => void
+}) {
+  const { t } = useTranslation('settings')
+  return (
+    <AlertDialog open={pending !== undefined} onOpenChange={(open) => !open && onCancel()}>
+      <AlertDialogPopup>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('replace.title')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('replace.description', { stored: storedName, chosen: pending?.block.name })}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogClose render={<Button variant="outline" />}>
+            {t('replace.cancel')}
+          </AlertDialogClose>
+          <Button variant="destructive" onClick={() => pending && onConfirm(pending)}>
+            {t('replace.confirm')}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogPopup>
+    </AlertDialog>
+  )
+}
+
+export function SlotSection({ slot, reportDirty }: { slot: SlotView; reportDirty: ReportDirty }) {
   const { t } = useTranslation('settings')
   const [choice, setChoice] = useState(slot.current?.block ?? slot.blocks[0]!.name)
+  const [pending, setPending] = useState<SlotSave>()
   const { submit, failed, issues } = useSaveSlot(slot)
+  const onDirtyChange = useSectionDirty(slot.name, reportDirty)
   const block = slot.blocks.find(({ name }) => name === choice) ?? slot.blocks[0]!
   const stored = slot.current?.block === block.name ? slot.current.content : undefined
+  const replacesOtherVariant = slot.current !== null && slot.current.block !== block.name
+  const requestSave = (save: SlotSave) => (replacesOtherVariant ? setPending(save) : submit(save))
+  const confirmSave = (save: SlotSave) => {
+    setPending(undefined)
+    return submit(save)
+  }
   return (
     <SectionFrame
       id={slot.name}
@@ -59,9 +114,16 @@ export function SlotSection({ slot }: { slot: SlotView }) {
         schema={block.schema}
         locales={LOCALES}
         value={stored === undefined ? undefined : blockValue.parse(stored)}
-        onSubmit={(value) => submit({ block, value })}
+        onSubmit={(value) => requestSave({ block, value })}
+        onDirtyChange={onDirtyChange}
         issues={issues}
         className="max-w-none gap-8"
+      />
+      <ReplaceVariantConfirm
+        pending={pending}
+        storedName={slot.current?.block}
+        onConfirm={(save) => void confirmSave(save)}
+        onCancel={() => setPending(undefined)}
       />
     </SectionFrame>
   )

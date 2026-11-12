@@ -7,8 +7,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ToastProvider } from '@/components/ui/toast'
 import i18n from '@/i18n/config'
+import { blocker } from '@/test/blocker'
 
 import { SettingsPage } from './settings-page'
+
+vi.mock('@tanstack/react-router', async () => (await import('@/test/blocker')).blockerRouterMock)
 
 const saved: SiteSettings = { ...EMPTY_SITE_SETTINGS, siteName: { en: 'Studio' } }
 
@@ -83,6 +86,7 @@ const renderPage = () =>
   )
 
 afterEach(async () => {
+  blocker.state = { status: 'idle' }
   vi.unstubAllGlobals()
   await i18n.changeLanguage('en')
 })
@@ -165,6 +169,65 @@ const saveGeneral = async (nameLabel: string, saveLabel: string) => {
     })
   )
 }
+
+describe('SettingsPage guards', { timeout: 15_000 }, () => {
+  it('blocks leaving only while a form has unsaved changes, and asks first', async () => {
+    mockApi()
+    renderPage()
+    const user = userEvent.setup()
+    const name = await screen.findByLabelText('Site name')
+    expect(blocker.options?.shouldBlockFn()).toBe(false)
+    const proceed = vi.fn()
+    blocker.state = { status: 'blocked', proceed, reset: vi.fn() }
+    await user.type(name, 'o')
+    await waitFor(() => expect(blocker.options?.shouldBlockFn()).toBe(true))
+    expect(await screen.findByText('Leave without saving?')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Leave and discard' }))
+    expect(proceed).toHaveBeenCalled()
+  })
+
+  it('blocks leaving for a slot form too, and lets go once the edit is undone', async () => {
+    mockApi()
+    renderPage()
+    const user = userEvent.setup()
+    const tagline = await screen.findByLabelText('Tagline')
+    await user.type(tagline, '!')
+    await waitFor(() => expect(blocker.options?.shouldBlockFn()).toBe(true))
+    await user.type(tagline, '{Backspace}')
+    await waitFor(() => expect(blocker.options?.shouldBlockFn()).toBe(false))
+  })
+
+  it('asks before a different design replaces the saved one, and saves only when confirmed', async () => {
+    const puts = mockApi()
+    renderPage()
+    const user = userEvent.setup()
+    const footer = within(await screen.findByRole('region', { name: 'Footer' }))
+    await user.click(footer.getByRole('combobox', { name: 'Design' }))
+    await user.click(await screen.findByRole('option', { name: 'site-footer-wide' }))
+    await user.type(await screen.findByLabelText('Motto'), 'Loud')
+    await user.click(footer.getByRole('button', { name: 'Save' }))
+    expect(await screen.findByText('Replace the saved design?')).toBeInTheDocument()
+    expect(puts).toHaveLength(0)
+
+    await user.click(screen.getByRole('button', { name: 'Keep the saved design' }))
+    expect(puts).toHaveLength(0)
+
+    await user.click(footer.getByRole('button', { name: 'Save' }))
+    await user.click(await screen.findByRole('button', { name: 'Replace it' }))
+    await waitFor(() => expect(puts).toHaveLength(1))
+    expect(puts[0]!.body).toMatchObject({ block: 'site-footer-wide', content: { motto: 'Loud' } })
+  })
+
+  it('saves a slot with nothing stored without asking', async () => {
+    const puts = mockApi()
+    renderPage()
+    const user = userEvent.setup()
+    const header = within(await screen.findByRole('region', { name: 'Header' }))
+    await user.click(header.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(puts).toHaveLength(1))
+    expect(screen.queryByText('Replace the saved design?')).not.toBeInTheDocument()
+  })
+})
 
 describe('SettingsPage editing', { timeout: 15_000 }, () => {
   it('keeps the form and explains when the server refuses', async () => {

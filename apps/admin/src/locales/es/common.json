@@ -101,5 +101,11 @@
     "title": "Tu sesión terminó",
     "description": "Inicia sesión de nuevo en una pestaña nueva, vuelve y reintenta. Tus cambios aquí se conservan.",
     "signIn": "Iniciar sesión de nuevo"
+  },
+  "leave": {
+    "title": "¿Salir sin guardar?",
+    "description": "Tienes cambios sin guardar en esta página. Si sales ahora, se perderán.",
+    "stay": "Seguir editando",
+    "discard": "Salir y descartar"
   }
 }

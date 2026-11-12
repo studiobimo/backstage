@@ -42,5 +42,11 @@
   "variant": {
     "label": "Design",
     "description": "The site offers more than one. Changing it starts the fields from scratch."
+  },
+  "replace": {
+    "title": "Replace the saved design?",
+    "description": "This slot currently saves the \"{{stored}}\" design. Saving \"{{chosen}}\" replaces it, and what was entered in \"{{stored}}\" is lost.",
+    "cancel": "Keep the saved design",
+    "confirm": "Replace it"
   }
 }

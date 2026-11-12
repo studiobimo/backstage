@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 
 export function LeaveGuard({ dirty }: { dirty: boolean }) {
-  const { t } = useTranslation('pageEditor')
+  const { t } = useTranslation('common')
   const blocker = useBlocker({
     shouldBlockFn: () => dirty,
     enableBeforeUnload: () => dirty,

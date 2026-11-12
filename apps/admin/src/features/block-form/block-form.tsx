@@ -42,6 +42,7 @@ export interface BlockFormProps {
   value?: BlockValue
   onSubmit?: (value: BlockValue) => void | Promise<void>
   onChange?: (value: BlockValue) => void
+  onDirtyChange?: (dirty: boolean) => void
   issues?: readonly FieldIssue[]
   className?: string
 }
@@ -120,12 +121,26 @@ function useEmitChanges(
   }, [values, onChange])
 }
 
+function useReportDirty(
+  form: BlockFormApi,
+  initial: BlockValue,
+  onDirtyChange?: (dirty: boolean) => void
+) {
+  const values = useStore(form.store, (state) => state.values)
+  const dirty = JSON.stringify(cleanValue(values)) !== JSON.stringify(cleanValue(initial))
+  useEffect(() => {
+    onDirtyChange?.(dirty)
+  }, [dirty, onDirtyChange])
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange])
+}
+
 function SupportedBlockForm({
   parsed,
   locales,
   value,
   onSubmit,
   onChange,
+  onDirtyChange,
   issues = noIssues,
   className
 }: BlockFormProps & { parsed: ParsedBlock }) {
@@ -140,6 +155,7 @@ function SupportedBlockForm({
     onSubmit: (submitted) => onSubmit?.(submitted)
   })
   useEmitChanges(form, initial, onChange)
+  useReportDirty(form, initial, onDirtyChange)
   useRefusedIssues(form, issues, locales, setActive)
   const { byLocale: status, issuePaths } = useLocaleStatus(form, parsed, locales, issues)
   const attempted = useStore(form.store, (state) => state.submissionAttempts > 0)

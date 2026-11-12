@@ -42,5 +42,11 @@
   "variant": {
     "label": "Diseño",
     "description": "El sitio ofrece más de uno. Cambiarlo empieza los campos desde cero."
+  },
+  "replace": {
+    "title": "¿Reemplazar el diseño guardado?",
+    "description": "Ahora se guarda el diseño \"{{stored}}\". Guardar \"{{chosen}}\" lo reemplaza, y lo que se escribió en \"{{stored}}\" se pierde.",
+    "cancel": "Mantener el diseño guardado",
+    "confirm": "Reemplazarlo"
   }
 }
