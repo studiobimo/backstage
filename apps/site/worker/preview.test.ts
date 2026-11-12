@@ -5,7 +5,7 @@ import { components } from '../src/blocks/component-map'
 import { PREVIEW_SAMPLES } from '../src/blocks/samples'
 import { PREVIEW_PHOTO } from '../src/blocks/sample-support'
 import { STYLESHEET } from './stylesheet'
-import { THUMBNAIL } from './thumbnails'
+import { THUMBNAIL } from './preview'
 import { clearKv, get, platform, publishSnapshots, snapshotOf } from './test-support'
 
 afterAll(() => platform.dispose())

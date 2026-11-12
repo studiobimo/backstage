@@ -2,7 +2,7 @@ import { BLOCK_PREVIEW } from '@studiobimo/backstage'
 import { createMiddleware } from 'hono/factory'
 import { secureHeaders } from 'hono/secure-headers'
 
-import { THUMBNAIL } from './thumbnails'
+import { THUMBNAIL } from './preview'
 
 const FRAME_NONE = ["'none'"]
 
