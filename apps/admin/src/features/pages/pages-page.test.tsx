@@ -113,13 +113,13 @@ describe('PagesPage', { timeout: 15_000 }, () => {
   it('lists pages with their address in each locale', async () => {
     mockApi(() => reply(200, { pages: [aboutPage] }))
     renderPage()
-    expect(await screen.findByText('/en/about')).toBeInTheDocument()
+    expect(await screen.findByText('/about')).toBeInTheDocument()
     expect(screen.getByText('/es/acerca')).toBeInTheDocument()
   })
 
   it('opens the new page form from the N shortcut', async () => {
     const user = renderPages([aboutPage])
-    await screen.findByText('/en/about')
+    await screen.findByText('/about')
     await user.keyboard('n')
     expect(await screen.findByRole('button', { name: 'Create page' })).toBeInTheDocument()
   })
@@ -240,10 +240,11 @@ const livePage: PageSummary = {
 }
 
 describe('PagesPage table', { timeout: 15_000 }, () => {
-  it('shows the home page address once', async () => {
+  it('shows the home page at its address in each language', async () => {
     renderPages([homePage])
     await screen.findByRole('link', { name: 'Welcome' })
     expect(screen.getAllByText('/')).toHaveLength(1)
+    expect(screen.getByText('/es')).toBeInTheDocument()
     expect(screen.getByText('Home')).toBeInTheDocument()
   })
 

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/sheet'
 import { useApiErrorMessage } from '@/lib/api-feedback'
 
+import { slugPrefix } from './page-label'
 import { createPageMutation, renamePageMutation } from './queries'
 
 interface PageFormSheetProps {
@@ -88,7 +89,7 @@ function LocaleFields({ form, locale, page }: { form: PageForm; locale: Locale; 
                 <field.TextField
                   label={t('form.slug')}
                   description={t('form.slugHint')}
-                  icon={<span className="font-mono">/{locale}/</span>}
+                  icon={<span className="font-mono">{slugPrefix(locale)}</span>}
                 />
               )}
             </form.AppField>
