@@ -15,6 +15,7 @@ import { PageFormSheet } from './page-form-sheet'
 import type { PageAction } from './page-row-actions'
 import { PagesTable } from './pages-table'
 import { PagesToolbar } from './pages-toolbar'
+import { RepublishAllDialog } from './republish-dialog'
 import { pagesQuery } from './queries'
 
 type Editing = { kind: 'create' } | PageAction
@@ -54,13 +55,18 @@ export function PagesPage({ createRequested = false, onCreateHandled }: PagesPag
       <PageHeader
         title={t('title')}
         actions={
-          <ShortcutTooltip id="newPage" label={t('list.create')}>
-            <Button aria-keyshortcuts={ariaKeyShortcuts('newPage')} onClick={startCreate}>
-              <Plus />
-              {t('list.create')}
-              <ShortcutHint id="newPage" className="-me-1" />
-            </Button>
-          </ShortcutTooltip>
+          <div className="flex flex-wrap items-center gap-2">
+            {pages.some(({ publishedAt }) => publishedAt !== null) && (
+              <RepublishAllDialog pages={pages} />
+            )}
+            <ShortcutTooltip id="newPage" label={t('list.create')}>
+              <Button aria-keyshortcuts={ariaKeyShortcuts('newPage')} onClick={startCreate}>
+                <Plus />
+                {t('list.create')}
+                <ShortcutHint id="newPage" className="-me-1" />
+              </Button>
+            </ShortcutTooltip>
+          </div>
         }
       />
       {pages.length === 0 ? (
