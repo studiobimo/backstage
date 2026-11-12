@@ -53,6 +53,14 @@ export {
 export type { Media, MediaAlt, MediaType, MediaUpload } from './media.ts'
 export { fieldKinds, image, link, localized, richText } from './fields.ts'
 export type { FieldKind } from './fields.ts'
+export {
+  hasMultipleLocales,
+  LOCALE,
+  localeConfigSchema,
+  perLocaleKeys,
+  resolveLocaleConfig
+} from './locales.ts'
+export type { LocaleConfig } from './locales.ts'
 export { RICH_TEXT, richTextDoc } from './rich-text.ts'
 export type { RichTextDoc } from './rich-text.ts'
 export {

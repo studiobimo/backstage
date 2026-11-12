@@ -45,6 +45,23 @@ describe('defineRegistry', () => {
     expect(registry.get('nope')).toBeUndefined()
   })
 
+  it('serves English and Spanish with English as the default unless told otherwise', () => {
+    expect(registry.locales).toEqual(['en', 'es'])
+    expect(registry.defaultLocale).toBe('en')
+  })
+
+  it('takes the locales and the default locale it is given', () => {
+    const spanishFirst = defineRegistry([hero], { locales: ['es', 'en'], defaultLocale: 'es' })
+    expect(spanishFirst.locales).toEqual(['es', 'en'])
+    expect(spanishFirst.defaultLocale).toBe('es')
+  })
+
+  it('refuses a default locale the site does not serve', () => {
+    expect(() => defineRegistry([hero], { locales: ['en'], defaultLocale: 'es' })).toThrow(
+      /one of the site's locales/
+    )
+  })
+
   it('refuses a duplicate name', () => {
     expect(() => defineRegistry([hero, hero])).toThrow(/twice/)
   })
