@@ -1,15 +1,13 @@
-import type { link, RichTextDoc } from '@studiobimo/backstage'
+import { isBlank, type RichTextDoc } from '@studiobimo/backstage'
 import { RichText, useImage, useLocalized } from '@studiobimo/backstage/render'
-import type { z } from 'zod'
-
 import { Button } from '@/components/ui/button'
 
-export type LinkValue = z.output<ReturnType<typeof link>>
-export type Translated<T> = Partial<Record<string, T>>
+import { type LinkValue, type Translated, useVisibleLinks } from './content.ts'
+import { HEADING_LEVEL } from './outline.ts'
 
 export function LocalizedLink({ value }: { value: Translated<LinkValue> | undefined }) {
   const target = useLocalized(value)
-  return target ? <a href={target.href}>{target.label || target.href}</a> : null
+  return target?.href ? <a href={target.href}>{target.label || target.href}</a> : null
 }
 
 export function Picture({ value }: { value: { id: string; alt: string } | undefined }) {
@@ -42,18 +40,27 @@ export function Cta({ value }: { value: LinkValue | undefined }) {
   ) : null
 }
 
+const nestHeadings = (doc: RichTextDoc): RichTextDoc => ({
+  ...doc,
+  content: doc.content.map((node) =>
+    node.type === 'heading' ? { ...node, attrs: { level: HEADING_LEVEL.content } } : node
+  )
+})
+
 export function Body({ value }: { value: Translated<RichTextDoc> | undefined }) {
-  return <RichText doc={useLocalized(value)} />
+  const doc = useLocalized(value)
+  return doc && !isBlank(doc) ? <RichText doc={nestHeadings(doc)} /> : null
 }
 
 export function LinkList({ links }: { links: Translated<LinkValue>[] }) {
-  return (
+  const visible = useVisibleLinks(links)
+  return visible.length > 0 ? (
     <ul>
-      {links.map((value, index) => (
+      {visible.map((value, index) => (
         <li key={index}>
           <LocalizedLink value={value} />
         </li>
       ))}
     </ul>
-  )
+  ) : null
 }

@@ -14,9 +14,9 @@ export function SplitHero({
   return (
     <section data-block="split-hero" data-theme={theme} data-image-side={imageSide}>
       <div>
-        <h1>
+        <h2>
           <Translation value={title} />
-        </h1>
+        </h2>
         <Body value={body} />
         <Cta value={cta} />
       </div>

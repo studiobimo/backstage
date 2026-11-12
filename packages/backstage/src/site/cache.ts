@@ -18,6 +18,12 @@ export const defaultEdgeCache = () =>
 
 const isCacheable = ({ ok, status }: Response) => ok || status === API_ERROR.notFound.status
 
+const cacheKeyOf = (request: Request) => {
+  const url = new URL(request.url)
+  url.search = ''
+  return new Request(url, { method: request.method })
+}
+
 export async function withEdgeCache(
   request: Request,
   context: Deferrable,
@@ -25,9 +31,10 @@ export async function withEdgeCache(
   cache = defaultEdgeCache()
 ) {
   if (!cache) return produce()
-  const hit = await cache.match(request)
+  const key = cacheKeyOf(request)
+  const hit = await cache.match(key)
   if (hit) return new Response(hit.body, hit)
   const response = await produce()
-  if (isCacheable(response)) context.waitUntil(cache.put(request, response.clone()))
+  if (isCacheable(response)) context.waitUntil(cache.put(key, response.clone()))
   return response
 }

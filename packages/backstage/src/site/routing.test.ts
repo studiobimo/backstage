@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { PAGE } from '../pages.ts'
 import { parseRoute, pathOf, routeOf } from './routing.ts'
 
 describe('routing', () => {
@@ -12,7 +13,20 @@ describe('routing', () => {
     expect(parseRoute(path)).toEqual(route)
   })
 
-  it.each(['/en', '/en/about', '/a/b', '/es/a/b'])('rejects %s', (path) => {
+  it.each([
+    '/en',
+    '/en/about',
+    '/a/b',
+    '/es/a/b',
+    '/wp-login.php',
+    '/.env',
+    '/About',
+    '/about_us',
+    '/-about',
+    '/about%20us',
+    '/es/xmlrpc.php',
+    `/${'a'.repeat(PAGE.slug.maxLength + 1)}`
+  ])('rejects %s', (path) => {
     expect(parseRoute(path)).toBeNull()
   })
 
@@ -21,6 +35,10 @@ describe('routing', () => {
       locale: 'es',
       slug: 'nosotros'
     })
+  })
+
+  it('reads no route from a path whose slug cannot exist', () => {
+    expect(routeOf(new Request('https://example.com/wp-login.php?x=1'))).toBeNull()
   })
 
   it('writes a path back from a route', () => {

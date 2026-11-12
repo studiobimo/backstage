@@ -1,5 +1,6 @@
 import type { z } from 'zod'
 
+import { useHasContent } from '../content.ts'
 import { Picture, Heading, Cta, Body } from '../parts.tsx'
 import type { twoColumnSectionSchema } from './schema.ts'
 
@@ -23,6 +24,9 @@ export function TwoColumnSection({
   background,
   spacing
 }: z.output<typeof twoColumnSectionSchema>) {
+  const hasLeft = useHasContent(left)
+  const hasRight = useHasContent(right)
+  if (!hasLeft && !hasRight) return null
   return (
     <section
       data-block="two-column-section"
@@ -30,8 +34,8 @@ export function TwoColumnSection({
       data-background={background}
       data-spacing={spacing}
     >
-      <SectionColumn {...left} />
-      <SectionColumn {...right} />
+      {hasLeft ? <SectionColumn {...left} /> : null}
+      {hasRight ? <SectionColumn {...right} /> : null}
     </section>
   )
 }

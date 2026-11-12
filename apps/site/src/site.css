@@ -64,8 +64,13 @@
     @apply text-foreground underline underline-offset-4;
   }
 
-  h1 {
+  h1,
+  [data-block$='hero'] h2 {
     @apply text-4xl font-semibold tracking-tight text-balance sm:text-5xl;
+  }
+
+  [data-page-title] {
+    @apply sr-only;
   }
 
   h2 {
