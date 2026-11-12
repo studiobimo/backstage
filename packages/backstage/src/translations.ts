@@ -5,6 +5,12 @@ export type TranslatedNode =
   | boolean
   | {
       backstage?: string
+      type?: string | string[]
+      required?: string[]
+      const?: unknown
+      enum?: unknown[]
+      anyOf?: TranslatedNode[]
+      oneOf?: TranslatedNode[]
       properties?: Record<string, TranslatedNode>
       items?: TranslatedNode | TranslatedNode[]
       additionalProperties?: TranslatedNode
@@ -45,6 +51,43 @@ export interface MarkedField {
 
 const childPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)
 
+const JSON_TYPE_CHECKS: Record<string, (value: unknown) => boolean> = {
+  null: (value) => value === null,
+  array: Array.isArray,
+  object: isRecord,
+  string: (value) => typeof value === 'string',
+  number: (value) => typeof value === 'number',
+  integer: Number.isInteger,
+  boolean: (value) => typeof value === 'boolean'
+}
+
+const matchesType = ({ type }: Exclude<TranslatedNode, boolean>, value: unknown) =>
+  type === undefined || [type].flat().some((name) => JSON_TYPE_CHECKS[name]?.(value) ?? true)
+
+const matchesObjectShape = (
+  { properties = {}, required = [] }: Exclude<TranslatedNode, boolean>,
+  value: unknown
+) =>
+  !isRecord(value) ||
+  (required.every((key) => key in value) &&
+    Object.entries(properties).every(
+      ([key, child]) =>
+        typeof child === 'boolean' || !('const' in child) || value[key] === child.const
+    ))
+
+const fitsValue = (node: TranslatedNode, value: unknown): boolean =>
+  typeof node === 'boolean' ||
+  (matchesType(node, value) &&
+    matchesObjectShape(node, value) &&
+    (value === undefined ||
+      [node.anyOf, node.oneOf].every(
+        (branches) => !branches || branches.some((branch) => fitsValue(branch, value))
+      )))
+
+const firstPerPath = (fields: MarkedField[]) => [
+  ...new Map(fields.map((field) => [field.path, field])).values()
+]
+
 export function markedFieldsIn(
   node: TranslatedNode,
   value: unknown,
@@ -53,6 +96,19 @@ export function markedFieldsIn(
 ): MarkedField[] {
   if (typeof node === 'boolean') return []
   if (node.backstage === kind) return [{ path, value }]
+  const branches = [...(node.anyOf ?? []), ...(node.oneOf ?? [])]
+  const inBranches = branches
+    .filter((branch) => fitsValue(branch, value))
+    .flatMap((branch) => markedFieldsIn(branch, value, kind, path))
+  return firstPerPath([...inBranches, ...markedFieldsInShape(node, value, kind, path)])
+}
+
+function markedFieldsInShape(
+  node: Exclude<TranslatedNode, boolean>,
+  value: unknown,
+  kind: FieldKind,
+  path: string
+): MarkedField[] {
   const { items, properties = {}, additionalProperties } = node
   if (items && !Array.isArray(items)) {
     return Array.isArray(value)

@@ -22,6 +22,8 @@ export type {
   RegistryOptions,
   SlotDescription
 } from './blocks.ts'
+export { classifyField } from './field-shapes.ts'
+export type { FieldShape } from './field-shapes.ts'
 export { defineComponents } from './components.ts'
 export type { BlockComponents, ComponentMap, LayoutComponents, LayoutProps } from './components.ts'
 export { API_ERROR, errorBody } from './errors.ts'

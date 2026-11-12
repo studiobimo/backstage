@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
+
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
 export const siteOriginResponseSchema = z.object({ origin: z.url() })
@@ -98,12 +100,30 @@ function indexSlots(
   return bySlot
 }
 
+function assertRenderable(block: Block) {
+  let schema: SchemaNode
+  try {
+    schema = z.toJSONSchema(block.schema, { io: 'input', cycles: 'throw' }) as SchemaNode
+  } catch {
+    throw new Error(
+      `Block "${block.name}" has a schema the admin cannot describe (recursive or unrepresentable)`
+    )
+  }
+  const field = unrenderableFieldIn(schema, '')
+  if (field !== undefined) {
+    throw new Error(
+      `Block "${block.name}" field "${field || '(root)'}" uses a schema shape the admin form cannot render (unions, nullable and referenced fields are not supported)`
+    )
+  }
+}
+
 export function defineRegistry<
   const B extends readonly Block[],
   const L extends readonly LayoutDefinition[] = readonly []
 >(blocks: B, options: RegistryOptions<L> = {}): Registry<B, L> {
   const { slots = {}, layouts = [] as unknown as L } = options
   const byName = indexByName(blocks, 'Block')
+  byName.forEach(assertRenderable)
   const bySlot = indexSlots(slots, byName)
   const slotBlocks = new Set([...bySlot.values()].flat())
   const layoutsByName = indexByName(layouts, 'Layout')
@@ -117,7 +137,7 @@ export function defineRegistry<
     jsonSchema(name) {
       const block = byName.get(name)
       if (!block) throw new Error(`Unknown block "${name}"`)
-      return z.toJSONSchema(block.schema, { io: 'input' })
+      return z.toJSONSchema(block.schema, { io: 'input', cycles: 'throw' })
     }
   }
 }

@@ -1,4 +1,4 @@
-import type { FieldKind } from '@studiobimo/backstage'
+import { classifyField, type FieldKind, type FieldShape } from '@studiobimo/backstage'
 import type { z } from 'zod'
 
 import type { FieldValue } from './value.ts'
@@ -114,19 +114,24 @@ function parseChild(schema: JsonSchema | undefined, key: string, required: boole
   return parseField(schema, key, required)
 }
 
-function parseStructured(schema: JsonSchema, common: Common): FieldSpec | undefined {
-  const { key } = common
-  if (schema.backstage === 'localized') {
+const NUMBER_SHAPES: readonly FieldShape[] = ['number', 'integer']
+
+function parseField(schema: JsonSchema, key: string, required: boolean): FieldSpec {
+  const { title, description } = schema
+  const common: Common = { key, title, description, required, defaultValue: schema.default }
+  const shape = classifyField(schema)
+  if (shape === 'richText') return { ...common, kind: 'richText' }
+  if (shape === 'localized') {
     return {
       ...common,
       kind: 'localized',
       inner: parseChild(schema.additionalProperties, key, true)
     }
   }
-  if (schema.backstage === 'image' || schema.backstage === 'link') {
-    return { ...common, kind: 'group', variant: schema.backstage, fields: groupFields(schema) }
+  if (shape === 'image' || shape === 'link') {
+    return { ...common, kind: 'group', variant: shape, fields: groupFields(schema) }
   }
-  if (schema.type === 'array') {
+  if (shape === 'array') {
     return {
       ...common,
       kind: 'list',
@@ -135,33 +140,20 @@ function parseStructured(schema: JsonSchema, common: Common): FieldSpec | undefi
       maxItems: schema.maxItems
     }
   }
-  if (schema.type === 'object') return { ...common, kind: 'group', fields: groupFields(schema) }
-  return undefined
-}
-
-function parseScalar(schema: JsonSchema, common: Common): FieldSpec | undefined {
-  if (schema.enum) return { ...common, kind: 'select', options: schema.enum }
-  if (schema.type === 'string') return { ...common, kind: 'text', ...stringConstraints(schema) }
-  if (schema.type === 'number' || schema.type === 'integer') {
+  if (shape === 'object') return { ...common, kind: 'group', fields: groupFields(schema) }
+  if (shape === 'select') return { ...common, kind: 'select', options: schema.enum ?? [] }
+  if (shape === 'string') return { ...common, kind: 'text', ...stringConstraints(schema) }
+  if (NUMBER_SHAPES.includes(shape)) {
     return {
       ...common,
       kind: 'number',
-      integer: schema.type === 'integer',
+      integer: shape === 'integer',
       minimum: schema.minimum,
       maximum: schema.maximum
     }
   }
-  if (schema.type === 'boolean') return { ...common, kind: 'boolean' }
-  return undefined
-}
-
-function parseField(schema: JsonSchema, key: string, required: boolean): FieldSpec {
-  const { title, description } = schema
-  const common: Common = { key, title, description, required, defaultValue: schema.default }
-  if (schema.backstage === 'richText') return { ...common, kind: 'richText' }
-  const spec = parseStructured(schema, common) ?? parseScalar(schema, common)
-  if (!spec) throw new UnsupportedSchemaError(key)
-  return spec
+  if (shape === 'boolean') return { ...common, kind: 'boolean' }
+  throw new UnsupportedSchemaError(key)
 }
 
 export function parseBlockSchema(schema: JsonSchema): GroupSpec {
