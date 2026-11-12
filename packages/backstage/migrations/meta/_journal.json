@@ -36,6 +36,13 @@
       "when": 1794186659348,
       "tag": "0004_page_seo_title",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794497292167,
+      "tag": "0005_pages_single_home",
+      "breakpoints": true
     }
   ]
 }

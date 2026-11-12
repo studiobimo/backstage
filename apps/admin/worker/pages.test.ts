@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { home, regular, send, useFreshPagesDb } from './pages-test-support'
+import { home, regular, send, useFreshPagesDb, versionOf } from './pages-test-support'
 
 describe('pages API', () => {
   useFreshPagesDb()
@@ -19,6 +19,13 @@ describe('pages API', () => {
     expect((await send('POST', '', home)).status).toBe(409)
   })
 
+  it('lets only one of two concurrent home page creates succeed', async () => {
+    const responses = await Promise.all([send('POST', '', home), send('POST', '', home)])
+    expect(responses.map((response) => response.status).sort()).toEqual([201, 409])
+    const refused = responses.find((response) => response.status === 409)
+    expect(await refused?.json()).toMatchObject({ code: 'home_taken' })
+  })
+
   it('refuses a slug already used in the same locale', async () => {
     await send('POST', '', regular('about'))
     const response = await send('POST', '', regular('about'))
@@ -35,7 +42,10 @@ describe('pages API', () => {
     const created = (await (await send('POST', '', regular('about'))).json()) as {
       page: { id: string }
     }
-    const renamed = await send('PUT', `/${created.page.id}`, regular('team'))
+    const renamed = await send('PUT', `/${created.page.id}`, {
+      ...regular('team'),
+      expectedVersion: await versionOf(created.page.id)
+    })
     expect(renamed.status).toBe(200)
     expect((await send('POST', '', regular('about'))).status).toBe(201)
   })
@@ -44,7 +54,8 @@ describe('pages API', () => {
     const created = (await (await send('POST', '', regular('about'))).json()) as {
       page: { id: string }
     }
-    expect((await send('PUT', `/${created.page.id}`, home)).status).toBe(400)
+    const turned = await send('PUT', `/${created.page.id}`, { ...home, expectedVersion: 1 })
+    expect(turned.status).toBe(400)
   })
 
   it('deletes a page, then answers 404', async () => {

@@ -59,6 +59,7 @@
   "errors": {
     "slug_taken": "Otra página ya usa esa dirección en este idioma.",
     "home_taken": "La página de inicio ya existe.",
+    "stale_version": "Se guardó una versión más reciente de esta página. Cierra este panel e inténtalo de nuevo.",
     "invalid": "Revisa los campos e inténtalo de nuevo.",
     "internal": "No se pudo guardar la página. Revisa tu conexión e inténtalo de nuevo."
   }

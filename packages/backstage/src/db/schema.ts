@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 const now = () => Date.now()
@@ -27,17 +28,25 @@ export const media = sqliteTable('media', {
   createdAt: createdAt()
 })
 
-export const pages = sqliteTable('pages', {
-  id: text('id').primaryKey(),
-  isHome: integer('is_home', { mode: 'boolean' }).notNull().default(false),
-  layout: text('layout').notNull().default('default'),
-  version: integer('version').notNull().default(1),
-  createdAt: createdAt(),
-  updatedAt: integer('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
-  updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
-  publishedAt: integer('published_at'),
-  publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' })
-})
+export const pages = sqliteTable(
+  'pages',
+  {
+    id: text('id').primaryKey(),
+    isHome: integer('is_home', { mode: 'boolean' }).notNull().default(false),
+    layout: text('layout').notNull().default('default'),
+    version: integer('version').notNull().default(1),
+    createdAt: createdAt(),
+    updatedAt: integer('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
+    updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
+    publishedAt: integer('published_at'),
+    publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' })
+  },
+  (t) => [
+    uniqueIndex('pages_single_home')
+      .on(t.isHome)
+      .where(sql`is_home = 1`)
+  ]
+)
 
 export const pageLocales = sqliteTable(
   'page_locales',

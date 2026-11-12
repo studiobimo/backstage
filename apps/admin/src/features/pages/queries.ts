@@ -15,7 +15,7 @@ export const pagesQuery = queryOptions({
 const refresh = (queryClient: QueryClient) =>
   queryClient.invalidateQueries({ queryKey: PAGES_QUERY_KEY })
 
-const body = (input: PageInput) => JSON.stringify(input)
+const body = (input: object) => JSON.stringify(input)
 
 export const createPageMutation = (queryClient: QueryClient) =>
   mutationOptions({
@@ -32,8 +32,16 @@ export const createPageMutation = (queryClient: QueryClient) =>
 
 export const renamePageMutation = (queryClient: QueryClient) =>
   mutationOptions({
-    mutationFn: async ({ id, input }: { id: string; input: PageInput }) => {
-      await request(`/${id}`, { method: 'PUT', body: body(input) })
+    mutationFn: async ({
+      id,
+      input,
+      expectedVersion
+    }: {
+      id: string
+      input: PageInput
+      expectedVersion: number
+    }) => {
+      await request(`/${id}`, { method: 'PUT', body: body({ ...input, expectedVersion }) })
     },
     onSuccess: () => refresh(queryClient)
   })
