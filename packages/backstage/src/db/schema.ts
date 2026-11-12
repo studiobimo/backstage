@@ -41,6 +41,7 @@ export const pages = sqliteTable(
     updatedAt: integer('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
     updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
     publishedAt: integer('published_at'),
+    publishedVersion: integer('published_version'),
     publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' }),
     missingTranslations: text('missing_translations', { mode: 'json' }).$type<MissingByLocale>()
   },

@@ -1,4 +1,10 @@
-import { publishedIndexSchema, SEO, snapshotKey, snapshotSchema } from '@studiobimo/backstage'
+import {
+  pagesResponseSchema,
+  publishedIndexSchema,
+  SEO,
+  snapshotKey,
+  snapshotSchema
+} from '@studiobimo/backstage'
 import { db, kv, send, versionOf } from './pages-test-support'
 
 const welcomeDoc = {
@@ -37,9 +43,9 @@ export const snapshotOf = async (id: string, locale: 'en' | 'es') =>
   snapshotSchema.parse(JSON.parse((await kv.get(snapshotKey(id, locale)))!))
 
 export const publishedPage = async (id: string) =>
-  ((await (await send('GET', '')).json()) as { pages: Record<string, unknown>[] }).pages.find(
-    (page) => page.id === id
-  )!
+  pagesResponseSchema
+    .parse(await (await send('GET', '')).json())
+    .pages.find((page) => page.id === id)!
 
 export const pageKeys = async () =>
   (await kv.list()).keys.map(({ name }) => name).filter((name) => name !== SEO.indexKey)
