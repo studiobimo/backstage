@@ -1,8 +1,10 @@
 import { z } from 'zod'
 
-export const LOCALES = ['en', 'es'] as const
+import { LOCALE, perLocaleKeys } from './locales.ts'
+
+export const LOCALES = LOCALE.default.locales
+export const DEFAULT_LOCALE: Locale = LOCALE.default.defaultLocale
 export type Locale = (typeof LOCALES)[number]
-export const DEFAULT_LOCALE: Locale = LOCALES[0]
 
 export const PAGE = {
   slug: { maxLength: 80, pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ },
@@ -12,7 +14,7 @@ export const PAGE = {
 } as const
 
 export const perLocale = <T extends z.ZodType>(value: T) =>
-  z.object(Object.fromEntries(LOCALES.map((locale) => [locale, value])) as Record<Locale, T>)
+  z.object(perLocaleKeys(LOCALES, () => value) as Record<Locale, T>)
 
 const slug = z.string().max(PAGE.slug.maxLength).regex(PAGE.slug.pattern)
 const title = z.string().trim().min(1).max(PAGE.title.maxLength)

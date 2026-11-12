@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { fieldIssuesOf, type FieldIssue } from './errors.ts'
 import { unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
+import { resolveLocaleConfig, type LocaleConfig } from './locales.ts'
 
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
@@ -61,7 +62,7 @@ export function defineLayout<const N extends string>(
 
 export interface RegistryOptions<
   L extends readonly LayoutDefinition[] = readonly LayoutDefinition[]
-> {
+> extends Partial<LocaleConfig> {
   slots?: Readonly<Record<string, readonly string[]>>
   layouts?: L
 }
@@ -69,7 +70,7 @@ export interface RegistryOptions<
 export interface Registry<
   B extends readonly Block[] = readonly Block[],
   L extends readonly LayoutDefinition[] = readonly LayoutDefinition[]
-> {
+> extends Partial<LocaleConfig> {
   readonly __types?: { readonly blocks: B; readonly layouts: L }
   readonly blocks: ReadonlyMap<string, Block>
   readonly slots: ReadonlyMap<string, readonly string[]>
@@ -128,13 +129,16 @@ export function defineRegistry<
   const B extends readonly Block[],
   const L extends readonly LayoutDefinition[] = readonly []
 >(blocks: B, options: RegistryOptions<L> = {}): Registry<B, L> {
-  const { slots = {}, layouts = [] as unknown as L } = options
+  const { slots = {}, layouts = [] as unknown as L, ...localeOptions } = options
+  const { locales, defaultLocale } = resolveLocaleConfig(localeOptions)
   const byName = indexByName(blocks, 'Block')
   byName.forEach(assertRenderable)
   const bySlot = indexSlots(slots, byName)
   const slotBlocks = new Set([...bySlot.values()].flat())
   const layoutsByName = indexByName(layouts, 'Layout')
   return {
+    locales,
+    defaultLocale,
     blocks: byName,
     slots: bySlot,
     layouts: layoutsByName,
