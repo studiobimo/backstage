@@ -11,7 +11,7 @@ import {
 } from '../index.ts'
 import { Hono } from 'hono'
 
-import { readJsonBody, respondWithError } from './respond.ts'
+import { readJsonBody, respondInvalid, respondWithError } from './respond.ts'
 
 const currentOf = (registry: Registry, stored: SiteBlock | undefined): SiteBlock | null => {
   const block = stored && registry.get(stored.block)
@@ -46,7 +46,7 @@ export const slotsRoutes = (registry: Registry) =>
       const block = registry.get(body.data.block)
       if (!block || !allowed.includes(block.name)) return respondWithError(c, API_ERROR.invalid)
       const valid = validateBlockContent(block, body.data.schemaVersion, body.data.content)
-      if (!valid.ok) return respondWithError(c, API_ERROR.invalid)
+      if (!valid.ok) return respondInvalid(c, valid.issues)
       await writeSiteBlock(c.env.DB!, slot, {
         block: block.name,
         schemaVersion: valid.schemaVersion,

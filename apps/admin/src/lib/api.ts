@@ -1,7 +1,9 @@
 import {
   API_ERROR,
+  fieldIssueSchema,
   pageStampSchema,
   publishProblemsResponseSchema,
+  type FieldIssue,
   type PageStamp,
   type PublishProblem
 } from '@studiobimo/backstage'
@@ -15,11 +17,19 @@ export class ApiError extends Error {
   readonly code: string
   readonly current?: PageStamp
   readonly problems: PublishProblem[]
-  constructor(code: string, message: string, current?: PageStamp, problems: PublishProblem[] = []) {
+  readonly issues: FieldIssue[]
+  constructor(
+    code: string,
+    message: string,
+    current?: PageStamp,
+    problems: PublishProblem[] = [],
+    issues: FieldIssue[] = []
+  ) {
     super(message)
     this.code = code
     this.current = current
     this.problems = problems
+    this.issues = issues
   }
 }
 
@@ -33,7 +43,8 @@ const failureShape = z.object({
   error: z.string(),
   code: z.string(),
   current: pageStampSchema.nullish(),
-  problems: publishProblemsResponseSchema.shape.problems.nullish()
+  problems: publishProblemsResponseSchema.shape.problems.nullish(),
+  issues: z.array(fieldIssueSchema).nullish()
 })
 
 const requestHeaders = (init?: RequestInit) => {
@@ -53,13 +64,14 @@ export const apiRequest = async (path: string, init?: RequestInit) => {
   if (response.type === 'opaqueredirect') throw new SessionExpiredError()
   if (response.ok) return response
   const failure = failureShape.safeParse(await response.json().catch(() => null))
-  const { code, error, current, problems } = failure.success
+  const { code, error, current, problems, issues } = failure.success
     ? failure.data
     : {
         code: API_ERROR.internal.code,
         error: API_ERROR.internal.message,
         current: null,
-        problems: null
+        problems: null,
+        issues: null
       }
-  throw new ApiError(code, error, current ?? undefined, problems ?? undefined)
+  throw new ApiError(code, error, current ?? undefined, problems ?? undefined, issues ?? undefined)
 }

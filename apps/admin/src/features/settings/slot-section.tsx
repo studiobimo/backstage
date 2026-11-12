@@ -34,7 +34,7 @@ function useSaveSlot(slot: SlotView) {
 export function SlotSection({ slot }: { slot: SlotView }) {
   const { t } = useTranslation('settings')
   const [choice, setChoice] = useState(slot.current?.block ?? slot.blocks[0]!.name)
-  const { submit, failed } = useSaveSlot(slot)
+  const { submit, failed, issues } = useSaveSlot(slot)
   const block = slot.blocks.find(({ name }) => name === choice) ?? slot.blocks[0]!
   const stored = slot.current?.block === block.name ? slot.current.content : undefined
   return (
@@ -60,6 +60,7 @@ export function SlotSection({ slot }: { slot: SlotView }) {
         locales={LOCALES}
         value={stored === undefined ? undefined : blockValue.parse(stored)}
         onSubmit={(value) => submit({ block, value })}
+        issues={issues}
         className="max-w-none gap-8"
       />
     </SectionFrame>

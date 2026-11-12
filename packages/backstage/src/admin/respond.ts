@@ -1,10 +1,20 @@
 import type { Context } from 'hono'
 import type { z } from 'zod'
 
-import { API_ERROR, errorBody, type ApiError } from '../index.ts'
+import {
+  API_ERROR,
+  errorBody,
+  fieldIssuesOf,
+  invalidBody,
+  type ApiError,
+  type FieldIssue
+} from '../index.ts'
 
 export const respondWithError = (c: Context, error: ApiError) =>
   c.json(errorBody(error), error.status)
+
+export const respondInvalid = (c: Context, issues: readonly FieldIssue[]) =>
+  c.json(invalidBody(issues), API_ERROR.invalid.status)
 
 export const RESPONSE_STATUS = { created: 201, noContent: 204 } as const
 
@@ -26,5 +36,5 @@ export const readJsonBody = async <S extends z.ZodType>(
   const parsed = schema.safeParse(await c.req.json().catch(() => null))
   return parsed.success
     ? { ok: true, data: parsed.data }
-    : { ok: false, response: respondWithError(c, API_ERROR.invalid) }
+    : { ok: false, response: respondInvalid(c, fieldIssuesOf(parsed.error)) }
 }

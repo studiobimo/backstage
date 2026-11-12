@@ -44,3 +44,11 @@ export function useHasIssueWithin(name: string): boolean {
     return issueName !== name && isWithinPath(issueName, name)
   })
 }
+
+export function setServerError(form: BlockFormApi, name: string, error: unknown) {
+  form.setFieldMeta(name, (meta) => ({
+    ...meta,
+    isTouched: true,
+    errorMap: { ...meta?.errorMap, onServer: error }
+  }))
+}

@@ -148,6 +148,24 @@ describe('SettingsPage saving', { timeout: 15_000 }, () => {
   })
 })
 
+const refusing = (path: string[]) => (method: string) =>
+  method === 'PUT'
+    ? reply(400, {
+        error: 'Invalid input',
+        code: 'invalid',
+        issues: [{ path, code: 'too_small', origin: 'string', minimum: 1 }]
+      })
+    : undefined
+
+const saveGeneral = async (nameLabel: string, saveLabel: string) => {
+  await screen.findByLabelText(nameLabel)
+  await userEvent.setup().click(
+    within(screen.getByRole('region', { name: 'General' })).getByRole('button', {
+      name: saveLabel
+    })
+  )
+}
+
 describe('SettingsPage editing', { timeout: 15_000 }, () => {
   it('keeps the form and explains when the server refuses', async () => {
     mockApi((method) =>
@@ -161,6 +179,36 @@ describe('SettingsPage editing', { timeout: 15_000 }, () => {
     )
     expect(await screen.findByText('Could not save the settings')).toBeInTheDocument()
     expect(screen.getByLabelText('Site name')).toHaveValue('Studio')
+  })
+
+  it('shows the refused issue on its field, in the language that has it', async () => {
+    mockApi(refusing(['siteName', 'es']))
+    renderPage()
+    await saveGeneral('Site name', 'Save')
+    expect(await screen.findByText('This field is required.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Site name')).toHaveValue('')
+    expect(screen.queryByText('Could not save the settings')).not.toBeInTheDocument()
+  })
+
+  it('shows the same issue in Spanish when the admin speaks Spanish', async () => {
+    mockApi(refusing(['siteName', 'en']))
+    await i18n.changeLanguage('es')
+    renderPage()
+    await saveGeneral('Nombre del sitio', 'Guardar')
+    expect(await screen.findByText('Este campo es obligatorio.')).toBeInTheDocument()
+  })
+
+  it('puts a whitespace-only name on its field without asking the server', async () => {
+    const puts = mockApi()
+    renderPage()
+    const user = userEvent.setup()
+    const name = await screen.findByLabelText('Site name')
+    await user.clear(name)
+    await user.type(name, '   ')
+    await saveGeneral('Site name', 'Save')
+    expect(await screen.findByText('This field is required.')).toBeInTheDocument()
+    expect(puts).toHaveLength(0)
+    expect(screen.queryByText('Could not save the settings')).not.toBeInTheDocument()
   })
 
   it('edits one language at a time and flags the one that is missing', async () => {
