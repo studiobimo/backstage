@@ -56,5 +56,31 @@
     "title": "Delete {{name}}?",
     "description": "The page and its blocks are removed. This cannot be undone.",
     "confirm": "Delete page"
+  },
+  "republish": {
+    "open": "Republish all",
+    "resume": "Resume republishing",
+    "title": "Republish every published page?",
+    "resumeTitle": "Resume republishing?",
+    "description": "Visitors keep seeing the current pages while this runs. Keep this tab open until it finishes.",
+    "intro_one": "1 published page will be republished with its saved content.",
+    "intro_other": "{{count}} published pages will be republished with their saved content.",
+    "resumeIntro_one": "1 page is left from the run you started.",
+    "resumeIntro_other": "{{count}} pages are left from the run you started.",
+    "writes": "This uses {{writes}} writes. The free plan allows {{limit}} a day, shared with every publish and preview.",
+    "changed_one": "1 page has unpublished changes. Its saved changes go live too.",
+    "changed_other": "{{count}} pages have unpublished changes. Their saved changes go live too.",
+    "overQuota": "This is more than the {{limit}} writes of one day. Stop when you reach the limit and resume tomorrow, and it continues where it stopped.",
+    "start": "Republish",
+    "resumeAction": "Resume",
+    "stop": "Stop",
+    "close": "Close",
+    "running": "Republished {{done}} of {{total}} pages",
+    "done_one": "Done. 1 page was checked, using {{writes}} writes.",
+    "done_other": "Done. {{count}} pages were checked, using {{writes}} writes.",
+    "stopped_one": "Stopped after 1 page. Resume to continue where you left off.",
+    "stopped_other": "Stopped after {{count}} pages. Resume to continue where you left off.",
+    "skipped_one": "1 page could not be republished and was skipped.",
+    "skipped_other": "{{count}} pages could not be republished and were skipped."
   }
 }

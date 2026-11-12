@@ -56,5 +56,31 @@
     "title": "¿Eliminar {{name}}?",
     "description": "Se eliminan la página y sus bloques. No se puede deshacer.",
     "confirm": "Eliminar página"
+  },
+  "republish": {
+    "open": "Republicar todo",
+    "resume": "Reanudar la republicación",
+    "title": "¿Republicar todas las páginas publicadas?",
+    "resumeTitle": "¿Reanudar la republicación?",
+    "description": "Los visitantes siguen viendo las páginas actuales mientras tanto. Mantén esta pestaña abierta hasta que termine.",
+    "intro_one": "Se republicará 1 página publicada con su contenido guardado.",
+    "intro_other": "Se republicarán {{count}} páginas publicadas con su contenido guardado.",
+    "resumeIntro_one": "Queda 1 página de la ejecución que empezaste.",
+    "resumeIntro_other": "Quedan {{count}} páginas de la ejecución que empezaste.",
+    "writes": "Esto usa {{writes}} escrituras. El plan gratuito permite {{limit}} al día, compartidas con cada publicación y vista previa.",
+    "changed_one": "1 página tiene cambios sin publicar. Sus cambios guardados también se publicarán.",
+    "changed_other": "{{count}} páginas tienen cambios sin publicar. Sus cambios guardados también se publicarán.",
+    "overQuota": "Son más que las {{limit}} escrituras de un día. Detén el proceso al llegar al límite y reanúdalo mañana: continúa donde se quedó.",
+    "start": "Republicar",
+    "resumeAction": "Reanudar",
+    "stop": "Detener",
+    "close": "Cerrar",
+    "running": "Se republicaron {{done}} de {{total}} páginas",
+    "done_one": "Listo. Se revisó 1 página y se usaron {{writes}} escrituras.",
+    "done_other": "Listo. Se revisaron {{count}} páginas y se usaron {{writes}} escrituras.",
+    "stopped_one": "Se detuvo tras 1 página. Reanuda para continuar donde lo dejaste.",
+    "stopped_other": "Se detuvo tras {{count}} páginas. Reanuda para continuar donde lo dejaste.",
+    "skipped_one": "1 página no se pudo republicar y se omitió.",
+    "skipped_other": "{{count}} páginas no se pudieron republicar y se omitieron."
   }
 }

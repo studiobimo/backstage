@@ -1,4 +1,4 @@
-import type { PageBlock, PageSummary } from '@studiobimo/backstage'
+import type { PageBlock, PageSummary, PublishProblem } from '@studiobimo/backstage'
 import { CircleAlertIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -16,6 +16,28 @@ interface PublishNotesProps {
   hintId: string
 }
 
+interface ProblemsListProps {
+  problems: PublishProblem[]
+  blocks: PageBlock[]
+}
+
+export function ProblemsList({ problems, blocks }: ProblemsListProps) {
+  const { t } = useTranslation('pageEditor')
+  return (
+    <ul className="list-disc pl-4">
+      {problems.map(({ reason, blockId, path }) => (
+        <li key={`${reason}:${blockId}:${path}`}>
+          {t(`publish.problems.${reason}`, {
+            name: blocks.find((block) => block.id === blockId)?.block ?? '',
+            path: path ?? '',
+            defaultValue: t('publish.problems.invalid_content', { name: '' })
+          })}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function ProblemsAlert({ error, blocks }: { error: ApiError; blocks: PageBlock[] }) {
   const { t } = useTranslation('pageEditor')
   return (
@@ -23,17 +45,7 @@ function ProblemsAlert({ error, blocks }: { error: ApiError; blocks: PageBlock[]
       <CircleAlertIcon />
       <AlertTitle>{t('publish.problems.title')}</AlertTitle>
       <AlertDescription>
-        <ul className="list-disc pl-4">
-          {error.problems.map(({ reason, blockId, path }) => (
-            <li key={`${reason}:${blockId}:${path}`}>
-              {t(`publish.problems.${reason}`, {
-                name: blocks.find((block) => block.id === blockId)?.block ?? '',
-                path: path ?? '',
-                defaultValue: t('publish.problems.invalid_content', { name: '' })
-              })}
-            </li>
-          ))}
-        </ul>
+        <ProblemsList problems={error.problems} blocks={blocks} />
       </AlertDescription>
     </Alert>
   )
