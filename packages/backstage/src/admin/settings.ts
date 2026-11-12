@@ -1,15 +1,29 @@
-import { readSiteSettings, siteSettingsSchema, writeSiteSettings } from '../index.ts'
+import {
+  readSiteSettingsStamp,
+  readVersionedSiteSettings,
+  ROW_WRITE,
+  saveSiteSettingsSchema,
+  writeSiteSettings
+} from '../index.ts'
 import { Hono } from 'hono'
 
-import { readJsonBody } from './respond.ts'
-import type { AdminEnv } from './env.ts'
+import type { AccessEnv } from './auth.ts'
+import { readJsonBody, respondWithStale, versionedWrite } from './respond.ts'
 
 export const settingsRoutes = () =>
-  new Hono<{ Bindings: AdminEnv }>()
-    .get('/', async (c) => c.json({ settings: await readSiteSettings(c.env.DB) }))
+  new Hono<AccessEnv>()
+    .get('/', async (c) => c.json(await readVersionedSiteSettings(c.env.DB)))
     .put('/', async (c) => {
-      const body = await readJsonBody(c, siteSettingsSchema)
+      const body = await readJsonBody(c, saveSiteSettingsSchema)
       if (!body.ok) return body.response
-      await writeSiteSettings(c.env.DB, body.data)
-      return c.json({ settings: body.data })
+      const { expectedVersion, ...settings } = body.data
+      const outcome = await writeSiteSettings(
+        c.env.DB,
+        settings,
+        await versionedWrite(c, expectedVersion)
+      )
+      if (outcome === ROW_WRITE.stale) {
+        return respondWithStale(c, await readSiteSettingsStamp(c.env.DB))
+      }
+      return c.json({ settings, version: expectedVersion + 1 })
     })

@@ -1,9 +1,13 @@
 import { z } from 'zod'
 
 import { pageBlockSchema } from './pages.ts'
+import { expectedSiteVersion } from './settings.ts'
 
 export const siteBlockSchema = pageBlockSchema.omit({ id: true })
 export type SiteBlock = z.infer<typeof siteBlockSchema>
+export type StoredSiteBlock = SiteBlock & { version: number }
+
+export const saveSiteBlockSchema = siteBlockSchema.extend({ expectedVersion: expectedSiteVersion })
 
 export const slotSchema = z.object({
   name: z.string(),

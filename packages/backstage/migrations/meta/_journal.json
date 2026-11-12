@@ -50,6 +50,13 @@
       "when": 1794498824852,
       "tag": "0006_pages_missing_translations",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794517863494,
+      "tag": "0007_site_row_versions",
+      "breakpoints": true
     }
   ]
 }

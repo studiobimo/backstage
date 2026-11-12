@@ -1,4 +1,4 @@
-import { writeSiteSettings } from '@studiobimo/backstage'
+import { ensureUser, writeSiteSettings } from '@studiobimo/backstage'
 import { describe, expect, it } from 'vitest'
 
 import { createRegularPage, db, saveSeo, useFreshPagesDb } from './pages-test-support'
@@ -9,11 +9,16 @@ describe('publishing with site settings defaults', () => {
 
   it('fills a missing description and social image from the site settings', async () => {
     await addMedia('d1')
-    await writeSiteSettings(db, {
-      siteName: {},
-      defaultDescription: { en: 'Studio site', es: 'Sitio del estudio' },
-      defaultSocialImage: { id: 'd1', alt: '' }
-    })
+    const editorId = await ensureUser(db, { email: 'editor@example.test', name: 'Editor' })
+    await writeSiteSettings(
+      db,
+      {
+        siteName: {},
+        defaultDescription: { en: 'Studio site', es: 'Sitio del estudio' },
+        defaultSocialImage: { id: 'd1', alt: '' }
+      },
+      { expectedVersion: 0, editorId }
+    )
     const id = await createRegularPage()
     const own = { title: '', description: 'Own', socialImageId: null }
     await saveSeo(id, { en: own, es: { title: '', description: '', socialImageId: null } })

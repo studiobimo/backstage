@@ -3,18 +3,34 @@ import type { z } from 'zod'
 
 import {
   API_ERROR,
+  ensureUser,
   errorBody,
   fieldIssuesOf,
   invalidBody,
   type ApiError,
-  type FieldIssue
+  type FieldIssue,
+  type PageStamp,
+  type VersionedWrite
 } from '../index.ts'
+
+import type { AccessEnv } from './auth.ts'
 
 export const respondWithError = (c: Context, error: ApiError) =>
   c.json(errorBody(error), error.status)
 
 export const respondInvalid = (c: Context, issues: readonly FieldIssue[]) =>
   c.json(invalidBody(issues), API_ERROR.invalid.status)
+
+export const respondWithStale = (c: Context, current: PageStamp | null) =>
+  c.json({ ...errorBody(API_ERROR.staleVersion), current }, API_ERROR.staleVersion.status)
+
+export const versionedWrite = async (
+  c: Context<AccessEnv>,
+  expectedVersion: number
+): Promise<VersionedWrite> => ({
+  expectedVersion,
+  editorId: await ensureUser(c.env.DB, c.get('editor'))
+})
 
 export const RESPONSE_STATUS = { created: 201, noContent: 204 } as const
 
