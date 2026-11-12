@@ -38,8 +38,19 @@ export interface ProcessedImage extends Size {
 const ENCODE = {
   qualitySteps: [0.85, 0.7, 0.55, 0.4],
   lossless: 'image/png',
-  avifFallback: 'image/webp'
-} as const satisfies { qualitySteps: number[]; lossless: MediaType; avifFallback: MediaType }
+  avifFallback: 'image/webp',
+  fallbacks: {
+    'image/png': ['image/webp', 'image/jpeg'],
+    'image/webp': ['image/jpeg'],
+    'image/avif': [],
+    'image/jpeg': []
+  }
+} as const satisfies {
+  qualitySteps: number[]
+  lossless: MediaType
+  avifFallback: MediaType
+  fallbacks: Record<MediaType, MediaType[]>
+}
 
 export const fitWithin = ({ width, height }: Size, maxDimension: number): Size => {
   const scale = Math.min(1, maxDimension / Math.max(width, height))
@@ -73,6 +84,15 @@ const sniffBlob = async (file: Blob) =>
 const qualityStepsFor = (type: MediaType) =>
   type === ENCODE.lossless ? ENCODE.qualitySteps.slice(0, 1) : ENCODE.qualitySteps
 
+const encodeAs = async (codec: ImageCodec, decoded: DecodedImage, size: Size, type: MediaType) => {
+  let encoded = new Blob()
+  for (const quality of qualityStepsFor(type)) {
+    encoded = await codec.encode(decoded, size, type, quality)
+    if (encoded.type !== type || encoded.size <= MEDIA.maxBytes) break
+  }
+  return encoded
+}
+
 const encodeWithinCap = async (
   codec: ImageCodec,
   decoded: DecodedImage,
@@ -80,9 +100,9 @@ const encodeWithinCap = async (
   type: MediaType
 ) => {
   let encoded = new Blob()
-  for (const quality of qualityStepsFor(type)) {
-    encoded = await codec.encode(decoded, size, type, quality)
-    if (encoded.size <= MEDIA.maxBytes) break
+  for (const candidate of [type, ...ENCODE.fallbacks[type]]) {
+    encoded = await encodeAs(codec, decoded, size, candidate)
+    if (encoded.type === candidate && encoded.size <= MEDIA.maxBytes) break
   }
   return encoded
 }

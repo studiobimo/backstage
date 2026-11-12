@@ -129,8 +129,6 @@ describe('UploadForm upload', () => {
     const body = init.body as FormData
     expect((body.get(MEDIA.upload.fileField) as File).name).toBe('chair.jpg')
     expect(JSON.parse(body.get(MEDIA.upload.metadataField) as string)).toEqual({
-      width: 800,
-      height: 600,
       decorative: false,
       alt: { en: 'A chair', es: 'Una silla' }
     })

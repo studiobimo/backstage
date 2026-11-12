@@ -7,6 +7,7 @@ import {
   MEDIA,
   mediaKeyOf,
   mediaUploadSchema,
+  readImageSize,
   sniffImageType,
   type ApiError
 } from '../index.ts'
@@ -51,9 +52,6 @@ const readUpload = async (request: Request): Promise<Upload | Rejection> => {
   return { file, metadata: metadata.data }
 }
 
-const sniffFile = async (file: File) =>
-  sniffImageType(new Uint8Array(await file.slice(0, MEDIA.sniffBytes).arrayBuffer()))
-
 export const mediaRoutes = () =>
   new Hono<AccessEnv>()
     .get('/', async (c) => c.json({ media: await listMedia(c.env.DB!) }))
@@ -72,12 +70,15 @@ export const mediaRoutes = () =>
       const upload = await readUpload(c.req.raw)
       if ('error' in upload) return respondWithError(c, upload.error)
       const { file, metadata } = upload
-      const contentType = await sniffFile(file)
+      const content = await file.arrayBuffer()
+      const contentType = sniffImageType(new Uint8Array(content.slice(0, MEDIA.sniffBytes)))
       if (!contentType) return respondWithError(c, API_ERROR.unsupportedMedia)
+      const size = readImageSize(new Uint8Array(content), contentType)
+      if (!size) return respondWithError(c, API_ERROR.invalid)
 
       const id = crypto.randomUUID()
       const r2Key = mediaKeyOf(id, contentType)
-      await c.env.MEDIA!.put(r2Key, await file.arrayBuffer(), {
+      await c.env.MEDIA!.put(r2Key, content, {
         httpMetadata: { contentType, cacheControl: MEDIA.cacheControl }
       })
       const saved = {
@@ -85,8 +86,7 @@ export const mediaRoutes = () =>
         filename: file.name,
         contentType,
         size: file.size,
-        width: metadata.width,
-        height: metadata.height,
+        ...size,
         decorative: metadata.decorative,
         alt: metadata.decorative ? {} : metadata.alt
       }

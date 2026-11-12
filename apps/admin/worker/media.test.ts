@@ -14,12 +14,21 @@ const SAME_ORIGIN = 'http://localhost'
 const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 const GIF = [...'GIF89a'].map((char) => char.charCodeAt(0))
 
-const pngBytes = (length = 64) =>
-  new Uint8Array([...PNG, ...new Array(length - PNG.length).fill(1)])
+const IHDR = [0, 0, 0, 13, ...'IHDR'].map((value) =>
+  typeof value === 'string' ? value.charCodeAt(0) : value
+)
+const dimensionBytes = (value: number) => [0, 0, value >> 8, value & 0xff]
+
+const pngBytes = (length = 64, width = 800, height = 600) =>
+  new Uint8Array([
+    ...PNG,
+    ...IHDR,
+    ...dimensionBytes(width),
+    ...dimensionBytes(height),
+    ...new Array(length - PNG.length - IHDR.length - 8).fill(1)
+  ])
 
 const described = {
-  width: 800,
-  height: 600,
   decorative: false,
   alt: { en: 'A chair', es: 'Una silla' }
 }
@@ -155,6 +164,25 @@ describe('media upload API refusals', () => {
   ])('refuses %s', async (_name, body) => {
     const before = (await rows()).length
     expect((await upload(body)).status).toBe(400)
+    expect(await rows()).toHaveLength(before)
+  })
+
+  it('records the size read from the file and ignores what the client claims', async () => {
+    const claimed = { ...described, width: 1, height: 1 }
+    const response = await upload(form(pngBytes(64, 321, 123), claimed))
+    expect(response.status).toBe(201)
+    expect(await response.json()).toMatchObject({ media: { width: 321, height: 123 } })
+  })
+
+  it.each([
+    ['dimensions that cannot be read', new Uint8Array([...PNG, 1, 2, 3, 4])],
+    ['dimensions beyond the cap', pngBytes(64, MEDIA.maxDimension + 1, 10)],
+    ['a zero dimension', pngBytes(64, 0, 10)]
+  ])('refuses an image with %s', async (_name, bytes) => {
+    const before = (await rows()).length
+    const response = await upload(form(bytes))
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ code: 'invalid' })
     expect(await rows()).toHaveLength(before)
   })
 
