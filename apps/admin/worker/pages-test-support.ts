@@ -1,17 +1,7 @@
-import { afterAll, beforeAll, beforeEach } from 'vitest'
+import { afterAll, beforeEach } from 'vitest'
 
 import app from './index'
-import { migrationStatements } from './test-migrations'
 import { openTestEnv } from './test-env'
-
-const migrations = migrationStatements(
-  '0000_init',
-  '0001_site_settings',
-  '0003_page_layout',
-  '0004_page_seo_title',
-  '0005_pages_single_home',
-  '0006_pages_missing_translations'
-)
 
 const { dispose, db, env } = await openTestEnv()
 
@@ -80,11 +70,6 @@ const tables = ['page_blocks', 'page_locales', 'pages', 'media', 'site_settings'
 
 export const useFreshPagesDb = () => {
   afterAll(dispose)
-  beforeAll(async () => {
-    const dropped = ['page_blocks', 'page_locales', 'pages', 'media', 'users', 'site_settings']
-    await db.batch(dropped.map((table) => db.prepare(`DROP TABLE IF EXISTS ${table}`)))
-    await db.batch(migrations.map((statement) => db.prepare(statement)))
-  })
   beforeEach(async () => {
     await db.batch(tables.map((table) => db.prepare(`DELETE FROM ${table}`)))
     const { keys } = await kv.list()

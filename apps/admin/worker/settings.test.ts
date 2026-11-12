@@ -1,13 +1,10 @@
 import { EMPTY_SITE_SETTINGS } from '@studiobimo/backstage'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, describe, expect, it } from 'vitest'
 
 import app from './index'
 import { openTestEnv } from './test-env'
-import { migrationStatements } from './test-migrations'
 
-const [migration] = migrationStatements('0001_site_settings')
-
-const { dispose, db, env } = await openTestEnv()
+const { dispose, env } = await openTestEnv()
 afterAll(dispose)
 
 const send = (method: string, body?: unknown, bindings = env.localDevelopment) =>
@@ -28,11 +25,6 @@ const saved = {
 }
 
 describe('settings API', () => {
-  beforeAll(async () => {
-    await db.prepare('DROP TABLE IF EXISTS site_settings').run()
-    await db.prepare(migration!).run()
-  })
-
   it('answers empty settings before anything is saved', async () => {
     const response = await send('GET')
     expect(response.status).toBe(200)

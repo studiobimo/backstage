@@ -1,11 +1,8 @@
 import { MEDIA } from '@studiobimo/backstage'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, describe, expect, it } from 'vitest'
 
 import app from './index'
 import { openTestEnv } from './test-env'
-import { migrationStatements } from './test-migrations'
-
-const migrations = migrationStatements('0000_init')
 
 const { dispose, db, env } = await openTestEnv()
 afterAll(dispose)
@@ -73,11 +70,6 @@ const upload = async (
 }
 
 const rows = async () => (await db.prepare('SELECT * FROM media').all()).results
-
-beforeAll(async () => {
-  await db.batch(['media', 'users'].map((table) => db.prepare(`DROP TABLE IF EXISTS ${table}`)))
-  await db.batch(migrations.map((statement) => db.prepare(statement)))
-})
 
 describe('media upload API', () => {
   it('stores the image in R2 under an immutable key and records it', async () => {
