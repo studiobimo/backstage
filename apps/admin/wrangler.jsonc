@@ -24,7 +24,22 @@
   "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
   "env": {
     "production": {
-      "vars": { "SITE_ORIGIN": "https://site.example.com" }
+      "vars": { "SITE_ORIGIN": "https://site.example.com" },
+      "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "backstage",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "../../packages/backstage/migrations"
+        }
+      ],
+      "assets": {
+        "binding": "ASSETS",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/*", "!/assets/*", "!/block-thumbnails/*", "!/favicon.svg"]
+      }
     }
   }
 }

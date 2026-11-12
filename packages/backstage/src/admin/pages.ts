@@ -48,7 +48,7 @@ const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok' | 'stale'>, ApiError> = {
 
 export const respondStale = async (c: PagesContext, id: string) =>
   c.json(
-    { ...errorBody(API_ERROR.staleVersion), current: await readPageStamp(c.env.DB!, id) },
+    { ...errorBody(API_ERROR.staleVersion), current: await readPageStamp(c.env.DB, id) },
     API_ERROR.staleVersion.status
   )
 
@@ -59,17 +59,17 @@ const failureOf = async (c: PagesContext, id: string, outcome: PageWrite) => {
 }
 
 const blocksResponse = async (c: PagesContext, id: string) => {
-  const page = await findPage(c.env.DB!, id)
+  const page = await findPage(c.env.DB, id)
   if (!page) return null
   return c.json({
-    blocks: await listPageBlocks(c.env.DB!, id),
+    blocks: await listPageBlocks(c.env.DB, id),
     version: page.version,
     layout: page.layout
   })
 }
 
 const seoResponse = async (c: PagesContext, id: string) => {
-  const [seo, page] = await Promise.all([readPageSeo(c.env.DB!, id), findPage(c.env.DB!, id)])
+  const [seo, page] = await Promise.all([readPageSeo(c.env.DB, id), findPage(c.env.DB, id)])
   return seo && page ? c.json({ seo, version: page.version }) : null
 }
 
@@ -78,7 +78,7 @@ const versionedWrite = async (
   expectedVersion: number
 ): Promise<VersionedWrite> => ({
   expectedVersion,
-  editorId: await ensureUser(c.env.DB!, c.get('editor'))
+  editorId: await ensureUser(c.env.DB, c.get('editor'))
 })
 
 const listPageSummaries = async (d1: D1Database, registry: Registry) => {
@@ -88,13 +88,13 @@ const listPageSummaries = async (d1: D1Database, registry: Registry) => {
 
 export const pagesRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()
-    .get('/', async (c) => c.json({ pages: await listPageSummaries(c.env.DB!, registry) }))
+    .get('/', async (c) => c.json({ pages: await listPageSummaries(c.env.DB, registry) }))
     .post('/', async (c) => {
       const body = await readJsonBody(c, pageInputSchema)
       if (!body.ok) return body.response
       const id = crypto.randomUUID()
-      const failure = await failureOf(c, id, await createPage(c.env.DB!, body.data, id))
-      return failure ?? c.json({ page: await findPage(c.env.DB!, id) }, RESPONSE_STATUS.created)
+      const failure = await failureOf(c, id, await createPage(c.env.DB, body.data, id))
+      return failure ?? c.json({ page: await findPage(c.env.DB, id) }, RESPONSE_STATUS.created)
     })
     .put('/:id', async (c) => {
       const body = await readJsonBody(c, renamePageSchema)
@@ -102,16 +102,16 @@ export const pagesRoutes = (registry: Registry) =>
       const id = c.req.param('id')
       const { expectedVersion, ...input } = body.data
       const write = await versionedWrite(c, expectedVersion)
-      const failure = await failureOf(c, id, await renamePage(c.env.DB!, id, input, write))
-      return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
+      const failure = await failureOf(c, id, await renamePage(c.env.DB, id, input, write))
+      return failure ?? c.json({ page: await findPage(c.env.DB, id) })
     })
     .delete('/:id', async (c) => {
       const id = c.req.param('id')
-      if ((await findPage(c.env.DB!, id))?.publishedAt) {
-        await removeSnapshots(c.env.SITE!, id)
-        await indexUnpublished(c.env.SITE!, id)
+      if ((await findPage(c.env.DB, id))?.publishedAt) {
+        await removeSnapshots(c.env.SITE, id)
+        await indexUnpublished(c.env.SITE, id)
       }
-      const failure = await failureOf(c, id, await deletePage(c.env.DB!, id))
+      const failure = await failureOf(c, id, await deletePage(c.env.DB, id))
       return failure ?? c.body(null, RESPONSE_STATUS.noContent)
     })
     .get('/:id/blocks', async (c) => {
@@ -131,7 +131,7 @@ export const pagesRoutes = (registry: Registry) =>
       const failure = await failureOf(
         c,
         id,
-        await replacePageBlocks(c.env.DB!, id, body.data.blocks, write)
+        await replacePageBlocks(c.env.DB, id, body.data.blocks, write)
       )
       return failure ?? (await blocksResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })
@@ -144,9 +144,9 @@ export const pagesRoutes = (registry: Registry) =>
       const failure = await failureOf(
         c,
         id,
-        await setPageLayout(c.env.DB!, id, body.data.layout, write)
+        await setPageLayout(c.env.DB, id, body.data.layout, write)
       )
-      return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
+      return failure ?? c.json({ page: await findPage(c.env.DB, id) })
     })
     .get('/:id/seo', async (c) => {
       const id = c.req.param('id')
@@ -158,6 +158,6 @@ export const pagesRoutes = (registry: Registry) =>
       const { expectedVersion, ...seo } = body.data
       const id = c.req.param('id')
       const write = await versionedWrite(c, expectedVersion)
-      const failure = await failureOf(c, id, await writePageSeo(c.env.DB!, id, seo, write))
+      const failure = await failureOf(c, id, await writePageSeo(c.env.DB, id, seo, write))
       return failure ?? (await seoResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })

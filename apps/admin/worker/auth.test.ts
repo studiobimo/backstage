@@ -1,9 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import app from './index'
+import { openTestEnv } from './test-env'
+
+const { dispose, env: testEnv } = await openTestEnv()
+afterAll(dispose)
 
 const TEAM_DOMAIN = 'https://studio.cloudflareaccess.com'
 const AUDIENCE = 'aud-tag'
@@ -37,11 +41,11 @@ const signToken = async (privateKey: CryptoKey, claims: Record<string, unknown>,
   return `${signingInput}.${base64Url(signature)}`
 }
 
-const deployedEnv = { ACCESS_TEAM_DOMAIN: TEAM_DOMAIN, ACCESS_AUD: AUDIENCE } as Env
+const deployedEnv = { ...testEnv.deployed, ACCESS_TEAM_DOMAIN: TEAM_DOMAIN, ACCESS_AUD: AUDIENCE }
 
 const request = (
   token?: string,
-  env: Partial<Env> = deployedEnv,
+  env: Partial<typeof deployedEnv> = deployedEnv,
   url = 'https://admin.example.com/api/v1/blocks'
 ) => app.request(url, token ? { headers: { 'Cf-Access-Jwt-Assertion': token } } : {}, env)
 
@@ -110,8 +114,10 @@ describe('access verification', () => {
   it('refuses everything when the team domain or audience is not configured', async () => {
     await serveCerts()
     const token = await signToken(trusted.privateKey, {})
-    expect((await request(token, { ACCESS_AUD: AUDIENCE } as Env)).status).toBe(403)
-    expect((await request(token, { ACCESS_TEAM_DOMAIN: TEAM_DOMAIN } as Env)).status).toBe(403)
+    expect((await request(token, { ...deployedEnv, ACCESS_TEAM_DOMAIN: undefined })).status).toBe(
+      403
+    )
+    expect((await request(token, { ...deployedEnv, ACCESS_AUD: undefined })).status).toBe(403)
   })
 
   it('refuses unknown paths too, before they can answer 404', async () => {
@@ -129,13 +135,13 @@ describe('access verification', () => {
 
   it('accepts a team domain written with a trailing slash', async () => {
     await serveCerts()
-    const env = { ...deployedEnv, ACCESS_TEAM_DOMAIN: `${TEAM_DOMAIN}/` } as Env
+    const env = { ...deployedEnv, ACCESS_TEAM_DOMAIN: `${TEAM_DOMAIN}/` }
     expect((await request(await signToken(trusted.privateKey, {}), env)).status).toBe(200)
   })
 })
 
 describe('DEV_AUTH', () => {
-  const devEnv = { DEV_AUTH: 'true' } as Env
+  const devEnv = testEnv.localDevelopment
 
   it.each([
     'http://localhost:5173/api/v1/blocks',
@@ -156,12 +162,12 @@ describe('DEV_AUTH', () => {
 
   it('refuses even a valid token on a deployed host while it is set', async () => {
     await serveCerts()
-    const env = { ...deployedEnv, DEV_AUTH: 'true' } as Env
+    const env = { ...deployedEnv, DEV_AUTH: 'true' }
     expect((await request(await signToken(trusted.privateKey, {}), env)).status).toBe(500)
   })
 
   it.each(['false', 'TRUE', '1', 'yes'])('stays off for the value %s', async (value) => {
-    const env = { ...deployedEnv, DEV_AUTH: value } as Env
+    const env = { ...deployedEnv, DEV_AUTH: value }
     expect((await request(undefined, env)).status).toBe(403)
   })
 
@@ -180,5 +186,36 @@ describe('wrangler.jsonc', () => {
 
   it('never sets DEV_AUTH, so no deploy carries it', () => {
     expect(config).not.toContain('DEV_AUTH')
+  })
+})
+
+describe('a worker with a missing binding', () => {
+  const without = (name: string) => ({ ...testEnv.localDevelopment, [name]: undefined })
+
+  it.each(['DB', 'SITE', 'MEDIA', 'ASSETS'])(
+    'answers 500 and logs that %s is missing',
+    async (name) => {
+      const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      const response = await app.request('/api/v1/blocks', {}, without(name))
+      expect(response.status).toBe(500)
+      expect(await response.json()).toEqual({
+        error: 'Internal error',
+        code: 'internal'
+      })
+      expect(String(log.mock.calls[0]?.[0])).toContain(
+        `The worker is missing a required binding: ${name}`
+      )
+      log.mockRestore()
+    }
+  )
+
+  it('checks the SPA fallback too', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    expect((await app.request('/blocks', {}, without('ASSETS'))).status).toBe(500)
+    log.mockRestore()
+  })
+
+  it('keeps /api/health answering', async () => {
+    expect((await app.request('/api/health', {}, without('DB'))).status).toBe(200)
   })
 })

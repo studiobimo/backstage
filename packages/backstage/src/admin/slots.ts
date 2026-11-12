@@ -12,6 +12,7 @@ import {
 import { Hono } from 'hono'
 
 import { readJsonBody, respondInvalid, respondWithError } from './respond.ts'
+import type { AdminEnv } from './env.ts'
 
 const currentOf = (registry: Registry, stored: SiteBlock | undefined): SiteBlock | null => {
   const block = stored && registry.get(stored.block)
@@ -35,8 +36,8 @@ const describeAll = async (registry: Registry, db: D1Database) => {
 }
 
 export const slotsRoutes = (registry: Registry) =>
-  new Hono<{ Bindings: Env }>()
-    .get('/', async (c) => c.json({ slots: await describeAll(registry, c.env.DB!) }))
+  new Hono<{ Bindings: AdminEnv }>()
+    .get('/', async (c) => c.json({ slots: await describeAll(registry, c.env.DB) }))
     .put('/:slot', async (c) => {
       const slot = c.req.param('slot')
       const allowed = registry.slots.get(slot)
@@ -47,11 +48,11 @@ export const slotsRoutes = (registry: Registry) =>
       if (!block || !allowed.includes(block.name)) return respondWithError(c, API_ERROR.invalid)
       const valid = validateBlockContent(block, body.data.schemaVersion, body.data.content)
       if (!valid.ok) return respondInvalid(c, valid.issues)
-      await writeSiteBlock(c.env.DB!, slot, {
+      await writeSiteBlock(c.env.DB, slot, {
         block: block.name,
         schemaVersion: valid.schemaVersion,
         content: valid.content as SiteBlock['content']
       })
-      const saved = (await describeAll(registry, c.env.DB!)).find(({ name }) => name === slot)
+      const saved = (await describeAll(registry, c.env.DB)).find(({ name }) => name === slot)
       return c.json({ slot: saved })
     })
