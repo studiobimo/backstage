@@ -79,12 +79,13 @@ export const recordPublished = async (
   d1: AnyD1Database,
   id: string,
   editorId: string,
-  publishedAt: number
+  publishedAt: number,
+  publishedVersion: number
 ) => {
   const db = drizzle(d1)
   await db
     .update(pages)
-    .set({ publishedAt, publishedBy: editorId, updatedAt: pages.updatedAt })
+    .set({ publishedAt, publishedVersion, publishedBy: editorId, updatedAt: pages.updatedAt })
     .where(eq(pages.id, id))
 }
 
@@ -92,7 +93,12 @@ export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
   const db = drizzle(d1)
   const cleared = await db
     .update(pages)
-    .set({ publishedAt: null, publishedBy: null, updatedAt: pages.updatedAt })
+    .set({
+      publishedAt: null,
+      publishedVersion: null,
+      publishedBy: null,
+      updatedAt: pages.updatedAt
+    })
     .where(eq(pages.id, id))
     .returning({ id: pages.id })
   return cleared.length > 0

@@ -82,6 +82,7 @@ const readPages = async (db: Database, id?: string): Promise<Page[]> => {
     layout: row.layout,
     updatedAt: row.updatedAt,
     publishedAt: row.publishedAt,
+    publishedVersion: row.publishedVersion,
     publishedBy: row.publishedAt ? publisherName || publisherEmail || null : null,
     locales: locales
       .filter((locale) => locale.pageId === row.id)

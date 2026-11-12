@@ -38,10 +38,16 @@ export const pageSchema = z.object({
   layout: z.string(),
   updatedAt: z.number().int(),
   publishedAt: z.number().int().nullable(),
+  publishedVersion: z.number().int().nullable(),
   publishedBy: z.string().nullable(),
   locales: z.array(z.object({ locale: z.string(), slug: z.string().nullable(), title: z.string() }))
 })
 export type Page = z.infer<typeof pageSchema>
+
+export const hasUnpublishedChanges = (
+  page: Pick<Page, 'publishedAt' | 'publishedVersion' | 'version'>,
+  version: number = page.version
+) => page.publishedAt !== null && page.publishedVersion !== version
 
 export const pageSummarySchema = pageSchema.extend({
   missing: perLocale(z.number().int().min(0))

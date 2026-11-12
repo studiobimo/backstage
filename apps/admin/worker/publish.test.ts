@@ -1,9 +1,10 @@
-import { routeKey } from '@studiobimo/backstage'
+import { hasUnpublishedChanges, routeKey } from '@studiobimo/backstage'
 import { describe, expect, it } from 'vitest'
 
 import {
   createRegularPage,
   kv,
+  regular,
   saveBlocks,
   saveSeo,
   send,
@@ -95,6 +96,33 @@ describe('publishing API', () => {
     expect(stale.status).toBe(409)
     expect(await stale.json()).toMatchObject({ code: 'stale_version' })
     expect((await publish('missing', 1)).status).toBe(404)
+  })
+  it('records the published version and reports saved changes until the page is published again', async () => {
+    await addMedia('m1')
+    const id = await createRegularPage()
+    expect(await publishedPage(id)).toMatchObject({ publishedAt: null, publishedVersion: null })
+    await publish(id)
+    const published = await publishedPage(id)
+    expect(published.publishedVersion).toBe(await versionOf(id))
+    expect(hasUnpublishedChanges(published)).toBe(false)
+    await saveBlocks(id, [hero()])
+    const edited = await publishedPage(id)
+    expect(edited.publishedVersion).toBe(published.publishedVersion)
+    expect(hasUnpublishedChanges(edited)).toBe(true)
+    await publish(id)
+    expect(hasUnpublishedChanges(await publishedPage(id))).toBe(false)
+  })
+  it('counts a rename as a change that is not live until the page is published again', async () => {
+    const id = await createRegularPage()
+    await publish(id)
+    await send('PUT', `/${id}`, { ...regular('team'), expectedVersion: await versionOf(id) })
+    expect(hasUnpublishedChanges(await publishedPage(id))).toBe(true)
+  })
+  it('clears the published version when the page is unpublished', async () => {
+    const id = await createRegularPage()
+    await publish(id)
+    await send('DELETE', `/${id}/publish`)
+    expect(await publishedPage(id)).toMatchObject({ publishedAt: null, publishedVersion: null })
   })
   it('refuses a malformed request', async () => {
     const id = await createRegularPage()
