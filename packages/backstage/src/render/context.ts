@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-import { DEFAULT_LOCALE, type Locale } from '../pages.ts'
+import { LOCALE, type Locale } from '../locales.ts'
 import type { Snapshot } from '../publishing.ts'
 import { isBlank } from '../translations.ts'
 
@@ -11,8 +11,8 @@ export interface RenderContext {
 }
 
 const RenderReactContext = createContext<RenderContext>({
-  locale: DEFAULT_LOCALE,
-  defaultLocale: DEFAULT_LOCALE,
+  locale: LOCALE.default.defaultLocale,
+  defaultLocale: LOCALE.default.defaultLocale,
   media: {}
 })
 

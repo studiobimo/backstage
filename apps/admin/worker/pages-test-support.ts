@@ -11,9 +11,10 @@ const request = (
   bindings: typeof env.localDevelopment,
   method: string,
   path: string,
-  body?: unknown
+  body?: unknown,
+  target: Pick<typeof app, 'request'> = app
 ) =>
-  app.request(
+  target.request(
     `/api/v1${path}`,
     {
       method,
@@ -36,6 +37,9 @@ export const send = (
   body?: unknown,
   bindings: Partial<typeof env.localDevelopment> = {}
 ) => request({ ...env.localDevelopment, ...bindings }, method, `/pages${path}`, body)
+
+export const sendTo = (target: Pick<typeof app, 'request'>, path: string, body?: unknown) =>
+  request(env.localDevelopment, 'POST', `/pages${path}`, body, target)
 
 const recordingDb = (statements: string[]) =>
   new Proxy(db, {

@@ -1,12 +1,11 @@
 import { z } from 'zod'
 
-import { DEFAULT_LOCALE, LOCALES, type Locale } from './pages.ts'
+import { LOCALE, type Locale, type LocaleConfig } from './locales.ts'
 import type { Snapshot } from './publishing.ts'
 
 export const SEO = {
   indexKey: 'index:pages',
   format: 1,
-  defaultLocale: DEFAULT_LOCALE,
   sitemapPath: '/sitemap.xml',
   robotsPath: '/robots.txt',
   cacheControl: 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600',
@@ -22,7 +21,7 @@ export const SEO = {
 const publishedPageSchema = z.object({
   pageId: z.string(),
   isHome: z.boolean(),
-  slugs: z.record(z.enum(LOCALES), z.string().nullable()),
+  slugs: z.record(z.string(), z.string().nullable()),
   publishedAt: z.number().int()
 })
 export type PublishedPage = z.infer<typeof publishedPageSchema>
@@ -64,25 +63,37 @@ export interface AlternateLink {
 
 const originOf = (siteUrl: string) => new URL(siteUrl).origin
 
-const pathOf = (page: PublishedPage, locale: Locale) => {
-  const prefix = locale === SEO.defaultLocale ? '' : `/${locale}`
+const pathOf = (page: PublishedPage, locale: Locale, defaultLocale: Locale) => {
+  const prefix = locale === defaultLocale ? '' : `/${locale}`
   if (page.isHome) return prefix === '' ? '/' : `${prefix}/`
   return `${prefix}/${page.slugs[locale]}`
 }
 
 const isLive = (page: PublishedPage, locale: Locale) => page.isHome || Boolean(page.slugs[locale])
 
-export const canonicalUrl = (siteUrl: string, page: PublishedPage, locale: Locale) =>
-  `${originOf(siteUrl)}${pathOf(page, locale)}`
+export const canonicalUrl = (
+  siteUrl: string,
+  page: PublishedPage,
+  locale: Locale,
+  defaultLocale: Locale = LOCALE.default.defaultLocale
+) => `${originOf(siteUrl)}${pathOf(page, locale, defaultLocale)}`
 
-export const alternateLinks = (siteUrl: string, page: PublishedPage): AlternateLink[] => {
-  const live = LOCALES.filter((locale) => isLive(page, locale))
+export const alternateLinks = (
+  siteUrl: string,
+  page: PublishedPage,
+  config: LocaleConfig = LOCALE.default
+): AlternateLink[] => {
+  const { locales, defaultLocale } = config
+  const live = locales.filter((locale) => isLive(page, locale))
   const links = live.map((locale) => ({
     hreflang: locale,
-    href: canonicalUrl(siteUrl, page, locale)
+    href: canonicalUrl(siteUrl, page, locale, defaultLocale)
   }))
-  return live.includes(SEO.defaultLocale)
-    ? [...links, { hreflang: SEO.xDefault, href: canonicalUrl(siteUrl, page, SEO.defaultLocale) }]
+  return live.includes(defaultLocale)
+    ? [
+        ...links,
+        { hreflang: SEO.xDefault, href: canonicalUrl(siteUrl, page, defaultLocale, defaultLocale) }
+      ]
     : links
 }
 
@@ -94,26 +105,30 @@ const escapeXml = (text: string) =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&apos;')
 
-const urlEntry = (siteUrl: string, page: PublishedPage, locale: Locale) =>
+const urlEntry = (siteUrl: string, page: PublishedPage, locale: Locale, config: LocaleConfig) =>
   [
     '  <url>',
-    `    <loc>${escapeXml(canonicalUrl(siteUrl, page, locale))}</loc>`,
+    `    <loc>${escapeXml(canonicalUrl(siteUrl, page, locale, config.defaultLocale))}</loc>`,
     `    <lastmod>${new Date(page.publishedAt).toISOString()}</lastmod>`,
-    ...alternateLinks(siteUrl, page).map(
+    ...alternateLinks(siteUrl, page, config).map(
       ({ hreflang, href }) =>
         `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${escapeXml(href)}"/>`
     ),
     '  </url>'
   ].join('\n')
 
-export const buildSitemap = (siteUrl: string, pages: readonly PublishedPage[]) =>
+export const buildSitemap = (
+  siteUrl: string,
+  pages: readonly PublishedPage[],
+  config: LocaleConfig = LOCALE.default
+) =>
   [
     SEO.xml.header,
     `<urlset xmlns="${SEO.xml.namespace}" xmlns:xhtml="${SEO.xml.xhtmlNamespace}">`,
     ...pages.flatMap((page) =>
-      LOCALES.filter((locale) => isLive(page, locale)).map((locale) =>
-        urlEntry(siteUrl, page, locale)
-      )
+      config.locales
+        .filter((locale) => isLive(page, locale))
+        .map((locale) => urlEntry(siteUrl, page, locale, config))
     ),
     '</urlset>',
     ''

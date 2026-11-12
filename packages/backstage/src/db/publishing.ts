@@ -2,7 +2,7 @@ import { and, asc, count, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-or
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import type { Registry } from '../blocks.ts'
-import { LOCALES, type PageBlock } from '../pages.ts'
+import type { PageBlock } from '../pages.ts'
 import {
   buildSnapshots,
   checkBlocks,
@@ -102,9 +102,6 @@ export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
   return cleared.length > 0
 }
 
-const emptySlugs = () =>
-  Object.fromEntries(LOCALES.map((locale) => [locale, null])) as PublishedPage['slugs']
-
 export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIndex> => {
   const rows = await drizzle(d1)
     .select({
@@ -124,11 +121,9 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
       pageId,
       isHome,
       publishedAt: publishedAt ?? 0,
-      slugs: emptySlugs()
+      slugs: {}
     }
-    if (locale && (LOCALES as readonly string[]).includes(locale)) {
-      entry.slugs[locale as keyof PublishedPage['slugs']] = slug
-    }
+    if (locale) entry.slugs[locale] = slug
     entries.set(pageId, entry)
   }
   return { format: SEO.format, pages: [...entries.values()] }
