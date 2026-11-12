@@ -3,7 +3,7 @@
   "description": "What appears on every page of the site. Switch language to translate each text.",
   "saved": {
     "title": "Settings saved",
-    "description": "The changes are in the editor. Publishing comes later."
+    "description": "The changes are saved in the draft. Publish the site to put them live."
   },
   "failed": {
     "title": "Could not save the settings",
@@ -48,5 +48,30 @@
     "description": "This slot currently saves the \"{{stored}}\" design. Saving \"{{chosen}}\" replaces it, and what was entered in \"{{stored}}\" is lost.",
     "cancel": "Keep the saved design",
     "confirm": "Replace it"
+  },
+  "publish": {
+    "title": "Publish site",
+    "description": "Saving a change updates the draft only. Publish the site to put the header, footer, site name and defaults on every page.",
+    "action": "Publish site",
+    "done": "Site published",
+    "someone": "someone",
+    "status": {
+      "never": "Not published",
+      "changes": "Unpublished changes",
+      "live": "Live"
+    },
+    "hint": {
+      "never": "Visitors see pages without the header, footer or site name until you publish.",
+      "changes": "The site still shows what {{name}} published on {{when}}. Publish to put your saved changes live.",
+      "live": "Live since {{when}}, published by {{name}}."
+    },
+    "problems": {
+      "title": "The site cannot be published yet",
+      "unknown_block": "{{place}} holds a block this site no longer offers. Choose another design and save.",
+      "invalid_content": "{{place}} has content that is not valid. Fix it and save.",
+      "unknown_media": "{{place}} uses an image that was removed from the media library.",
+      "unsafe_link": "{{place}} has a link that is not allowed ({{path}}). Use an http, https, mailto or tel address, a path or an anchor, then save.",
+      "missing_default_locale": "{{place}} has no value in the default language for {{path}}. Fill it in, then save."
+    }
   }
 }

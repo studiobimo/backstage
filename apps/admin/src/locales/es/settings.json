@@ -3,7 +3,7 @@
   "description": "Lo que aparece en todas las páginas del sitio. Cambia de idioma para traducir cada texto.",
   "saved": {
     "title": "Ajustes guardados",
-    "description": "Los cambios están en el editor. La publicación llegará después."
+    "description": "Los cambios están guardados en el borrador. Publica el sitio para ponerlos en línea."
   },
   "failed": {
     "title": "No se pudieron guardar los ajustes",
@@ -48,5 +48,30 @@
     "description": "Ahora se guarda el diseño \"{{stored}}\". Guardar \"{{chosen}}\" lo reemplaza, y lo que se escribió en \"{{stored}}\" se pierde.",
     "cancel": "Mantener el diseño guardado",
     "confirm": "Reemplazarlo"
+  },
+  "publish": {
+    "title": "Publicar el sitio",
+    "description": "Guardar un cambio solo actualiza el borrador. Publica el sitio para poner la cabecera, el pie, el nombre del sitio y los valores por defecto en todas las páginas.",
+    "action": "Publicar el sitio",
+    "done": "Sitio publicado",
+    "someone": "alguien",
+    "status": {
+      "never": "Sin publicar",
+      "changes": "Cambios sin publicar",
+      "live": "En línea"
+    },
+    "hint": {
+      "never": "Los visitantes ven las páginas sin cabecera, pie ni nombre del sitio hasta que publiques.",
+      "changes": "El sitio aún muestra lo que {{name}} publicó el {{when}}. Publica para poner tus cambios guardados en línea.",
+      "live": "En línea desde el {{when}}, publicado por {{name}}."
+    },
+    "problems": {
+      "title": "El sitio todavía no se puede publicar",
+      "unknown_block": "{{place}} tiene un bloque que este sitio ya no ofrece. Elige otro diseño y guarda.",
+      "invalid_content": "{{place}} tiene contenido que no es válido. Corrígelo y guarda.",
+      "unknown_media": "{{place}} usa una imagen que se quitó de la biblioteca de medios.",
+      "unsafe_link": "{{place}} tiene un enlace que no está permitido ({{path}}). Usa una dirección http, https, mailto o tel, una ruta o un ancla, y guarda.",
+      "missing_default_locale": "{{place}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda."
+    }
   }
 }

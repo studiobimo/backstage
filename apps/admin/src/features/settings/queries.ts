@@ -1,4 +1,5 @@
 import {
+  sitePublicationResponseSchema,
   siteSettingsResponseSchema,
   slotResponseSchema,
   slotsResponseSchema,
@@ -71,4 +72,28 @@ export const saveSlotMutation = (queryClient: QueryClient, slotName: string) =>
       queryClient.setQueryData<SlotView[]>(SLOTS_API.queryKey, (slots) =>
         slots?.map((slot) => (slot.name === saved.name ? saved : slot))
       )
+  })
+
+const PUBLICATION_API = {
+  path: '/site/publication',
+  publishPath: '/site/publish',
+  queryKey: ['site-publication']
+} as const
+
+const readPublication = async (response: Response) =>
+  sitePublicationResponseSchema.parse(await response.json()).publication
+
+export const sitePublicationQuery = queryOptions({
+  queryKey: PUBLICATION_API.queryKey,
+  queryFn: async () => readPublication(await apiRequest(PUBLICATION_API.path))
+})
+
+export const invalidateSitePublication = (queryClient: QueryClient) =>
+  queryClient.invalidateQueries({ queryKey: PUBLICATION_API.queryKey })
+
+export const publishSiteMutation = (queryClient: QueryClient) =>
+  mutationOptions({
+    mutationFn: async () =>
+      readPublication(await apiRequest(PUBLICATION_API.publishPath, { method: 'POST' })),
+    onSuccess: (publication) => queryClient.setQueryData(PUBLICATION_API.queryKey, publication)
   })

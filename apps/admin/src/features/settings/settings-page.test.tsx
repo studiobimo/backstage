@@ -56,6 +56,15 @@ const slots = [
 const reply = (status: number, body?: unknown) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status })
 
+const NEVER_PUBLISHED = { publishedAt: null, publishedBy: null, hasUnpublishedChanges: true }
+const LIVE = { publishedAt: 1_700_000_000_000, publishedBy: 'Ana', hasUnpublishedChanges: false }
+
+const defaultReply = (url: string) => {
+  if (url.endsWith('/slots')) return reply(200, { slots })
+  if (url.endsWith('/site/publication')) return reply(200, { publication: NEVER_PUBLISHED })
+  return reply(200, { settings: saved, version: 4 })
+}
+
 const mockApi = (
   handler: (method: string, url: string) => Response | undefined = () => undefined
 ) => {
@@ -65,12 +74,7 @@ const mockApi = (
     vi.fn(async (url: string, init?: RequestInit) => {
       const method = init?.method ?? 'GET'
       if (method === 'PUT') puts.push({ url, body: JSON.parse(init?.body as string) })
-      return (
-        handler(method, url) ??
-        (url.endsWith('/slots')
-          ? reply(200, { slots })
-          : reply(200, { settings: saved, version: 4 }))
-      )
+      return handler(method, url) ?? defaultReply(url)
     })
   )
   return puts
@@ -361,5 +365,59 @@ describe('SettingsPage editing', { timeout: 15_000 }, () => {
     renderPage()
     expect(await screen.findByLabelText('Nombre del sitio')).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Pie de página' })).toBeInTheDocument()
+  })
+})
+
+const PUBLISH_URL = /\/site\/publish$/
+
+const publishRegion = () => within(screen.getByRole('region', { name: 'Publish site' }))
+
+describe('SettingsPage publishing', { timeout: 15_000 }, () => {
+  it('says the site is not published and publishes it on request', async () => {
+    const requests: string[] = []
+    mockApi((method, url) => {
+      if (method !== 'POST' || !PUBLISH_URL.test(url)) return undefined
+      requests.push(url)
+      return reply(200, { publication: LIVE })
+    })
+    renderPage()
+    await screen.findByLabelText('Site name')
+    expect(publishRegion().getByText('Not published')).toBeInTheDocument()
+    await userEvent.setup().click(publishRegion().getByRole('button', { name: 'Publish site' }))
+    expect(await screen.findByText('Site published')).toBeInTheDocument()
+    expect(requests).toHaveLength(1)
+    expect(publishRegion().getByText('Live')).toBeInTheDocument()
+    expect(publishRegion().getByRole('button', { name: 'Publish site' })).toBeDisabled()
+  })
+
+  it('names the slot that cannot be published', async () => {
+    mockApi((method, url) =>
+      method === 'POST' && PUBLISH_URL.test(url)
+        ? reply(422, {
+            error: 'Cannot publish',
+            code: 'unpublishable',
+            problems: [{ reason: 'invalid_content', blockId: null, slot: 'header' }]
+          })
+        : undefined
+    )
+    renderPage()
+    await screen.findByLabelText('Site name')
+    await userEvent.setup().click(publishRegion().getByRole('button', { name: 'Publish site' }))
+    expect(await screen.findByText('The site cannot be published yet')).toBeInTheDocument()
+    expect(screen.getByText(/Header has content that is not valid/)).toBeInTheDocument()
+  })
+
+  it('offers to publish saved changes, in Spanish when the admin speaks it', async () => {
+    mockApi((_method, url) =>
+      url.endsWith('/site/publication')
+        ? reply(200, { publication: { ...LIVE, hasUnpublishedChanges: true } })
+        : undefined
+    )
+    await i18n.changeLanguage('es')
+    renderPage()
+    await screen.findByLabelText('Nombre del sitio')
+    const region = within(screen.getByRole('region', { name: 'Publicar el sitio' }))
+    expect(region.getByText('Cambios sin publicar')).toBeInTheDocument()
+    expect(region.getByRole('button', { name: 'Publicar el sitio' })).toBeEnabled()
   })
 })

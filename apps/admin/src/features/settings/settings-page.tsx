@@ -11,6 +11,7 @@ import { SectionFrame } from '@/features/block-form/section-frame.tsx'
 import type { JsonSchema } from '@/features/block-form/spec.ts'
 import { blockValue, type BlockValue } from '@/features/block-form/value.ts'
 
+import { PublishSiteSection } from './publish-site-section'
 import { saveSettingsMutation, settingsQuery, slotsQuery } from './queries'
 import { SaveFailedAlert } from './save-failed-alert'
 import { SlotSection } from './slot-section'
@@ -80,6 +81,7 @@ export function SettingsPage() {
       <LeaveGuard dirty={dirty} />
       <PageHeader title={t('title')} description={t('description')} />
       <div className="flex flex-col gap-10">
+        <PublishSiteSection />
         <GeneralSection reportDirty={report} />
         {slots.map((slot) => (
           <SlotSection key={slot.name} slot={slot} reportDirty={report} />
