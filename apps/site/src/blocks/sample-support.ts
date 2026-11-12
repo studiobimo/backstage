@@ -22,7 +22,10 @@ export const words = (en: string, es: string) => ({ en, es })
 const copy = (en: string, es: string) => ({ en: paragraph(en), es: paragraph(es) })
 
 export const photo = { id: PREVIEW_PHOTO.id, alt: '' }
-export const cta = { href: '/contact', label: 'Contact' }
+export const cta = {
+  en: { href: '/contact', label: 'Contact' },
+  es: { href: '/contacto', label: 'Contacto' }
+}
 
 export const INTRO = copy(
   'A short introduction that says what this page is about and why it matters.',

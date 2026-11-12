@@ -49,7 +49,7 @@ describe('worker', () => {
       'two-column-text'
     ])
     const hero = blocks.find((block) => block.name === 'split-hero')
-    expect(hero?.version).toBe(1)
+    expect(hero?.version).toBe(2)
     expect(
       Object.fromEntries(
         Object.entries(hero?.schema.properties ?? {}).map(([field, schema]) => [
@@ -60,7 +60,7 @@ describe('worker', () => {
     ).toEqual({
       title: 'localized',
       body: 'localized',
-      cta: 'link',
+      cta: 'localized',
       picture: 'image',
       theme: undefined,
       imageSide: undefined

@@ -1,5 +1,6 @@
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '@studiobimo/backstage'
 
+import { BLOCK_VERSION, migrateColumnCtas, migrateCta } from './migrations.ts'
 import { oneColumnSectionSchema } from './one-column-section/schema.ts'
 import { oneColumnTextSchema } from './one-column-text/schema.ts'
 import { overlayHeroSchema } from './overlay-hero/schema.ts'
@@ -16,6 +17,8 @@ const thumbnailOf = (name: string) => {
 
 const overlayHero = defineBlock({
   name: 'overlay-hero',
+  version: BLOCK_VERSION.localizedCta,
+  migrate: migrateCta,
   schema: overlayHeroSchema,
   title: { en: 'Overlay Hero', es: 'Hero con fondo' },
   description: {
@@ -27,6 +30,8 @@ const overlayHero = defineBlock({
 
 const splitHero = defineBlock({
   name: 'split-hero',
+  version: BLOCK_VERSION.localizedCta,
+  migrate: migrateCta,
   schema: splitHeroSchema,
   title: { en: 'Split Hero', es: 'Hero dividido' },
   description: {
@@ -38,6 +43,8 @@ const splitHero = defineBlock({
 
 const oneColumnSection = defineBlock({
   name: 'one-column-section',
+  version: BLOCK_VERSION.localizedCta,
+  migrate: migrateCta,
   schema: oneColumnSectionSchema,
   title: { en: 'One-Column Section', es: 'Sección de una columna' },
   description: {
@@ -60,6 +67,8 @@ const oneColumnText = defineBlock({
 
 const twoColumnSection = defineBlock({
   name: 'two-column-section',
+  version: BLOCK_VERSION.localizedCta,
+  migrate: migrateColumnCtas,
   schema: twoColumnSectionSchema,
   title: { en: 'Two-Column Section', es: 'Sección de dos columnas' },
   description: {
