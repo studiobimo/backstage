@@ -7,7 +7,9 @@ import {
   routeKeysOf,
   snapshotKeysOf,
   snapshotRecords,
+  siteSnapshotRecords,
   snapshotSchema,
+  type SiteSnapshot,
   type Snapshot
 } from '../index.ts'
 
@@ -53,3 +55,6 @@ export const rebuildPublishedIndex = async (context: Context, d1: D1Database, kv
     })
   }
 }
+
+export const writeSiteSnapshots = (kv: KVNamespace, snapshots: readonly SiteSnapshot[]) =>
+  Promise.all(siteSnapshotRecords(snapshots).map(({ key, value }) => kv.put(key, value)))

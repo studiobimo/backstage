@@ -10,11 +10,9 @@ import {
   type PublishDraft,
   type PublishMediaRow,
   type PublishProblem,
-  type Snapshot,
-  withSeoDefaults
+  type Snapshot
 } from '../publishing.ts'
 import { SEO, type PublishedIndex, type PublishedPage } from '../seo.ts'
-import { readSiteSettings } from './settings.ts'
 import { media, pageBlocks, pageLocales, pages } from './schema.ts'
 
 export const PUBLISH_PLAN = {
@@ -50,7 +48,7 @@ const readDraft = async (d1: AnyD1Database, id: string): Promise<PublishDraft | 
   }
 }
 
-const readMedia = async (d1: AnyD1Database, ids: string[]) => {
+export const readMedia = async (d1: AnyD1Database, ids: string[]) => {
   if (ids.length === 0) return new Map<string, PublishMediaRow>()
   const rows = await drizzle(d1).select().from(media).where(inArray(media.id, ids))
   return new Map(rows.map((row) => [row.id, row]))
@@ -63,9 +61,8 @@ export const planPublish = async (
   expectedVersion: number,
   publishedAt: number
 ): Promise<PublishPlan> => {
-  const found = await readDraft(d1, id)
-  if (!found) return { status: PUBLISH_PLAN.notFound }
-  const draft = { ...found, locales: withSeoDefaults(found.locales, await readSiteSettings(d1)) }
+  const draft = await readDraft(d1, id)
+  if (!draft) return { status: PUBLISH_PLAN.notFound }
   if (draft.page.version !== expectedVersion) return { status: PUBLISH_PLAN.stale }
   const { blocks } = checkBlocks(registry, draft.blocks)
   const mediaRows = await readMedia(d1, referencedMediaIds(registry, blocks, draft.locales))

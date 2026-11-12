@@ -14,7 +14,7 @@ const request = (
   body?: unknown
 ) =>
   app.request(
-    `/api/v1/pages${path}`,
+    `/api/v1${path}`,
     {
       method,
       headers: { 'content-type': 'application/json' },
@@ -23,12 +23,15 @@ const request = (
     bindings
   )
 
+export const sendApi = (path: string, method = 'GET', body?: unknown) =>
+  request(env.localDevelopment, method, path, body)
+
 export const send = (
   method: string,
   path: string,
   body?: unknown,
   bindings: Partial<typeof env.localDevelopment> = {}
-) => request({ ...env.localDevelopment, ...bindings }, method, path, body)
+) => request({ ...env.localDevelopment, ...bindings }, method, `/pages${path}`, body)
 
 const recordingDb = (statements: string[]) =>
   new Proxy(db, {
@@ -49,7 +52,7 @@ export const sendRecording = async (method: string, path: string) => {
   const response = await request(
     { ...env.localDevelopment, DB: recordingDb(statements) },
     method,
-    path
+    `/pages${path}`
   )
   return { response, statements }
 }
@@ -66,7 +69,15 @@ export const kv = env.localDevelopment.SITE!
 
 export const home = { isHome: true, titles: { en: 'Home', es: 'Inicio' } }
 
-const tables = ['page_blocks', 'page_locales', 'pages', 'media', 'site_settings']
+const tables = [
+  'page_blocks',
+  'page_locales',
+  'pages',
+  'media',
+  'site_settings',
+  'site_blocks',
+  'site_publication'
+]
 
 export const useFreshPagesDb = () => {
   afterAll(dispose)

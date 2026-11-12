@@ -1,0 +1,153 @@
+import { z } from 'zod'
+
+import { validateBlockContent, type Registry } from './blocks.ts'
+import { DEFAULT_LOCALE, LOCALES, type Locale } from './pages.ts'
+import {
+  contentProblems,
+  mediaFor,
+  mediaIdsIn,
+  problemOf,
+  PUBLISH_PROBLEM,
+  snapshotMediaSchema,
+  type PublishMediaRow,
+  type PublishProblem
+} from './publishing.ts'
+import { siteSettingsJsonSchema, type SiteSettings } from './settings.ts'
+import { siteBlockSchema, type SiteBlock } from './slots.ts'
+
+export const SITE_SNAPSHOT = {
+  format: 1,
+  key: { prefix: 'site', separator: ':' }
+} as const
+
+export const siteSnapshotKey = (locale: Locale) =>
+  [SITE_SNAPSHOT.key.prefix, locale].join(SITE_SNAPSHOT.key.separator)
+
+export const siteSnapshotSchema = z.object({
+  format: z.literal(SITE_SNAPSHOT.format),
+  locale: z.enum(LOCALES),
+  publishedAt: z.number().int(),
+  siteName: z.string(),
+  seo: z.object({
+    description: z.string(),
+    socialImageId: z.string().nullable()
+  }),
+  slots: z.record(z.string(), siteBlockSchema),
+  media: z.record(z.string(), snapshotMediaSchema)
+})
+export type SiteSnapshot = z.infer<typeof siteSnapshotSchema>
+
+export const sitePublicationSchema = z.object({
+  publishedAt: z.number().int().nullable(),
+  publishedBy: z.string().nullable(),
+  hasUnpublishedChanges: z.boolean()
+})
+export type SitePublication = z.infer<typeof sitePublicationSchema>
+
+export const sitePublicationResponseSchema = z.object({ publication: sitePublicationSchema })
+
+export const siteVersionsSchema = z.object({
+  settings: z.number().int(),
+  slots: z.record(z.string(), z.number().int())
+})
+export type SiteVersions = z.infer<typeof siteVersionsSchema>
+
+export const sameSiteVersions = (a: SiteVersions, b: SiteVersions) =>
+  a.settings === b.settings &&
+  Object.keys({ ...a.slots, ...b.slots }).every((slot) => a.slots[slot] === b.slots[slot])
+
+export interface SiteDraft {
+  settings: SiteSettings
+  blocks: ReadonlyMap<string, SiteBlock>
+}
+
+export type SiteSnapshotBuild =
+  { ok: true; snapshots: SiteSnapshot[] } | { ok: false; problems: PublishProblem[] }
+
+type CheckedSlot = { ok: true; value: SiteBlock } | { ok: false; problem: PublishProblem }
+
+const checkSlotBlock = (registry: Registry, slot: string, stored: SiteBlock): CheckedSlot => {
+  const definition = registry.get(stored.block)
+  if (!definition || !registry.slots.get(slot)?.includes(definition.name)) {
+    return { ok: false, problem: problemOf(PUBLISH_PROBLEM.unknownBlock, { slot }) }
+  }
+  const result = validateBlockContent(definition, stored.schemaVersion, stored.content)
+  if (!result.ok) {
+    return { ok: false, problem: problemOf(PUBLISH_PROBLEM.invalidContent, { slot }) }
+  }
+  return {
+    ok: true,
+    value: {
+      block: definition.name,
+      schemaVersion: result.schemaVersion,
+      content: result.content as SiteBlock['content']
+    }
+  }
+}
+
+const slotsToPublish = (registry: Registry, draft: SiteDraft) =>
+  [...registry.slots.keys()].flatMap((slot) => {
+    const stored = draft.blocks.get(slot)
+    return stored ? [{ slot, checked: checkSlotBlock(registry, slot, stored) }] : []
+  })
+
+export const siteMediaIds = (registry: Registry, draft: SiteDraft) => [
+  ...new Set([
+    ...mediaIdsIn(siteSettingsJsonSchema(), draft.settings),
+    ...slotsToPublish(registry, draft).flatMap(({ checked }) =>
+      checked.ok ? mediaIdsIn(registry.jsonSchema(checked.value.block), checked.value.content) : []
+    )
+  ])
+]
+
+const slotProblems = (
+  registry: Registry,
+  slot: string,
+  checked: CheckedSlot,
+  media: ReadonlyMap<string, PublishMediaRow>
+) =>
+  checked.ok
+    ? contentProblems(registry.jsonSchema(checked.value.block), checked.value.content, media, {
+        slot
+      })
+    : [checked.problem]
+
+export const buildSiteSnapshots = (
+  registry: Registry,
+  draft: SiteDraft,
+  media: ReadonlyMap<string, PublishMediaRow>,
+  publishedAt: number
+): SiteSnapshotBuild => {
+  const slots = slotsToPublish(registry, draft)
+  const problems = [
+    ...contentProblems(siteSettingsJsonSchema(), draft.settings, media, {}),
+    ...slots.flatMap(({ slot, checked }) => slotProblems(registry, slot, checked, media))
+  ]
+  if (problems.length > 0) return { ok: false, problems }
+  const published = Object.fromEntries(
+    slots.flatMap(({ slot, checked }) => (checked.ok ? [[slot, checked.value]] : []))
+  )
+  const mediaIds = siteMediaIds(registry, draft)
+  const { siteName, defaultDescription, defaultSocialImage } = draft.settings
+  return {
+    ok: true,
+    snapshots: LOCALES.map((locale) => ({
+      format: SITE_SNAPSHOT.format,
+      locale,
+      publishedAt,
+      siteName: siteName[locale] || siteName[DEFAULT_LOCALE] || '',
+      seo: {
+        description: defaultDescription?.[locale] ?? '',
+        socialImageId: defaultSocialImage?.id ?? null
+      },
+      slots: published,
+      media: mediaFor(mediaIds, media, locale)
+    }))
+  }
+}
+
+export const siteSnapshotRecords = (snapshots: readonly SiteSnapshot[]) =>
+  snapshots.map((snapshot) => ({
+    key: siteSnapshotKey(snapshot.locale),
+    value: JSON.stringify(snapshot)
+  }))
