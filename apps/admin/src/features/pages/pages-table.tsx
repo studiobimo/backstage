@@ -1,4 +1,4 @@
-import { LOCALES, type PageSummary } from '@studiobimo/backstage'
+import { hasUnpublishedChanges, LOCALES, type PageSummary } from '@studiobimo/backstage'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
@@ -62,13 +62,14 @@ function LanguageBadges({
 function StatusBadge({ page }: { page: PageSummary }) {
   const { t } = useTranslation('pages')
   const published = isPublished(page)
+  const changed = hasUnpublishedChanges(page)
   return (
     <Badge variant="outline">
       <span
         aria-hidden
-        className={`size-1.5 rounded-full ${published ? 'bg-success' : 'bg-muted-foreground/64'}`}
+        className={`size-1.5 rounded-full ${changed ? 'bg-warning' : published ? 'bg-success' : 'bg-muted-foreground/64'}`}
       />
-      {t(published ? 'list.published' : 'list.draft')}
+      {t(changed ? 'list.changed' : published ? 'list.published' : 'list.draft')}
     </Badge>
   )
 }

@@ -12,6 +12,7 @@
     "missing_one": "{{count}} missing in {{language}}",
     "missing_other": "{{count}} missing in {{language}}",
     "published": "Published",
+    "changed": "Unpublished changes",
     "draft": "Draft",
     "actions": {
       "open": "Actions for {{name}}",

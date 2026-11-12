@@ -1,5 +1,6 @@
 import {
   API_ERROR,
+  hasUnpublishedChanges,
   LOCALES,
   type Locale,
   type PageBlock,
@@ -284,6 +285,7 @@ function EditorChrome({
 }: EditorChromeProps) {
   const hintId = useId()
   const publish = usePublish(page, version)
+  const changed = hasUnpublishedChanges(page, version)
   const onSave = () => void save.save()
   useShortcut('save', dirty && !save.saving, onSave)
   return (
@@ -291,6 +293,7 @@ function EditorChrome({
       <EditorHeader
         title={title}
         published={page.publishedAt !== null}
+        changed={changed}
         dirty={dirty}
         locale={locale}
         actions={
@@ -300,6 +303,7 @@ function EditorChrome({
             dirty={dirty}
             saving={save.saving}
             published={page.publishedAt !== null}
+            changed={changed}
             publishing={publish.publishing}
             unpublishing={publish.unpublishing}
             onSave={onSave}
@@ -325,6 +329,7 @@ function EditorChrome({
         <PublishNotes
           page={page}
           dirty={dirty}
+          changed={changed}
           error={publish.error}
           blocks={blocks}
           hintId={hintId}
