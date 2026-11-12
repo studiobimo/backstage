@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "rewriteRelativeImportExtensions": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "dist/lib",
+    "tsBuildInfoFile": "${configDir}/node_modules/.tmp/tsconfig.build.tsbuildinfo"
+  },
+  "include": ["src", "node_modules/.tmp/worker-env.d.ts"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/render/blocks-fixture.tsx"]
+}

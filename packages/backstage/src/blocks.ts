@@ -130,7 +130,7 @@ export const layoutNames = (registry: Registry): string[] => [
 export interface BlockDescription {
   name: string
   version: number
-  schema: z.core.JSONSchema.BaseSchema
+  schema: Readonly<Record<string, unknown>>
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
   thumbnail?: Readonly<Record<string, string>>
