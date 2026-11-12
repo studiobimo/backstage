@@ -42,6 +42,10 @@ describe('the admin SPA headers', () => {
     }
   })
 
+  it('let images come from the admin itself and from object URLs for upload previews', () => {
+    expect(policy.get('img-src')).toEqual(["'self'", 'blob:'])
+  })
+
   it('never allow inline code, eval or any origin', () => {
     const allowed = [...policy.values()].flat()
     expect(allowed.filter((source) => CSP.forbiddenSources.has(source))).toEqual([])
