@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-import { LOCALES, perLocale } from './pages.ts'
+import type { Locale } from './locales.ts'
+import { perLocale } from './pages.ts'
 
 export const MEDIA = {
   types: {
@@ -58,30 +59,26 @@ export const mediaKeyOf = (id: string, type: MediaType) =>
 
 const altText = z.string().trim().max(MEDIA.alt.maxLength)
 
-const altShape = {
-  decorative: z.boolean(),
-  alt: perLocale(altText)
-}
-
 type AltFields = { decorative: boolean; alt: Record<string, string> }
 
-const requireAltUnlessDecorative = (value: AltFields, context: z.RefinementCtx) => {
-  if (value.decorative) return
-  for (const locale of LOCALES) {
-    if (value.alt[locale]) continue
-    context.addIssue({
-      code: 'custom',
-      path: ['alt', locale],
-      message: 'Alt text is required unless the image is decorative'
-    })
+const requireAltUnlessDecorative =
+  (locales: readonly Locale[]) => (value: AltFields, context: z.RefinementCtx) => {
+    if (value.decorative) return
+    for (const locale of locales) {
+      if (value.alt[locale]) continue
+      context.addIssue({
+        code: 'custom',
+        path: ['alt', locale],
+        message: 'Alt text is required unless the image is decorative'
+      })
+    }
   }
-}
 
-export const mediaAltSchema = z.object(altShape).superRefine(requireAltUnlessDecorative)
-export type MediaAlt = z.infer<typeof mediaAltSchema>
-
-export const mediaUploadSchema = z.object(altShape).superRefine(requireAltUnlessDecorative)
-export type MediaUpload = z.infer<typeof mediaUploadSchema>
+export const mediaAltSchema = (locales: readonly Locale[]) =>
+  z
+    .object({ decorative: z.boolean(), alt: perLocale(altText, locales) })
+    .superRefine(requireAltUnlessDecorative(locales))
+export type MediaAlt = z.infer<ReturnType<typeof mediaAltSchema>>
 
 export const mediaSchema = z.object({
   id: z.string(),

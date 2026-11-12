@@ -1,4 +1,4 @@
-import { MEDIA, mediaAltSchema, mediaTypes } from '@studiobimo/backstage'
+import { LOCALES, MEDIA, mediaAltSchema, mediaTypes, type MediaAlt } from '@studiobimo/backstage'
 import { useMutation } from '@tanstack/react-query'
 import { CircleAlertIcon, LoaderCircleIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -17,7 +17,7 @@ import { useApiErrorMessage } from '@/lib/api-feedback'
 import { ImageRejected, processImage, type ProcessedImage } from './process-image'
 import { uploadMediaMutation } from './queries'
 
-const EMPTY_VALUES = { decorative: false, alt: { en: '', es: '' } }
+const EMPTY_VALUES: MediaAlt = { decorative: false, alt: { en: '', es: '' } }
 
 type Selection =
   | { status: 'empty' }
@@ -58,12 +58,17 @@ function useUploadForm(selection: Selection, onUploaded: () => void) {
   const upload = useMutation(uploadMediaMutation)
   const form = useAppForm({
     defaultValues: EMPTY_VALUES,
-    validators: { onSubmit: ({ value }) => fieldErrorsOf(mediaAltSchema.safeParse(value)) },
+    validators: {
+      onSubmit: ({ value }) => fieldErrorsOf(mediaAltSchema(LOCALES).safeParse(value))
+    },
     onSubmit: async ({ value }) => {
       if (selection.status !== 'ready') return
       setFailure(undefined)
       try {
-        await upload.mutateAsync({ image: selection.image, ...mediaAltSchema.parse(value) })
+        await upload.mutateAsync({
+          image: selection.image,
+          ...mediaAltSchema(LOCALES).parse(value)
+        })
         toastManager.add({ type: 'success', title: t('uploaded.title') })
         form.reset()
         onUploaded()

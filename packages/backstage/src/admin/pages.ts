@@ -6,7 +6,6 @@ import {
   listMissingTranslations,
   listPageBlocks,
   listPages,
-  LOCALES,
   PAGE_WRITE,
   pageInputSchema,
   renamePageSchema,
@@ -40,7 +39,8 @@ import { rebuildPublishedIndex, removeSnapshots } from './snapshots.ts'
 
 type PagesContext = Context<AccessEnv>
 
-const NO_MISSING = Object.fromEntries(LOCALES.map((locale) => [locale, 0])) as MissingByLocale
+const noMissing = (locales: readonly string[]): MissingByLocale =>
+  Object.fromEntries(locales.map((locale) => [locale, 0]))
 
 const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok' | 'stale'>, ApiError> = {
   [PAGE_WRITE.slugTaken]: API_ERROR.slugTaken,
@@ -69,28 +69,33 @@ const blocksResponse = async (c: PagesContext, id: string) => {
   })
 }
 
-const seoResponse = async (c: PagesContext, id: string) => {
-  const [seo, page] = await Promise.all([readPageSeo(c.env.DB, id), findPage(c.env.DB, id)])
+const seoResponse = async (c: PagesContext, id: string, locales: readonly string[]) => {
+  const [seo, page] = await Promise.all([
+    readPageSeo(c.env.DB, id, locales),
+    findPage(c.env.DB, id)
+  ])
   return seo && page ? c.json({ seo, version: page.version }) : null
 }
 
 const listPageSummaries = async (d1: D1Database, registry: Registry) => {
   const [pages, missing] = await Promise.all([listPages(d1), listMissingTranslations(d1, registry)])
-  return pages.map((page) => ({ ...page, missing: missing.get(page.id) ?? NO_MISSING }))
+  const empty = noMissing(resolveLocaleConfig(registry).locales)
+  return pages.map((page) => ({ ...page, missing: missing.get(page.id) ?? empty }))
 }
 
-export const pagesRoutes = (registry: Registry) =>
-  new Hono<AccessEnv>()
+export const pagesRoutes = (registry: Registry) => {
+  const { locales } = resolveLocaleConfig(registry)
+  return new Hono<AccessEnv>()
     .get('/', async (c) => c.json({ pages: await listPageSummaries(c.env.DB, registry) }))
     .post('/', async (c) => {
-      const body = await readJsonBody(c, pageInputSchema)
+      const body = await readJsonBody(c, pageInputSchema(locales))
       if (!body.ok) return body.response
       const id = crypto.randomUUID()
       const failure = await failureOf(c, id, await createPage(c.env.DB, body.data, id))
       return failure ?? c.json({ page: await findPage(c.env.DB, id) }, RESPONSE_STATUS.created)
     })
     .put('/:id', async (c) => {
-      const body = await readJsonBody(c, renamePageSchema)
+      const body = await readJsonBody(c, renamePageSchema(locales))
       if (!body.ok) return body.response
       const id = c.req.param('id')
       const { expectedVersion, ...input } = body.data
@@ -101,7 +106,7 @@ export const pagesRoutes = (registry: Registry) =>
     .delete('/:id', async (c) => {
       const id = c.req.param('id')
       const wasPublished = Boolean((await findPage(c.env.DB, id))?.publishedAt)
-      if (wasPublished) await removeSnapshots(c.env.SITE, id, resolveLocaleConfig(registry).locales)
+      if (wasPublished) await removeSnapshots(c.env.SITE, id, locales)
       const failure = await failureOf(c, id, await deletePage(c.env.DB, id))
       if (wasPublished) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return failure ?? c.body(null, RESPONSE_STATUS.noContent)
@@ -142,14 +147,17 @@ export const pagesRoutes = (registry: Registry) =>
     })
     .get('/:id/seo', async (c) => {
       const id = c.req.param('id')
-      return (await seoResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
+      return (await seoResponse(c, id, locales)) ?? respondWithError(c, API_ERROR.notFound)
     })
     .put('/:id/seo', async (c) => {
-      const body = await readJsonBody(c, savePageSeoSchema)
+      const body = await readJsonBody(c, savePageSeoSchema(locales))
       if (!body.ok) return body.response
-      const { expectedVersion, ...seo } = body.data
+      const { expectedVersion, seo } = body.data
       const id = c.req.param('id')
       const write = await versionedWrite(c, expectedVersion)
       const failure = await failureOf(c, id, await writePageSeo(c.env.DB, id, seo, write))
-      return failure ?? (await seoResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
+      return (
+        failure ?? (await seoResponse(c, id, locales)) ?? respondWithError(c, API_ERROR.notFound)
+      )
     })
+}

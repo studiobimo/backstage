@@ -18,7 +18,7 @@ const config = resolveLocaleConfig(spanishFirst)
 
 const publishWithSpanishDefault = async (id: string) => {
   const blocks = (await (await send('GET', `/${id}/blocks`)).json()) as { version: number }
-  return sendTo(spanishAdmin, `/${id}/publish`, { expectedVersion: blocks.version })
+  return sendTo(spanishAdmin, 'POST', `/pages/${id}/publish`, { expectedVersion: blocks.version })
 }
 
 const published = async (path: string) => {

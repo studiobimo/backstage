@@ -6,18 +6,21 @@ import {
   listMedia,
   MEDIA,
   mediaKeyOf,
-  mediaUploadSchema,
+  mediaAltSchema,
   readImageSize,
+  resolveLocaleConfig,
   sniffImageType,
-  type ApiError
+  type ApiError,
+  type Registry
 } from '../index.ts'
 import { Hono } from 'hono'
+import type { z } from 'zod'
 
 import type { AccessEnv } from './auth.ts'
 import { RESPONSE_STATUS, respondWithError } from './respond.ts'
 
 type Rejection = { error: ApiError }
-type Upload = { file: File; metadata: ReturnType<typeof mediaUploadSchema.parse> }
+type Upload = { file: File; metadata: z.infer<ReturnType<typeof mediaAltSchema>> }
 
 const rejection = (error: ApiError): Rejection => ({ error })
 
@@ -30,29 +33,32 @@ const declaredTooLarge = (header: string | null) => {
   )
 }
 
-const parseMetadata = (raw: unknown) => {
+const parseMetadata = (raw: unknown, locales: readonly string[]) => {
   if (typeof raw !== 'string') return null
   try {
-    return mediaUploadSchema.safeParse(JSON.parse(raw))
+    return mediaAltSchema(locales).safeParse(JSON.parse(raw))
   } catch {
     return null
   }
 }
 
-const readUpload = async (request: Request): Promise<Upload | Rejection> => {
+const readUpload = async (
+  request: Request,
+  locales: readonly string[]
+): Promise<Upload | Rejection> => {
   if (declaredTooLarge(request.headers.get('content-length'))) {
     return rejection(API_ERROR.tooLarge)
   }
   const form = await request.formData().catch(() => null)
   const file = form?.get(MEDIA.upload.fileField)
-  const metadata = parseMetadata(form?.get(MEDIA.upload.metadataField) ?? null)
+  const metadata = parseMetadata(form?.get(MEDIA.upload.metadataField) ?? null, locales)
   if (!(file instanceof File) || !metadata?.success) return rejection(API_ERROR.invalid)
   if (file.size === 0) return rejection(API_ERROR.invalid)
   if (file.size > MEDIA.maxBytes) return rejection(API_ERROR.tooLarge)
   return { file, metadata: metadata.data }
 }
 
-export const mediaRoutes = () =>
+export const mediaRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()
     .get('/', async (c) => c.json({ media: await listMedia(c.env.DB) }))
     .get('/:id/file', async (c) => {
@@ -67,7 +73,7 @@ export const mediaRoutes = () =>
       })
     })
     .post('/', async (c) => {
-      const upload = await readUpload(c.req.raw)
+      const upload = await readUpload(c.req.raw, resolveLocaleConfig(registry).locales)
       if ('error' in upload) return respondWithError(c, upload.error)
       const { file, metadata } = upload
       const content = await file.arrayBuffer()
