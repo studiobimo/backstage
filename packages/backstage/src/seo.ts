@@ -15,7 +15,8 @@ export const SEO = {
     namespace: 'http://www.sitemaps.org/schemas/sitemap/0.9',
     xhtmlNamespace: 'http://www.w3.org/1999/xhtml'
   },
-  xDefault: 'x-default'
+  xDefault: 'x-default',
+  log: { rebuildFailed: 'sitemap index rebuild failed' }
 } as const
 
 const publishedPageSchema = z.object({

@@ -33,8 +33,12 @@ const request = (
     bindings
   )
 
-export const send = (method: string, path: string, body?: unknown) =>
-  request(env.localDevelopment, method, path, body)
+export const send = (
+  method: string,
+  path: string,
+  body?: unknown,
+  bindings: Partial<typeof env.localDevelopment> = {}
+) => request({ ...env.localDevelopment, ...bindings }, method, path, body)
 
 const recordingDb = (statements: string[]) =>
   new Proxy(db, {
