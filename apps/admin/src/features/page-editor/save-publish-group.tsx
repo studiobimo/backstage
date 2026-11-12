@@ -54,6 +54,7 @@ interface SavePublishGroupProps {
   dirty: boolean
   saving: boolean
   published: boolean
+  changed: boolean
   publishing: boolean
   unpublishing: boolean
   onSave: () => void
@@ -108,7 +109,9 @@ export function SavePublishGroup(props: SavePublishGroupProps) {
           onClick={props.onPublish}
         >
           <GlobeIcon aria-hidden />
-          <span className={LABEL}>{t('publish.publish')}</span>
+          <span className={LABEL}>
+            {t(props.changed ? 'publish.publishChanges' : 'publish.publish')}
+          </span>
         </Button>
         {published && (
           <>

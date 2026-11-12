@@ -10,6 +10,7 @@ import { formatDateTime } from '@/lib/format'
 interface PublishNotesProps {
   page: PageSummary
   dirty: boolean
+  changed: boolean
   error: unknown
   blocks: PageBlock[]
   hintId: string
@@ -51,22 +52,26 @@ function PublishNotice({ error, blocks }: { error: unknown; blocks: PageBlock[] 
   )
 }
 
-function usePublishHint(page: PageSummary, dirty: boolean) {
+function usePublishHint({
+  page,
+  dirty,
+  changed
+}: Pick<PublishNotesProps, 'page' | 'dirty' | 'changed'>) {
   const { t, i18n } = useTranslation('pageEditor')
   if (dirty) return t('publish.saveFirst')
   if (page.publishedAt === null) return t('publish.notLive')
-  return t('publish.since', {
+  return t(changed ? 'publish.changedSince' : 'publish.since', {
     when: formatDateTime(i18n.language, page.publishedAt),
     name: page.publishedBy ?? t('publish.someone')
   })
 }
 
-export function PublishNotes({ page, dirty, error, blocks, hintId }: PublishNotesProps) {
+export function PublishNotes({ page, dirty, changed, error, blocks, hintId }: PublishNotesProps) {
   const { t } = useTranslation('pageEditor')
   return (
     <section aria-label={t('publish.label')} className="flex flex-col gap-3">
       <p id={hintId} className="text-muted-foreground text-sm">
-        {usePublishHint(page, dirty)}
+        {usePublishHint({ page, dirty, changed })}
       </p>
       <PublishNotice error={error} blocks={blocks} />
     </section>
