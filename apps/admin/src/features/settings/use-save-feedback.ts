@@ -7,6 +7,8 @@ import { toastManager } from '@/components/ui/toast'
 import { ApiError } from '@/lib/api'
 import { fieldIssuesFrom } from '@/lib/api-feedback'
 
+import { invalidateSitePublication } from './queries'
+
 export interface StaleSave {
   current?: PageStamp
 }
@@ -18,6 +20,7 @@ const staleOf = (error: unknown): StaleSave | undefined =>
 
 export function useSaveFeedback<V>(save: (value: V) => Promise<unknown>) {
   const { t } = useTranslation('settings')
+  const queryClient = useQueryClient()
   const [failed, setFailed] = useState(false)
   const [stale, setStale] = useState<StaleSave>()
   const [issues, setIssues] = useState<FieldIssue[]>([])
@@ -27,6 +30,7 @@ export function useSaveFeedback<V>(save: (value: V) => Promise<unknown>) {
     setIssues([])
     try {
       await save(value)
+      void invalidateSitePublication(queryClient)
       toastManager.add({
         type: 'success',
         title: t('saved.title'),
