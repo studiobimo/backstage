@@ -17,7 +17,6 @@ import { upgradeBlockContent, type Registry } from '../blocks.ts'
 import {
   countMissingTranslations,
   isSeoMissing,
-  NO_MISSING,
   type MissingByLocale,
   type TranslatedNode
 } from '../translations.ts'
@@ -66,7 +65,7 @@ const pageWithPublisher = (db: Database) =>
     .from(pages)
     .leftJoin(users, eq(users.id, pages.publishedBy))
 
-const readPageRows = async (db: Database, id?: string) => {
+const readPages = async (db: Database, id?: string): Promise<Page[]> => {
   const [rows, locales] = await Promise.all([
     pageWithPublisher(db)
       .where(id === undefined ? undefined : eq(pages.id, id))
@@ -77,21 +76,20 @@ const readPageRows = async (db: Database, id?: string) => {
       .where(id === undefined ? undefined : eq(pageLocales.pageId, id))
   ])
   return rows.map(({ page: row, publisherName, publisherEmail }) => ({
-    stored: row.missingTranslations,
-    page: {
-      id: row.id,
-      isHome: row.isHome,
-      version: row.version,
-      layout: row.layout,
-      updatedAt: row.updatedAt,
-      publishedAt: row.publishedAt,
-      publishedBy: row.publishedAt ? publisherName || publisherEmail || null : null,
-      locales: locales
-        .filter((locale) => locale.pageId === row.id)
-        .map(({ locale, slug, title }) => ({ locale, slug, title }))
-    } satisfies Page
+    id: row.id,
+    isHome: row.isHome,
+    version: row.version,
+    layout: row.layout,
+    updatedAt: row.updatedAt,
+    publishedAt: row.publishedAt,
+    publishedBy: row.publishedAt ? publisherName || publisherEmail || null : null,
+    locales: locales
+      .filter((locale) => locale.pageId === row.id)
+      .map(({ locale, slug, title }) => ({ locale, slug, title }))
   }))
 }
+
+export const listPages = (d1: AnyD1Database) => readPages(connect(d1))
 
 const seoFromRows = (
   rows: { locale: string; seoTitle: string; description: string; socialImageId: string | null }[]
@@ -166,13 +164,11 @@ const groupByPage = <Row extends { pageId: string }>(rows: Row[]) =>
     return groups
   }, new Map<string, Row[]>())
 
-export const refreshMissingTranslations = async (
-  d1: AnyD1Database,
-  registry: Registry,
-  pageId?: string
+const countStalePages = async (
+  db: Database,
+  registry: Registry
 ): Promise<Map<string, MissingByLocale>> => {
-  const db = connect(d1)
-  const scope = pageId === undefined ? isNull(pages.missingTranslations) : eq(pages.id, pageId)
+  const scope = isNull(pages.missingTranslations)
   const [versions, locales, blocks] = await Promise.all([
     db.select({ id: pages.id, version: pages.version }).from(pages).where(scope),
     db
@@ -214,18 +210,21 @@ export const refreshMissingTranslations = async (
   return new Map([...computed].map(([id, { missing }]) => [id, missing]))
 }
 
-export const listPageSummaries = async (d1: AnyD1Database, registry: Registry) => {
-  const rows = await readPageRows(connect(d1))
-  const needsCount = rows.some(({ stored }) => stored === null)
-  const computed = needsCount ? await refreshMissingTranslations(d1, registry) : new Map()
-  return rows.map(({ page, stored }) => ({
-    ...page,
-    missing: stored ?? computed.get(page.id) ?? NO_MISSING
-  }))
+export const listMissingTranslations = async (
+  d1: AnyD1Database,
+  registry: Registry
+): Promise<Map<string, MissingByLocale>> => {
+  const db = connect(d1)
+  const rows = await db.select({ id: pages.id, missing: pages.missingTranslations }).from(pages)
+  const stored = new Map(
+    rows.flatMap(({ id, missing }) => (missing ? [[id, missing] as const] : []))
+  )
+  if (stored.size === rows.length) return stored
+  return new Map([...stored, ...(await countStalePages(db, registry))])
 }
 
 export const findPage = async (d1: AnyD1Database, id: string) =>
-  (await readPageRows(connect(d1), id))[0]?.page
+  (await readPages(connect(d1), id))[0]
 
 export const createPage = async (d1: AnyD1Database, input: PageInput, id: string) => {
   const db = connect(d1)

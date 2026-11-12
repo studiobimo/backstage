@@ -153,7 +153,3 @@ export const isSeoMissing = (seo: PageSeo, locale: Locale) => {
 }
 
 export type MissingByLocale = Record<Locale, number>
-
-export const NO_MISSING = Object.fromEntries(
-  LOCALES.map((locale) => [locale, 0])
-) as MissingByLocale
