@@ -9,9 +9,10 @@ import { publishRoutes } from './publish.ts'
 import { settingsRoutes } from './settings.ts'
 import { siteOriginRoutes } from './site-origin.ts'
 import { slotsRoutes } from './slots.ts'
+import type { AdminEnv } from './env.ts'
 
 export const v1Routes = (registry: Registry) =>
-  new Hono<{ Bindings: Env }>()
+  new Hono<{ Bindings: AdminEnv }>()
     .route('/blocks', blocksRoutes(registry))
     .route('/layouts', layoutsRoutes(registry))
     .route('/media', mediaRoutes())

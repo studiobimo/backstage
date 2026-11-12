@@ -12,6 +12,7 @@ import {
   type Registry
 } from '../index.ts'
 import { requireAccess } from './auth.ts'
+import { requireBindings, type AdminEnv } from './env.ts'
 import { respondWithError } from './respond.ts'
 import { serveSpa } from './spa.ts'
 import { v1Routes } from './v1.ts'
@@ -19,11 +20,12 @@ import { v1Routes } from './v1.ts'
 const API_PATH = '/api'
 
 export const createAdmin = (registry: Registry) => {
-  const api = new Hono<{ Bindings: Env }>().basePath(API_PATH)
+  const api = new Hono<{ Bindings: AdminEnv }>().basePath(API_PATH)
 
   api.use(...observe)
   api.use(secureHeaders())
   api.get(OBSERVABILITY.health.path, respondHealthy)
+  api.use(requireBindings)
   api.use(requireAccess)
   api.use(csrf())
 
@@ -38,13 +40,15 @@ export const createAdmin = (registry: Registry) => {
     return respondWithError(c, API_ERROR.internal)
   })
 
-  const app = new Hono<{ Bindings: Env }>()
+  const app = new Hono<{ Bindings: AdminEnv }>()
 
   app.route('/', api)
-  app.get('*', (c) =>
+  app.get('*', requireBindings, (c) =>
     c.req.path.startsWith(`${API_PATH}/`) ? respondWithError(c, API_ERROR.notFound) : serveSpa(c)
   )
   app.notFound((c) => respondWithError(c, API_ERROR.notFound))
 
   return app
 }
+
+export type { AdminEnv } from './env.ts'

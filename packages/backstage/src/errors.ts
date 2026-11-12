@@ -28,6 +28,11 @@ export const API_ERROR = {
   },
   notFound: { code: 'not_found', status: 404, message: 'Not found' },
   internal: { code: 'internal', status: 500, message: 'Internal error' },
+  bindingsMissing: {
+    code: 'bindings_missing',
+    status: 500,
+    message: 'The worker is missing a required binding'
+  },
   devAuthOutsideLocal: {
     code: 'dev_auth_outside_local',
     status: 500,

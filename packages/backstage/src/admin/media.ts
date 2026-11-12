@@ -54,10 +54,10 @@ const readUpload = async (request: Request): Promise<Upload | Rejection> => {
 
 export const mediaRoutes = () =>
   new Hono<AccessEnv>()
-    .get('/', async (c) => c.json({ media: await listMedia(c.env.DB!) }))
+    .get('/', async (c) => c.json({ media: await listMedia(c.env.DB) }))
     .get('/:id/file', async (c) => {
-      const key = await findMediaFileKey(c.env.DB!, c.req.param('id'))
-      const object = key ? await c.env.MEDIA!.get(key) : null
+      const key = await findMediaFileKey(c.env.DB, c.req.param('id'))
+      const object = key ? await c.env.MEDIA.get(key) : null
       if (!object) return respondWithError(c, API_ERROR.notFound)
       return new Response(object.body, {
         headers: {
@@ -78,7 +78,7 @@ export const mediaRoutes = () =>
 
       const id = crypto.randomUUID()
       const r2Key = mediaKeyOf(id, contentType)
-      await c.env.MEDIA!.put(r2Key, content, {
+      await c.env.MEDIA.put(r2Key, content, {
         httpMetadata: { contentType, cacheControl: MEDIA.cacheControl }
       })
       const saved = {
@@ -91,10 +91,10 @@ export const mediaRoutes = () =>
         alt: metadata.decorative ? {} : metadata.alt
       }
       try {
-        const uploadedBy = await ensureUser(c.env.DB!, c.get('editor'))
-        await insertMedia(c.env.DB!, { ...saved, r2Key, uploadedBy })
+        const uploadedBy = await ensureUser(c.env.DB, c.get('editor'))
+        await insertMedia(c.env.DB, { ...saved, r2Key, uploadedBy })
       } catch (error) {
-        await c.env.MEDIA!.delete(r2Key)
+        await c.env.MEDIA.delete(r2Key)
         throw error
       }
       return c.json({ media: saved }, RESPONSE_STATUS.created)

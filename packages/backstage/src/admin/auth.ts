@@ -3,6 +3,7 @@ import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
 
 import { respondWithError } from './respond.ts'
+import type { AdminEnv } from './env.ts'
 
 const ACCESS = {
   header: 'Cf-Access-Jwt-Assertion',
@@ -15,7 +16,7 @@ const ACCESS = {
 } as const
 
 export interface AccessEnv {
-  Bindings: Env
+  Bindings: AdminEnv
   Variables: { editor: Editor }
 }
 
