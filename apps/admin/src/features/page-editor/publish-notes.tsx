@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ApiError } from '@/lib/api'
+import { useApiErrorMessage } from '@/lib/api-feedback'
 import { formatDateTime } from '@/lib/format'
 
 interface PublishNotesProps {
@@ -38,16 +39,14 @@ function ProblemsAlert({ error, blocks }: { error: ApiError; blocks: PageBlock[]
 }
 
 function PublishNotice({ error, blocks }: { error: unknown; blocks: PageBlock[] }) {
-  const { t } = useTranslation('pageEditor')
+  const messageOf = useApiErrorMessage()
   if (!error) return null
   if (error instanceof ApiError && error.problems.length > 0) {
     return <ProblemsAlert error={error} blocks={blocks} />
   }
   return (
     <p role="alert" className="text-destructive-foreground text-sm">
-      {t(`publish.errors.${error instanceof ApiError ? error.code : 'internal'}`, {
-        defaultValue: t('publish.errors.internal')
-      })}
+      {messageOf(error)}
     </p>
   )
 }

@@ -98,6 +98,14 @@ const choose = async (user: ReturnType<typeof userEvent.setup>, item: string) =>
   await user.click(await screen.findByRole('menuitem', { name: item }))
 }
 
+const confirmDeletion = async (handler: Parameters<typeof mockApi>[0]) => {
+  mockApi(handler)
+  const user = userEvent.setup()
+  renderPage()
+  await choose(user, 'Delete')
+  await user.click(await screen.findByRole('button', { name: 'Delete page' }))
+}
+
 const openRowMenu = async (user: ReturnType<typeof userEvent.setup>, name: string) =>
   user.click(await screen.findByRole('button', { name: `Actions for ${name}` }))
 
@@ -168,16 +176,27 @@ describe('PagesPage', { timeout: 15_000 }, () => {
     await reopenForm(user)
     expect(screen.queryByRole('alert')).toBeNull()
   })
+})
+
+describe('PagesPage deleting', { timeout: 15_000 }, () => {
+  it('says why a page could not be deleted and keeps the dialog open', async () => {
+    await confirmDeletion((method) =>
+      method === 'DELETE'
+        ? reply(404, { error: 'Not found', code: 'not_found' })
+        : reply(200, { pages: [aboutPage] })
+    )
+    const dialog = await screen.findByRole('alertdialog')
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('no longer exists')
+    expect(screen.getByRole('button', { name: 'Delete page' })).toBeEnabled()
+  })
 
   it('deletes a page after confirming', async () => {
-    const calls = mockApi((method) =>
-      method === 'DELETE' ? reply(204) : reply(200, { pages: [aboutPage] })
-    )
-    const user = userEvent.setup()
-    renderPage()
-    await choose(user, 'Delete')
-    await user.click(await screen.findByRole('button', { name: 'Delete page' }))
-    await waitFor(() => expect(calls.some((call) => call.method === 'DELETE')).toBe(true))
+    const calls: string[] = []
+    await confirmDeletion((method) => {
+      calls.push(method)
+      return method === 'DELETE' ? reply(204) : reply(200, { pages: [aboutPage] })
+    })
+    await waitFor(() => expect(calls).toContain('DELETE'))
   })
 })
 

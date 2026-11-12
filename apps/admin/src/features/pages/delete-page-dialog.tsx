@@ -1,4 +1,5 @@
 import type { Page } from '@studiobimo/backstage'
+import { CircleAlertIcon } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
@@ -11,7 +12,9 @@ import {
   AlertDialogPopup,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { useApiErrorMessage } from '@/lib/api-feedback'
 
 import { pageLabel } from './page-label'
 import { deletePageMutation } from './queries'
@@ -25,8 +28,13 @@ interface DeletePageDialogProps {
 export function DeletePageDialog({ page, open, onOpenChange }: DeletePageDialogProps) {
   const { t, i18n } = useTranslation('pages')
   const remove = useMutation(deletePageMutation(useQueryClient()))
+  const messageOf = useApiErrorMessage()
+  const handleOpenChange = (next: boolean) => {
+    if (!next) remove.reset()
+    onOpenChange(next)
+  }
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogPopup>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -34,6 +42,12 @@ export function DeletePageDialog({ page, open, onOpenChange }: DeletePageDialogP
           </AlertDialogTitle>
           <AlertDialogDescription>{t('delete.description')}</AlertDialogDescription>
         </AlertDialogHeader>
+        {remove.isError && (
+          <Alert variant="error">
+            <CircleAlertIcon />
+            <AlertDescription>{messageOf(remove.error)}</AlertDescription>
+          </Alert>
+        )}
         <AlertDialogFooter>
           <AlertDialogClose render={<Button variant="outline" />}>
             {t('form.cancel')}

@@ -33,13 +33,6 @@
   "uploaded": {
     "title": "Imagen subida"
   },
-  "errors": {
-    "invalid": "Revisa la descripción de cada idioma e inténtalo de nuevo.",
-    "too_large": "La imagen es demasiado grande. Prueba con una más pequeña.",
-    "unsupported_media": "Solo se aceptan imágenes JPEG, PNG, WebP y AVIF.",
-    "forbidden": "No has iniciado sesión para subir imágenes.",
-    "internal": "No se pudo subir la imagen. Revisa tu conexión e inténtalo de nuevo."
-  },
   "library": {
     "title": "Elige una imagen",
     "description": "Elige una de las imágenes que subiste.",

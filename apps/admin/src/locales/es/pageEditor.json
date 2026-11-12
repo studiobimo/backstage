@@ -17,11 +17,6 @@
     "remove": "Quitar {{name}}",
     "edit": "Editar {{name}}"
   },
-  "errors": {
-    "invalid": "Algunos bloques no son válidos. Recarga e inténtalo de nuevo.",
-    "not_found": "Esta página ya no existe.",
-    "internal": "No se pudieron guardar los bloques. Revisa tu conexión e inténtalo de nuevo."
-  },
   "unsaved": "Cambios sin guardar",
   "announce": {
     "added": "{{name}} añadido en la posición {{position}} de {{total}}.",
@@ -124,11 +119,6 @@
       "unknown_media": "Una imagen que usa {{name}} se eliminó de la biblioteca de medios.",
       "unsafe_link": "El bloque {{name}} tiene un enlace no permitido ({{path}}). Usa una dirección http, https, mailto o tel, una ruta o un ancla, y guarda.",
       "missing_slug": "Un idioma no tiene dirección. Renombra la página para añadirla."
-    },
-    "errors": {
-      "stale_version": "Se guardó una versión más reciente. Recarga la última versión y vuelve a publicar.",
-      "not_found": "Esta página ya no existe.",
-      "internal": "No se pudo hacer el cambio. Revisa tu conexión e inténtalo de nuevo."
     },
     "more": "Más opciones de publicación"
   }

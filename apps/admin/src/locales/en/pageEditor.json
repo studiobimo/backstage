@@ -17,11 +17,6 @@
     "remove": "Remove {{name}}",
     "edit": "Edit {{name}}"
   },
-  "errors": {
-    "invalid": "Some blocks are not valid. Reload and try again.",
-    "not_found": "This page no longer exists.",
-    "internal": "The blocks could not be saved. Check your connection and try again."
-  },
   "unsaved": "Unsaved changes",
   "announce": {
     "added": "{{name}} added in position {{position}} of {{total}}.",
@@ -124,11 +119,6 @@
       "unknown_media": "An image {{name}} uses was removed from the media library.",
       "unsafe_link": "The block {{name}} has a link that is not allowed ({{path}}). Use an http, https, mailto or tel address, a path or an anchor, then save.",
       "missing_slug": "A language has no address. Rename the page to add one."
-    },
-    "errors": {
-      "stale_version": "A newer version was saved. Reload the latest version, then publish.",
-      "not_found": "This page no longer exists.",
-      "internal": "The change could not be made. Check your connection and try again."
     },
     "more": "More publishing options"
   }

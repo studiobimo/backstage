@@ -16,7 +16,7 @@ import {
   SheetPopup,
   SheetTitle
 } from '@/components/ui/sheet'
-import { ApiError } from '@/lib/api'
+import { useApiErrorMessage } from '@/lib/api-feedback'
 
 import { createPageMutation, renamePageMutation } from './queries'
 
@@ -38,7 +38,7 @@ const valuesOf = (page?: Page) => {
 }
 
 function usePageForm(page: Page | undefined, onSaved: () => void) {
-  const { t } = useTranslation('pages')
+  const messageOf = useApiErrorMessage()
   const queryClient = useQueryClient()
   const [failure, setFailure] = useState<string>()
   const create = useMutation(createPageMutation(queryClient))
@@ -54,7 +54,7 @@ function usePageForm(page: Page | undefined, onSaved: () => void) {
         else await create.mutateAsync(input)
         onSaved()
       } catch (error) {
-        setFailure(error instanceof ApiError ? t(`errors.${error.code}`) : t('errors.internal'))
+        setFailure(messageOf(error))
       }
     }
   })
