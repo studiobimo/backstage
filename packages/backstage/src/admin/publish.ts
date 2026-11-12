@@ -34,12 +34,7 @@ export const publishRoutes = (registry: Registry) =>
         )
       }
       await writeSnapshots(c.env.SITE, plan.snapshots)
-      await recordPublished(
-        c.env.DB,
-        id,
-        await ensureUser(c.env.DB, c.get('editor')),
-        publishedAt
-      )
+      await recordPublished(c.env.DB, id, await ensureUser(c.env.DB, c.get('editor')), publishedAt)
       await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return c.json({ page: await findPage(c.env.DB, id) })
     })
