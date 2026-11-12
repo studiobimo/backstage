@@ -10,5 +10,6 @@ export const Route = createFileRoute('/blocks')({
       context.queryClient.ensureQueryData(blockDescriptionsQuery),
       context.queryClient.ensureQueryData(siteOriginQuery)
     ]),
+  staticData: { title: 'nav.blocks' },
   component: BlockPreviewPage
 })

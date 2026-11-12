@@ -10,5 +10,6 @@ export const Route = createFileRoute('/settings')({
       context.queryClient.ensureQueryData(slotsQuery)
     ])
   },
+  staticData: { title: 'nav.sections.settings.title' },
   component: SettingsPage
 })

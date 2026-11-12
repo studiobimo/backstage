@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
-import { Link, useMatch, useMatches, useRouterState } from '@tanstack/react-router'
+import { Link, useMatch, useMatches } from '@tanstack/react-router'
 import { PanelLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,17 +19,10 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { pageLabel } from '@/features/pages/page-label'
-import { pagesQuery } from '@/features/pages/queries'
 import { CONTENT_WIDTH, type ContentWidth, DEFAULT_CONTENT_WIDTH } from '@/lib/content-width'
+import { useDocumentTitle, useScreenTitle } from '@/lib/screen-title'
 import { ariaKeyShortcuts } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
-
-const pageTitles: Record<string, string> = {
-  '/type': 'nav.type',
-  '/pages': 'nav.sections.pages.title',
-  '/settings': 'nav.sections.settings.title'
-}
 
 function SidebarToggle() {
   const { t } = useTranslation()
@@ -50,41 +42,26 @@ function SidebarToggle() {
   )
 }
 
-function EditedPageCrumbs({ pageId }: { pageId: string }) {
-  const { t, i18n } = useTranslation()
-  const { data: pages } = useQuery(pagesQuery)
-  const page = pages?.find((candidate) => candidate.id === pageId)
-  return (
-    <>
-      <BreadcrumbItem>
-        <BreadcrumbLink render={<Link to="/pages" />}>
-          {t('nav.sections.pages.title')}
-        </BreadcrumbLink>
-      </BreadcrumbItem>
-      <BreadcrumbSeparator />
-      <BreadcrumbItem>
-        <BreadcrumbPage>
-          {page ? pageLabel(page, i18n.language) : t('title', { ns: 'pageEditor' })}
-        </BreadcrumbPage>
-      </BreadcrumbItem>
-    </>
-  )
-}
-
 function PageBreadcrumb() {
   const { t } = useTranslation()
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const title = useScreenTitle()
   const editing = useMatch({ from: '/pages_/$pageId', shouldThrow: false })
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {editing ? (
-          <EditedPageCrumbs pageId={editing.params.pageId} />
-        ) : (
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(pageTitles[pathname] ?? 'nav.home')}</BreadcrumbPage>
-          </BreadcrumbItem>
+        {editing && (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link to="/pages" />}>
+                {t('nav.sections.pages.title')}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+          </>
         )}
+        <BreadcrumbItem>
+          <BreadcrumbPage>{title}</BreadcrumbPage>
+        </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   )
@@ -109,6 +86,7 @@ function ContentColumn({ className, width: fixedWidth, children }: ContentColumn
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  useDocumentTitle()
   return (
     <ToastProvider position="top-center">
       <TooltipProvider>
