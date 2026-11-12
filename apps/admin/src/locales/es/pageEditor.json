@@ -122,6 +122,7 @@
       "unknown_block": "El bloque {{name}} ya no existe. Quítalo y guarda.",
       "invalid_content": "El bloque {{name}} tiene contenido no válido. Corrígelo y guarda.",
       "unknown_media": "Una imagen que usa {{name}} se eliminó de la biblioteca de medios.",
+      "unsafe_link": "El bloque {{name}} tiene un enlace no permitido ({{path}}). Usa una dirección http, https, mailto o tel, una ruta o un ancla, y guarda.",
       "missing_slug": "Un idioma no tiene dirección. Renombra la página para añadirla."
     },
     "errors": {

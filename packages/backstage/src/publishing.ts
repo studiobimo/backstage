@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { validateBlockContent, type Registry } from './blocks.ts'
 import { LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
 import type { SiteSettings } from './settings.ts'
-import { isRecord, type TranslatedNode } from './translations.ts'
+import { RICH_TEXT } from './rich-text.ts'
+import { isRecord, markedFieldsIn, type TranslatedNode } from './translations.ts'
 
 export const SNAPSHOT = {
   format: 1,
@@ -35,6 +36,7 @@ const PUBLISH_PROBLEM = {
   unknownBlock: 'unknown_block',
   invalidContent: 'invalid_content',
   unknownMedia: 'unknown_media',
+  unsafeLink: 'unsafe_link',
   missingSlug: 'missing_slug'
 } as const
 
@@ -42,7 +44,8 @@ type PublishProblemReason = (typeof PUBLISH_PROBLEM)[keyof typeof PUBLISH_PROBLE
 
 const publishProblemSchema = z.object({
   reason: z.enum(Object.values(PUBLISH_PROBLEM)),
-  blockId: z.string().nullable()
+  blockId: z.string().nullable(),
+  path: z.string().optional()
 })
 export type PublishProblem = z.infer<typeof publishProblemSchema>
 
@@ -114,8 +117,8 @@ export interface PublishDraft {
 
 type Checked<T> = { ok: true; value: T } | { ok: false; problem: PublishProblem }
 
-const rejection = (reason: PublishProblemReason, blockId: string | null = null) =>
-  ({ ok: false, problem: { reason, blockId } }) as const
+const rejection = (reason: PublishProblemReason, blockId: string | null = null, path?: string) =>
+  ({ ok: false, problem: { reason, blockId, ...(path === undefined ? {} : { path }) } }) as const
 
 const checkBlock = (registry: Registry, block: PageBlock): Checked<PageBlock> => {
   const definition = registry.get(block.block)
@@ -142,22 +145,17 @@ export const checkBlocks = (registry: Registry, blocks: readonly PageBlock[]) =>
   }
 }
 
-const mediaIdsIn = (node: TranslatedNode, value: unknown): string[] => {
-  if (typeof node === 'boolean') return []
-  if (node.backstage === 'image') {
-    return isRecord(value) && typeof value.id === 'string' ? [value.id] : []
-  }
-  if (Array.isArray(value)) {
-    const { items } = node
-    return items && !Array.isArray(items) ? value.flatMap((item) => mediaIdsIn(items, item)) : []
-  }
-  if (!isRecord(value)) return []
-  const { properties = {}, additionalProperties } = node
-  return Object.entries(value).flatMap(([key, child]) => {
-    const childNode = properties[key] ?? additionalProperties
-    return childNode === undefined ? [] : mediaIdsIn(childNode, child)
-  })
-}
+const mediaIdsIn = (node: TranslatedNode, value: unknown): string[] =>
+  markedFieldsIn(node, value, 'image').flatMap(({ value: image }) =>
+    isRecord(image) && typeof image.id === 'string' ? [image.id] : []
+  )
+
+const unsafeLinkPathsIn = (node: TranslatedNode, value: unknown): string[] =>
+  markedFieldsIn(node, value, 'link').flatMap(({ path, value: link }) =>
+    isRecord(link) && typeof link.href === 'string' && !RICH_TEXT.safeHref.test(link.href)
+      ? [path]
+      : []
+  )
 
 export const referencedMediaIds = (
   registry: Registry,
@@ -205,6 +203,11 @@ const referenceProblems = (
     mediaIdsIn(registry.jsonSchema(block), content).some((mediaId) => !media.has(mediaId))
       ? [rejection(PUBLISH_PROBLEM.unknownMedia, id).problem]
       : []
+  ),
+  ...draft.blocks.flatMap(({ id, block, content }) =>
+    unsafeLinkPathsIn(registry.jsonSchema(block), content).map(
+      (path) => rejection(PUBLISH_PROBLEM.unsafeLink, id, path).problem
+    )
   ),
   ...(draft.locales.some(({ socialImageId }) => socialImageId && !media.has(socialImageId))
     ? [rejection(PUBLISH_PROBLEM.unknownMedia).problem]

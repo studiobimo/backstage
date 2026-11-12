@@ -122,6 +122,7 @@
       "unknown_block": "The block {{name}} no longer exists. Remove it and save.",
       "invalid_content": "The block {{name}} has content that is not valid. Fix it and save.",
       "unknown_media": "An image {{name}} uses was removed from the media library.",
+      "unsafe_link": "The block {{name}} has a link that is not allowed ({{path}}). Use an http, https, mailto or tel address, a path or an anchor, then save.",
       "missing_slug": "A language has no address. Rename the page to add one."
     },
     "errors": {
