@@ -33,6 +33,19 @@ describe('withEdgeCache', () => {
     expect(await again.text()).toBe('page')
   })
 
+  it('ignores the query string, so random queries share one entry', async () => {
+    const { cache, stored } = memoryCache()
+    const ctx = context()
+    let produced = 0
+    const produce = async () => (produced++, page())
+    await withEdgeCache(new Request(`${URL_OF_PAGE}?x=1`), ctx, produce, cache)
+    await Promise.all(ctx.pending)
+    await withEdgeCache(new Request(`${URL_OF_PAGE}?x=2&y=3`), ctx, produce, cache)
+    await withEdgeCache(new Request(URL_OF_PAGE), ctx, produce, cache)
+    expect(produced).toBe(1)
+    expect([...stored.keys()]).toEqual([URL_OF_PAGE])
+  })
+
   it('stores a 404 and nothing else that failed', async () => {
     const { cache, stored } = memoryCache()
     const ctx = context()

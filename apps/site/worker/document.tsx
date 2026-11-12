@@ -24,6 +24,15 @@ function FallbackLayout({ children }: LayoutProps) {
   return <main>{children}</main>
 }
 
+function PageContent({ components, snapshot }: PreviewProps) {
+  return (
+    <>
+      <h1 data-page-title>{snapshot.title}</h1>
+      <Blocks components={components} snapshot={snapshot} />
+    </>
+  )
+}
+
 function LanguageSwitcher({ snapshot, translations }: Omit<PageProps, 'components' | 'origin'>) {
   const pages = [snapshot, ...translations].sort(
     (a, b) => Number(b.locale === DEFAULT_LOCALE) - Number(a.locale === DEFAULT_LOCALE)
@@ -97,7 +106,7 @@ export function PreviewDocument({ components, snapshot }: PreviewProps) {
       </head>
       <body>
         <SnapshotProvider snapshot={snapshot}>
-          <Blocks components={components} snapshot={snapshot} />
+          <PageContent components={components} snapshot={snapshot} />
         </SnapshotProvider>
       </body>
     </html>
@@ -115,7 +124,7 @@ export function Document(props: PageProps) {
         <SnapshotProvider snapshot={snapshot}>
           {createElement(layoutComponent, {
             slots: {},
-            children: <Blocks components={components} snapshot={snapshot} />
+            children: <PageContent components={components} snapshot={snapshot} />
           })}
         </SnapshotProvider>
         <LanguageSwitcher snapshot={snapshot} translations={translations} />

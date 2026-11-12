@@ -15,9 +15,9 @@ export function OverlayHero({
     <section data-block="overlay-hero" data-tint={tint} data-align={align}>
       <Picture value={background} />
       <div>
-        <h1>
+        <h2>
           <Translation value={title} />
-        </h1>
+        </h2>
         <Body value={body} />
         <Cta value={cta} />
       </div>

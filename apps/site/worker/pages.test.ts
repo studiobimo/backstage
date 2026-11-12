@@ -36,7 +36,7 @@ const html = async (path: string) => (await get(path)).text()
 describe('rendering published pages', () => {
   it('serves the default locale at the root of its slug and the other under its prefix', async () => {
     await publishAbout()
-    expect(await html('/about')).toContain('<h1>Hello</h1>')
+    expect(await html('/about')).toContain('<h2>Hello</h2>')
     expect(await html('/es/acerca')).toContain('<html lang="es">')
     expect((await get('/acerca')).status).toBe(404)
     expect((await get('/en/about')).status).toBe(404)
@@ -55,7 +55,7 @@ describe('rendering published pages', () => {
 
   it('falls back to the default locale for an empty translation', async () => {
     await publishAbout()
-    expect(await html('/es/acerca')).toContain('<h1>Hello</h1>')
+    expect(await html('/es/acerca')).toContain('<h2>Hello</h2>')
   })
 
   it('links the same page in the other locale and declares the alternates', async () => {
@@ -116,7 +116,7 @@ describe('rendering published pages', () => {
     )
     const response = await get('/about')
     expect(response.status).toBe(200)
-    expect(await response.text()).not.toContain('<h1>')
+    expect(await response.text()).not.toContain('<h2>Hi</h2>')
   })
 
   it('answers 404 for a stale route, an unpublished page and a deep path', async () => {
