@@ -1,7 +1,7 @@
 export { defaultEdgeCache, EDGE_CACHE, withEdgeCache } from './cache.ts'
 export type { Deferrable, EdgeCache } from './cache.ts'
 export { renderHtml } from './html.ts'
-export { LOCALE_NAME, SWITCHER_LABEL } from './locales.ts'
+export { localeName, LOCALE_NAME, SWITCHER_LABEL, switcherLabel } from './locales.ts'
 export { respondWithMedia } from './media.ts'
 export type { MediaObject, MediaReader } from './media.ts'
 export { parseRoute, pathOf, routeOf } from './routing.ts'

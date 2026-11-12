@@ -20,6 +20,8 @@ export const RenderProvider = RenderReactContext.Provider
 
 export const useLocale = () => useContext(RenderReactContext).locale
 
+export const useDefaultLocale = () => useContext(RenderReactContext).defaultLocale
+
 export function useLocalized<T>(translations: Partial<Record<string, T>> | undefined) {
   const { locale, defaultLocale } = useContext(RenderReactContext)
   const own = translations?.[locale]
