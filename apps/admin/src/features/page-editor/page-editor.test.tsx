@@ -44,7 +44,7 @@ const mockApi = (
 ) => {
   const puts: { blocks: PageBlock[]; expectedVersion: number }[] = []
   const layoutPuts: { layout: string; expectedVersion: number }[] = []
-  const seoPuts: (PageSeo & { expectedVersion: number })[] = []
+  const seoPuts: { expectedVersion: number; [locale: string]: unknown }[] = []
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -54,8 +54,9 @@ const mockApi = (
       if (url.endsWith('/seo')) {
         if (init?.method !== 'PUT')
           return new Response(JSON.stringify({ seo: options.seo ?? emptySeo, version: 3 }))
-        const { expectedVersion, ...seo } = JSON.parse(init.body as string) as PageSeo & {
+        const { expectedVersion, ...seo } = JSON.parse(init.body as string) as {
           expectedVersion: number
+          [locale: string]: unknown
         }
         seoPuts.push({ ...seo, expectedVersion })
         return new Response(JSON.stringify({ seo, version: expectedVersion + 1 }))

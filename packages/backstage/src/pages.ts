@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
-import { LOCALE, perLocaleKeys } from './locales.ts'
+import { LOCALE, perLocaleKeys, type Locale } from './locales.ts'
 
+export type { Locale }
 export const LOCALES = LOCALE.default.locales
-export const DEFAULT_LOCALE: Locale = LOCALE.default.defaultLocale
-export type Locale = (typeof LOCALES)[number]
+export const DEFAULT_LOCALE = LOCALE.default.defaultLocale
 
 export const PAGE = {
   slug: { maxLength: 80, pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/ },
@@ -13,25 +13,22 @@ export const PAGE = {
   seo: { title: { maxLength: 70 }, description: { maxLength: 160 } }
 } as const
 
-export const perLocale = <T extends z.ZodType>(value: T) =>
-  z.object(perLocaleKeys(LOCALES, () => value) as Record<Locale, T>)
+export const perLocale = <T extends z.ZodType>(value: T, locales: readonly Locale[]) =>
+  z.object(perLocaleKeys(locales, () => value) as Record<Locale, T>)
 
 const slug = z.string().max(PAGE.slug.maxLength).regex(PAGE.slug.pattern)
 const title = z.string().trim().min(1).max(PAGE.title.maxLength)
 
-const regularPage = z.object({
-  isHome: z.literal(false),
-  slugs: perLocale(slug),
-  titles: perLocale(title)
-})
-
-const homePage = z.object({
-  isHome: z.literal(true),
-  titles: perLocale(title)
-})
-
-export const pageInputSchema = z.discriminatedUnion('isHome', [regularPage, homePage])
-export type PageInput = z.infer<typeof pageInputSchema>
+export const pageInputSchema = (locales: readonly Locale[]) =>
+  z.discriminatedUnion('isHome', [
+    z.object({
+      isHome: z.literal(false),
+      slugs: perLocale(slug, locales),
+      titles: perLocale(title, locales)
+    }),
+    z.object({ isHome: z.literal(true), titles: perLocale(title, locales) })
+  ])
+export type PageInput = z.infer<ReturnType<typeof pageInputSchema>>
 
 export const pageSchema = z.object({
   id: z.string(),
@@ -52,17 +49,17 @@ export const hasUnpublishedChanges = (
 ) => page.publishedAt !== null && page.publishedVersion !== version
 
 export const pageSummarySchema = pageSchema.extend({
-  missing: perLocale(z.number().int().min(0))
+  missing: z.record(z.string(), z.number().int().min(0))
 })
 export type PageSummary = z.infer<typeof pageSummarySchema>
 
 export const pagesResponseSchema = z.object({ pages: z.array(pageSummarySchema) })
 
 export const pageSlugsOf = (input: PageInput) =>
-  LOCALES.map((locale) => ({
+  Object.entries(input.titles).map(([locale, title]) => ({
     locale,
     slug: input.isHome ? null : input.slugs[locale],
-    title: input.titles[locale]
+    title
   }))
 
 export const slugify = (text: string) =>
@@ -98,7 +95,8 @@ export type PageBlocksResponse = z.infer<typeof pageBlocksResponseSchema>
 
 const expectedVersion = z.number().int().min(1)
 
-export const renamePageSchema = z.intersection(pageInputSchema, z.object({ expectedVersion }))
+export const renamePageSchema = (locales: readonly Locale[]) =>
+  z.intersection(pageInputSchema(locales), z.object({ expectedVersion }))
 export const savePageBlocksSchema = pageBlocksSchema.extend({ expectedVersion })
 export const savePageLayoutSchema = z.object({ layout: z.string().min(1), expectedVersion })
 
@@ -122,10 +120,14 @@ const localeSeoSchema = z.object({
 })
 export type LocaleSeo = z.infer<typeof localeSeoSchema>
 
-export const pageSeoSchema = perLocale(localeSeoSchema)
+export const pageSeoSchema = z.record(z.string(), localeSeoSchema)
 export type PageSeo = z.infer<typeof pageSeoSchema>
 
 export const pageSeoResponseSchema = z.object({ seo: pageSeoSchema, version: z.number().int() })
 export type PageSeoResponse = z.infer<typeof pageSeoResponseSchema>
 
-export const savePageSeoSchema = pageSeoSchema.extend({ expectedVersion })
+export const savePageSeoSchema = (locales: readonly Locale[]) =>
+  z
+    .record(z.string(), z.unknown())
+    .transform(({ expectedVersion: version, ...seo }) => ({ seo, expectedVersion: version }))
+    .pipe(z.object({ seo: perLocale(localeSeoSchema, locales), expectedVersion }))

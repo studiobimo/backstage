@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mediaAltSchema, mediaKeyOf, mediaUploadSchema, sniffImageType } from './media.ts'
+import { mediaAltSchema, mediaKeyOf, sniffImageType } from './media.ts'
 
 const bytes = (...values: number[]) => new Uint8Array([...values, ...new Array(32).fill(0)])
 const ascii = (text: string) => [...text].map((char) => char.charCodeAt(0))
@@ -33,20 +33,31 @@ describe('mediaKeyOf', () => {
   })
 })
 
+const LOCALES = ['en', 'es']
+
 describe('alt text', () => {
   it('requires alt text for every locale', () => {
-    const result = mediaAltSchema.safeParse({ decorative: false, alt: { en: 'A chair', es: ' ' } })
+    const result = mediaAltSchema(LOCALES).safeParse({
+      decorative: false,
+      alt: { en: 'A chair', es: ' ' }
+    })
     expect(result.error?.issues.map((issue) => issue.path.join('.'))).toEqual(['alt.es'])
   })
 
   it('accepts empty alt text for a decorative image', () => {
-    expect(mediaAltSchema.safeParse({ decorative: true, alt: { en: '', es: '' } }).success).toBe(
-      true
-    )
+    expect(
+      mediaAltSchema(LOCALES).safeParse({ decorative: true, alt: { en: '', es: '' } }).success
+    ).toBe(true)
+  })
+
+  it('asks only for the locales the site serves', () => {
+    const schema = mediaAltSchema(['fr'])
+    expect(schema.safeParse({ decorative: false, alt: { fr: 'Une chaise' } }).success).toBe(true)
+    expect(schema.safeParse({ decorative: false, alt: { en: 'A chair' } }).success).toBe(false)
   })
 
   it('trims alt text', () => {
-    const parsed = mediaUploadSchema.parse({
+    const parsed = mediaAltSchema(LOCALES).parse({
       decorative: false,
       alt: { en: ' A chair ', es: 'Una silla' }
     })

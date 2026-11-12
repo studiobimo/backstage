@@ -47,10 +47,9 @@ export {
   mediaResponseSchema,
   mediaSchema,
   mediaTypes,
-  mediaUploadSchema,
   sniffImageType
 } from './media.ts'
-export type { Media, MediaAlt, MediaType, MediaUpload } from './media.ts'
+export type { Media, MediaAlt, MediaType } from './media.ts'
 export { fieldKinds, image, link, localized, richText } from './fields.ts'
 export type { FieldKind } from './fields.ts'
 export {

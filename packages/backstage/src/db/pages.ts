@@ -3,7 +3,6 @@ import type { BatchItem } from 'drizzle-orm/batch'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import {
-  LOCALES,
   pageSlugsOf,
   type Locale,
   type LocaleSeo,
@@ -13,6 +12,7 @@ import {
   type PageSeo
 } from '../pages.ts'
 import { upgradeBlockContent, type Registry } from '../blocks.ts'
+import { resolveLocaleConfig } from '../locales.ts'
 import {
   countMissingTranslations,
   isSeoMissing,
@@ -93,10 +93,11 @@ const readPages = async (db: Database, id?: string): Promise<Page[]> => {
 export const listPages = (d1: AnyD1Database) => readPages(connect(d1))
 
 const seoFromRows = (
-  rows: { locale: string; seoTitle: string; description: string; socialImageId: string | null }[]
+  rows: { locale: string; seoTitle: string; description: string; socialImageId: string | null }[],
+  localeCodes: readonly string[]
 ) =>
   Object.fromEntries(
-    LOCALES.map((locale) => {
+    localeCodes.map((locale) => {
       const row = rows.find((candidate) => candidate.locale === locale)
       return [
         locale,
@@ -147,12 +148,13 @@ const memoizedSchemas = (registry: Registry) => {
 const missingOf = (
   registry: Registry,
   schemaOf: (block: string) => TranslatedNode,
-  locales: (typeof pageLocales.$inferSelect)[],
+  localeRows: (typeof pageLocales.$inferSelect)[],
   blocks: PageBlock[]
 ) => {
-  const seo = seoFromRows(locales)
+  const { locales } = resolveLocaleConfig(registry)
+  const seo = seoFromRows(localeRows, locales)
   return Object.fromEntries(
-    LOCALES.map((locale) => [
+    locales.map((locale) => [
       locale,
       blocksMissing(registry, schemaOf, blocks, locale) + (isSeoMissing(seo, locale) ? 1 : 0)
     ])
@@ -349,12 +351,16 @@ export const setPageLayout = (
   write: VersionedWrite
 ) => writeVersioned(connect(d1), id, write, { layout }, () => [])
 
-export const readPageSeo = async (d1: AnyD1Database, id: string): Promise<PageSeo | undefined> => {
+export const readPageSeo = async (
+  d1: AnyD1Database,
+  id: string,
+  locales: readonly string[]
+): Promise<PageSeo | undefined> => {
   const db = connect(d1)
   const [existing] = await db.select({ id: pages.id }).from(pages).where(eq(pages.id, id))
   if (!existing) return undefined
   const rows = await db.select().from(pageLocales).where(eq(pageLocales.pageId, id))
-  return seoFromRows(rows)
+  return seoFromRows(rows, locales)
 }
 
 const allMediaExists = async (db: Database, ids: string[]) => {
@@ -382,15 +388,16 @@ export const writePageSeo = async (
   write: VersionedWrite
 ) => {
   const db = connect(d1)
+  const entries = Object.entries(seo)
   if (
     !(await allMediaExists(
       db,
-      LOCALES.flatMap((locale) => seo[locale].socialImageId ?? [])
+      entries.flatMap(([, { socialImageId }]) => socialImageId ?? [])
     ))
   ) {
     return PAGE_WRITE.unknownMedia
   }
   return writeVersioned(db, id, write, INVALIDATE_MISSING, (matches) =>
-    LOCALES.map((locale) => localeSeoUpdate(db, id, locale, seo[locale], matches))
+    entries.map(([locale, entry]) => localeSeoUpdate(db, id, locale, entry, matches))
   )
 }

@@ -46,10 +46,12 @@ function usePageForm(page: Page | undefined, onSaved: () => void) {
   const rename = useMutation(renamePageMutation(queryClient))
   const form = useAppForm({
     defaultValues: valuesOf(page),
-    validators: { onSubmit: ({ value }) => fieldErrorsOf(pageInputSchema.safeParse(value)) },
+    validators: {
+      onSubmit: ({ value }) => fieldErrorsOf(pageInputSchema(LOCALES).safeParse(value))
+    },
     onSubmit: async ({ value }) => {
       setFailure(undefined)
-      const input = pageInputSchema.parse(value)
+      const input = pageInputSchema(LOCALES).parse(value)
       try {
         if (page) await rename.mutateAsync({ id: page.id, input, expectedVersion: page.version })
         else await create.mutateAsync(input)
