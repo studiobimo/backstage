@@ -9,13 +9,17 @@ export const OBSERVABILITY = {
 
 type LogLevel = 'info' | 'error'
 
+export const logLine = (level: LogLevel, message: string, fields: Record<string, unknown> = {}) => {
+  console[level](JSON.stringify({ level, message, ...fields }))
+}
+
 export const logEvent = (
   level: LogLevel,
   context: Context,
   message: string,
   fields: Record<string, unknown> = {}
 ) => {
-  console[level](JSON.stringify({ level, requestId: context.get('requestId'), message, ...fields }))
+  logLine(level, message, { requestId: context.get('requestId'), ...fields })
 }
 
 export const respondHealthy = (context: Context) => context.json(OBSERVABILITY.health.body)

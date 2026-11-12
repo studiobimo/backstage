@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { expect } from 'vitest'
 import { z } from 'zod'
 
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '../blocks.ts'
@@ -35,6 +36,7 @@ const blockOf = (id: string, block: string, content: unknown): Snapshot['blocks'
 })
 
 export const snapshot = {
+  pageId: 'page-1',
   blocks: [
     blockOf('a', 'note', { text: 'first' }),
     blockOf('b', 'header', { text: 'a slot block' }),
@@ -46,3 +48,13 @@ export const snapshot = {
 }
 
 export const RENDERED_HTML = '<p>first</p><p>last</p>'
+
+export const DROPPED_BLOCKS = [
+  { blockId: 'b', reason: 'slot_block' },
+  { blockId: 'c', reason: 'unknown_block' },
+  { blockId: 'd', reason: 'invalid_content' },
+  { blockId: 'e', reason: 'missing_component' }
+].map((dropped) => expect.objectContaining({ pageId: 'page-1', ...dropped }))
+
+export const loggedErrors = (spy: { mock: { calls: unknown[][] } }) =>
+  spy.mock.calls.map(([line]) => JSON.parse(line as string))
