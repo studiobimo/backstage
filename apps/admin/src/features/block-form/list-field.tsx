@@ -31,6 +31,7 @@ import {
   fieldName,
   initialValue,
   isRecord,
+  isWithinPath,
   type Path,
   readValue,
   summarize
@@ -89,7 +90,7 @@ function useItemInvalid(form: BlockFormApi, path: Path) {
     (state) =>
       state.submissionAttempts > 0 &&
       Object.entries(state.fieldMeta).some(
-        ([key, meta]) => key.startsWith(name) && (meta?.errors.length ?? 0) > 0
+        ([key, meta]) => isWithinPath(key, name) && (meta?.errors.length ?? 0) > 0
       )
   )
 }
@@ -112,8 +113,13 @@ function ItemContent({ form, spec, path, label }: NodeProps<ListSpec>) {
 
 function ListItem({ name, initiallyOpen, onRemove, sortable, ...props }: ListItemProps) {
   const { t } = useTranslation('blockForm')
-  const [open, setOpen] = useState(initiallyOpen)
   const invalid = useItemInvalid(props.form, props.path)
+  const [open, setOpen] = useState(initiallyOpen || invalid)
+  const [wasInvalid, setWasInvalid] = useState(invalid)
+  if (invalid !== wasInvalid) {
+    setWasInvalid(invalid)
+    if (invalid) setOpen(true)
+  }
   return (
     <li
       ref={sortable?.ref}
@@ -122,7 +128,7 @@ function ListItem({ name, initiallyOpen, onRemove, sortable, ...props }: ListIte
         sortable?.dragging && 'z-10 shadow-lg ring-2 ring-ring/24'
       )}
     >
-      <Collapsible open={open || invalid} onOpenChange={setOpen}>
+      <Collapsible open={open} onOpenChange={setOpen}>
         <div className="flex items-center gap-1 p-1">
           {sortable?.handle}
           <CollapsibleTrigger className="group flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-start font-medium text-sm outline-none hover:bg-accent/48 focus-visible:ring-2 focus-visible:ring-ring">
