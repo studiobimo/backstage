@@ -122,7 +122,13 @@ export {
   writePageSeo
 } from './db/pages.ts'
 export type { PageWrite, VersionedWrite } from './db/pages.ts'
-export { planPublish, PUBLISH_PLAN, recordPublished, recordUnpublished } from './db/publishing.ts'
+export {
+  planPublish,
+  PUBLISH_PLAN,
+  readPublishedIndex,
+  recordPublished,
+  recordUnpublished
+} from './db/publishing.ts'
 export type { PublishPlan } from './db/publishing.ts'
 export {
   publishPageSchema,

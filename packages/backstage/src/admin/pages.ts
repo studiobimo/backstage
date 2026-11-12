@@ -32,7 +32,7 @@ import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
 import { readJsonBody, RESPONSE_STATUS, respondWithError } from './respond.ts'
-import { indexUnpublished, removeSnapshots } from './snapshots.ts'
+import { rebuildPublishedIndex, removeSnapshots } from './snapshots.ts'
 
 type PagesContext = Context<AccessEnv>
 
@@ -107,11 +107,10 @@ export const pagesRoutes = (registry: Registry) =>
     })
     .delete('/:id', async (c) => {
       const id = c.req.param('id')
-      if ((await findPage(c.env.DB, id))?.publishedAt) {
-        await removeSnapshots(c.env.SITE, id)
-        await indexUnpublished(c.env.SITE, id)
-      }
+      const wasPublished = Boolean((await findPage(c.env.DB, id))?.publishedAt)
+      if (wasPublished) await removeSnapshots(c.env.SITE, id)
       const failure = await failureOf(c, id, await deletePage(c.env.DB, id))
+      if (wasPublished) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return failure ?? c.body(null, RESPONSE_STATUS.noContent)
     })
     .get('/:id/blocks', async (c) => {

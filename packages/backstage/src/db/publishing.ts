@@ -1,8 +1,8 @@
-import { asc, eq, inArray } from 'drizzle-orm'
+import { asc, eq, inArray, isNotNull } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import type { Registry } from '../blocks.ts'
-import type { PageBlock } from '../pages.ts'
+import { LOCALES, type PageBlock } from '../pages.ts'
 import {
   buildSnapshots,
   checkBlocks,
@@ -13,6 +13,7 @@ import {
   type Snapshot,
   withSeoDefaults
 } from '../publishing.ts'
+import { SEO, type PublishedIndex, type PublishedPage } from '../seo.ts'
 import { readSiteSettings } from './settings.ts'
 import { media, pageBlocks, pageLocales, pages } from './schema.ts'
 
@@ -95,4 +96,36 @@ export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
     .where(eq(pages.id, id))
     .returning({ id: pages.id })
   return cleared.length > 0
+}
+
+const emptySlugs = () =>
+  Object.fromEntries(LOCALES.map((locale) => [locale, null])) as PublishedPage['slugs']
+
+export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIndex> => {
+  const rows = await drizzle(d1)
+    .select({
+      pageId: pages.id,
+      isHome: pages.isHome,
+      publishedAt: pages.publishedAt,
+      locale: pageLocales.locale,
+      slug: pageLocales.slug
+    })
+    .from(pages)
+    .leftJoin(pageLocales, eq(pageLocales.pageId, pages.id))
+    .where(isNotNull(pages.publishedAt))
+    .orderBy(asc(pages.publishedAt), asc(pages.id))
+  const entries = new Map<string, PublishedPage>()
+  for (const { pageId, isHome, publishedAt, locale, slug } of rows) {
+    const entry = entries.get(pageId) ?? {
+      pageId,
+      isHome,
+      publishedAt: publishedAt ?? 0,
+      slugs: emptySlugs()
+    }
+    if (locale && (LOCALES as readonly string[]).includes(locale)) {
+      entry.slugs[locale as keyof PublishedPage['slugs']] = slug
+    }
+    entries.set(pageId, entry)
+  }
+  return { format: SEO.format, pages: [...entries.values()] }
 }

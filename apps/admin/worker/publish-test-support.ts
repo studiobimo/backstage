@@ -25,8 +25,13 @@ export const addMedia = (id: string) =>
     .bind(id, `media/${id}.png`, JSON.stringify({ en: 'A cat', es: 'Un gato' }))
     .run()
 
-export const publish = async (id: string, expectedVersion?: number) =>
-  send('POST', `/${id}/publish`, { expectedVersion: expectedVersion ?? (await versionOf(id)) })
+export const publish = async (id: string, expectedVersion?: number, bindings: Partial<Env> = {}) =>
+  send(
+    'POST',
+    `/${id}/publish`,
+    { expectedVersion: expectedVersion ?? (await versionOf(id)) },
+    bindings
+  )
 
 export const snapshotOf = async (id: string, locale: 'en' | 'es') =>
   snapshotSchema.parse(JSON.parse((await kv.get(snapshotKey(id, locale)))!))

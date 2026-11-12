@@ -1,14 +1,13 @@
+import type { Context } from 'hono'
+
 import {
-  EMPTY_PUBLISHED_INDEX,
-  publishedIndexSchema,
-  removeFromIndex,
+  logEvent,
+  readPublishedIndex,
   SEO,
   routeKeysOf,
   snapshotKeysOf,
   snapshotRecords,
   snapshotSchema,
-  upsertIntoIndex,
-  type PublishedIndex,
   type Snapshot
 } from '../index.ts'
 
@@ -45,16 +44,12 @@ export const removeSnapshots = async (kv: KVNamespace, pageId: string) => {
   await deleteRoutesOwnedBy(kv, pageId, routes)
 }
 
-const readIndex = async (kv: KVNamespace): Promise<PublishedIndex> => {
-  const parsed = publishedIndexSchema.safeParse(await kv.get(SEO.indexKey, 'json'))
-  return parsed.success ? parsed.data : EMPTY_PUBLISHED_INDEX
+export const rebuildPublishedIndex = async (context: Context, d1: D1Database, kv: KVNamespace) => {
+  try {
+    await kv.put(SEO.indexKey, JSON.stringify(await readPublishedIndex(d1)))
+  } catch (error) {
+    logEvent('error', context, SEO.log.rebuildFailed, {
+      error: error instanceof Error ? error.message : String(error)
+    })
+  }
 }
-
-const writeIndex = (kv: KVNamespace, index: PublishedIndex) =>
-  kv.put(SEO.indexKey, JSON.stringify(index))
-
-export const indexPublished = async (kv: KVNamespace, snapshots: readonly Snapshot[]) =>
-  writeIndex(kv, upsertIntoIndex(await readIndex(kv), snapshots))
-
-export const indexUnpublished = async (kv: KVNamespace, pageId: string) =>
-  writeIndex(kv, removeFromIndex(await readIndex(kv), pageId))

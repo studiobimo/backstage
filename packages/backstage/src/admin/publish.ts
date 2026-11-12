@@ -15,7 +15,7 @@ import { Hono } from 'hono'
 import type { AccessEnv } from './auth.ts'
 import { respondStale } from './pages.ts'
 import { readJsonBody, respondWithError } from './respond.ts'
-import { indexPublished, indexUnpublished, removeSnapshots, writeSnapshots } from './snapshots.ts'
+import { rebuildPublishedIndex, removeSnapshots, writeSnapshots } from './snapshots.ts'
 
 export const publishRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()
@@ -34,8 +34,13 @@ export const publishRoutes = (registry: Registry) =>
         )
       }
       await writeSnapshots(c.env.SITE, plan.snapshots)
-      await recordPublished(c.env.DB, id, await ensureUser(c.env.DB, c.get('editor')), publishedAt)
-      await indexPublished(c.env.SITE, plan.snapshots)
+      await recordPublished(
+        c.env.DB,
+        id,
+        await ensureUser(c.env.DB, c.get('editor')),
+        publishedAt
+      )
+      await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return c.json({ page: await findPage(c.env.DB, id) })
     })
     .delete('/:id/publish', async (c) => {
@@ -43,6 +48,6 @@ export const publishRoutes = (registry: Registry) =>
       if (!(await findPage(c.env.DB, id))) return respondWithError(c, API_ERROR.notFound)
       await removeSnapshots(c.env.SITE, id)
       await recordUnpublished(c.env.DB, id)
-      await indexUnpublished(c.env.SITE, id)
+      await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return c.json({ page: await findPage(c.env.DB, id) })
     })
