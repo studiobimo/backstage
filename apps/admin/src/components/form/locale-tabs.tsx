@@ -18,7 +18,7 @@ export function LocaleTabs({ form, localeLabel, attentionLabel, renderLocale }: 
   const invalid = useStore(form.store, (state) => localesWithErrors(state.fieldMeta))
   return (
     <Tabs defaultValue={LOCALES[0]}>
-      <TabsList className="w-full">
+      <TabsList className="w-full text-muted-foreground">
         {LOCALES.map((locale) => (
           <TabsTab key={locale} value={locale} className="flex-1 gap-2">
             {localeLabel(locale)}

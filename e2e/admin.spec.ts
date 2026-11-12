@@ -1,5 +1,5 @@
 import { expectNoAxeViolations } from './axe'
-import { test } from './fixtures'
+import { expect, test } from './fixtures'
 
 for (const path of ['/pages', '/settings', '/media']) {
   test(`axe finds no violations on ${path}`, async ({ page }) => {
@@ -8,3 +8,10 @@ for (const path of ['/pages', '/settings', '/media']) {
     await expectNoAxeViolations(page, path)
   })
 }
+
+test('axe finds no violations in the new page sheet', async ({ page }) => {
+  await page.goto('/pages')
+  await page.getByRole('button', { name: 'New page' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expectNoAxeViolations(page, 'the new page sheet')
+})

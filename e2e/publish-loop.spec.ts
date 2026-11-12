@@ -118,8 +118,8 @@ test('unpublishing a page makes the site answer not found', async ({ page }) => 
   await fillHeroBasics(page, hero, under.titles.en)
   await saveDraft(page)
   await publishPage(page)
-  const live = await page.request.get(`${siteUrl}/${under.slug}?probe=live`)
-  expect(live.status()).toBe(200)
+  const sitemap = await page.request.get(`${siteUrl}/sitemap.xml`)
+  expect(await sitemap.text()).toContain(`/${under.slug}<`)
 
   await unpublishPage(page, under.titles.en)
 
