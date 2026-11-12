@@ -110,6 +110,77 @@ In working order. Status lives in the
 14. [#214](https://github.com/studiobimo/backstage/issues/214) frame the site's block preview in `/blocks` (closes #199)
 15. [#215](https://github.com/studiobimo/backstage/issues/215) check the site has no D1 binding and no admin secret
 
+## M1.6: Hardening
+
+A review of M1, M1.5 and M2 found bugs, races and footguns that a client project would hit on
+its first install. They are fixed before the package goes to client projects, so the first
+installs do not inherit them.
+
+**Stories:** PUB-1 to PUB-5; PAG-1 to PAG-6; BLK-1 to BLK-6; MED-1, MED-2, MED-4; LOC-1 to LOC-4;
+AUT-1, AUT-2; OPS-3; PKG-1 to PKG-3, PKG-5, PKG-6.
+
+### Exit criteria
+
+- Unpublishing, deleting or renaming one page never changes what another page serves
+- The header, footer and site name an editor saves reach the site through publishing
+- An editor can tell a page whose saved changes are not yet live from one that is up to date
+- Page writes and publishing leave D1 and KV consistent after a failure or concurrent edits,
+  and the sitemap keeps every published page
+- Every environment declares its bindings, and a missing one fails with a clear error
+- Bots cannot use up the free plan's KV reads through query strings or impossible paths
+- CI runs on every pull request, and a release is published by the workflow
+- The built admin works under its own Content-Security-Policy, and the end-to-end run fails on a
+  console error
+- A page cannot be published with a required field empty in the default locale
+- A site sets its own locales and default locale
+- Site settings and slots are never lost or overwritten silently, and a refused save names the
+  field
+- The package's public API is listed, and its server code is out of the site's reach
+- Each issue below ships with a test that fails without its fix
+
+### Issues
+
+In working order. Status lives in the
+[milestone](https://github.com/studiobimo/backstage/milestone/11).
+
+1. [#271](https://github.com/studiobimo/backstage/issues/271) get the release workflow running and prove it publishes a release
+2. [#247](https://github.com/studiobimo/backstage/issues/247) keep unpublishing a page from deleting a route another page owns
+3. [#251](https://github.com/studiobimo/backstage/issues/251) allow only one home page at the database level
+4. [#252](https://github.com/studiobimo/backstage/issues/252) save the page version and its content in one transaction
+5. [#253](https://github.com/studiobimo/backstage/issues/253) stop concurrent publishes from losing sitemap entries
+6. [#249](https://github.com/studiobimo/backstage/issues/249) show when a published page has saved changes that are not live
+7. [#248](https://github.com/studiobimo/backstage/issues/248) publish the header, footer and site name to the site
+8. [#250](https://github.com/studiobimo/backstage/issues/250) find images and translations inside nullable and union fields
+9. [#255](https://github.com/studiobimo/backstage/issues/255) localize call-to-action links and image alt overrides
+10. [#269](https://github.com/studiobimo/backstage/issues/269) refuse to publish a required localized field with no default-locale value
+11. [#254](https://github.com/studiobimo/backstage/issues/254) declare every binding per environment and fail clearly when one is missing
+12. [#256](https://github.com/studiobimo/backstage/issues/256) stop query strings and impossible paths from spending KV reads
+13. [#257](https://github.com/studiobimo/backstage/issues/257) keep the pages list within the free plan's CPU limit
+14. [#258](https://github.com/studiobimo/backstage/issues/258) reject unsafe hrefs in link fields by default
+15. [#259](https://github.com/studiobimo/backstage/issues/259) tighten dev auth, cross-site writes and API request headers
+16. [#268](https://github.com/studiobimo/backstage/issues/268) let the CSP allow the upload preview and the rich text editor's styles
+17. [#280](https://github.com/studiobimo/backstage/issues/280) cover the block form, CSP errors and unpublish end to end
+18. [#264](https://github.com/studiobimo/backstage/issues/264) validate blocks once at publish and log any block the site drops
+19. [#276](https://github.com/studiobimo/backstage/issues/276) return field errors from the API so the form can show what the server refused
+20. [#272](https://github.com/studiobimo/backstage/issues/272) show the copied text when a rich text field copies another language
+21. [#273](https://github.com/studiobimo/backstage/issues/273) clear the new page form after it is cancelled or saved
+22. [#274](https://github.com/studiobimo/backstage/issues/274) show each page's real address on the site
+23. [#275](https://github.com/studiobimo/backstage/issues/275) guard site settings and slots against lost and overwritten changes
+24. [#282](https://github.com/studiobimo/backstage/issues/282) say what went wrong when an action fails
+25. [#283](https://github.com/studiobimo/backstage/issues/283) name every screen in the breadcrumb and the document title
+26. [#284](https://github.com/studiobimo/backstage/issues/284) flag only the list item that has the error
+27. [#285](https://github.com/studiobimo/backstage/issues/285) keep one h1 and no empty elements in the example blocks
+28. [#263](https://github.com/studiobimo/backstage/issues/263) read image sizes from the file and fall back to WebP when PNG is too large
+29. [#260](https://github.com/studiobimo/backstage/issues/260) let the site serve its own block thumbnails
+30. [#270](https://github.com/studiobimo/backstage/issues/270) configure a site's locales and default locale
+31. [#277](https://github.com/studiobimo/backstage/issues/277) split the package's entry points and shrink its public API
+32. [#278](https://github.com/studiobimo/backstage/issues/278) give the site worker a `createSite` like the admin's `createAdmin`
+33. [#279](https://github.com/studiobimo/backstage/issues/279) republish every published page in one action
+34. [#261](https://github.com/studiobimo/backstage/issues/261) publish the package so consumers need not compile its source
+35. [#262](https://github.com/studiobimo/backstage/issues/262) build canonical and sitemap URLs from a configured site URL
+36. [#281](https://github.com/studiobimo/backstage/issues/281) check every migration against the drizzle schema
+37. [#286](https://github.com/studiobimo/backstage/issues/286) bring the ADRs, PRD and risks back in line with the code
+
 ## M2: Package
 
 Backstage becomes something a client project installs, rather than code it copies.
