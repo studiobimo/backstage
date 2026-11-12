@@ -85,10 +85,16 @@ export const pageBlocks = sqliteTable(
   (t) => [index('page_blocks_page').on(t.pageId, t.position)]
 )
 
+const versionStamp = () => ({
+  version: integer('version').notNull().default(1),
+  updatedAt: integer('updated_at').notNull().$defaultFn(now),
+  updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
+})
+
 export const siteSettings = sqliteTable('site_settings', {
   id: text('id').primaryKey(),
   content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
-  updatedAt: integer('updated_at').notNull().$defaultFn(now)
+  ...versionStamp()
 })
 
 export const siteBlocks = sqliteTable('site_blocks', {
@@ -96,5 +102,5 @@ export const siteBlocks = sqliteTable('site_blocks', {
   block: text('block').notNull(),
   schemaVersion: integer('schema_version').notNull().default(1),
   content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
-  updatedAt: integer('updated_at').notNull().$defaultFn(now)
+  ...versionStamp()
 })

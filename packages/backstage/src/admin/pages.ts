@@ -2,8 +2,6 @@ import {
   API_ERROR,
   createPage,
   deletePage,
-  ensureUser,
-  errorBody,
   findPage,
   listMissingTranslations,
   listPageBlocks,
@@ -24,14 +22,19 @@ import {
   type Registry,
   type ApiError,
   type MissingByLocale,
-  type PageWrite,
-  type VersionedWrite
+  type PageWrite
 } from '../index.ts'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
-import { readJsonBody, RESPONSE_STATUS, respondWithError } from './respond.ts'
+import {
+  readJsonBody,
+  RESPONSE_STATUS,
+  respondWithError,
+  respondWithStale,
+  versionedWrite
+} from './respond.ts'
 import { rebuildPublishedIndex, removeSnapshots } from './snapshots.ts'
 
 type PagesContext = Context<AccessEnv>
@@ -47,10 +50,7 @@ const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok' | 'stale'>, ApiError> = {
 }
 
 export const respondStale = async (c: PagesContext, id: string) =>
-  c.json(
-    { ...errorBody(API_ERROR.staleVersion), current: await readPageStamp(c.env.DB, id) },
-    API_ERROR.staleVersion.status
-  )
+  respondWithStale(c, await readPageStamp(c.env.DB, id))
 
 const failureOf = async (c: PagesContext, id: string, outcome: PageWrite) => {
   if (outcome === PAGE_WRITE.ok) return null
@@ -72,14 +72,6 @@ const seoResponse = async (c: PagesContext, id: string) => {
   const [seo, page] = await Promise.all([readPageSeo(c.env.DB, id), findPage(c.env.DB, id)])
   return seo && page ? c.json({ seo, version: page.version }) : null
 }
-
-const versionedWrite = async (
-  c: PagesContext,
-  expectedVersion: number
-): Promise<VersionedWrite> => ({
-  expectedVersion,
-  editorId: await ensureUser(c.env.DB, c.get('editor'))
-})
 
 const listPageSummaries = async (d1: D1Database, registry: Registry) => {
   const [pages, missing] = await Promise.all([listPages(d1), listMissingTranslations(d1, registry)])

@@ -91,20 +91,22 @@ export type {
 } from './pages.ts'
 export {
   EMPTY_SITE_SETTINGS,
+  saveSiteSettingsSchema,
   SETTINGS,
   siteSettingsJsonSchema,
   siteSettingsResponseSchema,
   siteSettingsSchema
 } from './settings.ts'
-export type { SiteSettings } from './settings.ts'
+export type { SiteSettings, VersionedSiteSettings } from './settings.ts'
 export {
   layoutsResponseSchema,
+  saveSiteBlockSchema,
   siteBlockSchema,
   slotResponseSchema,
   slotSchema,
   slotsResponseSchema
 } from './slots.ts'
-export type { SiteBlock, Slot } from './slots.ts'
+export type { SiteBlock, Slot, StoredSiteBlock } from './slots.ts'
 export * from './db/schema.ts'
 export {
   createPage,
@@ -121,7 +123,7 @@ export {
   setPageLayout,
   writePageSeo
 } from './db/pages.ts'
-export type { PageWrite, VersionedWrite } from './db/pages.ts'
+export type { PageWrite } from './db/pages.ts'
 export {
   planPublish,
   PUBLISH_PLAN,
@@ -168,5 +170,12 @@ export {
 export type { MissingByLocale, TranslatedNode } from './translations.ts'
 export { ensureUser } from './db/users.ts'
 export type { Editor } from './db/users.ts'
-export { readSiteSettings, writeSiteSettings } from './db/settings.ts'
-export { readSiteBlocks, writeSiteBlock } from './db/site-blocks.ts'
+export {
+  readSiteSettings,
+  readSiteSettingsStamp,
+  readVersionedSiteSettings,
+  writeSiteSettings
+} from './db/settings.ts'
+export { readSiteBlocks, readSiteBlockStamp, writeSiteBlock } from './db/site-blocks.ts'
+export { ROW_VERSION, ROW_WRITE } from './db/versioned-row.ts'
+export type { RowWrite, VersionedWrite } from './db/versioned-row.ts'

@@ -10,8 +10,7 @@ import {
   type Page,
   type PageBlock,
   type PageInput,
-  type PageSeo,
-  type PageStamp
+  type PageSeo
 } from '../pages.ts'
 import { upgradeBlockContent, type Registry } from '../blocks.ts'
 import {
@@ -20,6 +19,7 @@ import {
   type MissingByLocale,
   type TranslatedNode
 } from '../translations.ts'
+import { readStamp, type VersionedWrite } from './versioned-row.ts'
 import { media, pageBlocks, pageLocales, pages, users } from './schema.ts'
 
 type Database = ReturnType<typeof drizzle>
@@ -273,11 +273,6 @@ export const listPageBlocks = async (d1: AnyD1Database, pageId: string): Promise
   return rows.map(toPageBlock)
 }
 
-export interface VersionedWrite {
-  expectedVersion: number
-  editorId: string
-}
-
 const versionMatches = (db: Database, id: string, expectedVersion: number) =>
   exists(
     db
@@ -309,24 +304,8 @@ const writeVersioned = async (
   return existing ? PAGE_WRITE.stale : PAGE_WRITE.notFound
 }
 
-export const readPageStamp = async (d1: AnyD1Database, id: string): Promise<PageStamp | null> => {
-  const [row] = await connect(d1)
-    .select({
-      version: pages.version,
-      updatedAt: pages.updatedAt,
-      name: users.name,
-      email: users.email
-    })
-    .from(pages)
-    .leftJoin(users, eq(users.id, pages.updatedBy))
-    .where(eq(pages.id, id))
-  if (!row) return null
-  return {
-    version: row.version,
-    updatedAt: row.updatedAt,
-    updatedBy: row.name || row.email || null
-  }
-}
+export const readPageStamp = (d1: AnyD1Database, id: string) =>
+  readStamp(d1, pages, eq(pages.id, id))
 
 const insertBlockIfMatched = (
   db: Database,
