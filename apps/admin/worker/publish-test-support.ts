@@ -1,13 +1,18 @@
 import { publishedIndexSchema, SEO, snapshotKey, snapshotSchema } from '@studiobimo/backstage'
 import { db, kv, send, versionOf } from './pages-test-support'
 
+const welcomeDoc = {
+  type: 'doc',
+  content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Welcome' }] }]
+}
+
 export const hero = (pictureId = 'm1') => ({
   id: 'b1',
   block: 'split-hero',
   schemaVersion: 2,
   content: {
     title: { en: 'Hello', es: 'Hola' },
-    body: {},
+    body: { en: welcomeDoc },
     cta: { en: { href: '/contact', label: 'Contact' } },
     picture: { id: pictureId, alt: '' },
     theme: 'light'

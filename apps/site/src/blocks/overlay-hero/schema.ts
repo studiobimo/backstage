@@ -5,7 +5,7 @@ import { ctaLink } from '../schema-parts.ts'
 
 export const overlayHeroSchema = z.object({
   title: localized(z.string().min(1)),
-  body: localized(richText()),
+  body: localized(richText()).optional(),
   cta: ctaLink().optional(),
   background: image(),
   tint: z.enum(['none', 'light', 'dark']).default('dark'),

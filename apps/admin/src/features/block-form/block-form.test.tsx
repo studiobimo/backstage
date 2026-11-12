@@ -115,6 +115,18 @@ describe('BlockForm locales', () => {
     expect(spanish).not.toHaveTextContent('missing')
   })
 
+  it('asks for the required localized fields in the default language only', async () => {
+    const { user } = setup()
+    const optionalMarks = () => screen.queryAllByText('Optional').length
+    const inEnglish = optionalMarks()
+    expect(screen.getAllByText('Required')).toHaveLength(2)
+    await user.type(textbox('Title'), 'Fresh coffee')
+    expect(screen.getAllByText('Required')).toHaveLength(1)
+    await user.click(screen.getByRole('button', { name: /Spanish/ }))
+    expect(screen.queryByText('Required')).not.toBeInTheDocument()
+    expect(optionalMarks()).toBe(inEnglish + 2)
+  })
+
   it('opens the locale with errors when saving finds them only there', async () => {
     const { user } = setup({ value: { title: { es: '' } } })
     await user.click(screen.getByRole('button', { name: 'Save' }))

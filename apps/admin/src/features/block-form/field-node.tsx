@@ -142,7 +142,7 @@ function GroupNode(props: NodeProps<GroupSpec>) {
       <GroupLegend
         label={label}
         badge={chrome?.badge}
-        optional={!spec.required && !props.translated}
+        optional={chrome?.optional ?? (!spec.required && !props.translated)}
         section={section}
       />
       {spec.description && (

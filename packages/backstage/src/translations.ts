@@ -1,5 +1,5 @@
 import type { FieldKind } from './fields.ts'
-import { LOCALES, type Locale, type PageSeo } from './pages.ts'
+import { DEFAULT_LOCALE, LOCALES, type Locale, type PageSeo } from './pages.ts'
 
 export type TranslatedNode =
   | boolean
@@ -47,6 +47,11 @@ export function isMissingTranslation(translations: Record<string, unknown>, loca
 export interface MarkedField {
   path: string
   value: unknown
+  required: boolean
+}
+
+export function lacksDefaultLocale(translations: unknown, defaultLocale: string = DEFAULT_LOCALE) {
+  return !isRecord(translations) || isBlank(translations[defaultLocale])
 }
 
 const childPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)
@@ -92,14 +97,15 @@ export function markedFieldsIn(
   node: TranslatedNode,
   value: unknown,
   kind: FieldKind,
-  path = ''
+  path = '',
+  required = true
 ): MarkedField[] {
   if (typeof node === 'boolean') return []
-  if (node.backstage === kind) return [{ path, value }]
+  if (node.backstage === kind) return [{ path, value, required }]
   const branches = [...(node.anyOf ?? []), ...(node.oneOf ?? [])]
   const inBranches = branches
     .filter((branch) => fitsValue(branch, value))
-    .flatMap((branch) => markedFieldsIn(branch, value, kind, path))
+    .flatMap((branch) => markedFieldsIn(branch, value, kind, path, required))
   return firstPerPath([...inBranches, ...markedFieldsInShape(node, value, kind, path)])
 }
 
@@ -119,7 +125,15 @@ function markedFieldsInShape(
   const extraKeys = additionalProperties === undefined ? [] : Object.keys(record)
   return [...new Set([...Object.keys(properties), ...extraKeys])].flatMap((key) => {
     const child = properties[key] ?? additionalProperties
-    return child === undefined ? [] : markedFieldsIn(child, record[key], kind, childPath(path, key))
+    return child === undefined
+      ? []
+      : markedFieldsIn(
+          child,
+          record[key],
+          kind,
+          childPath(path, key),
+          properties[key] === undefined || (node.required ?? []).includes(key)
+        )
   })
 }
 

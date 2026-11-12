@@ -145,6 +145,7 @@ export {
   countMissingTranslations,
   isBlank,
   isMissingTranslation,
+  lacksDefaultLocale,
   isSeoMissing,
   richTextPlain
 } from './translations.ts'

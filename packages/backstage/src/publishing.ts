@@ -4,7 +4,12 @@ import { validateBlockContent, type Registry } from './blocks.ts'
 import { LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
 import type { SiteSettings } from './settings.ts'
 import { RICH_TEXT } from './rich-text.ts'
-import { isRecord, markedFieldsIn, type TranslatedNode } from './translations.ts'
+import {
+  isRecord,
+  lacksDefaultLocale,
+  markedFieldsIn,
+  type TranslatedNode
+} from './translations.ts'
 
 export const SNAPSHOT = {
   format: 1,
@@ -37,6 +42,7 @@ const PUBLISH_PROBLEM = {
   invalidContent: 'invalid_content',
   unknownMedia: 'unknown_media',
   unsafeLink: 'unsafe_link',
+  missingDefaultLocale: 'missing_default_locale',
   missingSlug: 'missing_slug'
 } as const
 
@@ -157,6 +163,11 @@ const unsafeLinkPathsIn = (node: TranslatedNode, value: unknown): string[] =>
       : []
   )
 
+const missingDefaultLocalePathsIn = (node: TranslatedNode, value: unknown): string[] =>
+  markedFieldsIn(node, value, 'localized').flatMap(({ path, value: entry, required }) =>
+    required && lacksDefaultLocale(entry) ? [path] : []
+  )
+
 export const referencedMediaIds = (
   registry: Registry,
   blocks: readonly PageBlock[],
@@ -207,6 +218,11 @@ const referenceProblems = (
   ...draft.blocks.flatMap(({ id, block, content }) =>
     unsafeLinkPathsIn(registry.jsonSchema(block), content).map(
       (path) => rejection(PUBLISH_PROBLEM.unsafeLink, id, path).problem
+    )
+  ),
+  ...draft.blocks.flatMap(({ id, block, content }) =>
+    missingDefaultLocalePathsIn(registry.jsonSchema(block), content).map(
+      (path) => rejection(PUBLISH_PROBLEM.missingDefaultLocale, id, path).problem
     )
   ),
   ...(draft.locales.some(({ socialImageId }) => socialImageId && !media.has(socialImageId))

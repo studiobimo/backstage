@@ -1,4 +1,4 @@
-import { isMissingTranslation } from '@studiobimo/backstage'
+import { isMissingTranslation, lacksDefaultLocale } from '@studiobimo/backstage'
 import { useStore } from '@tanstack/react-form'
 import { CopyIcon, LanguagesIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -18,13 +18,25 @@ function useTranslations(form: BlockFormApi, path: Path) {
   return isRecord(value) ? value : {}
 }
 
-function LocaleBadge({ form, path }: { form: BlockFormApi; path: Path }) {
+function LocaleBadge({
+  form,
+  path,
+  required
+}: {
+  form: BlockFormApi
+  path: Path
+  required: boolean
+}) {
   const { t } = useTranslation('blockForm')
-  const { active } = useEditingLocale()
-  const missing = isMissingTranslation(useTranslations(form, path), active)
+  const { active, fallback } = useEditingLocale()
+  const translations = useTranslations(form, path)
+  const needsDefault = required && active === fallback && lacksDefaultLocale(translations, active)
   return (
     <>
-      {missing && <Badge variant="warning">{t('locale.missing')}</Badge>}
+      {needsDefault && <Badge variant="warning">{t('locale.required')}</Badge>}
+      {!needsDefault && isMissingTranslation(translations, active) && (
+        <Badge variant="warning">{t('locale.missing')}</Badge>
+      )}
       <Badge variant="outline" title={t('locale.perLanguage')}>
         <LanguagesIcon aria-hidden />
         {active.toUpperCase()}
@@ -70,7 +82,8 @@ function FallbackReference({ form, path }: { form: BlockFormApi; path: Path }) {
 export function LocalizedField({ form, spec, path, label }: NodeProps<LocalizedSpec>) {
   const { active, fallback } = useEditingLocale()
   const chrome = {
-    badge: <LocaleBadge form={form} path={path} />,
+    optional: !(spec.required && active === fallback),
+    badge: <LocaleBadge form={form} path={path} required={spec.required} />,
     footer: active === fallback ? undefined : <FallbackReference form={form} path={path} />
   }
   return (

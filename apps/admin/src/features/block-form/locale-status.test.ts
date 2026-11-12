@@ -14,8 +14,15 @@ describe('localeStatus', () => {
       [],
       locales
     )
-    expect(status.en).toEqual({ missing: 1, invalid: 0 })
+    expect(status.en).toEqual({ missing: 2, invalid: 0 })
     expect(status.es).toEqual({ missing: 1, invalid: 0 })
+  })
+
+  it('counts a required field with no default-language value as missing in that language', () => {
+    const status = localeStatus(root, { title: { es: 'Hola' } }, [], locales)
+    expect(status.en.missing).toBe(2)
+    expect(status.es.missing).toBe(0)
+    expect(localeStatus(root, { title: {} }, [], locales).es.missing).toBe(0)
   })
 
   it('does not count a field that no locale has filled', () => {
