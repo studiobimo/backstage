@@ -8,6 +8,7 @@ export type TranslatedNode =
       type?: string | string[]
       required?: string[]
       const?: unknown
+      enum?: unknown[]
       anyOf?: TranslatedNode[]
       oneOf?: TranslatedNode[]
       properties?: Record<string, TranslatedNode>

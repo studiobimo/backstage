@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { TranslatedNode } from './translations.ts'
+import { unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
 
 const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
@@ -98,38 +98,6 @@ function indexSlots(
     bySlot.set(slot, [...names])
   }
   return bySlot
-}
-
-const SCALAR_TYPES = new Set(['string', 'number', 'integer', 'boolean'])
-const OPAQUE_KINDS = new Set(['richText', 'image', 'link'])
-
-const joinPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)
-
-type SchemaNode = Exclude<TranslatedNode, boolean>
-
-function childrenOf(node: SchemaNode, path: string): [SchemaNode, string][] {
-  const { items, additionalProperties, properties = {} } = node
-  const children: [TranslatedNode | undefined, string][] = [
-    [Array.isArray(items) ? undefined : items, path],
-    [additionalProperties, path],
-    ...Object.entries(properties).map(([key, child]): [TranslatedNode, string] => [
-      child,
-      joinPath(path, key)
-    ])
-  ]
-  return children.flatMap(([child, childPath]) =>
-    child === undefined || typeof child === 'boolean' ? [] : [[child, childPath]]
-  )
-}
-
-function unrenderableFieldIn(node: SchemaNode, path: string): string | undefined {
-  if (node.backstage && OPAQUE_KINDS.has(node.backstage)) return undefined
-  const isScalar = typeof node.type === 'string' && SCALAR_TYPES.has(node.type)
-  const isContainer = node.type === 'object' || node.type === 'array'
-  if (!isScalar && !isContainer && !('enum' in node)) return path
-  return childrenOf(node, path)
-    .map(([child, childPath]) => unrenderableFieldIn(child, childPath))
-    .find((found) => found !== undefined)
 }
 
 function assertRenderable(block: Block) {
