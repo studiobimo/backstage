@@ -28,11 +28,16 @@ const failureShape = z.object({
   problems: publishProblemsResponseSchema.shape.problems.nullish()
 })
 
+const requestHeaders = (init?: RequestInit) => {
+  const headers = new Headers(init?.headers)
+  if (!(init?.body instanceof FormData) && !headers.has('content-type')) {
+    headers.set('content-type', 'application/json')
+  }
+  return headers
+}
+
 export const apiRequest = async (path: string, init?: RequestInit) => {
-  const response = await fetch(`${API_ROOT}${path}`, {
-    ...init,
-    headers: init?.body instanceof FormData ? undefined : { 'content-type': 'application/json' }
-  })
+  const response = await fetch(`${API_ROOT}${path}`, { ...init, headers: requestHeaders(init) })
   if (response.ok) return response
   const failure = failureShape.safeParse(await response.json().catch(() => null))
   const { code, error, current, problems } = failure.success

@@ -102,6 +102,11 @@ On every `/api/*` request, `packages/backstage/src/admin/auth.ts` does this:
 - require the issuer to be the team domain and the audience to be `ACCESS_AUD`
 - answer `403` if the header, either variable or a valid signature is missing
 
+After that, `csrf()` rejects a write whose `Origin` is another site, and a `POST`, `PUT` or `PATCH`
+must send `application/json` (the image upload sends `multipart/form-data`). Do not rely on the
+`CF_Authorization` cookie's SameSite attribute for this: Cloudflare's default is `None`. Set the
+application's SameSite attribute to Lax or Strict as well.
+
 The check runs before routing, so an unknown path gets `403` as well, not `404`. It does this itself because `ctx.access`, the shortcut Cloudflare offers for Workers, is not
 passed to a worker that has static assets, which the admin does.
 
@@ -109,7 +114,7 @@ passed to a worker that has static assets, which the admin does.
 
 Put `DEV_AUTH=true` in `.dev.vars` (see `.dev.vars.example`) and the check is skipped. The bypass
 only works for requests to `localhost`, `127.0.0.1` or `[::1]`. On any other host, a worker with
-`DEV_AUTH` set to anything answers `500` to every `/api/*` request, even one with a valid token, so
+`DEV_AUTH` set to `true` answers `500` to every `/api/*` request, even one with a valid token, so
 a deploy that carries it is refused rather than left open (AUT-2). A test also fails if
 `wrangler.jsonc` mentions `DEV_AUTH`.
 

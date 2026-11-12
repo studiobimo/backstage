@@ -10,6 +10,7 @@ const ACCESS = {
   algorithms: ['RS256'],
   certsCacheSeconds: 300,
   localHostnames: ['localhost', '127.0.0.1', '[::1]'],
+  devAuthValue: 'true',
   devEditor: { email: 'dev@localhost', name: 'Local developer' }
 } as const
 
@@ -49,7 +50,7 @@ const verifiedEditor = async (token: string, teamDomain: string, audience: strin
 export const requireAccess = createMiddleware<AccessEnv>(async (c, next) => {
   const { DEV_AUTH, ACCESS_TEAM_DOMAIN, ACCESS_AUD } = c.env
 
-  if (DEV_AUTH) {
+  if (DEV_AUTH === ACCESS.devAuthValue) {
     if (!isLocalRequest(c.req.url)) {
       logEvent('error', c, API_ERROR.devAuthOutsideLocal.message)
       return respondWithError(c, API_ERROR.devAuthOutsideLocal)

@@ -63,7 +63,7 @@ describe('settings API', () => {
   it('refuses a body that is not JSON', async () => {
     const response = await app.request(
       '/api/v1/settings',
-      { method: 'PUT', body: 'nope' },
+      { method: 'PUT', headers: { 'content-type': 'application/json' }, body: 'nope' },
       env.localDevelopment
     )
     expect(response.status).toBe(400)

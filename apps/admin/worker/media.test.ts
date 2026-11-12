@@ -52,7 +52,11 @@ const upload = async (
     {
       method: 'POST',
       body: bytes,
-      headers: { 'content-type': contentType, ...headers({ contentLength }) }
+      headers: {
+        'content-type': contentType,
+        origin: 'http://localhost',
+        ...headers({ contentLength })
+      }
     },
     bindings
   )
