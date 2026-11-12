@@ -8,7 +8,7 @@ import {
   snapshotKeysOf,
   snapshotRecords,
   siteSnapshotRecords,
-  snapshotSchema,
+  readableSnapshotSchema,
   type SiteSnapshot,
   type Snapshot
 } from '../index.ts'
@@ -16,7 +16,7 @@ import {
 const readSnapshots = async (kv: KVNamespace, pageId: string) =>
   (await Promise.all(snapshotKeysOf(pageId).map((key) => kv.get(key, { type: 'json' })))).flatMap(
     (stored) => {
-      const parsed = snapshotSchema.safeParse(stored)
+      const parsed = readableSnapshotSchema.safeParse(stored)
       return parsed.success ? [parsed.data] : []
     }
   )

@@ -1,4 +1,4 @@
-import { asc, eq, inArray, isNotNull } from 'drizzle-orm'
+import { and, asc, count, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import type { Registry } from '../blocks.ts'
@@ -12,6 +12,7 @@ import {
   type PublishProblem,
   type Snapshot
 } from '../publishing.ts'
+import type { RepublishScope } from '../republish.ts'
 import { SEO, type PublishedIndex, type PublishedPage } from '../seo.ts'
 import { media, pageBlocks, pageLocales, pages } from './schema.ts'
 
@@ -131,4 +132,30 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
     entries.set(pageId, entry)
   }
   return { format: SEO.format, pages: [...entries.values()] }
+}
+
+const republishFilter = ({ since, cursor }: RepublishScope) =>
+  and(
+    isNotNull(pages.publishedAt),
+    since === null ? undefined : lt(pages.publishedAt, since),
+    cursor === null ? undefined : gt(pages.id, cursor)
+  )
+
+export const readRepublishBatch = (d1: AnyD1Database, scope: RepublishScope, limit: number) =>
+  drizzle(d1)
+    .select({ id: pages.id, version: pages.version })
+    .from(pages)
+    .where(republishFilter(scope))
+    .orderBy(asc(pages.id))
+    .limit(limit)
+
+export const countRepublishable = async (d1: AnyD1Database, scope: RepublishScope) => {
+  const [row] = await drizzle(d1)
+    .select({
+      remaining: count(),
+      changed: count(sql`CASE WHEN ${pages.publishedVersion} < ${pages.version} THEN 1 END`)
+    })
+    .from(pages)
+    .where(republishFilter(scope))
+  return { remaining: row?.remaining ?? 0, changed: row?.changed ?? 0 }
 }

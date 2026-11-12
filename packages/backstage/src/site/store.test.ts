@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
-import { SNAPSHOT, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
+import { SNAPSHOT, SNAPSHOT_UPGRADES, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
 import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../site-publishing.ts'
 import { routeOf } from './routing.ts'
 import { findPublished, findSiteSnapshot, findTranslations, type KvReader } from './store.ts'
@@ -81,5 +81,25 @@ describe('reading the published site', () => {
     const kv = memoryKv({ [siteSnapshotKey('es')]: { format: 99 } })
     expect(await findSiteSnapshot(kv, 'en')).toBeNull()
     expect(await findSiteSnapshot(kv, 'es')).toBeNull()
+  })
+})
+
+describe('reading a page published in the previous snapshot format', () => {
+  const PREVIOUS_FORMAT = SNAPSHOT.format - 1
+  const { title, ...rest } = en
+  const previous = { ...rest, format: PREVIOUS_FORMAT, heading: title }
+  const kv = memoryKv({ [routeKey('en', 'about')]: 'p1', [snapshotKey('p1', 'en')]: previous })
+
+  afterEach(() => {
+    delete SNAPSHOT_UPGRADES[PREVIOUS_FORMAT]
+  })
+
+  it('serves it through the upgrade registered for that format', async () => {
+    SNAPSHOT_UPGRADES[PREVIOUS_FORMAT] = ({ heading, ...stored }) => ({ ...stored, title: heading })
+    expect(await findPublished(kv, { locale: 'en', slug: 'about' })).toEqual(en)
+  })
+
+  it('answers not found for a format that has no upgrade', async () => {
+    expect(await findPublished(kv, { locale: 'en', slug: 'about' })).toBeNull()
   })
 })

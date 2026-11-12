@@ -23,8 +23,12 @@ const request = (
     bindings
   )
 
-export const sendApi = (path: string, method = 'GET', body?: unknown) =>
-  request(env.localDevelopment, method, path, body)
+export const sendApi = (
+  path: string,
+  method = 'GET',
+  body?: unknown,
+  bindings: Partial<typeof env.localDevelopment> = {}
+) => request({ ...env.localDevelopment, ...bindings }, method, path, body)
 
 export const send = (
   method: string,

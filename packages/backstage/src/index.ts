@@ -127,8 +127,10 @@ export {
 } from './db/pages.ts'
 export type { PageWrite } from './db/pages.ts'
 export {
+  countRepublishable,
   planPublish,
   PUBLISH_PLAN,
+  readRepublishBatch,
   readPublishedIndex,
   recordPublished,
   recordUnpublished
@@ -137,14 +139,32 @@ export type { PublishPlan } from './db/publishing.ts'
 export {
   publishPageSchema,
   publishProblemsResponseSchema,
+  readableSnapshotSchema,
   routeKey,
   routeKeysOf,
   snapshotKey,
   snapshotKeysOf,
   snapshotRecords,
   snapshotSchema,
-  SNAPSHOT
+  SNAPSHOT,
+  SNAPSHOT_UPGRADES,
+  upgradeSnapshot
 } from './publishing.ts'
+export {
+  KV_LIMITS,
+  kvWritesPerPage,
+  kvWritesToRepublish,
+  REPUBLISH,
+  republishBatchSchema,
+  republishScopeSchema,
+  republishStatusResponseSchema
+} from './republish.ts'
+export type {
+  RepublishBatch,
+  RepublishScope,
+  RepublishSkipped,
+  RepublishStatus
+} from './republish.ts'
 export type { PublishProblem, Snapshot } from './publishing.ts'
 export {
   buildSiteSnapshots,
