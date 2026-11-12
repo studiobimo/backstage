@@ -6,7 +6,14 @@ const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
 export const siteOriginResponseSchema = z.object({ origin: z.url() })
 
-export const BLOCK_PREVIEW = { path: '/__preview/blocks', localeParam: 'locale' } as const
+export const BLOCK_PREVIEW = {
+  path: '/__preview/blocks',
+  localeParam: 'locale',
+  thumbnailFile: 'thumbnail.svg'
+} as const
+
+export const blockThumbnailUrl = (siteOrigin: string, blockName: string) =>
+  `${siteOrigin}${BLOCK_PREVIEW.path}/${blockName}/${BLOCK_PREVIEW.thumbnailFile}`
 
 export interface BlockDefinition<S extends z.ZodType = z.ZodType, N extends string = string> {
   name: N
@@ -15,7 +22,6 @@ export interface BlockDefinition<S extends z.ZodType = z.ZodType, N extends stri
   migrate?: (content: unknown, fromVersion: number) => unknown
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
-  thumbnail?: Readonly<Record<string, string>>
 }
 
 export interface Block<
@@ -153,7 +159,6 @@ export interface BlockDescription {
   schema: Readonly<Record<string, unknown>>
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
-  thumbnail?: Readonly<Record<string, string>>
 }
 
 const describe = (registry: Registry, block: Block): BlockDescription => ({
@@ -161,8 +166,7 @@ const describe = (registry: Registry, block: Block): BlockDescription => ({
   version: block.version,
   schema: registry.jsonSchema(block.name),
   title: block.title,
-  description: block.description,
-  thumbnail: block.thumbnail
+  description: block.description
 })
 
 export function describeBlocks(registry: Registry): BlockDescription[] {

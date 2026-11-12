@@ -22,8 +22,7 @@ const blockDescriptionsSchema = z.object({
       version: z.number(),
       schema: z.custom<JsonSchema>(),
       title: z.record(z.string(), z.string()).optional(),
-      description: z.record(z.string(), z.string()).optional(),
-      thumbnail: z.record(z.string(), z.string()).optional()
+      description: z.record(z.string(), z.string()).optional()
     })
   )
 })

@@ -1,9 +1,11 @@
 import { BLOCK_PREVIEW } from '@studiobimo/backstage'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
+import { components } from '../src/blocks/component-map'
 import { PREVIEW_SAMPLES } from '../src/blocks/samples'
 import { PREVIEW_PHOTO } from '../src/blocks/sample-support'
 import { STYLESHEET } from './stylesheet'
+import { THUMBNAIL } from './preview'
 import { clearKv, get, platform, publishSnapshots, snapshotOf } from './test-support'
 
 afterAll(() => platform.dispose())
@@ -81,5 +83,36 @@ describe('block preview route', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('image/svg+xml')
     expect(await response.text()).toContain('<svg')
+  })
+})
+
+describe('block thumbnails', () => {
+  const thumbnailPath = (name: string) => `${BLOCK_PREVIEW.path}/${name}/${THUMBNAIL.file}`
+  const registered = [...components.registry.blocks.keys()].filter(
+    (name) => !components.registry.isSlotBlock(name)
+  )
+
+  it.each(registered)('serves a cacheable svg for %s', async (name) => {
+    const response = await get(thumbnailPath(name))
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Type')).toBe(THUMBNAIL.contentType)
+    expect(response.headers.get('Cache-Control')).toBe(THUMBNAIL.cacheControl)
+    expect(await response.text()).toContain('<svg')
+  })
+
+  it('lets the admin origin load them across origins', async () => {
+    const response = await get(thumbnailPath('split-hero'))
+    expect(response.headers.get('Cross-Origin-Resource-Policy')).toBe('cross-origin')
+  })
+
+  it('keeps every other route same-origin', async () => {
+    const response = await get(previewPath('split-hero'))
+    expect(response.headers.get('Cross-Origin-Resource-Policy')).toBe('same-origin')
+  })
+
+  it('answers 404 for an unknown block, a slot block and an inherited name', async () => {
+    for (const name of ['no-such-block', 'site-header', 'constructor']) {
+      expect((await get(thumbnailPath(name))).status).toBe(404)
+    }
   })
 })

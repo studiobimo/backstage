@@ -6,7 +6,7 @@ import { openTestEnv } from './test-env'
 const { dispose, env } = await openTestEnv()
 afterAll(dispose)
 
-const POLICY = "default-src 'none'; frame-ancestors 'none'"
+const POLICY = "default-src 'none'; img-src 'self' blob:; frame-ancestors 'none'"
 const SITE = 'https://site.test'
 
 const withAssets = (
@@ -20,8 +20,10 @@ const withAssets = (
     ASSETS: { fetch: async () => new Response('<html></html>', { headers }) }
   }) as unknown as Env
 
-const frameSrc = (response: Response) =>
-  /frame-src ([^;]+)/.exec(response.headers.get('Content-Security-Policy') ?? '')?.[1]
+const directive = (response: Response, name: string) =>
+  new RegExp(`${name} ([^;]+)`).exec(response.headers.get('Content-Security-Policy') ?? '')?.[1]
+
+const frameSrc = (response: Response) => directive(response, 'frame-src')
 
 describe('the SPA through the worker', () => {
   it('lets the page frame the site and nothing else', async () => {
@@ -31,7 +33,8 @@ describe('the SPA through the worker', () => {
       withAssets(`${SITE}/ignored/path`, { 'Content-Security-Policy': POLICY })
     )
     expect(frameSrc(response)).toBe(SITE)
-    expect(response.headers.get('Content-Security-Policy')).toContain(POLICY)
+    expect(directive(response, 'img-src')).toBe(`'self' blob: ${SITE}`)
+    expect(response.headers.get('Content-Security-Policy')).toContain("frame-ancestors 'none'")
     expect(await response.text()).toBe('<html></html>')
   })
 
@@ -42,6 +45,16 @@ describe('the SPA through the worker', () => {
       withAssets('', { 'Content-Security-Policy': POLICY })
     )
     expect(frameSrc(response)).toBeUndefined()
+    expect(directive(response, 'img-src')).toBe("'self' blob:")
+  })
+
+  it('adds an img-src when the policy has none', async () => {
+    const response = await app.request(
+      '/blocks',
+      {},
+      withAssets(SITE, { 'Content-Security-Policy': "default-src 'none'" })
+    )
+    expect(directive(response, 'img-src')).toBe(SITE)
   })
 
   it('leaves a response without a policy as it is', async () => {
