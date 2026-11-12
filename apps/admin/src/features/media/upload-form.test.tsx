@@ -1,10 +1,11 @@
 import { MEDIA } from '@studiobimo/backstage'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ToastProvider } from '@/components/ui/toast'
+import { testQueryClient } from '@/test/query-client'
 
 import { IMAGE_REJECTION, ImageRejected, processImage } from './process-image'
 import { UploadForm } from './upload-form'
@@ -43,9 +44,9 @@ const stubUrls = () => {
   URL.revokeObjectURL = vi.fn()
 }
 
-const renderForm = () =>
+const renderForm = (client = testQueryClient()) =>
   render(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={client}>
       <ToastProvider>
         <UploadForm />
       </ToastProvider>
@@ -159,5 +160,15 @@ describe('UploadForm upload', () => {
     await userEvent.click(uploadButton())
     expect(await screen.findByRole('alert')).toHaveTextContent('too large')
     expect(uploadButton()).toBeEnabled()
+  })
+})
+
+describe('UploadForm on a site with one locale', () => {
+  it('asks for a single description and shows no language tabs', async () => {
+    vi.stubGlobal('fetch', vi.fn())
+    renderForm(testQueryClient({ locales: ['fr'], defaultLocale: 'fr' }))
+    await pick()
+    expect(await screen.findAllByLabelText('Description of the image')).toHaveLength(1)
+    expect(screen.queryByRole('tab')).toBeNull()
   })
 })

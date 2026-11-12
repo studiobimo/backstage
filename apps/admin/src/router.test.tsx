@@ -1,14 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import i18n from './i18n/config'
 import { createAppRouter } from './router'
+import { testQueryClient } from './test/query-client'
 
 describe('router', () => {
   it('renders the home page at /', async () => {
-    const queryClient = new QueryClient()
+    const queryClient = testQueryClient()
     const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: ['/'] }))
     render(
       <QueryClientProvider client={queryClient}>
@@ -19,7 +20,7 @@ describe('router', () => {
   })
 
   it('gives every route a title that exists in the catalogs', () => {
-    const router = createAppRouter(new QueryClient())
+    const router = createAppRouter(testQueryClient())
     const routes = Object.values(router.routesByPath)
     expect(routes.length).toBeGreaterThan(0)
     for (const route of routes) {
