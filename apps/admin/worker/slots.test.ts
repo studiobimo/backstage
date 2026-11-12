@@ -1,8 +1,7 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import app from './index'
 import { openTestEnv } from './test-env'
-import { migrationStatements } from './test-migrations'
 
 const { dispose, db, env } = await openTestEnv()
 afterAll(dispose)
@@ -34,10 +33,6 @@ interface SlotsBody {
 }
 
 describe('slots API', () => {
-  beforeAll(async () => {
-    await db.prepare('DROP TABLE IF EXISTS site_blocks').run()
-    await db.batch(migrationStatements('0002_site_blocks').map((sql) => db.prepare(sql)))
-  })
   beforeEach(async () => {
     await db.prepare('DELETE FROM site_blocks').run()
   })

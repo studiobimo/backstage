@@ -12,9 +12,15 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
+import { getTableName, is } from 'drizzle-orm'
+import { SQLiteTable } from 'drizzle-orm/sqlite-core'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import * as schema from '../src/db/schema'
+import { migrationNames } from './migrations'
+
 const packageDir = join(import.meta.dirname, '..')
+const repoRoot = join(import.meta.dirname, '../../..')
 const adminHeaders = join(packageDir, '../../apps/admin/public/_headers')
 const PACK = { timeoutMs: 120_000 } as const
 const CONSUMER = {
@@ -37,6 +43,14 @@ const CONSUMER = {
     include: ['index.ts']
   }
 } as const
+const CONSUMER_MIGRATIONS = {
+  timeoutMs: 180_000,
+  binding: 'DB',
+  dir: 'node_modules/@studiobimo/backstage/migrations',
+  makefile: '-include node_modules/@studiobimo/backstage/backstage.mk\n',
+  listTables: "SELECT name FROM sqlite_master WHERE type = 'table'",
+  listApplied: 'SELECT name FROM d1_migrations ORDER BY id'
+} as const
 let out: string
 let tarball: string
 
@@ -48,6 +62,13 @@ const linkDependencies = (from: string, to: string) => {
     if (name === '@studiobimo') continue
     symlinkSync(join(from, name), join(to, name))
   }
+}
+
+const installPackage = (consumer: string) => {
+  const installed = join(consumer, 'node_modules/@studiobimo/backstage')
+  mkdirSync(installed, { recursive: true })
+  execFileSync('tar', ['-xzf', tarball, '-C', installed, '--strip-components=1'])
+  return installed
 }
 
 const loadEntries = () =>
@@ -99,9 +120,7 @@ describe('the packed package', () => {
     'typechecks and loads from a consumer with a strict tsconfig',
     () => {
       const consumer = join(out, 'consumer')
-      const installed = join(consumer, 'node_modules/@studiobimo/backstage')
-      mkdirSync(installed, { recursive: true })
-      execFileSync('tar', ['-xzf', tarball, '-C', installed, '--strip-components=1'])
+      installPackage(consumer)
       linkDependencies(join(packageDir, 'node_modules'), join(consumer, 'node_modules'))
       const source = CONSUMER.entries.map(
         (entry, index) => `import * as entry${index} from '@studiobimo/backstage${entry}'`
@@ -134,4 +153,64 @@ describe('the packed package', () => {
       expect(tar('-xzOf', file)).not.toMatch(/url\(\s*["']?data:/)
     }
   })
+})
+
+describe('the packed migrations', () => {
+  it(
+    'applies its migrations in a consumer through backstage.mk',
+    () => {
+      const consumer = join(out, 'migrating-consumer')
+      installPackage(consumer)
+      mkdirSync(join(consumer, 'node_modules/.bin'), { recursive: true })
+      symlinkSync(
+        join(repoRoot, 'node_modules/.bin/wrangler'),
+        join(consumer, 'node_modules/.bin/wrangler')
+      )
+      const passThrough = join(consumer, 'run')
+      writeFileSync(passThrough, '#!/bin/sh\nshift 2\nexec "$@"\n', { mode: 0o755 })
+      writeFileSync(join(consumer, 'package.json'), JSON.stringify({ private: true }))
+      writeFileSync(join(consumer, 'Makefile'), CONSUMER_MIGRATIONS.makefile)
+      writeFileSync(
+        join(consumer, 'wrangler.jsonc'),
+        JSON.stringify({
+          name: 'consumer',
+          compatibility_date: '2026-01-01',
+          d1_databases: [
+            {
+              binding: CONSUMER_MIGRATIONS.binding,
+              database_name: 'consumer',
+              database_id: '00000000-0000-0000-0000-000000000000',
+              migrations_dir: CONSUMER_MIGRATIONS.dir
+            }
+          ]
+        })
+      )
+      const run = (...command: string[]) =>
+        execFileSync(command[0]!, command.slice(1), { cwd: consumer, encoding: 'utf8' })
+      run('make', 'migrate', `ROOT=${consumer}`, 'BACKSTAGE_ADMIN_DIR=.', `MISE=${passThrough}`)
+      const names = (sql: string) => {
+        const [{ results }] = JSON.parse(
+          run(
+            join(consumer, 'node_modules/.bin/wrangler'),
+            'd1',
+            'execute',
+            CONSUMER_MIGRATIONS.binding,
+            '--local',
+            '--json',
+            '--command',
+            sql
+          )
+        ) as { results: { name: string }[] }[]
+        return results.map((row) => row.name)
+      }
+      const declared = Object.values(schema)
+        .filter((value) => is(value, SQLiteTable))
+        .map(getTableName)
+      expect(names(CONSUMER_MIGRATIONS.listApplied)).toEqual(
+        migrationNames().map((name) => `${name}.sql`)
+      )
+      expect(names(CONSUMER_MIGRATIONS.listTables)).toEqual(expect.arrayContaining(declared))
+    },
+    CONSUMER_MIGRATIONS.timeoutMs
+  )
 })
