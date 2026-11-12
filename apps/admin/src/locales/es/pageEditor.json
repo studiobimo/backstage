@@ -35,6 +35,8 @@
   "stale": {
     "title": "Se guardó una versión más reciente",
     "description": "{{name}} guardó esta página el {{when}}. Tus cambios no se guardaron y siguen aquí. Cópialos, o recarga para ver su versión.",
+    "changedSince": "En línea desde {{when}}, publicada por {{name}}. Los cambios guardados aún no están en línea. Publica para actualizar la página.",
+    "publishChanges": "Publicar cambios",
     "someone": "Alguien",
     "reload": "Recargar la última versión",
     "copy": {
@@ -85,6 +87,7 @@
     "cancel": "Cancelar",
     "status": {
       "published": "Publicada",
+      "changed": "Cambios sin publicar",
       "draft": "Borrador"
     },
     "notLive": "No está en línea. Los visitantes aún no ven esta página.",

@@ -233,6 +233,7 @@ const livePage: PageSummary = {
   ...aboutPage,
   id: 'p2',
   publishedAt: 1,
+  publishedVersion: 1,
   locales: [
     { locale: 'en', slug: 'team', title: 'Team' },
     { locale: 'es', slug: 'equipo', title: 'Equipo' }
@@ -245,6 +246,17 @@ describe('PagesPage table', { timeout: 15_000 }, () => {
     await screen.findByRole('link', { name: 'Welcome' })
     expect(screen.getAllByText('/')).toHaveLength(1)
     expect(screen.getByText('Home')).toBeInTheDocument()
+  })
+
+  it('marks a published page that has saved changes', async () => {
+    renderPages([livePage, { ...livePage, id: 'p3', version: 2 }])
+    const rows = await screen.findAllByRole('row')
+    const statuses = rows.map((row) => within(row).queryByText(/^(Published|Unpublished changes)$/))
+    expect(statuses.map((status) => status?.textContent)).toEqual([
+      undefined,
+      'Published',
+      'Unpublished changes'
+    ])
   })
 
   it('filters by status with a count on each tab', async () => {

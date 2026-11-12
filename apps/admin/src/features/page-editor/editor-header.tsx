@@ -58,17 +58,31 @@ function StateDot({ className, label }: { className: string; label: string }) {
   )
 }
 
-function EditorStatus({ published, dirty }: { published: boolean; dirty: boolean }) {
+interface EditorStatusProps {
+  published: boolean
+  changed: boolean
+  dirty: boolean
+}
+
+function EditorStatus({ published, changed, dirty }: EditorStatusProps) {
   const { t } = useTranslation('pageEditor')
-  const status = t(published ? 'publish.status.published' : 'publish.status.draft')
+  const status = t(
+    changed
+      ? 'publish.status.changed'
+      : published
+        ? 'publish.status.published'
+        : 'publish.status.draft'
+  )
   return (
     <>
       <StateDot
-        className={dirty ? 'bg-warning' : published ? 'bg-success' : 'bg-muted-foreground/64'}
+        className={
+          dirty || changed ? 'bg-warning' : published ? 'bg-success' : 'bg-muted-foreground/64'
+        }
         label={dirty ? t('unsaved') : status}
       />
       <span className="hidden items-center gap-2 sm:inline-flex">
-        <Badge variant={published ? 'success' : 'outline'}>{status}</Badge>
+        <Badge variant={changed ? 'warning' : published ? 'success' : 'outline'}>{status}</Badge>
         {dirty && <Badge variant="warning">{t('unsaved')}</Badge>}
       </span>
     </>
@@ -78,12 +92,20 @@ function EditorStatus({ published, dirty }: { published: boolean; dirty: boolean
 interface EditorHeaderProps {
   title: string
   published: boolean
+  changed: boolean
   dirty: boolean
   locale: LocaleTabsProps
   actions: ReactNode
 }
 
-export function EditorHeader({ title, published, dirty, locale, actions }: EditorHeaderProps) {
+export function EditorHeader({
+  title,
+  published,
+  changed,
+  dirty,
+  locale,
+  actions
+}: EditorHeaderProps) {
   const { t } = useTranslation('pageEditor')
   return (
     <header className="sticky top-0 z-20 -mt-4 border-b bg-background py-3">
@@ -92,7 +114,7 @@ export function EditorHeader({ title, published, dirty, locale, actions }: Edito
           <ArrowLeftIcon aria-hidden />
         </Button>
         <h1 className="min-w-0 flex-1 truncate text-xl sm:text-2xl">{title}</h1>
-        <EditorStatus published={published} dirty={dirty} />
+        <EditorStatus published={published} changed={changed} dirty={dirty} />
         <EditorLocaleTabs {...locale} />
         {actions}
       </div>

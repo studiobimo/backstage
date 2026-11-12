@@ -1,4 +1,4 @@
-import type { PageBlock } from '@studiobimo/backstage'
+import { hasUnpublishedChanges, type PageBlock } from '@studiobimo/backstage'
 import { useShortcut } from '@/lib/shortcuts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -23,11 +23,13 @@ const mockPublish = (response: Response) => {
 interface HarnessProps {
   dirty: boolean
   publishedAt: number | null
+  publishedVersion?: number | null
   onSave: () => void
 }
 
-function Harness({ dirty, publishedAt, onSave }: HarnessProps) {
-  const page = { ...aboutPage, publishedAt, publishedBy: 'Ana Ruiz' }
+function Harness({ dirty, publishedAt, publishedVersion = 3, onSave }: HarnessProps) {
+  const page = { ...aboutPage, publishedAt, publishedVersion, publishedBy: 'Ana Ruiz' }
+  const changed = hasUnpublishedChanges(page, 3)
   const publish = usePublish(page, 3)
   useShortcut('save', dirty, onSave)
   return (
@@ -38,13 +40,21 @@ function Harness({ dirty, publishedAt, onSave }: HarnessProps) {
         dirty={dirty}
         saving={false}
         published={publishedAt !== null}
+        changed={changed}
         publishing={publish.publishing}
         unpublishing={publish.unpublishing}
         onSave={onSave}
         onPublish={publish.publish}
         onUnpublish={publish.unpublish}
       />
-      <PublishNotes page={page} dirty={dirty} error={publish.error} blocks={blocks} hintId="hint" />
+      <PublishNotes
+        page={page}
+        dirty={dirty}
+        changed={changed}
+        error={publish.error}
+        blocks={blocks}
+        hintId="hint"
+      />
     </>
   )
 }

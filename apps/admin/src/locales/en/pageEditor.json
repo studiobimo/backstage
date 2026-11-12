@@ -35,6 +35,8 @@
   "stale": {
     "title": "A newer version was saved",
     "description": "{{name}} saved this page on {{when}}. Your changes were not saved and are still here. Copy them, or reload to get their version.",
+    "changedSince": "Live since {{when}}, published by {{name}}. Saved changes are not live yet. Publish to update the page.",
+    "publishChanges": "Publish changes",
     "someone": "Someone",
     "reload": "Reload latest version",
     "copy": {
@@ -85,6 +87,7 @@
     "cancel": "Cancel",
     "status": {
       "published": "Published",
+      "changed": "Unpublished changes",
       "draft": "Draft"
     },
     "notLive": "Not live. Visitors cannot see this page yet.",
