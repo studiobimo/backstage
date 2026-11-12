@@ -199,10 +199,12 @@ describe('a worker with a missing binding', () => {
       const response = await app.request('/api/v1/blocks', {}, without(name))
       expect(response.status).toBe(500)
       expect(await response.json()).toEqual({
-        error: 'The worker is missing a required binding',
-        code: 'bindings_missing'
+        error: 'Internal error',
+        code: 'internal'
       })
-      expect(String(log.mock.calls[0]?.[0])).toContain(name)
+      expect(String(log.mock.calls[0]?.[0])).toContain(
+        `The worker is missing a required binding: ${name}`
+      )
       log.mockRestore()
     }
   )
