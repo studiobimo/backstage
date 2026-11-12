@@ -160,6 +160,11 @@ describe('DEV_AUTH', () => {
     expect((await request(await signToken(trusted.privateKey, {}), env)).status).toBe(500)
   })
 
+  it.each(['false', 'TRUE', '1', 'yes'])('stays off for the value %s', async (value) => {
+    const env = { ...deployedEnv, DEV_AUTH: value } as Env
+    expect((await request(undefined, env)).status).toBe(403)
+  })
+
   it('does not leak onto a lookalike hostname', async () => {
     const response = await request(
       undefined,

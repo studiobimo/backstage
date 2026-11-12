@@ -1,14 +1,14 @@
-import { API_ERROR, readSiteSettings, siteSettingsSchema, writeSiteSettings } from '../index.ts'
+import { readSiteSettings, siteSettingsSchema, writeSiteSettings } from '../index.ts'
 import { Hono } from 'hono'
 
-import { respondWithError } from './respond.ts'
+import { readJsonBody } from './respond.ts'
 
 export const settingsRoutes = () =>
   new Hono<{ Bindings: Env }>()
     .get('/', async (c) => c.json({ settings: await readSiteSettings(c.env.DB!) }))
     .put('/', async (c) => {
-      const parsed = siteSettingsSchema.safeParse(await c.req.json().catch(() => null))
-      if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
-      await writeSiteSettings(c.env.DB!, parsed.data)
-      return c.json({ settings: parsed.data })
+      const body = await readJsonBody(c, siteSettingsSchema)
+      if (!body.ok) return body.response
+      await writeSiteSettings(c.env.DB!, body.data)
+      return c.json({ settings: body.data })
     })

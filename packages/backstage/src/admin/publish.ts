@@ -14,21 +14,21 @@ import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
 import { respondStale } from './pages.ts'
-import { respondWithError } from './respond.ts'
+import { readJsonBody, respondWithError } from './respond.ts'
 import { indexPublished, indexUnpublished, removeSnapshots, writeSnapshots } from './snapshots.ts'
 
 export const publishRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()
     .post('/:id/publish', async (c) => {
-      const parsed = publishPageSchema.safeParse(await c.req.json().catch(() => null))
-      if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
+      const body = await readJsonBody(c, publishPageSchema)
+      if (!body.ok) return body.response
       const id = c.req.param('id')
       const publishedAt = Date.now()
       const plan = await planPublish(
         c.env.DB!,
         registry,
         id,
-        parsed.data.expectedVersion,
+        body.data.expectedVersion,
         publishedAt
       )
       if (plan.status === PUBLISH_PLAN.notFound) return respondWithError(c, API_ERROR.notFound)
