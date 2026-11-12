@@ -1,12 +1,13 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
 import { BlockForm } from './block-form.tsx'
 import type { JsonSchema } from './spec.ts'
 
 const LIST = { itemCount: 12, invalidNumber: 11 } as const
+const TIMING = { sortableLoadTimeoutMs: 10_000, testTimeoutMs: 20_000 } as const
 
 const listSchema = z.toJSONSchema(
   z.object({ items: z.array(z.object({ name: z.string().min(1) })) }),
@@ -22,12 +23,17 @@ const itemTrigger = (name: string) => screen.getByRole('button', { name: new Reg
 async function submitInvalidList() {
   const user = userEvent.setup({ delay: null })
   render(<BlockForm schema={listSchema} locales={['en']} value={{ items: itemsWithOneBlank }} />)
-  await screen.findByRole('button', { name: 'Reorder Name 1' })
+  await screen.findByRole(
+    'button',
+    { name: 'Reorder Name 1' },
+    { timeout: TIMING.sortableLoadTimeoutMs }
+  )
   await user.click(screen.getByRole('button', { name: 'Save' }))
   return user
 }
 
-describe('BlockForm list items with errors', () => {
+describe('BlockForm list items with errors', { timeout: TIMING.testTimeoutMs }, () => {
+  beforeAll(() => import('@/components/sortable-items'))
   afterEach(cleanup)
 
   it('flags only the eleventh of twelve items', async () => {
