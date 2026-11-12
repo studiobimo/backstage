@@ -34,8 +34,6 @@ describe('mediaKeyOf', () => {
 })
 
 describe('alt text', () => {
-  const size = { width: 800, height: 600 }
-
   it('requires alt text for every locale', () => {
     const result = mediaAltSchema.safeParse({ decorative: false, alt: { en: 'A chair', es: ' ' } })
     expect(result.error?.issues.map((issue) => issue.path.join('.'))).toEqual(['alt.es'])
@@ -49,20 +47,9 @@ describe('alt text', () => {
 
   it('trims alt text', () => {
     const parsed = mediaUploadSchema.parse({
-      ...size,
       decorative: false,
       alt: { en: ' A chair ', es: 'Una silla' }
     })
     expect(parsed.alt.en).toBe('A chair')
-  })
-
-  it('refuses dimensions beyond the cap', () => {
-    const result = mediaUploadSchema.safeParse({
-      width: 99999,
-      height: 10,
-      decorative: true,
-      alt: { en: '', es: '' }
-    })
-    expect(result.success).toBe(false)
   })
 })

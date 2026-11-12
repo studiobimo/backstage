@@ -80,11 +80,7 @@ const requireAltUnlessDecorative = (value: AltFields, context: z.RefinementCtx) 
 export const mediaAltSchema = z.object(altShape).superRefine(requireAltUnlessDecorative)
 export type MediaAlt = z.infer<typeof mediaAltSchema>
 
-const dimension = z.number().int().min(1).max(MEDIA.maxDimension)
-
-export const mediaUploadSchema = z
-  .object({ ...altShape, width: dimension, height: dimension })
-  .superRefine(requireAltUnlessDecorative)
+export const mediaUploadSchema = z.object(altShape).superRefine(requireAltUnlessDecorative)
 export type MediaUpload = z.infer<typeof mediaUploadSchema>
 
 export const mediaSchema = z.object({

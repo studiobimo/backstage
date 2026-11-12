@@ -13,6 +13,9 @@ import {
 
 const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 const JPEG = [0xff, 0xd8, 0xff, 0xe0]
+const WEBP = [...'RIFF', 0, 0, 0, 0, ...'WEBP'].map((value) =>
+  typeof value === 'string' ? value.charCodeAt(0) : value
+)
 
 const fileOf = (head: number[], name: string, type = 'image/png') =>
   new File([new Uint8Array([...head, 0, 0, 0, 0])], name, { type })
@@ -109,19 +112,51 @@ describe('processImage size cap', () => {
     expect(encode.mock.calls.map((call) => call[3])).toEqual([0.85, 0.7, 0.55, 0.4])
   })
 
-  it('does not retry a PNG at lower quality, which would change nothing', async () => {
+  it('re-encodes a PNG that stays over the cap as WebP', async () => {
+    const { codec, encode } = codecFor({ width: 10, height: 10 })
+    const over = new Blob([new Uint8Array(MEDIA.maxBytes + 1)], { type: 'image/png' })
+    const webp = new Blob([new Uint8Array(10)], { type: 'image/webp' })
+    encode.mockResolvedValueOnce(over).mockResolvedValueOnce(webp)
+    const result = await processImage(fileOf(PNG, 'a.png'), codec)
+    expect(encode.mock.calls.map((call) => call[2])).toEqual(['image/png', 'image/webp'])
+    expect(result.contentType).toBe('image/webp')
+    expect(result.file.name).toBe('a.webp')
+  })
+
+  it('falls back to JPEG when the browser cannot encode WebP and returns PNG instead', async () => {
+    const { codec, encode } = codecFor({ width: 10, height: 10 })
+    const over = new Blob([new Uint8Array(MEDIA.maxBytes + 1)], { type: 'image/png' })
+    const jpeg = new Blob([new Uint8Array(10)], { type: 'image/jpeg' })
+    encode.mockResolvedValueOnce(over).mockResolvedValueOnce(over).mockResolvedValueOnce(jpeg)
+    const result = await processImage(fileOf(PNG, 'a.png'), codec)
+    expect(encode.mock.calls.map((call) => call[2])).toEqual([
+      'image/png',
+      'image/webp',
+      'image/jpeg'
+    ])
+    expect(result).toMatchObject({ contentType: 'image/jpeg' })
+    expect(result.file.name).toBe('a.jpg')
+  })
+
+  it('falls back to JPEG for a WebP source when the browser cannot encode WebP', async () => {
+    const { codec, encode } = codecFor({ width: 10, height: 10 })
+    const png = new Blob([new Uint8Array(10)], { type: 'image/png' })
+    const jpeg = new Blob([new Uint8Array(10)], { type: 'image/jpeg' })
+    encode.mockResolvedValueOnce(png).mockResolvedValueOnce(jpeg)
+    const result = await processImage(fileOf(WEBP, 'a.webp', 'image/webp'), codec)
+    expect(result.contentType).toBe('image/jpeg')
+  })
+
+  it('refuses a PNG that is over the cap in every format', async () => {
     const { codec, encode } = codecFor({ width: 10, height: 10 }, 'image/png', MEDIA.maxBytes + 1)
     expect(await rejection(processImage(fileOf(PNG, 'a.png'), codec))).toBe(
       IMAGE_REJECTION.tooLarge
     )
-    expect(encode).toHaveBeenCalledOnce()
-  })
-
-  it('refuses an image that is still over the cap once re-encoded', async () => {
-    const { codec } = codecFor({ width: 10, height: 10 }, 'image/png', MEDIA.maxBytes + 1)
-    expect(await rejection(processImage(fileOf(PNG, 'a.png'), codec))).toBe(
-      IMAGE_REJECTION.tooLarge
-    )
+    expect(encode.mock.calls.map((call) => call[2])).toEqual([
+      'image/png',
+      'image/webp',
+      'image/jpeg'
+    ])
   })
 
   it('refuses an image the browser cannot decode', async () => {
