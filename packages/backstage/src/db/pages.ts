@@ -1,4 +1,4 @@
-import { and, asc, eq, exists, inArray, sql, type SQL } from 'drizzle-orm'
+import { and, asc, eq, exists, getTableColumns, inArray, isNull, sql, type SQL } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
@@ -59,15 +59,21 @@ const guardUnique = async (write: () => Promise<PageWrite>): Promise<PageWrite> 
   }
 }
 
-export const listPages = async (d1: AnyD1Database): Promise<Page[]> => {
-  const db = connect(d1)
+const pageWithPublisher = (db: Database) =>
+  db
+    .select({ page: pages, publisherName: users.name, publisherEmail: users.email })
+    .from(pages)
+    .leftJoin(users, eq(users.id, pages.publishedBy))
+
+const readPages = async (db: Database, id?: string): Promise<Page[]> => {
   const [rows, locales] = await Promise.all([
-    db
-      .select({ page: pages, publisherName: users.name, publisherEmail: users.email })
-      .from(pages)
-      .leftJoin(users, eq(users.id, pages.publishedBy))
+    pageWithPublisher(db)
+      .where(id === undefined ? undefined : eq(pages.id, id))
       .orderBy(pages.createdAt),
-    db.select().from(pageLocales)
+    db
+      .select()
+      .from(pageLocales)
+      .where(id === undefined ? undefined : eq(pageLocales.pageId, id))
   ])
   return rows.map(({ page: row, publisherName, publisherEmail }) => ({
     id: row.id,
@@ -82,6 +88,8 @@ export const listPages = async (d1: AnyD1Database): Promise<Page[]> => {
       .map(({ locale, slug, title }) => ({ locale, slug, title }))
   }))
 }
+
+export const listPages = (d1: AnyD1Database) => readPages(connect(d1))
 
 const seoFromRows = (
   rows: { locale: string; seoTitle: string; description: string; socialImageId: string | null }[]
@@ -135,34 +143,88 @@ const memoizedSchemas = (registry: Registry) => {
   }
 }
 
+const missingOf = (
+  registry: Registry,
+  schemaOf: (block: string) => TranslatedNode,
+  locales: (typeof pageLocales.$inferSelect)[],
+  blocks: PageBlock[]
+) => {
+  const seo = seoFromRows(locales)
+  return Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      blocksMissing(registry, schemaOf, blocks, locale) + (isSeoMissing(seo, locale) ? 1 : 0)
+    ])
+  ) as MissingByLocale
+}
+
+const groupByPage = <Row extends { pageId: string }>(rows: Row[]) =>
+  rows.reduce((groups, row) => {
+    groups.set(row.pageId, [...(groups.get(row.pageId) ?? []), row])
+    return groups
+  }, new Map<string, Row[]>())
+
+const countStalePages = async (
+  db: Database,
+  registry: Registry
+): Promise<Map<string, MissingByLocale>> => {
+  const scope = isNull(pages.missingTranslations)
+  const [versions, locales, blocks] = await Promise.all([
+    db.select({ id: pages.id, version: pages.version }).from(pages).where(scope),
+    db
+      .select(getTableColumns(pageLocales))
+      .from(pageLocales)
+      .innerJoin(pages, eq(pages.id, pageLocales.pageId))
+      .where(scope),
+    db
+      .select(getTableColumns(pageBlocks))
+      .from(pageBlocks)
+      .innerJoin(pages, eq(pages.id, pageBlocks.pageId))
+      .where(scope)
+      .orderBy(asc(pageBlocks.position))
+  ])
+  const schemaOf = memoizedSchemas(registry)
+  const localesByPage = groupByPage(locales)
+  const blocksByPage = groupByPage(blocks)
+  const computed = new Map(
+    versions.map(({ id, version }) => [
+      id,
+      {
+        version,
+        missing: missingOf(
+          registry,
+          schemaOf,
+          localesByPage.get(id) ?? [],
+          (blocksByPage.get(id) ?? []).map(toPageBlock)
+        )
+      }
+    ])
+  )
+  const [first, ...rest] = [...computed].map(([id, { version, missing }]) =>
+    db
+      .update(pages)
+      .set({ missingTranslations: missing, updatedAt: pages.updatedAt })
+      .where(and(eq(pages.id, id), eq(pages.version, version)))
+  )
+  if (first) await db.batch([first, ...rest])
+  return new Map([...computed].map(([id, { missing }]) => [id, missing]))
+}
+
 export const listMissingTranslations = async (
   d1: AnyD1Database,
   registry: Registry
 ): Promise<Map<string, MissingByLocale>> => {
   const db = connect(d1)
-  const [locales, blocks] = await Promise.all([
-    db.select().from(pageLocales),
-    db.select().from(pageBlocks).orderBy(asc(pageBlocks.position))
-  ])
-  const pageIds = new Set(locales.map(({ pageId }) => pageId))
-  const schemaOf = memoizedSchemas(registry)
-  return new Map(
-    [...pageIds].map((pageId) => {
-      const seo = seoFromRows(locales.filter((row) => row.pageId === pageId))
-      const own = blocks.filter((row) => row.pageId === pageId).map(toPageBlock)
-      const missing = Object.fromEntries(
-        LOCALES.map((locale) => [
-          locale,
-          blocksMissing(registry, schemaOf, own, locale) + (isSeoMissing(seo, locale) ? 1 : 0)
-        ])
-      ) as MissingByLocale
-      return [pageId, missing]
-    })
+  const rows = await db.select({ id: pages.id, missing: pages.missingTranslations }).from(pages)
+  const stored = new Map(
+    rows.flatMap(({ id, missing }) => (missing ? [[id, missing] as const] : []))
   )
+  if (stored.size === rows.length) return stored
+  return new Map([...stored, ...(await countStalePages(db, registry))])
 }
 
 export const findPage = async (d1: AnyD1Database, id: string) =>
-  (await listPages(d1)).find((page) => page.id === id)
+  (await readPages(connect(d1), id))[0]
 
 export const createPage = async (d1: AnyD1Database, input: PageInput, id: string) => {
   const db = connect(d1)
@@ -224,13 +286,15 @@ const versionMatches = (db: Database, id: string, expectedVersion: number) =>
       .where(and(eq(pages.id, id), eq(pages.version, expectedVersion)))
   )
 
+const INVALIDATE_MISSING = { missingTranslations: null } as const
+
 type ContentWrites = (versionMatches: SQL) => BatchItem<'sqlite'>[]
 
 const writeVersioned = async (
   db: Database,
   id: string,
   { expectedVersion, editorId }: VersionedWrite,
-  changes: { layout?: string },
+  changes: { layout?: string; missingTranslations?: null },
   contentWrites: ContentWrites
 ): Promise<PageWrite> => {
   const claim = db
@@ -292,7 +356,7 @@ export const replacePageBlocks = async (
   write: VersionedWrite
 ) => {
   const db = connect(d1)
-  return writeVersioned(db, id, write, {}, (matches) => [
+  return writeVersioned(db, id, write, INVALIDATE_MISSING, (matches) => [
     db.delete(pageBlocks).where(and(eq(pageBlocks.pageId, id), matches)),
     ...blocks.map((block, position) => insertBlockIfMatched(db, id, block, position, write))
   ])
@@ -346,7 +410,7 @@ export const writePageSeo = async (
   ) {
     return PAGE_WRITE.unknownMedia
   }
-  return writeVersioned(db, id, write, {}, (matches) =>
+  return writeVersioned(db, id, write, INVALIDATE_MISSING, (matches) =>
     LOCALES.map((locale) => localeSeoUpdate(db, id, locale, seo[locale], matches))
   )
 }

@@ -9,14 +9,20 @@ const migrations = migrationStatements(
   '0001_site_settings',
   '0003_page_layout',
   '0004_page_seo_title',
-  '0005_pages_single_home'
+  '0005_pages_single_home',
+  '0006_pages_missing_translations'
 )
 
 const { dispose, db, env } = await openTestEnv()
 
 export { db }
 
-export const send = (method: string, path: string, body?: unknown) =>
+const request = (
+  bindings: typeof env.localDevelopment,
+  method: string,
+  path: string,
+  body?: unknown
+) =>
   app.request(
     `/api/v1/pages${path}`,
     {
@@ -24,8 +30,35 @@ export const send = (method: string, path: string, body?: unknown) =>
       headers: { 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body)
     },
-    env.localDevelopment
+    bindings
   )
+
+export const send = (method: string, path: string, body?: unknown) =>
+  request(env.localDevelopment, method, path, body)
+
+const recordingDb = (statements: string[]) =>
+  new Proxy(db, {
+    get(target, property) {
+      const value = Reflect.get(target, property)
+      if (property === 'prepare') {
+        return (sql: string) => {
+          statements.push(sql)
+          return target.prepare(sql)
+        }
+      }
+      return typeof value === 'function' ? value.bind(target) : value
+    }
+  })
+
+export const sendRecording = async (method: string, path: string) => {
+  const statements: string[] = []
+  const response = await request(
+    { ...env.localDevelopment, DB: recordingDb(statements) },
+    method,
+    path
+  )
+  return { response, statements }
+}
 
 export const regular = (slug: string) => ({
   isHome: false,

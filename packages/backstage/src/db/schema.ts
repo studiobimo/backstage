@@ -1,6 +1,8 @@
 import { sql } from 'drizzle-orm'
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
+import type { MissingByLocale } from '../translations.ts'
+
 const now = () => Date.now()
 const createdAt = () => integer('created_at').notNull().$defaultFn(now)
 
@@ -39,7 +41,8 @@ export const pages = sqliteTable(
     updatedAt: integer('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
     updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
     publishedAt: integer('published_at'),
-    publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' })
+    publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' }),
+    missingTranslations: text('missing_translations', { mode: 'json' }).$type<MissingByLocale>()
   },
   (t) => [
     uniqueIndex('pages_single_home')

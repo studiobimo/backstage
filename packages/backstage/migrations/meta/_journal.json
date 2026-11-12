@@ -43,6 +43,13 @@
       "when": 1794497292167,
       "tag": "0005_pages_single_home",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794498824852,
+      "tag": "0006_pages_missing_translations",
+      "breakpoints": true
     }
   ]
 }
