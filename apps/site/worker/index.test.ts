@@ -69,10 +69,11 @@ describe('site worker', () => {
   })
 
   describe('search engine files', () => {
-    const HOST = 'https://example.com'
+    const OTHER_HOST = 'https://other.example.net'
+    const HOST = platform.env.SITE_URL
 
     it('serves a robots.txt that names the sitemap', async () => {
-      const response = await get(`${HOST}/robots.txt`)
+      const response = await get(`${OTHER_HOST}/robots.txt`)
       expect(response.headers.get('Content-Type')).toMatch(/^text\/plain/)
       expect(await response.text()).toContain(`Sitemap: ${HOST}/sitemap.xml`)
     })
@@ -91,9 +92,17 @@ describe('site worker', () => {
         ]
       })
       await platform.env.SITE!.put(SEO.indexKey, JSON.stringify(index))
-      const xml = await (await get(`${HOST}/sitemap.xml`)).text()
+      const xml = await (await get(`${OTHER_HOST}/sitemap.xml`)).text()
       expect(xml).toContain(`<loc>${HOST}/about</loc>`)
       expect(xml).toContain(`hreflang="es" href="${HOST}/es/nosotros"`)
+      expect(xml).toContain(`hreflang="x-default" href="${HOST}/about"`)
+      expect(xml).not.toContain(OTHER_HOST)
+    })
+
+    it('fails clearly when SITE_URL is not configured', async () => {
+      const env = { ...platform.env, SITE_URL: '' } as unknown as Env
+      expect((await get('/sitemap.xml', undefined, env)).status).toBe(500)
+      expect((await get('/robots.txt', undefined, env)).status).toBe(500)
     })
   })
 })

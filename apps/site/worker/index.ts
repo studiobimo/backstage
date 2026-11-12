@@ -23,6 +23,7 @@ import { renderPage } from './page'
 import { previewRoutes } from './preview'
 import { respondWithError } from './respond'
 import { securityHeaders } from './security'
+import { atSiteOrigin, siteOriginOf } from './seo'
 import { stylesheetRoutes } from './stylesheet'
 
 const app = new Hono<{ Bindings: Env }>()
@@ -31,8 +32,10 @@ app.use(...observe)
 app.use(securityHeaders)
 
 app.get(OBSERVABILITY.health.path, respondHealthy)
-app.get(SEO.sitemapPath, (c) => respondWithSitemap(c.env.SITE!, c.req.raw))
-app.get(SEO.robotsPath, (c) => respondWithRobots(c.req.raw))
+app.get(SEO.sitemapPath, (c) =>
+  respondWithSitemap(c.env.SITE!, atSiteOrigin(c.req.raw, siteOriginOf(c.env)))
+)
+app.get(SEO.robotsPath, (c) => respondWithRobots(atSiteOrigin(c.req.raw, siteOriginOf(c.env))))
 app.route('/', stylesheetRoutes)
 app.route('/', previewRoutes)
 
@@ -53,7 +56,7 @@ const renderRoute = async (c: Context<{ Bindings: Env }>) => {
       components,
       snapshot,
       translations: await findTranslations(c.env.SITE!, snapshot),
-      origin: new URL(c.req.url).origin
+      siteOrigin: siteOriginOf(c.env)
     },
     { 'Cache-Control': EDGE_CACHE.control }
   )

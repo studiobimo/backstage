@@ -59,7 +59,7 @@ const render = (locale: 'en' | 'es') =>
       components: { ...components, layouts: { default: PageLayout } } as ComponentMap,
       snapshot: snapshotOf({ locale, slug: 'about', blocks: pageBlocks }),
       translations: [],
-      origin: 'https://example.com'
+      siteOrigin: 'https://example.com'
     })
   )
 
