@@ -2,7 +2,6 @@ import { z } from 'zod'
 
 import { validateBlockContent, type Registry } from './blocks.ts'
 import { LOCALES, pageBlockSchema, type Locale, type PageBlock } from './pages.ts'
-import type { SiteSettings } from './settings.ts'
 import { RICH_TEXT } from './rich-text.ts'
 import {
   isRecord,
@@ -36,7 +35,7 @@ export const snapshotRecords = (snapshots: readonly Snapshot[]) =>
 export const routeKeysOf = (snapshots: readonly Pick<Snapshot, 'locale' | 'slug'>[]) =>
   snapshots.map(({ locale, slug }) => routeKey(locale, slug))
 
-const PUBLISH_PROBLEM = {
+export const PUBLISH_PROBLEM = {
   unknownLayout: 'unknown_layout',
   unknownBlock: 'unknown_block',
   invalidContent: 'invalid_content',
@@ -46,23 +45,24 @@ const PUBLISH_PROBLEM = {
   missingSlug: 'missing_slug'
 } as const
 
-type PublishProblemReason = (typeof PUBLISH_PROBLEM)[keyof typeof PUBLISH_PROBLEM]
+export type PublishProblemReason = (typeof PUBLISH_PROBLEM)[keyof typeof PUBLISH_PROBLEM]
 
 const publishProblemSchema = z.object({
   reason: z.enum(Object.values(PUBLISH_PROBLEM)),
   blockId: z.string().nullable(),
+  slot: z.string().optional(),
   path: z.string().optional()
 })
 export type PublishProblem = z.infer<typeof publishProblemSchema>
 
-const snapshotMediaSchema = z.object({
+export const snapshotMediaSchema = z.object({
   key: z.string(),
   contentType: z.string(),
   width: z.number().int(),
   height: z.number().int(),
   alt: z.string()
 })
-type SnapshotMedia = z.infer<typeof snapshotMediaSchema>
+export type SnapshotMedia = z.infer<typeof snapshotMediaSchema>
 
 export const snapshotSchema = z.object({
   format: z.literal(SNAPSHOT.format),
@@ -83,16 +83,6 @@ export const snapshotSchema = z.object({
   media: z.record(z.string(), snapshotMediaSchema)
 })
 export type Snapshot = z.infer<typeof snapshotSchema>
-
-export const withSeoDefaults = (
-  locales: readonly PublishLocaleRow[],
-  settings: SiteSettings
-): PublishLocaleRow[] =>
-  locales.map((row) => ({
-    ...row,
-    description: row.description || settings.defaultDescription?.[row.locale] || '',
-    socialImageId: row.socialImageId ?? settings.defaultSocialImage?.id ?? null
-  }))
 
 export const publishPageSchema = z.object({ expectedVersion: z.number().int().min(1) })
 
@@ -123,8 +113,24 @@ export interface PublishDraft {
 
 type Checked<T> = { ok: true; value: T } | { ok: false; problem: PublishProblem }
 
-const rejection = (reason: PublishProblemReason, blockId: string | null = null, path?: string) =>
-  ({ ok: false, problem: { reason, blockId, ...(path === undefined ? {} : { path }) } }) as const
+export interface ProblemLocation {
+  blockId?: string | null
+  slot?: string
+  path?: string
+}
+
+export const problemOf = (
+  reason: PublishProblemReason,
+  { blockId = null, slot, path }: ProblemLocation = {}
+): PublishProblem => ({
+  reason,
+  blockId,
+  ...(slot === undefined ? {} : { slot }),
+  ...(path === undefined ? {} : { path })
+})
+
+const rejection = (reason: PublishProblemReason, blockId: string | null = null) =>
+  ({ ok: false, problem: problemOf(reason, { blockId }) }) as const
 
 const checkBlock = (registry: Registry, block: PageBlock): Checked<PageBlock> => {
   const definition = registry.get(block.block)
@@ -151,7 +157,7 @@ export const checkBlocks = (registry: Registry, blocks: readonly PageBlock[]) =>
   }
 }
 
-const mediaIdsIn = (node: TranslatedNode, value: unknown): string[] =>
+export const mediaIdsIn = (node: TranslatedNode, value: unknown): string[] =>
   markedFieldsIn(node, value, 'image').flatMap(({ value: image }) =>
     isRecord(image) && typeof image.id === 'string' ? [image.id] : []
   )
@@ -187,7 +193,7 @@ const snapshotMediaOf = (row: PublishMediaRow, locale: Locale): SnapshotMedia =>
   alt: row.decorative ? '' : (row.alt[locale] ?? '')
 })
 
-const mediaFor = (
+export const mediaFor = (
   ids: readonly string[],
   media: ReadonlyMap<string, PublishMediaRow>,
   locale: Locale
@@ -199,34 +205,37 @@ const mediaFor = (
     })
   )
 
+export const contentProblems = (
+  node: TranslatedNode,
+  content: unknown,
+  media: ReadonlyMap<string, unknown>,
+  location: ProblemLocation
+): PublishProblem[] => [
+  ...(mediaIdsIn(node, content).some((mediaId) => !media.has(mediaId))
+    ? [problemOf(PUBLISH_PROBLEM.unknownMedia, location)]
+    : []),
+  ...unsafeLinkPathsIn(node, content).map((path) =>
+    problemOf(PUBLISH_PROBLEM.unsafeLink, { ...location, path })
+  ),
+  ...missingDefaultLocalePathsIn(node, content).map((path) =>
+    problemOf(PUBLISH_PROBLEM.missingDefaultLocale, { ...location, path })
+  )
+]
+
 const referenceProblems = (
   registry: Registry,
   draft: PublishDraft,
   media: ReadonlyMap<string, PublishMediaRow>
 ): PublishProblem[] => [
-  ...(registry.hasLayout(draft.page.layout)
-    ? []
-    : [rejection(PUBLISH_PROBLEM.unknownLayout).problem]),
+  ...(registry.hasLayout(draft.page.layout) ? [] : [problemOf(PUBLISH_PROBLEM.unknownLayout)]),
   ...draft.locales.flatMap(({ slug }) =>
-    draft.page.isHome || slug ? [] : [rejection(PUBLISH_PROBLEM.missingSlug).problem]
+    draft.page.isHome || slug ? [] : [problemOf(PUBLISH_PROBLEM.missingSlug)]
   ),
   ...draft.blocks.flatMap(({ id, block, content }) =>
-    mediaIdsIn(registry.jsonSchema(block), content).some((mediaId) => !media.has(mediaId))
-      ? [rejection(PUBLISH_PROBLEM.unknownMedia, id).problem]
-      : []
-  ),
-  ...draft.blocks.flatMap(({ id, block, content }) =>
-    unsafeLinkPathsIn(registry.jsonSchema(block), content).map(
-      (path) => rejection(PUBLISH_PROBLEM.unsafeLink, id, path).problem
-    )
-  ),
-  ...draft.blocks.flatMap(({ id, block, content }) =>
-    missingDefaultLocalePathsIn(registry.jsonSchema(block), content).map(
-      (path) => rejection(PUBLISH_PROBLEM.missingDefaultLocale, id, path).problem
-    )
+    contentProblems(registry.jsonSchema(block), content, media, { blockId: id })
   ),
   ...(draft.locales.some(({ socialImageId }) => socialImageId && !media.has(socialImageId))
-    ? [rejection(PUBLISH_PROBLEM.unknownMedia).problem]
+    ? [problemOf(PUBLISH_PROBLEM.unknownMedia)]
     : [])
 ]
 

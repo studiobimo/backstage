@@ -1,7 +1,6 @@
 import {
   API_ERROR,
   ensureUser,
-  errorBody,
   findPage,
   planPublish,
   PUBLISH_PLAN,
@@ -14,7 +13,7 @@ import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
 import { respondStale } from './pages.ts'
-import { readJsonBody, respondWithError } from './respond.ts'
+import { readJsonBody, respondUnpublishable, respondWithError } from './respond.ts'
 import { rebuildPublishedIndex, removeSnapshots, writeSnapshots } from './snapshots.ts'
 
 export const publishRoutes = (registry: Registry) =>
@@ -28,10 +27,7 @@ export const publishRoutes = (registry: Registry) =>
       if (plan.status === PUBLISH_PLAN.notFound) return respondWithError(c, API_ERROR.notFound)
       if (plan.status === PUBLISH_PLAN.stale) return respondStale(c, id)
       if (plan.status === PUBLISH_PLAN.invalid) {
-        return c.json(
-          { ...errorBody(API_ERROR.unpublishable), problems: plan.problems },
-          API_ERROR.unpublishable.status
-        )
+        return respondUnpublishable(c, plan.problems)
       }
       await writeSnapshots(c.env.SITE, plan.snapshots)
       await recordPublished(

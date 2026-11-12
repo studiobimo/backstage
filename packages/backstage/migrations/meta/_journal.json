@@ -64,6 +64,13 @@
       "when": 1794520693688,
       "tag": "0008_pages_published_version",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794522371498,
+      "tag": "0009_site_publication",
+      "breakpoints": true
     }
   ]
 }

@@ -4,10 +4,10 @@ import { describe, expect, it } from 'vitest'
 import { createRegularPage, db, saveSeo, useFreshPagesDb } from './pages-test-support'
 import { addMedia, publish, snapshotOf } from './publish-test-support'
 
-describe('publishing with site settings defaults', () => {
+describe('publishing a page when the site settings have defaults', () => {
   useFreshPagesDb()
 
-  it('fills a missing description and social image from the site settings', async () => {
+  it('leaves a missing description and social image empty, for the site snapshot to fill', async () => {
     await addMedia('d1')
     const editorId = await ensureUser(db, { email: 'editor@example.test', name: 'Editor' })
     await writeSiteSettings(
@@ -25,8 +25,8 @@ describe('publishing with site settings defaults', () => {
     expect((await publish(id)).status).toBe(200)
     const en = await snapshotOf(id, 'en')
     const es = await snapshotOf(id, 'es')
-    expect(en.seo).toEqual({ title: '', description: 'Own', socialImageId: 'd1' })
-    expect(es.seo.description).toBe('Sitio del estudio')
-    expect(es.media.d1).toMatchObject({ key: 'media/d1.png' })
+    expect(en.seo).toEqual({ title: '', description: 'Own', socialImageId: null })
+    expect(es.seo.description).toBe('')
+    expect(es.media).toEqual({})
   })
 })

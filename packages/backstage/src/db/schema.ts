@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
+import type { SiteVersions } from '../site-publishing.ts'
 import type { MissingByLocale } from '../translations.ts'
 
 const now = () => Date.now()
@@ -104,4 +105,11 @@ export const siteBlocks = sqliteTable('site_blocks', {
   schemaVersion: integer('schema_version').notNull().default(1),
   content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
   ...versionStamp()
+})
+
+export const sitePublication = sqliteTable('site_publication', {
+  id: text('id').primaryKey(),
+  publishedAt: integer('published_at').notNull(),
+  publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' }),
+  versions: text('versions', { mode: 'json' }).$type<SiteVersions>().notNull()
 })

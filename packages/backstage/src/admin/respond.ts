@@ -10,6 +10,7 @@ import {
   type ApiError,
   type FieldIssue,
   type PageStamp,
+  type PublishProblem,
   type VersionedWrite
 } from '../index.ts'
 
@@ -31,6 +32,9 @@ export const versionedWrite = async (
   expectedVersion,
   editorId: await ensureUser(c.env.DB, c.get('editor'))
 })
+
+export const respondUnpublishable = (c: Context, problems: readonly PublishProblem[]) =>
+  c.json({ ...errorBody(API_ERROR.unpublishable), problems }, API_ERROR.unpublishable.status)
 
 export const RESPONSE_STATUS = { created: 201, noContent: 204 } as const
 
