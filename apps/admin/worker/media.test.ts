@@ -10,6 +10,7 @@ const migrations = migrationStatements('0000_init')
 const { dispose, db, env } = await openTestEnv()
 afterAll(dispose)
 
+const SAME_ORIGIN = 'http://localhost'
 const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 const GIF = [...'GIF89a'].map((char) => char.charCodeAt(0))
 
@@ -52,7 +53,11 @@ const upload = async (
     {
       method: 'POST',
       body: bytes,
-      headers: { 'content-type': contentType, ...headers({ contentLength }) }
+      headers: {
+        'content-type': contentType,
+        origin: SAME_ORIGIN,
+        ...headers({ contentLength })
+      }
     },
     bindings
   )

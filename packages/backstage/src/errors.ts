@@ -19,6 +19,11 @@ export const API_ERROR = {
     status: 415,
     message: 'Only JPEG, PNG, WebP and AVIF images are accepted'
   },
+  unsupportedContentType: {
+    code: 'unsupported_content_type',
+    status: 415,
+    message: 'Send the request body as application/json'
+  },
   notFound: { code: 'not_found', status: 404, message: 'Not found' },
   internal: { code: 'internal', status: 500, message: 'Internal error' },
   devAuthOutsideLocal: {

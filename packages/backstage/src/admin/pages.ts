@@ -31,7 +31,7 @@ import type { Context } from 'hono'
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
-import { RESPONSE_STATUS, respondWithError } from './respond.ts'
+import { readJsonBody, RESPONSE_STATUS, respondWithError } from './respond.ts'
 import { indexUnpublished, removeSnapshots } from './snapshots.ts'
 
 type PagesContext = Context<AccessEnv>
@@ -44,11 +44,6 @@ const WRITE_ERRORS: Record<Exclude<PageWrite, 'ok' | 'stale'>, ApiError> = {
   [PAGE_WRITE.notFound]: API_ERROR.notFound,
   [PAGE_WRITE.homeMismatch]: API_ERROR.invalid,
   [PAGE_WRITE.unknownMedia]: API_ERROR.invalid
-}
-
-const readInput = async (c: PagesContext) => {
-  const body = await c.req.json().catch(() => null)
-  return pageInputSchema.safeParse(body)
 }
 
 export const respondStale = async (c: PagesContext, id: string) =>
@@ -95,17 +90,17 @@ export const pagesRoutes = (registry: Registry) =>
   new Hono<AccessEnv>()
     .get('/', async (c) => c.json({ pages: await listPageSummaries(c.env.DB!, registry) }))
     .post('/', async (c) => {
-      const parsed = await readInput(c)
-      if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
+      const body = await readJsonBody(c, pageInputSchema)
+      if (!body.ok) return body.response
       const id = crypto.randomUUID()
-      const failure = await failureOf(c, id, await createPage(c.env.DB!, parsed.data, id))
+      const failure = await failureOf(c, id, await createPage(c.env.DB!, body.data, id))
       return failure ?? c.json({ page: await findPage(c.env.DB!, id) }, RESPONSE_STATUS.created)
     })
     .put('/:id', async (c) => {
-      const parsed = renamePageSchema.safeParse(await c.req.json().catch(() => null))
-      if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
+      const body = await readJsonBody(c, renamePageSchema)
+      if (!body.ok) return body.response
       const id = c.req.param('id')
-      const { expectedVersion, ...input } = parsed.data
+      const { expectedVersion, ...input } = body.data
       const write = await versionedWrite(c, expectedVersion)
       const failure = await failureOf(c, id, await renamePage(c.env.DB!, id, input, write))
       return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
@@ -124,33 +119,32 @@ export const pagesRoutes = (registry: Registry) =>
       return (await blocksResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })
     .put('/:id/blocks', async (c) => {
-      const parsed = savePageBlocksSchema.safeParse(await c.req.json().catch(() => null))
+      const body = await readJsonBody(c, savePageBlocksSchema)
+      if (!body.ok) return body.response
       if (
-        !parsed.success ||
-        parsed.data.blocks.some(({ block }) => !registry.get(block) || registry.isSlotBlock(block))
+        body.data.blocks.some(({ block }) => !registry.get(block) || registry.isSlotBlock(block))
       ) {
         return respondWithError(c, API_ERROR.invalid)
       }
       const id = c.req.param('id')
-      const write = await versionedWrite(c, parsed.data.expectedVersion)
+      const write = await versionedWrite(c, body.data.expectedVersion)
       const failure = await failureOf(
         c,
         id,
-        await replacePageBlocks(c.env.DB!, id, parsed.data.blocks, write)
+        await replacePageBlocks(c.env.DB!, id, body.data.blocks, write)
       )
       return failure ?? (await blocksResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })
     .put('/:id/layout', async (c) => {
-      const parsed = savePageLayoutSchema.safeParse(await c.req.json().catch(() => null))
-      if (!parsed.success || !registry.hasLayout(parsed.data.layout)) {
-        return respondWithError(c, API_ERROR.invalid)
-      }
+      const body = await readJsonBody(c, savePageLayoutSchema)
+      if (!body.ok) return body.response
+      if (!registry.hasLayout(body.data.layout)) return respondWithError(c, API_ERROR.invalid)
       const id = c.req.param('id')
-      const write = await versionedWrite(c, parsed.data.expectedVersion)
+      const write = await versionedWrite(c, body.data.expectedVersion)
       const failure = await failureOf(
         c,
         id,
-        await setPageLayout(c.env.DB!, id, parsed.data.layout, write)
+        await setPageLayout(c.env.DB!, id, body.data.layout, write)
       )
       return failure ?? c.json({ page: await findPage(c.env.DB!, id) })
     })
@@ -159,9 +153,9 @@ export const pagesRoutes = (registry: Registry) =>
       return (await seoResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
     })
     .put('/:id/seo', async (c) => {
-      const parsed = savePageSeoSchema.safeParse(await c.req.json().catch(() => null))
-      if (!parsed.success) return respondWithError(c, API_ERROR.invalid)
-      const { expectedVersion, ...seo } = parsed.data
+      const body = await readJsonBody(c, savePageSeoSchema)
+      if (!body.ok) return body.response
+      const { expectedVersion, ...seo } = body.data
       const id = c.req.param('id')
       const write = await versionedWrite(c, expectedVersion)
       const failure = await failureOf(c, id, await writePageSeo(c.env.DB!, id, seo, write))

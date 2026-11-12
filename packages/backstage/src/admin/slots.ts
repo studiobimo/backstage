@@ -11,7 +11,7 @@ import {
 } from '../index.ts'
 import { Hono } from 'hono'
 
-import { respondWithError } from './respond.ts'
+import { readJsonBody, respondWithError } from './respond.ts'
 
 const currentOf = (registry: Registry, stored: SiteBlock | undefined): SiteBlock | null => {
   const block = stored && registry.get(stored.block)
@@ -39,14 +39,13 @@ export const slotsRoutes = (registry: Registry) =>
     .get('/', async (c) => c.json({ slots: await describeAll(registry, c.env.DB!) }))
     .put('/:slot', async (c) => {
       const slot = c.req.param('slot')
-      const parsed = siteBlockSchema.safeParse(await c.req.json().catch(() => null))
       const allowed = registry.slots.get(slot)
       if (!allowed) return respondWithError(c, API_ERROR.notFound)
-      const block = parsed.success && registry.get(parsed.data.block)
-      if (!parsed.success || !block || !allowed.includes(block.name)) {
-        return respondWithError(c, API_ERROR.invalid)
-      }
-      const valid = validateBlockContent(block, parsed.data.schemaVersion, parsed.data.content)
+      const body = await readJsonBody(c, siteBlockSchema)
+      if (!body.ok) return body.response
+      const block = registry.get(body.data.block)
+      if (!block || !allowed.includes(block.name)) return respondWithError(c, API_ERROR.invalid)
+      const valid = validateBlockContent(block, body.data.schemaVersion, body.data.content)
       if (!valid.ok) return respondWithError(c, API_ERROR.invalid)
       await writeSiteBlock(c.env.DB!, slot, {
         block: block.name,
