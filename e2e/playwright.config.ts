@@ -29,7 +29,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `${migrate} && ${wranglerDev('admin', 'backstage_admin', E2E.admin.port, '--var DEV_AUTH:true')}`,
+      command: `${migrate} && ${wranglerDev('admin', 'backstage_admin', E2E.admin.port, `--var DEV_AUTH:true --var SITE_ORIGIN:${siteUrl}`)}`,
       url: adminUrl,
       reuseExistingServer: !process.env.CI,
       cwd: '..',

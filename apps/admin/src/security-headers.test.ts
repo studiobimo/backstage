@@ -15,7 +15,10 @@ function headersFor(path: string) {
   )
 }
 
-const CSP = { forbiddenSources: new Set(["'unsafe-inline'", "'unsafe-eval'", '*']) }
+const CSP = {
+  forbiddenSources: new Set(["'unsafe-inline'", "'unsafe-eval'", '*']),
+  styleHash: /^'sha256-[A-Za-z0-9+/]{43}='$/
+}
 
 const headers = headersFor('/*')
 const policy = new Map(
@@ -37,9 +40,16 @@ describe('the admin SPA headers', () => {
   })
 
   it('allow scripts, styles and requests only from the admin itself', () => {
-    for (const directive of ['script-src', 'style-src', 'connect-src']) {
+    for (const directive of ['script-src', 'connect-src']) {
       expect(policy.get(directive)).toEqual(["'self'"])
     }
+  })
+
+  it('allow styles from the admin itself and from the exact inline sheets the drag library adds', () => {
+    const [own, ...inlineSheets] = policy.get('style-src') ?? []
+    expect(own).toBe("'self'")
+    expect(inlineSheets.length).toBeGreaterThan(0)
+    for (const source of inlineSheets) expect(source).toMatch(CSP.styleHash)
   })
 
   it('let images come from the admin itself and from object URLs for upload previews', () => {

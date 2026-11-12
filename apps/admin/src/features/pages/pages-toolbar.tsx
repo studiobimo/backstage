@@ -26,7 +26,7 @@ export function PagesToolbar({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <Tabs value={status} onValueChange={(value) => onStatusChange(value as PageStatusFilter)}>
-        <TabsList aria-label={t('list.filters.status')}>
+        <TabsList aria-label={t('list.filters.status')} className="text-muted-foreground">
           {PAGE_STATUS_FILTERS.map((filter) => (
             <TabsTab key={filter} value={filter}>
               {t(`list.filters.${filter}`)}

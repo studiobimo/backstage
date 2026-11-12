@@ -14,6 +14,13 @@ describe('the site stylesheet', () => {
     expect(response.headers.get('Cache-Control')).toBe(STYLESHEET.cacheControl)
   })
 
+  it('is compiled by Tailwind, not served as the raw source', async () => {
+    const css = await (await get(STYLESHEET.path)).text()
+    expect(css).not.toContain('@import')
+    expect(css).not.toContain('@apply')
+    expect(css).toMatch(/\[data-block=["']split-hero["']\]\s*\{[^}]*display:\s*grid/)
+  })
+
   it('is cached for a year as immutable', () => {
     expect(STYLESHEET.cacheControl).toBe('public, max-age=31536000, immutable')
   })
