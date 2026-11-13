@@ -30,3 +30,4 @@ This folder is the source of truth for what Backstage is and why it is built the
   - [ADR-0013: The sitemap index is rebuilt from D1 on every publish, unpublish and delete](adr/0013-sitemap-index-from-d1.md)
   - [ADR-0014: Republishing every page runs as server-driven batches](adr/0014-republish-all-in-batches.md)
   - [ADR-0015: The package has six entries, and SemVer covers only the public ones](adr/0015-entry-points-and-semver.md)
+  - [ADR-0016: The package owns the site Worker, and a site overrides only what is its own](adr/0016-create-site.md)

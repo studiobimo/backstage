@@ -27,5 +27,6 @@ export type { KvReader } from './store.ts'
 export interface SiteEnv {
   SITE: KVNamespace
   MEDIA: R2Bucket
+  SITE_URL: string
   ADMIN_ORIGIN?: string
 }
