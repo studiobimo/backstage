@@ -29,6 +29,9 @@ export interface SitePreview {
   assets?: Readonly<Record<string, string>>
 }
 
+const ownValue = <T>(record: Readonly<Record<string, T>> | undefined, key: string) =>
+  record && Object.hasOwn(record, key) ? record[key] : undefined
+
 const localeOf = (value: string | undefined, { locales, defaultLocale }: LocaleConfig) =>
   locales.find((locale) => locale === value) ?? defaultLocale
 
@@ -68,7 +71,7 @@ export const previewRoutes = (preview: SitePreview, context: DocumentContext) =>
   }
   return routes
     .get(`${BLOCK_PREVIEW.path}/:name/${BLOCK_PREVIEW.thumbnailFile}`, (c) => {
-      const svg = preview.thumbnails?.[c.req.param('name')]
+      const svg = ownValue(preview.thumbnails, c.req.param('name'))
       if (!svg) return respondWithError(c, API_ERROR.notFound, PREVIEW_HEADERS)
       return c.body(svg, 200, {
         'Content-Type': SVG_CONTENT_TYPE,
@@ -78,7 +81,9 @@ export const previewRoutes = (preview: SitePreview, context: DocumentContext) =>
     .get(`${BLOCK_PREVIEW.path}/:name`, (c) => {
       const name = c.req.param('name')
       const block =
-        preview.samples[name] === undefined ? undefined : context.components.registry.get(name)
+        ownValue(preview.samples, name) === undefined
+          ? undefined
+          : context.components.registry.get(name)
       if (!block) return respondWithError(c, API_ERROR.notFound, PREVIEW_HEADERS)
       const locale = localeOf(c.req.query(BLOCK_PREVIEW.localeParam), context.locales)
       return renderPreview(

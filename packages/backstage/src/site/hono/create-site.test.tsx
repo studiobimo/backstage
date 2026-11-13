@@ -117,9 +117,10 @@ describe('createSite security and preview', () => {
     const response = await request(path)
     expect(await response.text()).toBe(FIXTURE.thumbnail)
     expect(response.headers.get('Cross-Origin-Resource-Policy')).toBe('cross-origin')
-    expect((await request(`${BLOCK_PREVIEW.path}/x/${BLOCK_PREVIEW.thumbnailFile}`)).status).toBe(
-      404
-    )
+    for (const name of ['x', 'constructor']) {
+      const unknown = await request(`${BLOCK_PREVIEW.path}/${name}/${BLOCK_PREVIEW.thumbnailFile}`)
+      expect(unknown.status).toBe(404)
+    }
   })
 
   it('has no preview routes unless the site supplies samples', async () => {
