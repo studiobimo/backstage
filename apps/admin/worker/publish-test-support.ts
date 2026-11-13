@@ -1,10 +1,5 @@
-import {
-  pagesResponseSchema,
-  publishedIndexSchema,
-  SEO,
-  snapshotKey,
-  snapshotSchema
-} from '@studiobimo/backstage'
+import { pagesResponseSchema } from '@studiobimo/backstage/internal'
+import { publishedIndexSchema, SEO, snapshotKey, snapshotSchema } from '@studiobimo/backstage/site'
 import { db, kv, send, versionOf } from './pages-test-support'
 
 const welcomeDoc = {

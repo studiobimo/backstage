@@ -1,4 +1,4 @@
-import { ensureUser, writeSiteSettings } from '@studiobimo/backstage'
+import { ensureUser, writeSiteSettings } from '@studiobimo/backstage/admin'
 import { describe, expect, it } from 'vitest'
 
 import { createRegularPage, db, saveSeo, useFreshPagesDb } from './pages-test-support'

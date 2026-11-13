@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { SEO } from '@studiobimo/backstage'
+import { SEO } from '@studiobimo/backstage/site'
 
 import { db, kv, regular, send, useFreshPagesDb } from './pages-test-support'
 import { publish, publishedIndex } from './publish-test-support'

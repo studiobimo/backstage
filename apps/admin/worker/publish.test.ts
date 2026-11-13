@@ -1,4 +1,5 @@
-import { hasUnpublishedChanges, routeKey } from '@studiobimo/backstage'
+import { hasUnpublishedChanges } from '@studiobimo/backstage/internal'
+import { routeKey } from '@studiobimo/backstage/site'
 import { describe, expect, it } from 'vitest'
 
 import {

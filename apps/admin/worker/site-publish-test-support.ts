@@ -1,4 +1,5 @@
-import { siteSnapshotKey, siteSnapshotSchema, type SitePublication } from '@studiobimo/backstage'
+import type { SitePublication } from '@studiobimo/backstage/internal'
+import { siteSnapshotKey, siteSnapshotSchema } from '@studiobimo/backstage/site'
 
 import { db, kv, sendApi } from './pages-test-support'
 

@@ -3,7 +3,7 @@ import {
   republishStatusResponseSchema,
   type RepublishBatch,
   type RepublishScope
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 import { vi } from 'vitest'
 
 import { db, kv, regular, send, sendApi } from './pages-test-support'
