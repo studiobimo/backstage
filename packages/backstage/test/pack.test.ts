@@ -25,7 +25,10 @@ const adminHeaders = join(packageDir, '../../apps/admin/public/_headers')
 const PACK = { timeoutMs: 120_000 } as const
 const CONSUMER = {
   timeoutMs: 120_000,
-  entries: ['', '/admin', '/render', '/site'],
+  entries: {
+    public: ['', '/admin', '/render', '/site', '/site/hono'],
+    internal: ['/internal']
+  },
   tsconfig: {
     compilerOptions: {
       target: 'es2023',
@@ -71,8 +74,12 @@ const installPackage = (consumer: string) => {
   return installed
 }
 
+const allEntries = () => [...CONSUMER.entries.public, ...CONSUMER.entries.internal]
+
 const loadEntries = () =>
-  CONSUMER.entries.map((entry) => `await import('@studiobimo/backstage${entry}')`).join('\n')
+  allEntries()
+    .map((entry) => `await import('@studiobimo/backstage${entry}')`)
+    .join('\n')
 
 beforeAll(() => {
   out = mkdtempSync(join(tmpdir(), 'backstage-pack-'))
@@ -107,7 +114,7 @@ describe('the packed package', () => {
   it('exports compiled javascript and declarations, and ships no source', () => {
     const files = tar('-tzf').split('\n')
     const manifest = JSON.parse(tar('-xzOf', 'package/package.json'))
-    for (const entry of CONSUMER.entries) {
+    for (const entry of allEntries()) {
       const { types, default: runtime } = manifest.exports[`.${entry}`]
       expect(files).toContain(`package/${types.slice(2)}`)
       expect(files).toContain(`package/${runtime.slice(2)}`)
@@ -122,10 +129,14 @@ describe('the packed package', () => {
       const consumer = join(out, 'consumer')
       installPackage(consumer)
       linkDependencies(join(packageDir, 'node_modules'), join(consumer, 'node_modules'))
-      const source = CONSUMER.entries.map(
-        (entry, index) => `import * as entry${index} from '@studiobimo/backstage${entry}'`
+      const imports = [
+        ...CONSUMER.entries.public.map((entry, index) => [`entry${index}`, entry] as const),
+        ...CONSUMER.entries.internal.map((entry, index) => [`internal${index}`, entry] as const)
+      ]
+      const source = imports.map(
+        ([name, entry]) => `import * as ${name} from '@studiobimo/backstage${entry}'`
       )
-      const uses = CONSUMER.entries.map((_, index) => `entry${index}`)
+      const uses = imports.map(([name]) => name)
       writeFileSync(join(consumer, 'index.ts'), `${source.join('\n')}\nexport default [${uses}]\n`)
       writeFileSync(join(consumer, 'tsconfig.json'), JSON.stringify(CONSUMER.tsconfig))
       const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc')

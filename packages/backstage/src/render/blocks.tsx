@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 
 import { validateBlockContent } from '../blocks.ts'
 import type { ComponentMap } from '../components.ts'
-import { logLine } from '../observability.ts'
+import { logLine } from '../log.ts'
 import type { PageBlock } from '../pages.ts'
 import type { Snapshot } from '../publishing.ts'
 

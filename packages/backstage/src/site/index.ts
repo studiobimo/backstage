@@ -1,3 +1,4 @@
+export { BLOCK_PREVIEW } from '../blocks.ts'
 export { defaultEdgeCache, EDGE_CACHE, withEdgeCache } from './cache.ts'
 export type { Deferrable, EdgeCache } from './cache.ts'
 export { renderHtml } from './html.ts'
@@ -7,6 +8,18 @@ export type { MediaObject, MediaReader } from './media.ts'
 export { parseRoute, pathOf, routeOf } from './routing.ts'
 export type { Route } from './routing.ts'
 export { readPublishedPages, respondWithRobots, respondWithSitemap } from './seo.ts'
+export {
+  alternateLinks,
+  canonicalUrl,
+  EMPTY_PUBLISHED_INDEX,
+  publishedIndexSchema,
+  SEO,
+  upsertIntoIndex
+} from '../seo.ts'
+export type { AlternateLink } from '../seo.ts'
+export { routeKey, SNAPSHOT, snapshotKey, snapshotRecords, snapshotSchema } from '../publishing.ts'
+export type { Snapshot } from '../publishing.ts'
+export { siteSnapshotKey, siteSnapshotSchema } from '../site-publishing.ts'
 export { findPublished, findSiteSnapshot, findTranslations } from './store.ts'
 export type { KvReader } from './store.ts'
 
