@@ -18,8 +18,10 @@ bimo.dev's site and admin are the first consumer of Backstage, not part of it
 the studio starts in parallel once there are blocks to build on. This repository holds only the
 harness in `apps/`.
 
-Until the package is published (M2), bimo.dev takes it by path (a `link:` dependency on
-`packages/backstage`) or through this repository as a git submodule. Anything that needs a
+`0.1.0` is on GitHub Packages, published by hand because the release workflow does not run yet
+([#271](https://github.com/studiobimo/backstage/issues/271)), so bimo.dev installs it with a token
+([guide](guides/package-token.md)). Changes merged after `0.1.0` reach bimo.dev only in the next
+release. Anything that needs a
 deployed site, such as the deploys, Cloudflare Access, the custom domains, the leads and contact
 form, the home page and the 404 page, is built and checked there. Milestones below that name
 bimo.dev are met in that repository.
@@ -128,7 +130,9 @@ AUT-1, AUT-2; OPS-3; PKG-1 to PKG-3, PKG-5, PKG-6.
   and the sitemap keeps every published page
 - Every environment declares its bindings, and a missing one fails with a clear error
 - Bots cannot use up the free plan's KV reads through query strings or impossible paths
-- CI runs on every pull request, and a release is published by the workflow
+- CI runs on every pull request, and a release is published by the workflow. Not met: the
+  workflow's Actions do not run, and `0.1.0` was published by hand
+  ([#271](https://github.com/studiobimo/backstage/issues/271))
 - The built admin works under its own Content-Security-Policy, and the end-to-end run fails on a
   console error
 - A page cannot be published with a required field empty in the default locale
@@ -189,9 +193,15 @@ Backstage becomes something a client project installs, rather than code it copie
 
 ### Exit criteria
 
-- `@studiobimo/backstage` is published to GitHub Packages by the reusable workflow in `studiobimo/.github`
+- `@studiobimo/backstage` is published to GitHub Packages by the reusable workflow in
+  `studiobimo/.github`. Not met: `0.1.0` is on GitHub Packages but was published by hand, because
+  the workflow's Actions do not run ([#271](https://github.com/studiobimo/backstage/issues/271))
 - `apps/site` consumes the published package, not the workspace source. `apps/admin` stays on the
-  workspace source, because the package ships its build as the prebuilt admin SPA
+  workspace source, because the package ships the admin SPA's build in `dist/client`
+  ([ADR-0008](adr/0008-workspace-profiles-and-styling.md)). The package ships compiled JavaScript
+  through the entry points of [ADR-0015](adr/0015-entry-points-and-semver.md). Met for `0.1.0`;
+  later changes (the site's header and footer, site locales and `createSite`) wait for the next
+  release
 - The `backstage` profile is released in `studiobimo/project-template`
 - On a test Cloudflare account, a fresh repo with the profile and a token reaches a working admin
   and site by following the README alone

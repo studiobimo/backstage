@@ -17,8 +17,8 @@ mean migrating every stored field and every route.
   field is shared. Pages have a slug for each locale.
 - **Routes**: the default locale is served at `/` and the other at `/<locale>/`. Pages carry
   `hreflang` links, and an empty localized value falls back to the default locale.
-- Locales are configured per site, so adding a third needs no schema change. The site declares
-  them once, in `defineRegistry` (see "Configuring locales" below).
+- Locales are configured per site, in the registry, so adding a third needs no schema change. The
+  site declares them once, in `defineRegistry` (see "Configuring locales" below).
 
 ## Configuring locales
 
@@ -43,6 +43,11 @@ mean migrating every stored field and every route.
   locale rows they were created with. Adding a locale needs a data migration that adds rows for
   each page, then a republish of every page and the site. Removing one leaves orphaned rows and
   snapshots, which are ignored. Declare the locales when the site is created.
+
+The site Worker reads the registry's locales only in a release that includes
+[#270](https://github.com/studiobimo/backstage/issues/270). `apps/site` is on the published `0.1.0`,
+so its site keeps `en` and `es` until the next release
+([#271](https://github.com/studiobimo/backstage/issues/271)).
 
 ## Consequences
 

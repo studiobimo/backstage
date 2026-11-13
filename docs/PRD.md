@@ -129,13 +129,13 @@ may slip to the next release.
 
 ### E5. Locales
 
-| ID    | Story                          | Acceptance                                                                                                            | Priority |
-| ----- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------- | -------- |
-| LOC-1 | The site has a default locale  | `en` and `es` are configured per site. The default locale is served at `/` and the other at `/<locale>/`              | Must     |
-| LOC-2 | I edit one locale at a time    | The editor has a locale switcher, and fields with a missing translation are flagged in the page list and in the form  | Must     |
-| LOC-3 | Missing translations fall back | On the site, an empty localized value shows the default locale's value                                                | Must     |
-| LOC-4 | The admin speaks my language   | Every admin string comes from i18next in `en` and `es`. `eslint-plugin-i18next` fails the build on a hardcoded string | Must     |
-| LOC-5 | Visitors can switch language   | The switcher links to the same page in the other locale                                                               | Must     |
+| ID    | Story                          | Acceptance                                                                                                                                                                                                                 | Priority |
+| ----- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| LOC-1 | The site has a default locale  | A site declares its locales and default in `defineRegistry`; `en` and `es` with `en` as the default if it declares none ([ADR-0007](adr/0007-two-locales.md)). The default is served at `/` and the others at `/<locale>/` | Must     |
+| LOC-2 | I edit one locale at a time    | The editor has a locale switcher, and fields with a missing translation are flagged in the page list and in the form                                                                                                       | Must     |
+| LOC-3 | Missing translations fall back | On the site, an empty localized value shows the default locale's value                                                                                                                                                     | Must     |
+| LOC-4 | The admin speaks my language   | Every admin string comes from i18next in `en` and `es`. `eslint-plugin-i18next` fails the build on a hardcoded string                                                                                                      | Must     |
+| LOC-5 | Visitors can switch language   | The switcher links to the same page in the other locale                                                                                                                                                                    | Must     |
 
 ### E6. Collections
 
@@ -156,13 +156,13 @@ may slip to the next release.
 
 ### E8. Auth
 
-| ID    | Story                                    | Acceptance                                                                                         | Priority |
-| ----- | ---------------------------------------- | -------------------------------------------------------------------------------------------------- | -------- |
-| AUT-1 | Only the client's people reach the admin | The admin sits behind Cloudflare Access, and the worker checks the Access JWT on every API request | Must     |
-| AUT-2 | Local development needs no Access        | A bypass works only when `DEV_AUTH` is set, and a deploy with it set is refused                    | Must     |
-| AUT-3 | I can sign in without Zero Trust         | Magic-link sign-in with sessions, as an alternative to Access, chosen per site                     | Must     |
-| AUT-4 | Owners manage who edits                  | The owner role invites and removes users. Editors edit and publish                                 | Must     |
-| AUT-5 | I can see who changed what               | Each page and entry shows who last saved it and who last published it                              | Should   |
+| ID    | Story                                    | Acceptance                                                                                                                                  | Priority |
+| ----- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| AUT-1 | Only the client's people reach the admin | The admin sits behind Cloudflare Access, and the worker checks the Access JWT on every API request                                          | Must     |
+| AUT-2 | Local development needs no Access        | A bypass is on only when `DEV_AUTH` is `true` and works only on localhost. A deployed Worker with it set answers `500` to every API request | Must     |
+| AUT-3 | I can sign in without Zero Trust         | Magic-link sign-in with sessions, as an alternative to Access, chosen per site                                                              | Must     |
+| AUT-4 | Owners manage who edits                  | The owner role invites and removes users. Editors edit and publish                                                                          | Must     |
+| AUT-5 | I can see who changed what               | Each page and entry shows who last saved it and who last published it                                                                       | Should   |
 
 ### E9. Package and onboarding
 
@@ -194,7 +194,9 @@ may slip to the next release.
 - **Security:**
   - A strict Content-Security-Policy on both Workers
   - No secret in the site worker
-  - CSRF protection on every admin write
+  - CSRF protection on every admin write: Hono's `csrf()` refuses a form-type write from another
+    origin, and the JSON routes answer `415` to a body that is not `application/json`
+    ([Cloudflare Access guide](guides/cloudflare-access.md))
 - **Accessibility:** the admin and bimo.dev meet WCAG 2.2 AA.
 - **Performance:** bimo.dev's home page reaches an LCP under 2.5 s on a mid-range phone over 4G.
 

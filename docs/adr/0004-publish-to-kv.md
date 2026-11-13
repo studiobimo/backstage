@@ -37,7 +37,8 @@ options:
 
 ## Consequences
 
-- KV's 1,000 free writes a day are spent only on publishing and previewing ([risk 1](../RISKS.md)).
+- KV's 1,000 free writes a day are spent only on publishing, unpublishing, deleting a published page
+  and, from M4, previewing ([risk 1](../RISKS.md)).
 - KV takes up to about 60 seconds to reach every location, and the cache adds to that. A publish
   is promised within two minutes.
 - Server-side React counts against the Worker's size and CPU budget, so a spike in M0 measures it.

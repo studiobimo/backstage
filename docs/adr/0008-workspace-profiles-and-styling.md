@@ -1,7 +1,8 @@
 # ADR-0008: The org's profiles inside a workspace, with coss ui and lineup's styling
 
-- **Status:** Accepted, amended 2026-11-07 (bimo.dev moved to its own repository) and 2026-11-10
-  (the site owns its blocks and stylesheet)
+- **Status:** Accepted, amended 2026-11-07 (bimo.dev moved to its own repository), 2026-11-10
+  (the site owns its blocks and stylesheet) and 2026-11-12 (the admin SPA's source and how the
+  package ships)
 - **Date:** 2026-11-07
 
 ## Context
@@ -16,8 +17,8 @@ look the studio wants to reuse.
 - The repo uses the **`vite-react-tanstack` and `cloudflare` profiles**, in a workspace:
 
   ```text
-  packages/backstage   core, admin API, site renderer, admin SPA
-  apps/admin           the smallest admin worker that runs the package
+  packages/backstage   core, admin API, site renderer, and the admin SPA's build in dist/client
+  apps/admin           the admin SPA's source, and the smallest admin worker that runs the package
   apps/site            the smallest site worker that renders it, with a few example blocks
   ```
 
@@ -26,8 +27,7 @@ look the studio wants to reuse.
   project-template will scaffold for a client (PKG-3). They are not bimo.dev, and no real
   site's design lives in them.
 - **bimo.dev lives in its own repository** and consumes `@studiobimo/backstage` like any client
-  project. Until the package is published (M2) it takes the package by path or as a git
-  submodule of this repository.
+  project, from GitHub Packages.
 - **Nothing in this repository is deployed.** The first deploy comes from a consumer: bimo.dev's
   repository, or a test project for M2. The repository has one long-lived branch, `main`, and no
   `development` environment. The `cloudflare` profile's deploy workflow stays inert, because the
@@ -67,4 +67,17 @@ way a client uses it.
   day of use, Cloudflare Access, custom domains, and the leads and contact form.
 - A bug found in bimo.dev is fixed here and released, then bumped there. That is the loop every
   client will have, so the studio meets it first.
-- Both repositories need to be checked out side by side while the package is unpublished.
+- The package is on GitHub Packages (`0.1.0`, published by hand until
+  [#271](https://github.com/studiobimo/backstage/issues/271) gets the release workflow running),
+  so a consumer no longer needs this repository checked out beside it.
+
+## Amendment: the SPA's source and the compiled package (2026-11-12)
+
+- **The admin SPA's source is `apps/admin`, not `packages/backstage`.** The package's `prepack`
+  builds it and copies the result into `dist/client`, which `createAdmin` serves. `apps/admin`
+  therefore stays on the workspace source of the package, while `apps/site` consumes the
+  published `0.1.0` like a client.
+- **The package ships compiled JavaScript and declarations**
+  ([#261](https://github.com/studiobimo/backstage/issues/261)), mapped through `publishConfig.exports`
+  to the entry points of [ADR-0015](0015-entry-points-and-semver.md), so a consumer needs no
+  TypeScript source transform.

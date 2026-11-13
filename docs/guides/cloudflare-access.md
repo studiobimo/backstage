@@ -106,8 +106,9 @@ After that, `csrf()` rejects a form-type write (`multipart/form-data`,
 `application/x-www-form-urlencoded` or `text/plain`, which is also what a request with no content
 type counts as) whose `Origin` is another site. The JSON routes also answer `415` to a body that is
 not `application/json`. Do not rely on the
-`CF_Authorization` cookie's SameSite attribute for this: Cloudflare's default is `None`. Set the
-application's SameSite attribute to Lax or Strict as well.
+`CF_Authorization` cookie's SameSite attribute for this: Cloudflare's reference gives it no
+default, so it is your choice. In the Access application's cookie settings, set **SameSite** to
+`Lax` or `Strict`.
 
 The check runs before routing, so an unknown path gets `403` as well, not `404`. It does this itself because `ctx.access`, the shortcut Cloudflare offers for Workers, is not
 passed to a worker that has static assets, which the admin does.
