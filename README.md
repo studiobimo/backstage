@@ -45,6 +45,7 @@ Site Worker, typed as `SiteEnv` from `@studiobimo/backstage/site`:
 | -------------- | ------------ | -------- | ------------------------------------------------------ |
 | `SITE`         | KV namespace | yes      | published snapshots, written by the admin Worker       |
 | `MEDIA`        | R2 bucket    | yes      | uploaded images, served under `/media`                 |
+| `SITE_URL`     | variable     | yes      | the site's canonical URL, for canonical links, sitemap |
 | `ADMIN_ORIGIN` | variable     | no       | the admin's origin, so it may frame the block previews |
 
 ## Public API
@@ -89,7 +90,13 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 
 ### `@studiobimo/backstage/site/hono`
 
-Hono middleware for the site Worker: `observe`, `reportError`, `respondHealthy`, `OBSERVABILITY`.
+The site Worker in one call, and its Hono middleware.
+
+- `createSite`, which owns routing, the edge cache, security headers, the block preview, media, the
+  stylesheet, the sitemap and robots, and the 404 and error responses
+  ([ADR-0016](docs/adr/0016-create-site.md)), with the `CreateSiteOptions`, `SiteApp`, `SiteHead`,
+  `SitePreview` and `ContentSecurityPolicyAdditions` types
+- `observe`, `reportError`, `respondHealthy`, `OBSERVABILITY`
 
 ### `@studiobimo/backstage/render`
 
