@@ -1,6 +1,7 @@
 import { createMiddleware } from 'hono/factory'
 
-import { API_ERROR, logEvent } from '../index.ts'
+import { API_ERROR } from '../errors.ts'
+import { logEvent } from '../observability.ts'
 import { respondWithError } from './respond.ts'
 
 export interface AdminEnv {

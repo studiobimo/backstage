@@ -1,4 +1,4 @@
-import { describeBlocks, type Registry } from '../index.ts'
+import { describeBlocks, type Registry } from '../blocks.ts'
 import { Hono } from 'hono'
 import type { AdminEnv } from './env.ts'
 

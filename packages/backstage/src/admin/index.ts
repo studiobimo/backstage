@@ -3,14 +3,9 @@ import { csrf } from 'hono/csrf'
 import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
 
-import {
-  API_ERROR,
-  OBSERVABILITY,
-  observe,
-  reportError,
-  respondHealthy,
-  type Registry
-} from '../index.ts'
+import { API_ERROR } from '../errors.ts'
+import { OBSERVABILITY, observe, reportError, respondHealthy } from '../observability.ts'
+import type { Registry } from '../blocks.ts'
 import { requireAccess } from './auth.ts'
 import { requireBindings, type AdminEnv } from './env.ts'
 import { respondWithError } from './respond.ts'

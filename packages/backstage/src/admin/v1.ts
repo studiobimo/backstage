@@ -1,4 +1,4 @@
-import type { Registry } from '../index.ts'
+import type { Registry } from '../blocks.ts'
 import { Hono } from 'hono'
 
 import { blocksRoutes } from './blocks.ts'

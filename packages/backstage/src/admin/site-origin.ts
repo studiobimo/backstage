@@ -1,4 +1,4 @@
-import { API_ERROR } from '../index.ts'
+import { API_ERROR } from '../errors.ts'
 import { Hono } from 'hono'
 
 import { respondWithError } from './respond.ts'

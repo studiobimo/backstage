@@ -1,4 +1,6 @@
-import { API_ERROR, logEvent, type Editor } from '../index.ts'
+import { API_ERROR } from '../errors.ts'
+import { logEvent } from '../observability.ts'
+import type { Editor } from '../db/users.ts'
 import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
 
