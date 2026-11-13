@@ -6,7 +6,7 @@ import {
   type SiteBlock,
   type SiteSettings,
   type Slot
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
 
 import { apiRequest } from '@/lib/api'

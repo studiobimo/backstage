@@ -1,4 +1,4 @@
-import type { PublishProblem, SitePublication } from '@studiobimo/backstage'
+import type { PublishProblem, SitePublication } from '@studiobimo/backstage/internal'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { CircleAlertIcon, RocketIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'

@@ -1,12 +1,12 @@
+import { API_ERROR } from '@studiobimo/backstage'
 import {
-  API_ERROR,
   fieldIssueSchema,
   pageStampSchema,
   publishProblemsResponseSchema,
   type FieldIssue,
   type PageStamp,
   type PublishProblem
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 import { z } from 'zod'
 
 const API_ROOT = '/api/v1'

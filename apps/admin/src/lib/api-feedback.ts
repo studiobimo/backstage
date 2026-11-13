@@ -1,4 +1,4 @@
-import { fieldIssuesOf, type FieldIssue } from '@studiobimo/backstage'
+import { fieldIssuesOf, type FieldIssue } from '@studiobimo/backstage/internal'
 import i18n, { type i18n as I18n } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { ZodError } from 'zod'

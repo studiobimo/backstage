@@ -1,4 +1,4 @@
-import type { PageSummary } from '@studiobimo/backstage'
+import type { PageSummary } from '@studiobimo/backstage/internal'
 
 export const aboutPage: PageSummary = {
   id: 'p1',
