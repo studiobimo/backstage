@@ -37,7 +37,7 @@ export const siteSnapshotSchema = z.object({
 })
 export type SiteSnapshot = z.infer<typeof siteSnapshotSchema>
 
-export const sitePublicationSchema = z.object({
+const sitePublicationSchema = z.object({
   publishedAt: z.number().int().nullable(),
   publishedBy: z.string().nullable(),
   hasUnpublishedChanges: z.boolean()
@@ -46,11 +46,10 @@ export type SitePublication = z.infer<typeof sitePublicationSchema>
 
 export const sitePublicationResponseSchema = z.object({ publication: sitePublicationSchema })
 
-export const siteVersionsSchema = z.object({
-  settings: z.number().int(),
-  slots: z.record(z.string(), z.number().int())
-})
-export type SiteVersions = z.infer<typeof siteVersionsSchema>
+export interface SiteVersions {
+  settings: number
+  slots: Record<string, number>
+}
 
 export const sameSiteVersions = (a: SiteVersions, b: SiteVersions) =>
   a.settings === b.settings &&

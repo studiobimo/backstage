@@ -46,6 +46,12 @@ const CONSUMER = {
     include: ['index.ts']
   }
 } as const
+const README = {
+  path: join(repoRoot, 'README.md'),
+  internalHeading: '## Internal entry',
+  internalNotice: 'internal and not covered by SemVer',
+  heading: (entry: string) => `### \`@studiobimo/backstage${entry}\``
+} as const
 const CONSUMER_MIGRATIONS = {
   timeoutMs: 180_000,
   binding: 'DB',
@@ -56,6 +62,7 @@ const CONSUMER_MIGRATIONS = {
 } as const
 let out: string
 let tarball: string
+let namesByEntry: Record<string, string[]>
 
 const tar = (flags: string, ...members: string[]) =>
   execFileSync('tar', [flags, tarball, ...members], { encoding: 'utf8' })
@@ -76,10 +83,19 @@ const installPackage = (consumer: string) => {
 
 const allEntries = () => [...CONSUMER.entries.public, ...CONSUMER.entries.internal]
 
-const loadEntries = () =>
-  allEntries()
-    .map((entry) => `await import('@studiobimo/backstage${entry}')`)
-    .join('\n')
+const loadEntries = () => `const names = {}
+${allEntries()
+  .map((entry) => `names['${entry}'] = Object.keys(await import('@studiobimo/backstage${entry}'))`)
+  .join('\n')}
+console.log(JSON.stringify(names))`
+
+const readmeSection = (heading: string) => {
+  const readme = readFileSync(README.path, 'utf8')
+  const start = readme.indexOf(heading)
+  expect(start, `${heading} in README.md`).toBeGreaterThanOrEqual(0)
+  const rest = readme.slice(start + heading.length)
+  return rest.slice(0, rest.search(/\n#{2,3} /))
+}
 
 beforeAll(() => {
   out = mkdtempSync(join(tmpdir(), 'backstage-pack-'))
@@ -141,10 +157,11 @@ describe('the packed package', () => {
       writeFileSync(join(consumer, 'tsconfig.json'), JSON.stringify(CONSUMER.tsconfig))
       const tsc = createRequire(import.meta.url).resolve('typescript/bin/tsc')
       execFileSync('node', [tsc, '-p', consumer], { stdio: 'pipe' })
-      execFileSync('node', ['--input-type=module', '-e', loadEntries()], {
+      const loaded = execFileSync('node', ['--input-type=module', '-e', loadEntries()], {
         cwd: consumer,
-        stdio: 'pipe'
+        encoding: 'utf8'
       })
+      namesByEntry = JSON.parse(loaded)
     },
     CONSUMER.timeoutMs
   )
@@ -162,6 +179,24 @@ describe('the packed package', () => {
     expect(stylesheets.length).toBeGreaterThan(0)
     for (const file of stylesheets) {
       expect(tar('-xzOf', file)).not.toMatch(/url\(\s*["']?data:/)
+    }
+  })
+})
+
+describe('the README', () => {
+  it('lists every runtime export of the public entries in the README', () => {
+    for (const entry of CONSUMER.entries.public) {
+      const listed = readmeSection(README.heading(entry))
+      const unlisted = namesByEntry[entry]!.filter((name) => !listed.includes(`\`${name}\``))
+      expect(unlisted, `${entry} exports missing from the README`).toEqual([])
+    }
+  })
+
+  it('marks the internal entries as outside SemVer in the README', () => {
+    for (const entry of CONSUMER.entries.internal) {
+      const section = readmeSection(README.internalHeading)
+      expect(section).toContain(`@studiobimo/backstage${entry}`)
+      expect(section).toContain(README.internalNotice)
     }
   })
 })

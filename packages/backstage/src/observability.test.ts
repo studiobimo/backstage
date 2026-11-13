@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { observe, reportError } from './index.ts'
+import { observe, reportError } from './observability.ts'
 
 const buildApp = () => {
   const app = new Hono()

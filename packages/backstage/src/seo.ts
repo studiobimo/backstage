@@ -34,7 +34,7 @@ export type PublishedIndex = z.infer<typeof publishedIndexSchema>
 
 export const EMPTY_PUBLISHED_INDEX: PublishedIndex = { format: SEO.format, pages: [] }
 
-export const removeFromIndex = (index: PublishedIndex, pageId: string): PublishedIndex => ({
+const removeFromIndex = (index: PublishedIndex, pageId: string): PublishedIndex => ({
   ...index,
   pages: index.pages.filter((page) => page.pageId !== pageId)
 })

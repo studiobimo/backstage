@@ -32,9 +32,6 @@ export const readVersionedSiteSettings = async (
   }
 }
 
-export const readSiteSettings = async (d1: AnyD1Database): Promise<SiteSettings> =>
-  (await readVersionedSiteSettings(d1)).settings
-
 export const readSiteSettingsStamp = (d1: AnyD1Database) =>
   readStamp(d1, siteSettings, eq(siteSettings.id, SITE_ROW_ID))
 

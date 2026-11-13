@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { API_ERROR, errorBody, fieldIssuesOf, invalidBody, invalidResponseSchema } from './index.ts'
+import {
+  API_ERROR,
+  errorBody,
+  fieldIssuesOf,
+  invalidBody,
+  invalidResponseSchema
+} from './errors.ts'
 
 describe('API_ERROR', () => {
   it('gives every error its own code', () => {

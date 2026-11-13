@@ -17,6 +17,7 @@ const KIND = {
 } as const
 
 const FORBIDDEN_BY_ENTRY = {
+  '.': [KIND.d1, KIND.hono],
   './internal': [KIND.d1, KIND.hono],
   './site': [KIND.d1, KIND.hono],
   './render': [KIND.d1, KIND.hono],

@@ -19,6 +19,7 @@ export {
 export type { AlternateLink } from '../seo.ts'
 export { routeKey, SNAPSHOT, snapshotKey, snapshotRecords, snapshotSchema } from '../publishing.ts'
 export type { Snapshot } from '../publishing.ts'
+export type { PageBlock } from '../pages.ts'
 export { siteSnapshotKey, siteSnapshotSchema } from '../site-publishing.ts'
 export { findPublished, findSiteSnapshot, findTranslations } from './store.ts'
 export type { KvReader } from './store.ts'
