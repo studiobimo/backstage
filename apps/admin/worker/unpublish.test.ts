@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { routeKey } from '@studiobimo/backstage'
+import { routeKey } from '@studiobimo/backstage/site'
 
 import {
   createRegularPage,

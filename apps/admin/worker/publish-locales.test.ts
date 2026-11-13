@@ -1,5 +1,6 @@
-import { defineRegistry, resolveLocaleConfig } from '@studiobimo/backstage'
+import { defineRegistry } from '@studiobimo/backstage'
 import { createAdmin } from '@studiobimo/backstage/admin'
+import { resolveLocaleConfig } from '@studiobimo/backstage/internal'
 import { findPublished, parseRoute } from '@studiobimo/backstage/site'
 import { registry as sampleRegistry } from 'backstage-site/registry'
 import { describe, expect, it } from 'vitest'

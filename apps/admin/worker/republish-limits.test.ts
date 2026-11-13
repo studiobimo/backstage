@@ -1,4 +1,4 @@
-import { KV_LIMITS, kvWritesToRepublish, resolveLocaleConfig } from '@studiobimo/backstage'
+import { KV_LIMITS, kvWritesToRepublish, resolveLocaleConfig } from '@studiobimo/backstage/internal'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { regular, send, sendApi, useFreshPagesDb } from './pages-test-support'

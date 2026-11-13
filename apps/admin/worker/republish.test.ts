@@ -1,4 +1,4 @@
-import { SEO } from '@studiobimo/backstage'
+import { SEO } from '@studiobimo/backstage/site'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { regular, send, useFreshPagesDb } from './pages-test-support'

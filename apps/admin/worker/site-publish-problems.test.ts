@@ -1,4 +1,5 @@
-import { ensureUser, siteSnapshotKey, writeSiteBlock } from '@studiobimo/backstage'
+import { ensureUser, writeSiteBlock } from '@studiobimo/backstage/admin'
+import { siteSnapshotKey } from '@studiobimo/backstage/site'
 import { describe, expect, it } from 'vitest'
 
 import { db, kv, useFreshPagesDb } from './pages-test-support'

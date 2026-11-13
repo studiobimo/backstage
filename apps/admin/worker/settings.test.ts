@@ -1,4 +1,4 @@
-import { EMPTY_SITE_SETTINGS } from '@studiobimo/backstage'
+import { EMPTY_SITE_SETTINGS } from '@studiobimo/backstage/internal'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import app from './index'
