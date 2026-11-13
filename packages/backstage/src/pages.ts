@@ -46,7 +46,7 @@ export const hasUnpublishedChanges = (
   version: number = page.version
 ) => page.publishedAt !== null && page.publishedVersion !== version
 
-export const pageSummarySchema = pageSchema.extend({
+const pageSummarySchema = pageSchema.extend({
   missing: z.record(z.string(), z.number().int().min(0))
 })
 export type PageSummary = z.infer<typeof pageSummarySchema>
@@ -77,13 +77,12 @@ export const pageBlockSchema = z.object({
 })
 export type PageBlock = z.infer<typeof pageBlockSchema>
 
-export const pageBlocksSchema = z.object({
+const pageBlocksSchema = z.object({
   blocks: z
     .array(pageBlockSchema)
     .max(PAGE.blocks.maxCount)
     .refine((blocks) => new Set(blocks.map((block) => block.id)).size === blocks.length)
 })
-export type PageBlocks = z.infer<typeof pageBlocksSchema>
 
 export const pageBlocksResponseSchema = pageBlocksSchema.extend({
   version: z.number().int(),
@@ -105,12 +104,6 @@ export const pageStampSchema = z.object({
 })
 export type PageStamp = z.infer<typeof pageStampSchema>
 
-export const staleVersionSchema = z.object({
-  code: z.literal('stale_version'),
-  error: z.string(),
-  current: pageStampSchema
-})
-
 const localeSeoSchema = z.object({
   title: z.string().trim().max(PAGE.seo.title.maxLength),
   description: z.string().trim().max(PAGE.seo.description.maxLength),
@@ -118,7 +111,7 @@ const localeSeoSchema = z.object({
 })
 export type LocaleSeo = z.infer<typeof localeSeoSchema>
 
-export const pageSeoSchema = z.record(z.string(), localeSeoSchema)
+const pageSeoSchema = z.record(z.string(), localeSeoSchema)
 export type PageSeo = z.infer<typeof pageSeoSchema>
 
 export const pageSeoResponseSchema = z.object({ seo: pageSeoSchema, version: z.number().int() })

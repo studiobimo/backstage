@@ -9,7 +9,7 @@ export type StoredSiteBlock = SiteBlock & { version: number }
 
 export const saveSiteBlockSchema = siteBlockSchema.extend({ expectedVersion: expectedSiteVersion })
 
-export const slotSchema = z.object({
+const slotSchema = z.object({
   name: z.string(),
   blocks: z.array(
     z.object({

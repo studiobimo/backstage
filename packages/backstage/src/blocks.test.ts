@@ -9,12 +9,9 @@ import {
   describeSlots,
   layoutNames,
   upgradeBlockContent,
-  validateBlockContent,
-  image,
-  link,
-  localized,
-  richText
-} from './index.ts'
+  validateBlockContent
+} from './blocks.ts'
+import { image, link, localized, richText } from './fields.ts'
 
 const hero = defineBlock({
   name: 'hero',

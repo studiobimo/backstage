@@ -80,7 +80,7 @@ export const mediaAltSchema = (locales: readonly Locale[]) =>
     .superRefine(requireAltUnlessDecorative(locales))
 export type MediaAlt = z.infer<ReturnType<typeof mediaAltSchema>>
 
-export const mediaSchema = z.object({
+const mediaSchema = z.object({
   id: z.string(),
   filename: z.string(),
   contentType: z.string(),

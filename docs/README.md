@@ -27,3 +27,6 @@ This folder is the source of truth for what Backstage is and why it is built the
   - [ADR-0010: The header and footer are blocks in named global slots](adr/0010-global-slots.md)
   - [ADR-0011: A page chooses a layout from a list in the registry](adr/0011-page-layouts.md)
   - [ADR-0012: Block preview is a frame the site serves](adr/0012-block-preview-frame.md)
+  - [ADR-0013: The sitemap index is rebuilt from D1 on every publish, unpublish and delete](adr/0013-sitemap-index-from-d1.md)
+  - [ADR-0014: Republishing every page runs as server-driven batches](adr/0014-republish-all-in-batches.md)
+  - [ADR-0015: The package has six entries, and SemVer covers only the public ones](adr/0015-entry-points-and-semver.md)

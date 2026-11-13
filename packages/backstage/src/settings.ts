@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { image, localized } from './fields.ts'
 import { PAGE } from './pages.ts'
 
-export const SETTINGS = {
+const SETTINGS = {
   siteName: { maxLength: 80 },
   defaultDescription: { maxLength: PAGE.seo.description.maxLength }
 } as const
