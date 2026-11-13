@@ -1,4 +1,4 @@
-import { siteOriginResponseSchema } from '@studiobimo/backstage'
+import { siteOriginResponseSchema } from '@studiobimo/backstage/internal'
 import { queryOptions } from '@tanstack/react-query'
 
 import { apiRequest } from '@/lib/api'

@@ -1,4 +1,4 @@
-import type { PageBlock, PageSummary, PublishProblem } from '@studiobimo/backstage'
+import type { PageBlock, PageSummary, PublishProblem } from '@studiobimo/backstage/internal'
 import { CircleAlertIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 

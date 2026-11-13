@@ -1,4 +1,4 @@
-import { hasMultipleLocales, localeConfigSchema } from '@studiobimo/backstage'
+import { hasMultipleLocales, localeConfigSchema } from '@studiobimo/backstage/internal'
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 
 import { apiRequest } from '@/lib/api'

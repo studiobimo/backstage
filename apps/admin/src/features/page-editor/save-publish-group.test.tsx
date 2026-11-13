@@ -1,4 +1,4 @@
-import { hasUnpublishedChanges, type PageBlock } from '@studiobimo/backstage'
+import { hasUnpublishedChanges, type PageBlock } from '@studiobimo/backstage/internal'
 import { useShortcut } from '@/lib/shortcuts'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'

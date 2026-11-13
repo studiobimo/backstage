@@ -1,10 +1,9 @@
+import { API_ERROR, type Locale } from '@studiobimo/backstage'
 import {
-  API_ERROR,
   hasUnpublishedChanges,
-  type Locale,
   type PageBlock,
   type PageSummary
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { ChevronRightIcon, CopyIcon, Trash2Icon } from 'lucide-react'
 import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'

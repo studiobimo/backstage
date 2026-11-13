@@ -1,4 +1,4 @@
-import { richTextPlain } from '@studiobimo/backstage'
+import { richTextPlain } from '@studiobimo/backstage/internal'
 import { z } from 'zod'
 
 import type { FieldSpec, GroupSpec } from './spec.ts'
