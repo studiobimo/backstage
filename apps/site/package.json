@@ -17,7 +17,7 @@
     "@studiobimo/backstage": "^0.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "hono": "^4.13.14",
+    "hono": "^4.13.16",
     "lucide-react": "^1.66.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
