@@ -66,6 +66,10 @@ rules out: only the registry changes between sites.
 - A project that registers no slots has no header or footer to edit.
 - A header or footer an editor saves is not on the site until someone publishes the site, which
   the settings page says.
+- The site Worker renders the header and footer only when it runs a release with the site
+  snapshot reader (#248). `apps/site` is on the published `0.1.0`, which predates it, so this
+  repository's own site shows no header or footer until a new release is published
+  ([#271](https://github.com/studiobimo/backstage/issues/271)).
 - A project upgrading must publish the site once, and update the site Worker with the admin: pages
   published after the upgrade no longer carry the SEO defaults, so an older site shows none until
   it reads the site snapshot.

@@ -18,8 +18,10 @@ not add one.
 ## Decision
 
 - **M1 ships Access only.** The admin worker checks `Cf-Access-Jwt-Assertion` against the team's
-  keys on every API request. A local bypass works only when `DEV_AUTH` is set, and a deploy is
-  refused if it is.
+  keys on every API request. A local bypass is on only when `DEV_AUTH` is exactly `true`, and it works
+  only for requests to `localhost`, `127.0.0.1` or `[::1]`. Nothing checks at deploy time: a
+  deployed Worker that carries `DEV_AUTH=true` answers `500` to every `/api/*` request, even one
+  with a valid token, so it is never left open.
 - **M5 adds magic link**, ported from jpn-community, together with owner and editor roles. Each
   site picks one mode in its config.
 - Users and roles live in D1 in both modes, keyed by email address.

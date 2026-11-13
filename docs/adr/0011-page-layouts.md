@@ -21,8 +21,9 @@ blocks, layouts })` maps each layout name to its component (ADR-0003). A layout 
   choice per page, not per locale, so the locales of a page never differ in shape.
 - **The page editor shows a layout select** fed by `GET /api/v1/layouts`. `PUT
 /api/v1/pages/:id/layout` refuses a name the registry does not have.
-- **The snapshot carries the name**, and the site picks the matching component. Publishing is not
-  built yet, so only the draft side exists.
+- **The snapshot carries the name**, and the site picks the matching component. The layout is
+  published with the page, and the slots it places come from the site snapshot
+  ([ADR-0010](0010-global-slots.md)).
 - Editors cannot switch the header or footer off without a layout for it: a developer adds the
   layout. Named menus (a layout choosing different links) are a further step, only worth it if a
   real page needs different links and not only a different shape.
