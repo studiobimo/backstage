@@ -1,4 +1,5 @@
-import { API_ERROR, type FieldIssue, type PageStamp } from '@studiobimo/backstage'
+import { API_ERROR } from '@studiobimo/backstage'
+import type { FieldIssue, PageStamp } from '@studiobimo/backstage/internal'
 import { type QueryKey, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

@@ -1,4 +1,8 @@
-import { KV_LIMITS, type RepublishScope, type RepublishSkipped } from '@studiobimo/backstage'
+import {
+  KV_LIMITS,
+  type RepublishScope,
+  type RepublishSkipped
+} from '@studiobimo/backstage/internal'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 

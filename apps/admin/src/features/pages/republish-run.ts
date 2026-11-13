@@ -1,4 +1,4 @@
-import { republishScopeSchema, type RepublishScope } from '@studiobimo/backstage'
+import { republishScopeSchema, type RepublishScope } from '@studiobimo/backstage/internal'
 
 const STORED_RUN_KEY = 'backstage:republish-run'
 

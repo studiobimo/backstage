@@ -1,4 +1,4 @@
-import { siteSettingsJsonSchema, siteSettingsSchema } from '@studiobimo/backstage'
+import { siteSettingsJsonSchema, siteSettingsSchema } from '@studiobimo/backstage/internal'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { GlobeIcon } from 'lucide-react'
 import { useMemo } from 'react'
