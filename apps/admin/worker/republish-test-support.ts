@@ -81,3 +81,5 @@ export const resetRepublishRun = () => {
   suite.bindings = {}
   vi.restoreAllMocks()
 }
+
+export const REPUBLISH_TEST_TIMING = { suiteTimeoutMs: 30_000 } as const
