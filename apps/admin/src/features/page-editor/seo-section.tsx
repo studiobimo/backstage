@@ -1,10 +1,5 @@
-import {
-  isSeoMissing,
-  PAGE,
-  type Locale,
-  type LocaleSeo,
-  type PageSeo
-} from '@studiobimo/backstage'
+import type { Locale } from '@studiobimo/backstage'
+import { isSeoMissing, PAGE, type LocaleSeo, type PageSeo } from '@studiobimo/backstage/internal'
 import { LanguagesIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 

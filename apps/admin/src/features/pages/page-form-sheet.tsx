@@ -1,4 +1,5 @@
-import { pageInputSchema, slugify, type Locale, type Page } from '@studiobimo/backstage'
+import type { Locale } from '@studiobimo/backstage'
+import { pageInputSchema, slugify, type Page } from '@studiobimo/backstage/internal'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

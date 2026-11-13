@@ -1,5 +1,5 @@
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
-import { pageSchema, pagesResponseSchema, type PageInput } from '@studiobimo/backstage'
+import { pageSchema, pagesResponseSchema, type PageInput } from '@studiobimo/backstage/internal'
 
 import { apiRequest } from '@/lib/api'
 

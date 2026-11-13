@@ -1,4 +1,4 @@
-import type { PageStamp } from '@studiobimo/backstage'
+import type { PageStamp } from '@studiobimo/backstage/internal'
 import { CheckIcon, CircleAlertIcon, ClipboardIcon, RefreshCwIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
