@@ -1,4 +1,4 @@
-import type { PageSummary } from '@studiobimo/backstage'
+import type { PageSummary } from '@studiobimo/backstage/internal'
 import { useNavigate } from '@tanstack/react-router'
 import { type LucideIcon, LayoutListIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'

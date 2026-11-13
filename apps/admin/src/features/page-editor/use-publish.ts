@@ -1,4 +1,4 @@
-import type { PageSummary } from '@studiobimo/backstage'
+import type { PageSummary } from '@studiobimo/backstage/internal'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { i18n as I18n, TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'

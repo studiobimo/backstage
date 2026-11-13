@@ -2,7 +2,7 @@ import {
   republishBatchSchema,
   republishStatusResponseSchema,
   type RepublishScope
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 import { queryOptions } from '@tanstack/react-query'
 
 import { apiRequest } from '@/lib/api'

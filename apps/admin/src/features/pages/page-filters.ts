@@ -1,4 +1,4 @@
-import type { PageSummary } from '@studiobimo/backstage'
+import type { PageSummary } from '@studiobimo/backstage/internal'
 
 export const PAGE_STATUS = { all: 'all', draft: 'draft', published: 'published' } as const
 

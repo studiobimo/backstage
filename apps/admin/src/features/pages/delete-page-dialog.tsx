@@ -1,4 +1,4 @@
-import type { Page } from '@studiobimo/backstage'
+import type { Page } from '@studiobimo/backstage/internal'
 import { CircleAlertIcon } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'

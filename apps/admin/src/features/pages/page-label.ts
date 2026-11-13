@@ -1,4 +1,5 @@
-import { pathOf, type Locale, type LocaleConfig, type Page } from '@studiobimo/backstage'
+import type { Locale, LocaleConfig } from '@studiobimo/backstage'
+import { pathOf, type Page } from '@studiobimo/backstage/internal'
 
 export const pageLabel = (page: Page, language: string) => {
   const rows = page.locales

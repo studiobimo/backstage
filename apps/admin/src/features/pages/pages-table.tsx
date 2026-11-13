@@ -1,4 +1,4 @@
-import { hasUnpublishedChanges, type PageSummary } from '@studiobimo/backstage'
+import { hasUnpublishedChanges, type PageSummary } from '@studiobimo/backstage/internal'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 

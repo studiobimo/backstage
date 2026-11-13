@@ -1,4 +1,4 @@
-import { pathOf } from '@studiobimo/backstage'
+import { pathOf } from '@studiobimo/backstage/internal'
 import { describe, expect, it } from 'vitest'
 
 import { aboutPage } from '@/test/fixtures'

@@ -1,4 +1,4 @@
-import type { PageSummary, RepublishStatus } from '@studiobimo/backstage'
+import type { PageSummary, RepublishStatus } from '@studiobimo/backstage/internal'
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { CircleAlertIcon, RefreshCwIcon, TriangleAlertIcon } from 'lucide-react'
