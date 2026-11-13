@@ -1,7 +1,7 @@
 import { useLocale } from '@studiobimo/backstage/render'
 import type { z } from 'zod'
 
-import { NAV_LABEL } from '../outline.ts'
+import { primaryNavLabel } from '../outline.ts'
 import { type LinkValue, type Translated, useLocalizer } from '../content.ts'
 import { LocalizedLink, LinkList } from '../parts.tsx'
 import type { siteHeaderSchema } from './schema.ts'
@@ -15,7 +15,7 @@ export function SiteHeader({ navigation, cta }: z.output<typeof siteHeaderSchema
   return (
     <header>
       {items.length > 0 ? (
-        <nav aria-label={NAV_LABEL.primary[locale]}>
+        <nav aria-label={primaryNavLabel(locale)}>
           <ul>
             {items.map((item, index) => (
               <li key={index}>

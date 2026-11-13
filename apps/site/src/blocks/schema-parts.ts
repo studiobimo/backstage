@@ -1,7 +1,7 @@
 import { image, link, localized, richText } from '@studiobimo/backstage'
 import { z } from 'zod'
 
-export const menuLink = () => localized(link({ strict: true }))
+export const menuLink = () => localized(link({ requireLabel: true }))
 
 export const ctaLink = () => localized(link())
 

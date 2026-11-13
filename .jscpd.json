@@ -7,9 +7,6 @@
     "**/src/routeTree.gen.ts",
     "**/migrations/meta/**",
     "**/src/components/ui/**",
-    "**/.template/profiles/**",
-    "apps/site/worker/document.tsx",
-    "apps/site/worker/index.ts",
-    "apps/site/worker/seo.ts"
+    "**/.template/profiles/**"
   ]
 }

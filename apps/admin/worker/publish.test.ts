@@ -14,6 +14,7 @@ import {
 } from './pages-test-support'
 import {
   addMedia,
+  expectPublishRefused,
   hero,
   pageKeys,
   publish,
@@ -73,12 +74,7 @@ describe('publishing API', () => {
   it('refuses a page whose blocks do not validate and writes nothing', async () => {
     const id = await createRegularPage()
     await saveBlocks(id, [{ ...hero(), content: { title: 'not localized' } }])
-    const response = await publish(id)
-    expect(response.status).toBe(422)
-    expect(await response.json()).toMatchObject({
-      code: 'unpublishable',
-      problems: [{ reason: 'invalid_content', blockId: 'b1' }]
-    })
+    await expectPublishRefused(id, [{ reason: 'invalid_content', blockId: 'b1' }])
     expect(await pageKeys()).toEqual([])
     expect((await publishedPage(id)).publishedAt).toBeNull()
   })
