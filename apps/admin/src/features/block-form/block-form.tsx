@@ -1,4 +1,4 @@
-import type { FieldIssue } from '@studiobimo/backstage'
+import type { FieldIssue } from '@studiobimo/backstage/internal'
 import { useStore } from '@tanstack/react-form'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'

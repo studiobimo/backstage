@@ -1,4 +1,4 @@
-import { isMissingTranslation, lacksDefaultLocale } from '@studiobimo/backstage'
+import { isMissingTranslation, lacksDefaultLocale } from '@studiobimo/backstage/internal'
 import { useStore } from '@tanstack/react-form'
 import { CopyIcon, LanguagesIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'

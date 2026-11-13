@@ -1,4 +1,4 @@
-import type { PageBlock } from '@studiobimo/backstage'
+import type { PageBlock } from '@studiobimo/backstage/internal'
 import { describe, expect, it } from 'vitest'
 
 import { describeChanges, duplicateAt, moveBlock, newBlock, removeAt, sameBlocks } from './draft'

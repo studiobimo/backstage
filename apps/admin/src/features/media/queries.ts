@@ -1,9 +1,9 @@
+import { MEDIA } from '@studiobimo/backstage'
 import {
-  MEDIA,
   mediaListResponseSchema,
   mediaResponseSchema,
   type MediaAlt
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 import { mutationOptions, queryOptions } from '@tanstack/react-query'
 
 import { apiRequest } from '@/lib/api'

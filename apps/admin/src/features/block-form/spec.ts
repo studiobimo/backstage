@@ -1,4 +1,4 @@
-import { classifyField, type FieldKind, type FieldShape } from '@studiobimo/backstage'
+import { classifyField, type FieldKind, type FieldShape } from '@studiobimo/backstage/internal'
 import type { z } from 'zod'
 
 import type { FieldValue } from './value.ts'

@@ -1,4 +1,4 @@
-import { isMissingTranslation, lacksDefaultLocale } from '@studiobimo/backstage'
+import { isMissingTranslation, lacksDefaultLocale } from '@studiobimo/backstage/internal'
 import { createContext, useContext } from 'react'
 
 import type { FieldSpec, GroupSpec } from './spec.ts'

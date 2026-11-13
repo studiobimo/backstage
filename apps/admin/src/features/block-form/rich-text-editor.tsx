@@ -1,4 +1,4 @@
-import { RICH_TEXT } from '@studiobimo/backstage'
+import { RICH_TEXT } from '@studiobimo/backstage/internal'
 import Blockquote from '@tiptap/extension-blockquote'
 import { ListItem } from '@tiptap/extension-list'
 import { type Editor, EditorContent, useEditor, useEditorState } from '@tiptap/react'

@@ -1,4 +1,5 @@
-import { MEDIA, mediaAltSchema, mediaTypes, perLocaleKeys } from '@studiobimo/backstage'
+import { MEDIA } from '@studiobimo/backstage'
+import { mediaAltSchema, mediaTypes, perLocaleKeys } from '@studiobimo/backstage/internal'
 import { useMutation } from '@tanstack/react-query'
 import { CircleAlertIcon, LoaderCircleIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'

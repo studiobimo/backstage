@@ -1,10 +1,10 @@
+import type { Locale } from '@studiobimo/backstage'
 import {
   countMissingTranslations,
   isSeoMissing,
-  type Locale,
   type PageBlock,
   type PageSeo
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 
 import { type JsonSchema, parseBlockSchema } from '../block-form/spec'
 import type { LocaleStatus } from '../block-form/locale-status'

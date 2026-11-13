@@ -1,4 +1,5 @@
-import { MEDIA, sniffImageType, type MediaType } from '@studiobimo/backstage'
+import { MEDIA } from '@studiobimo/backstage'
+import { sniffImageType, type MediaType } from '@studiobimo/backstage/internal'
 
 export const IMAGE_REJECTION = {
   unsupported: 'unsupported',

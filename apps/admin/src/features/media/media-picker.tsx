@@ -1,4 +1,4 @@
-import type { Media } from '@studiobimo/backstage'
+import type { Media } from '@studiobimo/backstage/internal'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ImageIcon } from 'lucide-react'

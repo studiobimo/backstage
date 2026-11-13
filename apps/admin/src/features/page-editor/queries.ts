@@ -7,7 +7,7 @@ import {
   type PageBlocksResponse,
   type PageSeo,
   type PageSeoResponse
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/internal'
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 
