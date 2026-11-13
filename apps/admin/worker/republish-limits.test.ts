@@ -10,10 +10,11 @@ import {
   START,
   statusOf,
   resetRepublishRun,
-  countKvWrites
+  countKvWrites,
+  REPUBLISH_TEST_TIMING
 } from './republish-test-support'
 
-describe('republish limits', () => {
+describe('republish limits', { timeout: REPUBLISH_TEST_TIMING.suiteTimeoutMs }, () => {
   useFreshPagesDb()
   afterEach(resetRepublishRun)
 
