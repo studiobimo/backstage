@@ -4,24 +4,26 @@ import { z } from 'zod'
 
 import {
   countRepublishable,
-  ensureUser,
-  KV_LIMITS,
-  kvWritesPerPage,
-  kvWritesToRepublish,
-  logEvent,
   planPublish,
   PUBLISH_PLAN,
   readRepublishBatch,
-  recordPublished,
+  recordPublished
+} from '../db/publishing.ts'
+import { ensureUser } from '../db/users.ts'
+import {
+  KV_LIMITS,
+  kvWritesPerPage,
+  kvWritesToRepublish,
   REPUBLISH,
   republishBatchSize,
   republishScopeSchema,
-  resolveLocaleConfig,
-  type Registry,
   type RepublishBatch,
   type RepublishScope,
   type RepublishSkipped
-} from '../index.ts'
+} from '../republish.ts'
+import { logEvent } from '../observability.ts'
+import { resolveLocaleConfig } from '../locales.ts'
+import type { Registry } from '../blocks.ts'
 import type { AccessEnv } from './auth.ts'
 import { readJsonBody } from './respond.ts'
 import { rebuildPublishedIndex, writeSnapshots } from './snapshots.ts'

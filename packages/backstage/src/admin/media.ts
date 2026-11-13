@@ -1,18 +1,10 @@
-import {
-  API_ERROR,
-  ensureUser,
-  findMediaFileKey,
-  insertMedia,
-  listMedia,
-  MEDIA,
-  mediaKeyOf,
-  mediaAltSchema,
-  readImageSize,
-  resolveLocaleConfig,
-  sniffImageType,
-  type ApiError,
-  type Registry
-} from '../index.ts'
+import { API_ERROR, type ApiError } from '../errors.ts'
+import { ensureUser } from '../db/users.ts'
+import { findMediaFileKey, insertMedia, listMedia } from '../db/media.ts'
+import { MEDIA, mediaKeyOf, mediaAltSchema, sniffImageType } from '../media.ts'
+import { readImageSize } from '../image-size.ts'
+import { resolveLocaleConfig } from '../locales.ts'
+import type { Registry } from '../blocks.ts'
 import { Hono } from 'hono'
 import type { z } from 'zod'
 

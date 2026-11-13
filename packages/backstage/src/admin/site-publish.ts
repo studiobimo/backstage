@@ -1,11 +1,11 @@
+import { ensureUser } from '../db/users.ts'
 import {
-  ensureUser,
   planSitePublish,
   readSitePublication,
   recordSitePublished,
-  SITE_PUBLISH_PLAN,
-  type Registry
-} from '../index.ts'
+  SITE_PUBLISH_PLAN
+} from '../db/site-publishing.ts'
+import type { Registry } from '../blocks.ts'
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'

@@ -3,16 +3,16 @@ import type { z } from 'zod'
 
 import {
   API_ERROR,
-  ensureUser,
   errorBody,
   fieldIssuesOf,
   invalidBody,
   type ApiError,
-  type FieldIssue,
-  type PageStamp,
-  type PublishProblem,
-  type VersionedWrite
-} from '../index.ts'
+  type FieldIssue
+} from '../errors.ts'
+import { ensureUser } from '../db/users.ts'
+import type { PageStamp } from '../pages.ts'
+import type { PublishProblem } from '../publishing.ts'
+import type { VersionedWrite } from '../db/versioned-row.ts'
 
 import type { AccessEnv } from './auth.ts'
 

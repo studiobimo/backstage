@@ -1,5 +1,5 @@
+import { API_ERROR, type ApiError } from '../errors.ts'
 import {
-  API_ERROR,
   createPage,
   deletePage,
   findPage,
@@ -7,23 +7,24 @@ import {
   listPageBlocks,
   listPages,
   PAGE_WRITE,
-  pageInputSchema,
-  renamePageSchema,
   readPageSeo,
   readPageStamp,
   renamePage,
-  resolveLocaleConfig,
   replacePageBlocks,
-  savePageBlocksSchema,
-  savePageLayoutSchema,
-  savePageSeoSchema,
   setPageLayout,
   writePageSeo,
-  type Registry,
-  type ApiError,
-  type MissingByLocale,
   type PageWrite
-} from '../index.ts'
+} from '../db/pages.ts'
+import {
+  pageInputSchema,
+  renamePageSchema,
+  savePageBlocksSchema,
+  savePageLayoutSchema,
+  savePageSeoSchema
+} from '../pages.ts'
+import { resolveLocaleConfig } from '../locales.ts'
+import type { Registry } from '../blocks.ts'
+import type { MissingByLocale } from '../translations.ts'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 

@@ -1,18 +1,13 @@
+import { API_ERROR } from '../errors.ts'
 import {
-  API_ERROR,
   describeSlots,
-  readSiteBlocks,
-  readSiteBlockStamp,
-  ROW_VERSION,
-  ROW_WRITE,
-  saveSiteBlockSchema,
   upgradeBlockContent,
   validateBlockContent,
-  writeSiteBlock,
-  type Registry,
-  type SiteBlock,
-  type StoredSiteBlock
-} from '../index.ts'
+  type Registry
+} from '../blocks.ts'
+import { readSiteBlocks, readSiteBlockStamp, writeSiteBlock } from '../db/site-blocks.ts'
+import { ROW_VERSION, ROW_WRITE } from '../db/versioned-row.ts'
+import { saveSiteBlockSchema, type SiteBlock, type StoredSiteBlock } from '../slots.ts'
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
