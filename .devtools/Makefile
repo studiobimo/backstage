@@ -20,6 +20,10 @@ BUNDLE_DIR@apps/site := dist/backstage_site
 BUNDLE_CHUNK_KIB@apps/site := 900
 BUNDLE_TOTAL_KIB@apps/site := 185
 
+.PHONY: dev
+dev: ## Apply local D1 migrations, then run the admin (5173) and site (5174) dev servers; stops if a port is busy
+	$(MISE) exec -- bash $(ROOT)/.devtools/scripts/dev.sh
+
 .PHONY: e2e
 e2e: build ## Playwright: the publish loop through both Workers, and an axe scan of the page editor
 	cd $(ROOT) && $(MISE) exec -- pnpm exec playwright test -c e2e/playwright.config.ts
