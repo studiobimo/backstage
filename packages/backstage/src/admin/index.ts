@@ -47,3 +47,6 @@ export const createAdmin = (registry: Registry) => {
 }
 
 export type { AdminEnv } from './env.ts'
+export { ensureUser } from '../db/users.ts'
+export { writeSiteSettings } from '../db/settings.ts'
+export { writeSiteBlock } from '../db/site-blocks.ts'

@@ -19,6 +19,10 @@
         "types": "./dist/lib/admin/index.d.ts",
         "default": "./dist/lib/admin/index.js"
       },
+      "./internal": {
+        "types": "./dist/lib/internal/index.d.ts",
+        "default": "./dist/lib/internal/index.js"
+      },
       "./render": {
         "types": "./dist/lib/render/index.d.ts",
         "default": "./dist/lib/render/index.js"
@@ -26,6 +30,10 @@
       "./site": {
         "types": "./dist/lib/site/index.d.ts",
         "default": "./dist/lib/site/index.js"
+      },
+      "./site/hono": {
+        "types": "./dist/lib/site/hono/index.d.ts",
+        "default": "./dist/lib/site/hono/index.js"
       }
     }
   },
@@ -34,8 +42,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./admin": "./src/admin/index.ts",
+    "./internal": "./src/internal/index.ts",
     "./render": "./src/render/index.ts",
-    "./site": "./src/site/index.ts"
+    "./site": "./src/site/index.ts",
+    "./site/hono": "./src/site/hono/index.ts"
   },
   "files": [
     "dist",

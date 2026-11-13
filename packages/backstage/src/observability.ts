@@ -2,16 +2,12 @@ import type { Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
 import { requestId } from 'hono/request-id'
 
+import { logLine, type LogLevel } from './log.ts'
+
 export const OBSERVABILITY = {
   health: { path: '/health', body: { ok: true } },
   requestId: { header: 'X-Request-Id' }
 } as const
-
-type LogLevel = 'info' | 'error'
-
-export const logLine = (level: LogLevel, message: string, fields: Record<string, unknown> = {}) => {
-  console[level](JSON.stringify({ level, message, ...fields }))
-}
 
 export const logEvent = (
   level: LogLevel,

@@ -2,7 +2,7 @@ import type { ComponentType, ReactNode } from 'react'
 
 import { validateBlockContent } from '../blocks.ts'
 import type { ComponentMap } from '../components.ts'
-import { logLine } from '../observability.ts'
+import { logLine } from '../log.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 import type { SiteSnapshot } from '../site-publishing.ts'
 import { RenderProvider } from './context.ts'
