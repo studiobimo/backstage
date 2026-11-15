@@ -86,6 +86,17 @@ describe('createSite pages', () => {
     ])
   })
 
+  it('renders no language switcher and no alternates on a single-locale site', async () => {
+    const kv = memoryKv([pageSnapshot()], [siteSnapshot()])
+    const options = fixtureOptions({
+      components: fixtureComponents({ locales: ['en'], defaultLocale: 'en' })
+    })
+    const html = await (await request('/about', envWith({}, kv), options)).text()
+    expect(html).toContain(`<link rel="canonical" href="${FIXTURE.siteUrl}/about"/>`)
+    expect(html).not.toContain('<nav')
+    expect(html).not.toContain('rel="alternate"')
+  })
+
   it('renders the site snapshot into the layout slots', async () => {
     const html = await (await request('/about')).text()
     expect(html).toContain('<header>Studio header</header>')

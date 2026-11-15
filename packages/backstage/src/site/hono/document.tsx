@@ -2,7 +2,7 @@ import { createElement, type ReactNode } from 'react'
 
 import { LAYOUT } from '../../blocks.ts'
 import type { ComponentMap, LayoutProps } from '../../components.ts'
-import type { LocaleConfig } from '../../locales.ts'
+import { hasMultipleLocales, type LocaleConfig } from '../../locales.ts'
 import type { Snapshot } from '../../publishing.ts'
 import { Blocks } from '../../render/blocks.tsx'
 import { RenderProvider } from '../../render/context.ts'
@@ -49,6 +49,7 @@ function LanguageSwitcher({
   translations,
   locales
 }: Pick<PageProps, 'snapshot' | 'translations' | 'locales'>) {
+  if (!hasMultipleLocales(locales)) return null
   const pages = [snapshot, ...translations].sort(
     (a, b) =>
       Number(b.locale === locales.defaultLocale) - Number(a.locale === locales.defaultLocale)
