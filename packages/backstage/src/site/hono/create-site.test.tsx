@@ -46,7 +46,7 @@ describe('createSite pages', () => {
     const response = await request('/about')
     const html = await response.text()
     expect(response.status).toBe(200)
-    expect(html).toContain('<title>About</title>')
+    expect(html).toContain('<title>About | Studio</title>')
     expect(html).toContain(`<link rel="canonical" href="${FIXTURE.siteUrl}/about"/>`)
     expect(html).toContain('Hello there')
     expect(html).toContain('href="/fr/about"')
@@ -112,6 +112,72 @@ describe('createSite pages', () => {
   it('refuses to render without a valid SITE_URL', async () => {
     const response = await request('/about', envWith({ SITE_URL: 'not a url' }, publishedKv()))
     expect(response.status).toBe(500)
+  })
+})
+
+type PageOverrides = Parameters<typeof pageSnapshot>[0]
+
+const headOf = async (page: PageOverrides, sites = [siteSnapshot()]) => {
+  const snapshot = pageSnapshot(page)
+  const path = snapshot.locale === 'en' ? '/about' : `/${snapshot.locale}/about`
+  return (await request(path, envWith({}, memoryKv([snapshot], sites)))).text()
+}
+
+const photo = (key: string) => ({ key, contentType: 'image/png', width: 1, height: 1, alt: '' })
+
+const siteWithFallbacks = () =>
+  siteSnapshot({
+    seo: { description: 'Site words', socialImageId: 's1' },
+    media: { s1: photo('media/site.png') }
+  })
+
+describe('createSite head', () => {
+  it('puts the site name of the locale after the page title', async () => {
+    const sites = [siteSnapshot(), siteSnapshot({ locale: 'fr', siteName: 'Atelier' })]
+    expect(await headOf({}, sites)).toContain('<title>About | Studio</title>')
+    expect(await headOf({ locale: 'fr', title: 'A propos' }, sites)).toContain(
+      '<title>A propos | Atelier</title>'
+    )
+  })
+
+  it('uses the SEO title and keeps og:title the same as the document title', async () => {
+    const html = await headOf({ seo: { title: 'Custom', description: '', socialImageId: null } })
+    expect(html).toContain('<title>Custom | Studio</title>')
+    expect(html).toContain('<meta property="og:title" content="Custom | Studio"/>')
+  })
+
+  it('does not repeat the site name when the page title is the site name', async () => {
+    expect(await headOf({ title: 'Studio' })).toContain('<title>Studio</title>')
+  })
+
+  it('falls back to the site description and social image', async () => {
+    const html = await headOf({}, [siteWithFallbacks()])
+    expect(html).toContain('<meta name="description" content="Site words"/>')
+    expect(html).toContain(
+      `<meta property="og:image" content="${FIXTURE.siteUrl}/media/site.png"/>`
+    )
+  })
+
+  it('prefers the page description and social image', async () => {
+    const html = await headOf(
+      {
+        seo: { title: '', description: 'Page words', socialImageId: 'p1' },
+        media: { p1: photo('media/page.png') }
+      },
+      [siteWithFallbacks()]
+    )
+    expect(html).toContain('<meta name="description" content="Page words"/>')
+    expect(html).toContain('media/page.png')
+    expect(html).not.toContain('media/site.png')
+    expect(html).not.toContain('Site words')
+  })
+
+  it('renders a page of a site that was never published as it is', async () => {
+    const html = await headOf({}, [])
+    expect(html).toContain('<title>About</title>')
+    expect(html).not.toContain('og:site_name')
+    expect(html).not.toContain('name="description"')
+    expect(html).not.toContain('og:image')
   })
 })
 
