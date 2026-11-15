@@ -192,22 +192,54 @@ export function describeSlots(registry: Registry): SlotDescription[] {
   }))
 }
 
+export const CONTENT_FAILURE = {
+  invalid: 'invalid',
+  newerVersion: 'newer_version',
+  migrationFailed: 'migration_failed'
+} as const
+
+type ContentFailure = (typeof CONTENT_FAILURE)[keyof typeof CONTENT_FAILURE]
+
+export interface VersionedContentSchema {
+  version: number
+  schema: z.ZodType
+  migrate?: (content: unknown, fromVersion: number) => unknown
+}
+
 export type BlockContentResult =
-  { ok: true; schemaVersion: number; content: unknown } | { ok: false; issues: FieldIssue[] }
+  | { ok: true; schemaVersion: number; content: unknown }
+  | { ok: false; failure: ContentFailure; issues: FieldIssue[] }
+
+const rootIssue = (failure: ContentFailure): FieldIssue => ({ path: [], code: failure })
+
+const failed = (failure: ContentFailure, issues?: FieldIssue[]): BlockContentResult => ({
+  ok: false,
+  failure,
+  issues: issues ?? [rootIssue(failure)]
+})
 
 export function upgradeBlockContent(
-  block: Block,
+  block: VersionedContentSchema,
   schemaVersion: number,
   content: unknown
 ): BlockContentResult {
-  if (schemaVersion > block.version) return { ok: false, issues: [] }
-  const upgraded =
-    schemaVersion < block.version && block.migrate ? block.migrate(content, schemaVersion) : content
-  return { ok: true, schemaVersion: block.version, content: upgraded }
+  if (schemaVersion > block.version) return failed(CONTENT_FAILURE.newerVersion)
+  if (schemaVersion === block.version || !block.migrate) {
+    return { ok: true, schemaVersion: block.version, content }
+  }
+  try {
+    return {
+      ok: true,
+      schemaVersion: block.version,
+      content: block.migrate(content, schemaVersion)
+    }
+  } catch {
+    return failed(CONTENT_FAILURE.migrationFailed)
+  }
 }
 
 export function validateBlockContent(
-  block: Block,
+  block: VersionedContentSchema,
   schemaVersion: number,
   content: unknown
 ): BlockContentResult {
@@ -216,5 +248,16 @@ export function validateBlockContent(
   const parsed = block.schema.safeParse(upgraded.content)
   return parsed.success
     ? { ...upgraded, content: parsed.data }
-    : { ok: false, issues: fieldIssuesOf(parsed.error) }
+    : failed(CONTENT_FAILURE.invalid, fieldIssuesOf(parsed.error))
+}
+
+export function openStoredContent(
+  block: VersionedContentSchema,
+  schemaVersion: number,
+  content: unknown
+): { schemaVersion: number; content: unknown } {
+  const upgraded = upgradeBlockContent(block, schemaVersion, content)
+  return upgraded.ok
+    ? { schemaVersion: upgraded.schemaVersion, content: upgraded.content }
+    : { schemaVersion, content }
 }

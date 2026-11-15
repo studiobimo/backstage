@@ -11,6 +11,7 @@ import { toastManager } from '@/components/ui/toast'
 import { ApiError } from '@/lib/api'
 import { useApiErrorMessage } from '@/lib/api-feedback'
 import { formatDateTime } from '@/lib/format'
+import { publishProblemKey } from '@/lib/publish-problem-key'
 
 import { publishSiteMutation, sitePublicationQuery } from './queries'
 
@@ -36,7 +37,7 @@ function useHint(publication: SitePublication, stateKey: string) {
 function useProblemText() {
   const { t } = useTranslation('settings')
   return ({ reason, slot, path }: PublishProblem) =>
-    t(`publish.problems.${reason}`, {
+    t(publishProblemKey({ reason, path }), {
       place: slot ? t(`slots.${slot}.title`, { defaultValue: slot }) : t('sections.general.title'),
       path: slot || !path ? (path ?? '') : t(`fields.${path}.title`, { defaultValue: path }),
       defaultValue: t('publish.problems.invalid_content', { place: slot ?? '' })

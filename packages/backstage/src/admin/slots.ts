@@ -1,10 +1,5 @@
 import { API_ERROR } from '../errors.ts'
-import {
-  describeSlots,
-  upgradeBlockContent,
-  validateBlockContent,
-  type Registry
-} from '../blocks.ts'
+import { describeSlots, openStoredContent, validateBlockContent, type Registry } from '../blocks.ts'
 import { readSiteBlocks, readSiteBlockStamp, writeSiteBlock } from '../db/site-blocks.ts'
 import { ROW_VERSION, ROW_WRITE } from '../db/versioned-row.ts'
 import { saveSiteBlockSchema, type SiteBlock, type StoredSiteBlock } from '../slots.ts'
@@ -22,14 +17,12 @@ import {
 const currentOf = (registry: Registry, stored: StoredSiteBlock | undefined): SiteBlock | null => {
   const block = stored && registry.get(stored.block)
   if (!stored || !block) return null
-  const upgraded = upgradeBlockContent(block, stored.schemaVersion, stored.content)
-  return upgraded.ok
-    ? {
-        block: block.name,
-        schemaVersion: upgraded.schemaVersion,
-        content: upgraded.content as SiteBlock['content']
-      }
-    : null
+  const opened = openStoredContent(block, stored.schemaVersion, stored.content)
+  return {
+    block: block.name,
+    schemaVersion: opened.schemaVersion,
+    content: opened.content as SiteBlock['content']
+  }
 }
 
 const describeAll = async (registry: Registry, db: D1Database) => {

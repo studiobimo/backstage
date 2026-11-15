@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ApiError } from '@/lib/api'
 import { useApiErrorMessage } from '@/lib/api-feedback'
 import { formatDateTime } from '@/lib/format'
+import { publishProblemKey } from '@/lib/publish-problem-key'
 
 interface PublishNotesProps {
   page: PageSummary
@@ -27,7 +28,7 @@ export function ProblemsList({ problems, blocks }: ProblemsListProps) {
     <ul className="list-disc pl-4">
       {problems.map(({ reason, blockId, path }) => (
         <li key={`${reason}:${blockId}:${path}`}>
-          {t(`publish.problems.${reason}`, {
+          {t(publishProblemKey({ reason, path }), {
             name: blocks.find((block) => block.id === blockId)?.block ?? '',
             path: path ?? '',
             defaultValue: t('publish.problems.invalid_content', { name: '' })

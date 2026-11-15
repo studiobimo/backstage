@@ -1,6 +1,12 @@
 import { z } from 'zod'
 
-import { validateBlockContent, type Registry } from './blocks.ts'
+import {
+  CONTENT_FAILURE,
+  validateBlockContent,
+  type BlockContentResult,
+  type Registry
+} from './blocks.ts'
+import type { FieldIssue } from './errors.ts'
 import { LOCALE, resolveLocaleConfig, type Locale } from './locales.ts'
 import { pageBlockSchema, type PageBlock } from './pages.ts'
 import {
@@ -55,6 +61,8 @@ export const PUBLISH_PROBLEM = {
   unknownLayout: 'unknown_layout',
   unknownBlock: 'unknown_block',
   invalidContent: 'invalid_content',
+  newerSchemaVersion: 'newer_schema_version',
+  migrationFailed: 'migration_failed',
   unknownMedia: 'unknown_media',
   missingDefaultLocale: 'missing_default_locale',
   missingSlug: 'missing_slug'
@@ -144,7 +152,7 @@ export interface PublishDraft {
   blocks: PageBlock[]
 }
 
-type Checked<T> = { ok: true; value: T } | { ok: false; problem: PublishProblem }
+type Checked<T> = { ok: true; value: T } | { ok: false; problems: PublishProblem[] }
 
 export interface ProblemLocation {
   blockId?: string | null
@@ -162,16 +170,36 @@ export const problemOf = (
   ...(path === undefined ? {} : { path })
 })
 
-const rejection = (reason: PublishProblemReason, blockId: string | null = null) =>
-  ({ ok: false, problem: problemOf(reason, { blockId }) }) as const
+const FAILURE_REASON = {
+  [CONTENT_FAILURE.invalid]: PUBLISH_PROBLEM.invalidContent,
+  [CONTENT_FAILURE.newerVersion]: PUBLISH_PROBLEM.newerSchemaVersion,
+  [CONTENT_FAILURE.migrationFailed]: PUBLISH_PROBLEM.migrationFailed
+} as const
+
+const issuePathOf = (segments: FieldIssue['path']) =>
+  segments.reduce<string>(
+    (path, segment) =>
+      typeof segment === 'number' ? `${path}[${segment}]` : path ? `${path}.${segment}` : segment,
+    ''
+  )
+
+export const failureProblems = (
+  result: Extract<BlockContentResult, { ok: false }>,
+  location: ProblemLocation
+): PublishProblem[] => {
+  const paths = [...new Set(result.issues.map(({ path }) => issuePathOf(path)))]
+  return paths.map((path) =>
+    problemOf(FAILURE_REASON[result.failure], { ...location, ...(path ? { path } : {}) })
+  )
+}
 
 const checkBlock = (registry: Registry, block: PageBlock): Checked<PageBlock> => {
   const definition = registry.get(block.block)
   if (!definition || registry.isSlotBlock(block.block)) {
-    return rejection(PUBLISH_PROBLEM.unknownBlock, block.id)
+    return { ok: false, problems: [problemOf(PUBLISH_PROBLEM.unknownBlock, { blockId: block.id })] }
   }
   const result = validateBlockContent(definition, block.schemaVersion, block.content)
-  if (!result.ok) return rejection(PUBLISH_PROBLEM.invalidContent, block.id)
+  if (!result.ok) return { ok: false, problems: failureProblems(result, { blockId: block.id }) }
   return {
     ok: true,
     value: {
@@ -186,7 +214,7 @@ export const checkBlocks = (registry: Registry, blocks: readonly PageBlock[]) =>
   const checked = blocks.map((block) => checkBlock(registry, block))
   return {
     blocks: checked.flatMap((entry) => (entry.ok ? [entry.value] : [])),
-    problems: checked.flatMap((entry) => (entry.ok ? [] : [entry.problem]))
+    problems: checked.flatMap((entry) => (entry.ok ? [] : entry.problems))
   }
 }
 

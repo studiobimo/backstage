@@ -115,6 +115,9 @@
       "unknown_layout": "El diseño ya no existe. Elige otro y guarda.",
       "unknown_block": "El bloque {{name}} ya no existe. Quítalo y guarda.",
       "invalid_content": "El bloque {{name}} tiene contenido no válido. Corrígelo y guarda.",
+      "invalid_content_field": "El bloque {{name}} tiene un valor no válido en {{path}}. Corrígelo y guarda.",
+      "newer_schema_version": "El bloque {{name}} lo guardó una versión más reciente de este sitio. Actualiza el sitio antes de publicar.",
+      "migration_failed": "El bloque {{name}} no se pudo actualizar a su diseño actual. Edítalo y guarda.",
       "unknown_media": "Una imagen que usa {{name}} se eliminó de la biblioteca de medios.",
       "missing_default_locale": "El bloque {{name}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda.",
       "missing_slug": "Un idioma no tiene dirección. Renombra la página para añadirla."
