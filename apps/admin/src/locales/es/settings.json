@@ -70,7 +70,6 @@
       "unknown_block": "{{place}} tiene un bloque que este sitio ya no ofrece. Elige otro diseño y guarda.",
       "invalid_content": "{{place}} tiene contenido que no es válido. Corrígelo y guarda.",
       "unknown_media": "{{place}} usa una imagen que se quitó de la biblioteca de medios.",
-      "unsafe_link": "{{place}} tiene un enlace que no está permitido ({{path}}). Usa una dirección http, https, mailto o tel, una ruta o un ancla, y guarda.",
       "missing_default_locale": "{{place}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda."
     }
   }

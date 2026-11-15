@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { validateBlockContent, type Registry } from './blocks.ts'
 import { LOCALE, resolveLocaleConfig, type Locale } from './locales.ts'
 import { pageBlockSchema, type PageBlock } from './pages.ts'
-import { RICH_TEXT } from './rich-text.ts'
 import {
   isRecord,
   lacksDefaultLocale,
@@ -57,7 +56,6 @@ export const PUBLISH_PROBLEM = {
   unknownBlock: 'unknown_block',
   invalidContent: 'invalid_content',
   unknownMedia: 'unknown_media',
-  unsafeLink: 'unsafe_link',
   missingDefaultLocale: 'missing_default_locale',
   missingSlug: 'missing_slug'
 } as const
@@ -197,13 +195,6 @@ export const mediaIdsIn = (node: TranslatedNode, value: unknown): string[] =>
     isRecord(image) && typeof image.id === 'string' ? [image.id] : []
   )
 
-const unsafeLinkPathsIn = (node: TranslatedNode, value: unknown): string[] =>
-  markedFieldsIn(node, value, 'link').flatMap(({ path, value: link }) =>
-    isRecord(link) && typeof link.href === 'string' && !RICH_TEXT.safeHref.test(link.href)
-      ? [path]
-      : []
-  )
-
 const missingDefaultLocalePathsIn = (
   node: TranslatedNode,
   value: unknown,
@@ -254,9 +245,6 @@ export const contentProblems = (
   ...(mediaIdsIn(node, content).some((mediaId) => !media.has(mediaId))
     ? [problemOf(PUBLISH_PROBLEM.unknownMedia, location)]
     : []),
-  ...unsafeLinkPathsIn(node, content).map((path) =>
-    problemOf(PUBLISH_PROBLEM.unsafeLink, { ...location, path })
-  ),
   ...missingDefaultLocalePathsIn(node, content, defaultLocale).map((path) =>
     problemOf(PUBLISH_PROBLEM.missingDefaultLocale, { ...location, path })
   )
