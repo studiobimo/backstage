@@ -11,6 +11,7 @@ import type { SiteSnapshot } from '../../site-publishing.ts'
 import { renderHtml } from '../html.ts'
 import { localeName, switcherLabel } from '../locales.ts'
 import { pathOf } from '../routing.ts'
+import { descriptionOf, documentTitleOf, socialImageOf } from './head.ts'
 import { linksOf } from './origin.ts'
 
 export type SiteHead = (snapshot: Snapshot) => ReactNode
@@ -83,18 +84,17 @@ function Head({
   head,
   locales
 }: PageProps) {
-  const title = snapshot.seo.title || snapshot.title
+  const title = documentTitleOf(snapshot, site)
+  const description = descriptionOf(snapshot, site)
   const { canonical, alternates } = linksOf(siteOrigin, snapshot, translations, locales)
-  const socialImage = snapshot.seo.socialImageId && snapshot.media[snapshot.seo.socialImageId]
+  const socialImage = socialImageOf(snapshot, site)
   return (
     <head>
       <meta charSet="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title}</title>
       <link rel="stylesheet" href={stylesheetPath} />
-      {snapshot.seo.description ? (
-        <meta name="description" content={snapshot.seo.description} />
-      ) : null}
+      {description ? <meta name="description" content={description} /> : null}
       <link rel="canonical" href={canonical} />
       {alternates.map(({ hreflang, href }) => (
         <link key={hreflang} rel="alternate" hrefLang={hreflang} href={href} />
