@@ -70,7 +70,6 @@
       "unknown_block": "{{place}} holds a block this site no longer offers. Choose another design and save.",
       "invalid_content": "{{place}} has content that is not valid. Fix it and save.",
       "unknown_media": "{{place}} uses an image that was removed from the media library.",
-      "unsafe_link": "{{place}} has a link that is not allowed ({{path}}). Use an http, https, mailto or tel address, a path or an anchor, then save.",
       "missing_default_locale": "{{place}} has no value in the default language for {{path}}. Fill it in, then save."
     }
   }
