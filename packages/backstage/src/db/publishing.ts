@@ -55,6 +55,20 @@ export const readMedia = async (d1: AnyD1Database, ids: string[]) => {
   return new Map(rows.map((row) => [row.id, row]))
 }
 
+const planDraft = async (
+  d1: AnyD1Database,
+  registry: Registry,
+  draft: PublishDraft,
+  publishedAt: number
+): Promise<PublishPlan> => {
+  const { blocks } = checkBlocks(registry, draft.blocks)
+  const mediaRows = await readMedia(d1, referencedMediaIds(registry, blocks, draft.locales))
+  const built = buildSnapshots(registry, draft, mediaRows, publishedAt)
+  return built.ok
+    ? { status: PUBLISH_PLAN.ready, snapshots: built.snapshots }
+    : { status: PUBLISH_PLAN.invalid, problems: built.problems }
+}
+
 export const planPublish = async (
   d1: AnyD1Database,
   registry: Registry,
@@ -65,12 +79,17 @@ export const planPublish = async (
   const draft = await readDraft(d1, id)
   if (!draft) return { status: PUBLISH_PLAN.notFound }
   if (draft.page.version !== expectedVersion) return { status: PUBLISH_PLAN.stale }
-  const { blocks } = checkBlocks(registry, draft.blocks)
-  const mediaRows = await readMedia(d1, referencedMediaIds(registry, blocks, draft.locales))
-  const built = buildSnapshots(registry, draft, mediaRows, publishedAt)
-  return built.ok
-    ? { status: PUBLISH_PLAN.ready, snapshots: built.snapshots }
-    : { status: PUBLISH_PLAN.invalid, problems: built.problems }
+  return planDraft(d1, registry, draft, publishedAt)
+}
+
+export const planPreview = async (
+  d1: AnyD1Database,
+  registry: Registry,
+  id: string,
+  now: number
+): Promise<PublishPlan> => {
+  const draft = await readDraft(d1, id)
+  return draft ? planDraft(d1, registry, draft, now) : { status: PUBLISH_PLAN.notFound }
 }
 
 export const recordPublished = async (

@@ -97,9 +97,9 @@ describe('buildSitemap', () => {
 })
 
 describe('buildRobots', () => {
-  it('allows crawling and names the sitemap', () => {
+  it('allows crawling, keeps previews out and names the sitemap', () => {
     expect(buildRobots('https://example.com/some/path')).toBe(
-      'User-agent: *\nAllow: /\n\nSitemap: https://example.com/sitemap.xml\n'
+      'User-agent: *\nAllow: /\nDisallow: /__preview/\n\nSitemap: https://example.com/sitemap.xml\n'
     )
   })
 })

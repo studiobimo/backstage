@@ -17,7 +17,7 @@ const THUMBNAIL = {
   cacheControl: `public, max-age=${ONE_DAY_SECONDS}, stale-while-revalidate=${ONE_WEEK_SECONDS}`
 } as const
 
-const PREVIEW_HEADERS = {
+export const PREVIEW_HEADERS = {
   'Cache-Control': 'no-store',
   'X-Robots-Tag': 'noindex, nofollow'
 } as const

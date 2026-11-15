@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { PREVIEW_ROOT } from './blocks.ts'
 import { hasMultipleLocales, LOCALE, type Locale, type LocaleConfig } from './locales.ts'
 import type { Snapshot } from './publishing.ts'
 
@@ -136,6 +137,11 @@ export const buildSitemap = (
   ].join('\n')
 
 export const buildRobots = (siteUrl: string) =>
-  ['User-agent: *', 'Allow: /', '', `Sitemap: ${originOf(siteUrl)}${SEO.sitemapPath}`, ''].join(
-    '\n'
-  )
+  [
+    'User-agent: *',
+    'Allow: /',
+    `Disallow: ${PREVIEW_ROOT}/`,
+    '',
+    `Sitemap: ${originOf(siteUrl)}${SEO.sitemapPath}`,
+    ''
+  ].join('\n')

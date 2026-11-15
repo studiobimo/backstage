@@ -14,6 +14,7 @@ import type { SiteEnv } from '../index.ts'
 import { renderPage, type DocumentContext, type SiteHead } from './document.tsx'
 import { atSiteOrigin, siteOriginOf } from './origin.ts'
 import { previewRoutes, type SitePreview } from './preview.ts'
+import { pagePreviewRoutes } from './page-preview.ts'
 import { respondWithError } from './respond.ts'
 import { securityHeaders, type ContentSecurityPolicyAdditions } from './security.ts'
 import { stylesheetPathFor, stylesheetRoutes } from './stylesheet.ts'
@@ -52,6 +53,7 @@ export const createSite = (options: CreateSiteOptions) => {
   app.get(SEO.robotsPath, (c) => respondWithRobots(atSiteOrigin(c.req.raw, siteOriginOf(c.env))))
   app.route('/', stylesheetRoutes(stylesheet))
   if (preview) app.route('/', previewRoutes(preview, document))
+  app.route('/', pagePreviewRoutes(document))
 
   app.get('/media/*', async (c) => {
     const response = await respondWithMedia(c.env.MEDIA, c.req.raw)
