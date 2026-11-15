@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.0](https://github.com/studiobimo/backstage/compare/v0.2.1...v0.3.0) (2026-11-15)
+
+
+### Features
+
+* **core:** use the site name, description and social image in createSite's head ([#359](https://github.com/studiobimo/backstage/issues/359)) ([5c08608](https://github.com/studiobimo/backstage/commit/5c086085d9aff4646e9df6d28bc40399283e3ac2))
+* **site:** declare the site's locales in its registry ([#352](https://github.com/studiobimo/backstage/issues/352)) ([3e27618](https://github.com/studiobimo/backstage/commit/3e27618e0cba8390aa588a395cb5e1c6d2bbe59f))
+* **site:** render the published header, footer and site name ([#353](https://github.com/studiobimo/backstage/issues/353)) ([c322592](https://github.com/studiobimo/backstage/commit/c322592e5af644f2e033dbe8f29e7fc3a8b19390))
+
+
+### Bug Fixes
+
+* **core:** build the head canonical and alternates with the site's locale config ([#357](https://github.com/studiobimo/backstage/issues/357)) ([2510c28](https://github.com/studiobimo/backstage/commit/2510c289bfeac2388a1fb89a2f9d30aab44d61b2))
+* **core:** export the site snapshot constant and records helper from the site entry ([#356](https://github.com/studiobimo/backstage/issues/356)) ([aab7b0c](https://github.com/studiobimo/backstage/commit/aab7b0c06ec35375f879867abe158291342cdbba))
+* **core:** hide the language switcher on a single-locale site ([#358](https://github.com/studiobimo/backstage/issues/358)) ([df7f955](https://github.com/studiobimo/backstage/commit/df7f955060f3f60eaea10d8e2d4de20850aca8ff))
+
 ## [0.2.1](https://github.com/studiobimo/backstage/compare/v0.2.0...v0.2.1) (2026-11-15)
 
 
