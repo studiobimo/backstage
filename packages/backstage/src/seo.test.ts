@@ -61,6 +61,12 @@ describe('with Spanish as the default locale', () => {
     ])
   })
 
+  it('lists no alternates for a single-locale site', () => {
+    const single = { locales: ['es'], defaultLocale: 'es' }
+    expect(alternateLinks(SITE, about, single)).toEqual([])
+    expect(buildSitemap(SITE, [about], single)).not.toContain('xhtml:link')
+  })
+
   it('lists a url for each configured locale only', () => {
     const sitemap = buildSitemap(SITE, [about], { locales: ['es'], defaultLocale: 'es' })
     expect(sitemap.match(/<url>/g)).toHaveLength(1)

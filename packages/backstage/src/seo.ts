@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { LOCALE, type Locale, type LocaleConfig } from './locales.ts'
+import { hasMultipleLocales, LOCALE, type Locale, type LocaleConfig } from './locales.ts'
 import type { Snapshot } from './publishing.ts'
 
 export const SEO = {
@@ -83,6 +83,7 @@ export const alternateLinks = (
   page: PublishedPage,
   config: LocaleConfig = LOCALE.default
 ): AlternateLink[] => {
+  if (!hasMultipleLocales(config)) return []
   const { locales, defaultLocale } = config
   const live = locales.filter((locale) => isLive(page, locale))
   const links = live.map((locale) => ({
