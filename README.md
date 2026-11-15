@@ -78,8 +78,9 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
 - Routing: `parseRoute`, `pathOf`, `routeOf`, and the `Route` type
-- The KV layout: `routeKey`, `snapshotKey`, `siteSnapshotKey`, `SNAPSHOT`, `snapshotRecords`,
-  `snapshotSchema`, `siteSnapshotSchema`, and the `PageBlock` and `Snapshot` types
+- The KV layout: `routeKey`, `snapshotKey`, `siteSnapshotKey`, `SNAPSHOT`, `SITE_SNAPSHOT`,
+  `snapshotRecords`, `siteSnapshotRecords`, `snapshotSchema`, `siteSnapshotSchema`, and the
+  `PageBlock`, `Snapshot` and `SiteSnapshot` types
 - SEO: `SEO`, `alternateLinks`, `canonicalUrl`, `EMPTY_PUBLISHED_INDEX`, `publishedIndexSchema`,
   `upsertIntoIndex`, `readPublishedPages`, `respondWithRobots`, `respondWithSitemap`, and the
   `AlternateLink` type

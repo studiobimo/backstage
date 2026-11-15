@@ -56,3 +56,17 @@ describe('what each entry can reach', () => {
     expect(reached.some((name) => KIND.d1.test(name))).toBe(true)
   })
 })
+
+const SITE_SNAPSHOT_EXPORTS = [
+  'SITE_SNAPSHOT',
+  'siteSnapshotKey',
+  'siteSnapshotRecords',
+  'siteSnapshotSchema'
+] as const
+
+describe('the site entry export list', () => {
+  it.each(SITE_SNAPSHOT_EXPORTS)('exports %s', async (name) => {
+    const site = await import(join(PACKAGE_DIR, MANIFEST.exports['./site']!))
+    expect(Object.keys(site)).toContain(name)
+  })
+})
