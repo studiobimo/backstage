@@ -1,10 +1,11 @@
 import {
   BLOCK_PREVIEW,
-  siteSnapshotKey,
-  siteSnapshotSchema,
+  SITE_SNAPSHOT,
+  siteSnapshotRecords,
   SNAPSHOT,
   snapshotRecords,
   type PageBlock,
+  type SiteSnapshot,
   type Snapshot
 } from '@studiobimo/backstage/site'
 import type { Locale } from '@studiobimo/backstage'
@@ -74,14 +75,10 @@ export const snapshotOf = (overrides: Partial<Snapshot> & { locale: Locale }): S
 export const publishSnapshots = (...snapshots: Snapshot[]) =>
   Promise.all(snapshotRecords(snapshots).map(({ key, value }) => kv.put(key, value)))
 
-const SITE_SNAPSHOT_FORMAT = 1
-
-export type SiteSnapshot = ReturnType<typeof siteSnapshotSchema.parse>
-
 export const siteSnapshotOf = (
   overrides: Partial<SiteSnapshot> & { locale: Locale }
 ): SiteSnapshot => ({
-  format: SITE_SNAPSHOT_FORMAT,
+  format: SITE_SNAPSHOT.format,
   publishedAt: 1,
   siteName: 'Studio',
   seo: { description: '', socialImageId: null },
@@ -91,9 +88,7 @@ export const siteSnapshotOf = (
 })
 
 export const publishSiteSnapshots = (...snapshots: SiteSnapshot[]) =>
-  Promise.all(
-    snapshots.map((snapshot) => kv.put(siteSnapshotKey(snapshot.locale), JSON.stringify(snapshot)))
-  )
+  Promise.all(siteSnapshotRecords(snapshots).map(({ key, value }) => kv.put(key, value)))
 
 export const clearKv = async () => {
   const { keys } = await kv.list()
