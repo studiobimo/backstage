@@ -7,6 +7,7 @@ import { createSite } from './create-site.ts'
 import {
   envWith,
   FIXTURE,
+  fixtureComponents,
   fixtureOptions,
   memoryKv,
   pageSnapshot,
@@ -58,6 +59,31 @@ describe('createSite pages', () => {
     expect((await request('/fr/about')).status).toBe(200)
     expect((await request('/es/about')).status).toBe(404)
     expect((await request('/de/about')).status).toBe(404)
+  })
+
+  it('builds the head canonical and alternates with the locales of the registry', async () => {
+    const french = { locales: ['fr', 'es'], defaultLocale: 'fr' }
+    const kv = memoryKv(
+      [
+        pageSnapshot({ locale: 'fr', title: 'A propos' }),
+        pageSnapshot({ locale: 'es', title: 'Acerca' })
+      ],
+      [siteSnapshot()]
+    )
+    const options = fixtureOptions({ components: fixtureComponents(french) })
+    const sitemap = await (await request(SEO.sitemapPath, envWith({}, kv), options)).text()
+    const html = await (await request('/about', envWith({}, kv), options)).text()
+    const listed = [...sitemap.matchAll(/hreflang="([^"]+)" href="([^"]+)"/g)].slice(0, 3)
+    expect(listed).toHaveLength(3)
+    expect(html).toContain(`<link rel="canonical" href="${FIXTURE.siteUrl}/about"/>`)
+    for (const [, hreflang, href] of listed) {
+      expect(html).toContain(`<link rel="alternate" hrefLang="${hreflang}" href="${href}"/>`)
+    }
+    expect(listed.map(([, hreflang, href]) => `${hreflang} ${href}`)).toEqual([
+      `fr ${FIXTURE.siteUrl}/about`,
+      `es ${FIXTURE.siteUrl}/es/about`,
+      `x-default ${FIXTURE.siteUrl}/about`
+    ])
   })
 
   it('renders the site snapshot into the layout slots', async () => {

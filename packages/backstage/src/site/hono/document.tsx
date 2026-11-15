@@ -73,9 +73,17 @@ function LanguageSwitcher({
   )
 }
 
-function Head({ snapshot, translations, siteOrigin, site, stylesheetPath, head }: PageProps) {
+function Head({
+  snapshot,
+  translations,
+  siteOrigin,
+  site,
+  stylesheetPath,
+  head,
+  locales
+}: PageProps) {
   const title = snapshot.seo.title || snapshot.title
-  const { canonical, alternates } = linksOf(siteOrigin, snapshot, translations)
+  const { canonical, alternates } = linksOf(siteOrigin, snapshot, translations, locales)
   const socialImage = snapshot.seo.socialImageId && snapshot.media[snapshot.seo.socialImageId]
   return (
     <head>
