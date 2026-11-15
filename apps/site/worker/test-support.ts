@@ -1,10 +1,11 @@
 import {
+  BLOCK_PREVIEW,
   SNAPSHOT,
   snapshotRecords,
-  type Locale,
   type PageBlock,
   type Snapshot
-} from '@studiobimo/backstage'
+} from '@studiobimo/backstage/site'
+import type { Locale } from '@studiobimo/backstage'
 import { getPlatformProxy } from 'wrangler'
 
 import app from './index'
@@ -15,6 +16,11 @@ export const kv = platform.env.SITE!
 
 export const get = (path: string, executionCtx?: ExecutionContext, env: Env = platform.env) =>
   app.request(path, {}, env, executionCtx)
+
+export const stylesheetPath = async () => {
+  const html = await (await get(`${BLOCK_PREVIEW.path}/split-hero`)).text()
+  return /<link rel="stylesheet" href="([^"]+)"/.exec(html)![1]!
+}
 
 export const richParagraph = (text: string) => ({
   type: 'doc',

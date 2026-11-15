@@ -1,5 +1,5 @@
-import { DEFAULT_LOCALE, isBlank, type link, type RichTextDoc } from '@studiobimo/backstage'
-import { useImage, useLocale } from '@studiobimo/backstage/render'
+import { isBlank, type link, type RichTextDoc } from '@studiobimo/backstage'
+import { useDefaultLocale, useImage, useLocale } from '@studiobimo/backstage/render'
 import type { z } from 'zod'
 
 export type LinkValue = z.output<ReturnType<typeof link>>
@@ -7,9 +7,10 @@ export type Translated<T> = Partial<Record<string, T>>
 
 export function useLocalizer() {
   const locale = useLocale()
+  const defaultLocale = useDefaultLocale()
   return <T>(translations: Translated<T> | undefined) => {
     const own = translations?.[locale]
-    return isBlank(own) ? translations?.[DEFAULT_LOCALE] : own
+    return isBlank(own) ? translations?.[defaultLocale] : own
   }
 }
 

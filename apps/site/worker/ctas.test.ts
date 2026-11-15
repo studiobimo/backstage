@@ -1,4 +1,4 @@
-import type { PageBlock } from '@studiobimo/backstage'
+import type { PageBlock } from '@studiobimo/backstage/site'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { registry } from '../src/blocks/registry'

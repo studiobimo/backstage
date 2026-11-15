@@ -1,6 +1,6 @@
-import { DEFAULT_LOCALE } from '@studiobimo/backstage'
-
 export const BLOCK_VERSION = { localizedCta: 2 } as const
+
+const LEGACY_CTA_LOCALE = 'en'
 
 type Fields = Record<string, unknown>
 
@@ -9,7 +9,8 @@ const isFields = (value: unknown): value is Fields =>
 
 const isSingleLink = (value: unknown) => isFields(value) && typeof value.href === 'string'
 
-const localizeCta = (value: unknown) => (isSingleLink(value) ? { [DEFAULT_LOCALE]: value } : value)
+const localizeCta = (value: unknown) =>
+  isSingleLink(value) ? { [LEGACY_CTA_LOCALE]: value } : value
 
 const withLocalizedCta = (fields: unknown) =>
   isFields(fields) && 'cta' in fields ? { ...fields, cta: localizeCta(fields.cta) } : fields

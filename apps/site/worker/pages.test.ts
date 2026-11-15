@@ -1,4 +1,4 @@
-import { EMPTY_PUBLISHED_INDEX, SEO, upsertIntoIndex } from '@studiobimo/backstage'
+import { EMPTY_PUBLISHED_INDEX, SEO, upsertIntoIndex } from '@studiobimo/backstage/site'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import {

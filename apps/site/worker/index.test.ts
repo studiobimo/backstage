@@ -1,4 +1,4 @@
-import { publishedIndexSchema, SEO } from '@studiobimo/backstage'
+import { publishedIndexSchema, SEO } from '@studiobimo/backstage/site'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { clearKv, get, heroBlock, platform, publishSnapshots, snapshotOf } from './test-support'

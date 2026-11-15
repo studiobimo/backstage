@@ -1,13 +1,20 @@
-import type { ComponentMap, LayoutProps, PageBlock } from '@studiobimo/backstage'
+import type { ComponentMap, LayoutProps } from '@studiobimo/backstage'
+import type { PageBlock } from '@studiobimo/backstage/site'
+import { createSite } from '@studiobimo/backstage/site/hono'
 import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, describe, expect, it } from 'vitest'
 
 import { components } from '../src/blocks/component-map'
 import { SiteFooter } from '../src/blocks/site-footer/component'
 import { SiteHeader } from '../src/blocks/site-header/component'
-import { Document } from './document'
-import { heroBlock, platform, richParagraph, snapshotOf } from './test-support'
+import {
+  clearKv,
+  heroBlock,
+  platform,
+  publishSnapshots,
+  richParagraph,
+  snapshotOf
+} from './test-support'
 
 afterAll(() => platform.dispose())
 
@@ -53,15 +60,17 @@ const footer = createElement(SiteFooter, {
 const PageLayout = ({ children }: LayoutProps) =>
   createElement('div', null, header, createElement('main', null, children), footer)
 
-const render = (locale: 'en' | 'es') =>
-  renderToStaticMarkup(
-    createElement(Document, {
-      components: { ...components, layouts: { default: PageLayout } } as ComponentMap,
-      snapshot: snapshotOf({ locale, slug: 'about', blocks: pageBlocks }),
-      translations: [],
-      siteOrigin: 'https://example.com'
-    })
-  )
+const outlineSite = createSite({
+  components: { ...components, layouts: { default: PageLayout } } as ComponentMap,
+  stylesheet: ''
+})
+
+const render = async (locale: 'en' | 'es') => {
+  await clearKv()
+  await publishSnapshots(snapshotOf({ locale, slug: 'about', blocks: pageBlocks }))
+  const path = locale === 'en' ? '/about' : '/es/about'
+  return (await outlineSite.request(path, {}, platform.env)).text()
+}
 
 const outline = (html: string) =>
   [...html.matchAll(/<h([1-6])[^>]*>([^<]+)<\/h\1>/g)].map(([, level, text]) => `${level}:${text}`)
@@ -76,8 +85,8 @@ const emptyElements = (html: string) =>
 const navTags = (html: string) => [...html.matchAll(/<nav[^>]*>/g)].map(([tag]) => tag)
 
 describe('the page outline', () => {
-  it('has one h1 and nests every heading under its section', () => {
-    expect(outline(render('en'))).toEqual([
+  it('has one h1 and nests every heading under its section', async () => {
+    expect(outline(await render('en'))).toEqual([
       '1:About',
       '2:First hero',
       '3:Inside hero',
@@ -89,8 +98,8 @@ describe('the page outline', () => {
     ])
   })
 
-  it('renders nothing for blank blocks, a blank footer or a blank nav item', () => {
-    const html = render('en')
+  it('renders nothing for blank blocks, a blank footer or a blank nav item', async () => {
+    const html = await render('en')
     expect(emptyElements(html)).toEqual([])
     expect(html).not.toContain('data-block="one-column-section"')
     expect(html).not.toContain('<footer')
@@ -98,10 +107,12 @@ describe('the page outline', () => {
     expect(html.match(/<li>/g)).toHaveLength(2)
   })
 
-  it('labels every nav in the page language', () => {
-    expect(navTags(render('en'))).toHaveLength(2)
-    expect(navTags(render('en')).every((tag) => /aria-label="[^"]+"/.test(tag))).toBe(true)
-    expect(navTags(render('es')).join('')).toMatch(/aria-label="Idioma"/)
-    expect(navTags(render('es')).join('')).toMatch(/aria-label="Principal"/)
+  it('labels every nav in the page language', async () => {
+    const en = navTags(await render('en'))
+    const es = navTags(await render('es')).join('')
+    expect(en).toHaveLength(2)
+    expect(en.every((tag) => /aria-label="[^"]+"/.test(tag))).toBe(true)
+    expect(es).toMatch(/aria-label="Idioma"/)
+    expect(es).toMatch(/aria-label="Principal"/)
   })
 })
