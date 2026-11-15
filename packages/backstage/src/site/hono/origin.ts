@@ -1,3 +1,4 @@
+import type { LocaleConfig } from '../../locales.ts'
 import type { Snapshot } from '../../publishing.ts'
 import {
   alternateLinks,
@@ -31,11 +32,12 @@ export interface PageLinks {
 export const linksOf = (
   siteOrigin: string,
   snapshot: Snapshot,
-  translations: readonly Snapshot[]
+  translations: readonly Snapshot[],
+  locales: LocaleConfig
 ): PageLinks => {
   const [page] = upsertIntoIndex(EMPTY_PUBLISHED_INDEX, [snapshot, ...translations]).pages
   return {
-    canonical: canonicalUrl(siteOrigin, page!, snapshot.locale),
-    alternates: alternateLinks(siteOrigin, page!)
+    canonical: canonicalUrl(siteOrigin, page!, snapshot.locale, locales.defaultLocale),
+    alternates: alternateLinks(siteOrigin, page!, locales)
   }
 }

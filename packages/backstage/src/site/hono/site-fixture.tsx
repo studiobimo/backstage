@@ -3,7 +3,9 @@ import { z } from 'zod'
 
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '../../blocks.ts'
 import { defineComponents } from '../../components.ts'
+import type { LocaleConfig } from '../../locales.ts'
 import { SNAPSHOT, snapshotRecords, type Snapshot } from '../../publishing.ts'
+import { EMPTY_PUBLISHED_INDEX, SEO, upsertIntoIndex } from '../../seo.ts'
 import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../../site-publishing.ts'
 import type { SiteEnv } from '../index.ts'
 import type { CreateSiteOptions } from './create-site.ts'
@@ -11,11 +13,12 @@ import type { CreateSiteOptions } from './create-site.ts'
 const note = defineBlock({ name: 'note', schema: z.object({ text: z.string() }) })
 const header = defineBlock({ name: 'header', schema: z.object({ text: z.string() }) })
 
-const registry = defineRegistry([note, header], {
-  locales: ['en', 'es', 'fr'],
-  slots: { [SLOT.header]: [header.name] },
-  layouts: [defineLayout({ name: 'default' })]
-})
+const registryFor = (locales: LocaleConfig) =>
+  defineRegistry([note, header], {
+    ...locales,
+    slots: { [SLOT.header]: [header.name] },
+    layouts: [defineLayout({ name: 'default' })]
+  })
 
 const Layout = ({ slots, children }: { slots: Record<string, ReactNode>; children: ReactNode }) => (
   <>
@@ -33,14 +36,19 @@ export const FIXTURE = {
   mediaKey: 'media/m1.png'
 } as const
 
-export const fixtureOptions = (overrides: Partial<CreateSiteOptions> = {}): CreateSiteOptions => ({
-  components: defineComponents(registry, {
+const FIXTURE_LOCALES = { locales: ['en', 'es', 'fr'], defaultLocale: 'en' } as const
+
+export const fixtureComponents = (locales: LocaleConfig = FIXTURE_LOCALES) =>
+  defineComponents(registryFor(locales), {
     blocks: {
       note: ({ text }: { text: string }) => <p>{text}</p>,
       header: ({ text }: { text: string }) => <header>{text}</header>
     },
     layouts: { default: Layout }
-  }),
+  })
+
+export const fixtureOptions = (overrides: Partial<CreateSiteOptions> = {}): CreateSiteOptions => ({
+  components: fixtureComponents(),
   stylesheet: FIXTURE.stylesheet,
   preview: {
     samples: { note: { text: 'Sample note' } },
@@ -78,8 +86,15 @@ export const siteSnapshot = (overrides: Partial<SiteSnapshot> = {}): SiteSnapsho
   ...overrides
 })
 
+const publishedIndexOf = (snapshots: Snapshot[]) =>
+  Object.values(Object.groupBy(snapshots, ({ pageId }) => pageId)).reduce(
+    (index, group) => upsertIntoIndex(index, group ?? []),
+    EMPTY_PUBLISHED_INDEX
+  )
+
 export const memoryKv = (snapshots: Snapshot[] = [], sites: SiteSnapshot[] = []) => {
   const records = new Map<string, string>([
+    [SEO.indexKey, JSON.stringify(publishedIndexOf(snapshots))],
     ...snapshotRecords(snapshots).map(({ key, value }): [string, string] => [key, value]),
     ...sites.map((site): [string, string] => [siteSnapshotKey(site.locale), JSON.stringify(site)])
   ])
