@@ -1,5 +1,74 @@
 # Changelog
 
+## [0.2.0](https://github.com/studiobimo/backstage/compare/v0.1.0...v0.2.0) (2026-11-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** shrink the root entry to what a site author uses ([#337](https://github.com/studiobimo/backstage/issues/337))
+
+### Features
+
+* **admin:** publish the site from the settings page ([#315](https://github.com/studiobimo/backstage/issues/315)) ([70283a7](https://github.com/studiobimo/backstage/commit/70283a7d6c7f4f8eb17c1c57e3f6c8301aeb641b))
+* **admin:** read the site's locales from the API in the editor and settings ([#328](https://github.com/studiobimo/backstage/issues/328)) ([1b0ad25](https://github.com/studiobimo/backstage/commit/1b0ad252c8aa6d6859f6923b5205242f2487febd))
+* **admin:** read the site's locales from the API in the page and media forms ([#327](https://github.com/studiobimo/backstage/issues/327)) ([6a2573c](https://github.com/studiobimo/backstage/commit/6a2573c04aa685497018530f1237fecdc51936d4))
+* **admin:** republish every published page in one action ([#321](https://github.com/studiobimo/backstage/issues/321)) ([361bf0d](https://github.com/studiobimo/backstage/commit/361bf0d26da45cce2909c03cdcd0213a0a21d518))
+* **admin:** show unpublished changes ([#319](https://github.com/studiobimo/backstage/issues/319)) ([5e2fe4e](https://github.com/studiobimo/backstage/commit/5e2fe4e5479401804b83f3a9b16560b1d6449d69))
+* **core:** add createSite to the site/hono entry ([#341](https://github.com/studiobimo/backstage/issues/341)) ([089cd76](https://github.com/studiobimo/backstage/commit/089cd76d790bdd8105e10ea6958107c7431712ad))
+* **core:** add the internal and site/hono entries, and test what each can reach ([#332](https://github.com/studiobimo/backstage/issues/332)) ([fa3d74e](https://github.com/studiobimo/backstage/commit/fa3d74e77bbd7c4f8fde992670bca99e60d6c98b))
+* **core:** declare a site's locales and default locale in the registry ([#324](https://github.com/studiobimo/backstage/issues/324)) ([57cba5e](https://github.com/studiobimo/backstage/commit/57cba5e8a1d71a758c42facd1fb04c4f145a2318))
+* **core:** let the site serve its own block thumbnails ([#305](https://github.com/studiobimo/backstage/issues/305)) ([9ed2f4e](https://github.com/studiobimo/backstage/commit/9ed2f4e3bb3d945bb4e133134b83812ea4d293ee))
+* **core:** name any locale in the site's switcher and expose the default ([#329](https://github.com/studiobimo/backstage/issues/329)) ([0b6aa2d](https://github.com/studiobimo/backstage/commit/0b6aa2d59d2a976de2fe5602cf95e5e6679f6ba8))
+* **core:** publish the header, footer and site name to the site ([#313](https://github.com/studiobimo/backstage/issues/313)) ([126a57b](https://github.com/studiobimo/backstage/commit/126a57bb0dfa2f0f701951f18387e641d7e3ea14))
+* **core:** publish, route and index pages by the registry's locales ([#325](https://github.com/studiobimo/backstage/issues/325)) ([014932b](https://github.com/studiobimo/backstage/commit/014932b89cb41a020d00ae7d9f65d8283f3902bb))
+* **core:** read the site snapshot and render its slots ([#314](https://github.com/studiobimo/backstage/issues/314)) ([50ebacb](https://github.com/studiobimo/backstage/commit/50ebacb6488a6c323f40006c8362a281a4d12040))
+* **core:** record the version a page was published at ([#317](https://github.com/studiobimo/backstage/issues/317)) ([dba5074](https://github.com/studiobimo/backstage/commit/dba507455872e70ebb2b8e3b2663819166e5aca1))
+* **core:** republish every published page in batches ([#320](https://github.com/studiobimo/backstage/issues/320)) ([23fba8c](https://github.com/studiobimo/backstage/commit/23fba8c7c879bfb5b9cf8026ee4f29a69acabd40))
+* **core:** validate requests against the configured locales and serve them ([#326](https://github.com/studiobimo/backstage/issues/326)) ([79088eb](https://github.com/studiobimo/backstage/commit/79088ebd9770b26c50c491e90786d4d0f0dd96d7))
+* **devtools:** add targets to try a package change in the site ([#245](https://github.com/studiobimo/backstage/issues/245)) ([b78ccf2](https://github.com/studiobimo/backstage/commit/b78ccf27fc0178e72de8add5d35f26fed836b3ea))
+* **devtools:** start the admin and site dev servers with one make dev ([#343](https://github.com/studiobimo/backstage/issues/343)) ([51d433d](https://github.com/studiobimo/backstage/commit/51d433d730c0b7a552820404c66da298a5beeb84))
+
+
+### Bug Fixes
+
+* **admin:** ask before leaving settings or replacing a slot design ([#310](https://github.com/studiobimo/backstage/issues/310)) ([d7354ec](https://github.com/studiobimo/backstage/commit/d7354ec92699619c29e9a2a50467949b692e9ab2))
+* **admin:** flag only the list item that has the error ([#299](https://github.com/studiobimo/backstage/issues/299)) ([7569694](https://github.com/studiobimo/backstage/commit/7569694531fdcc3722cbffef1189289e67af45d4))
+* **admin:** guard site settings and slots against lost changes ([#312](https://github.com/studiobimo/backstage/issues/312)) ([60dca5a](https://github.com/studiobimo/backstage/commit/60dca5a2e909a4e6d48eb8c2e764667fce45fd78))
+* **admin:** read image sizes from the file and fall back to webp ([#304](https://github.com/studiobimo/backstage/issues/304)) ([4acc10a](https://github.com/studiobimo/backstage/commit/4acc10aa3787226a4b967bd66d1121d008faa6ed))
+* **admin:** reset the new page form and title every screen ([#290](https://github.com/studiobimo/backstage/issues/290)) ([6f57611](https://github.com/studiobimo/backstage/commit/6f57611789ce03169309c7064a4523dd5e0f3d9a))
+* **admin:** say what went wrong when an action fails ([#301](https://github.com/studiobimo/backstage/issues/301)) ([9c40d0b](https://github.com/studiobimo/backstage/commit/9c40d0bc34cd0e343aa41d0310b2c2a99519d4a8))
+* **admin:** show each page's real address on the site ([#316](https://github.com/studiobimo/backstage/issues/316)) ([d869fe2](https://github.com/studiobimo/backstage/commit/d869fe205f784c94a0ab78472e201ca8255736b8))
+* **admin:** sync the rich text editor and allow its csp needs ([#293](https://github.com/studiobimo/backstage/issues/293)) ([6fabaf4](https://github.com/studiobimo/backstage/commit/6fabaf41b871c051b760a8d598e8fbadd26e2847))
+* **core:** declare bindings per environment and fail clearly when one is missing ([#308](https://github.com/studiobimo/backstage/issues/308)) ([ed5df4e](https://github.com/studiobimo/backstage/commit/ed5df4e086e531661d3bbbe44b3d95b713657993))
+* **core:** keep other pages' routes on unpublish and walk union fields ([#295](https://github.com/studiobimo/backstage/issues/295)) ([aca6db2](https://github.com/studiobimo/backstage/commit/aca6db279e00e2c508f06d74aa5e84771c1cf592))
+* **core:** one home page and atomic page saves ([#288](https://github.com/studiobimo/backstage/issues/288)) ([b7c3878](https://github.com/studiobimo/backstage/commit/b7c38789146404ae3dbcd86864892b6b068fc87d))
+* **core:** rebuild the sitemap index from d1 on every publish ([#307](https://github.com/studiobimo/backstage/issues/307)) ([1797533](https://github.com/studiobimo/backstage/commit/17975335ee108b713d439b498d671040a7637bb0))
+* **core:** refuse a stale save of site settings and slots ([#311](https://github.com/studiobimo/backstage/issues/311)) ([69dee70](https://github.com/studiobimo/backstage/commit/69dee707656c129a96cf16cec104107e5f116a36))
+* **core:** reject unsafe hrefs in link fields by default ([#289](https://github.com/studiobimo/backstage/issues/289)) ([d4f5ede](https://github.com/studiobimo/backstage/commit/d4f5edef82265307fe1f3013c6ec93f27b93de11))
+* **core:** require default-locale values to publish ([#302](https://github.com/studiobimo/backstage/issues/302)) ([0a11142](https://github.com/studiobimo/backstage/commit/0a1114237e60b22dd7c1d22f6740c6e4b790fd18))
+* **core:** return field errors from the api ([#306](https://github.com/studiobimo/backstage/issues/306)) ([8bf15b3](https://github.com/studiobimo/backstage/commit/8bf15b3a9c941690eb6c2ce09b210864a69ad70e))
+* **core:** tighten dev auth, cross-site writes and api request headers ([#291](https://github.com/studiobimo/backstage/issues/291)) ([302b211](https://github.com/studiobimo/backstage/commit/302b2113a4f8de8674eca37b228e3c1cf71d8e8d))
+* **core:** validate blocks once and log dropped blocks ([#303](https://github.com/studiobimo/backstage/issues/303)) ([6fdbad5](https://github.com/studiobimo/backstage/commit/6fdbad59aff96f17bb504a406bc1389238d73a3b))
+* **site:** localize call-to-action links and use media alt text ([#300](https://github.com/studiobimo/backstage/issues/300)) ([3fa6f2c](https://github.com/studiobimo/backstage/commit/3fa6f2cf820b93f27598cb663cf22cf42a934e78))
+* **site:** skip kv for impossible paths and keep one h1 ([#292](https://github.com/studiobimo/backstage/issues/292)) ([ff01d60](https://github.com/studiobimo/backstage/commit/ff01d60d2b84a301d55d0e19bc6819fd5d68f637))
+* **site:** use a configured site url for seo urls ([#298](https://github.com/studiobimo/backstage/issues/298)) ([d2165e7](https://github.com/studiobimo/backstage/commit/d2165e74869a5a3b73fe22bd8b6e3575eeb00404))
+
+
+### Performance
+
+* **core:** keep the pages list cheap with stored missing-translation counts ([#297](https://github.com/studiobimo/backstage/issues/297)) ([6ffdd3b](https://github.com/studiobimo/backstage/commit/6ffdd3bfbe84cf371fff369b5c19070e09e318f8))
+
+
+### Documentation
+
+* add the m1.6 hardening milestone to the roadmap ([#266](https://github.com/studiobimo/backstage/issues/266)) ([3c56f4c](https://github.com/studiobimo/backstage/commit/3c56f4c281bbd226d25109425b8fc4d64a991993))
+* bring the adrs, prd and risks back in line with the code ([#342](https://github.com/studiobimo/backstage/issues/342)) ([1a4beb2](https://github.com/studiobimo/backstage/commit/1a4beb2175f3976cd17a690c3787bb77aa905f6b))
+
+
+### Refactoring
+
+* **core:** shrink the root entry to what a site author uses ([#337](https://github.com/studiobimo/backstage/issues/337)) ([a59ca41](https://github.com/studiobimo/backstage/commit/a59ca41cb9480cc39f210e752572db60c6290552))
+
 ## 0.1.0 (2026-11-11)
 
 
