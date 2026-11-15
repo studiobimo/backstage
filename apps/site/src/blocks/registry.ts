@@ -1,5 +1,6 @@
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '@studiobimo/backstage'
 
+import { SITE_LOCALES } from './locales.ts'
 import { BLOCK_VERSION, migrateColumnCtas, migrateCta } from './migrations.ts'
 import { oneColumnSectionSchema } from './one-column-section/schema.ts'
 import { oneColumnTextSchema } from './one-column-text/schema.ts'
@@ -99,6 +100,7 @@ export const registry = defineRegistry(
     siteFooter
   ],
   {
+    ...SITE_LOCALES,
     slots: { [SLOT.header]: [siteHeader.name], [SLOT.footer]: [siteFooter.name] },
     layouts: [
       defineLayout({ name: 'default' }),

@@ -1,6 +1,6 @@
-export const BLOCK_VERSION = { localizedCta: 2 } as const
+import { SITE_LOCALES } from './locales.ts'
 
-const LEGACY_CTA_LOCALE = 'en'
+export const BLOCK_VERSION = { localizedCta: 2 } as const
 
 type Fields = Record<string, unknown>
 
@@ -10,7 +10,7 @@ const isFields = (value: unknown): value is Fields =>
 const isSingleLink = (value: unknown) => isFields(value) && typeof value.href === 'string'
 
 const localizeCta = (value: unknown) =>
-  isSingleLink(value) ? { [LEGACY_CTA_LOCALE]: value } : value
+  isSingleLink(value) ? { [SITE_LOCALES.defaultLocale]: value } : value
 
 const withLocalizedCta = (fields: unknown) =>
   isFields(fields) && 'cta' in fields ? { ...fields, cta: localizeCta(fields.cta) } : fields
