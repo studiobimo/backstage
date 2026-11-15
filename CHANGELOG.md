@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/studiobimo/backstage/compare/v0.2.0...v0.2.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* **deps:** bump hono from 4.13.14 to 4.13.16 ([#340](https://github.com/studiobimo/backstage/issues/340)) ([bfa03d1](https://github.com/studiobimo/backstage/commit/bfa03d1d2c5eeb2553644f098a2bbcd5497b819d))
+
 ## [0.2.0](https://github.com/studiobimo/backstage/compare/v0.1.0...v0.2.0) (2026-11-15)
 
 
