@@ -18,6 +18,10 @@
     "edit": "Edit {{name}}"
   },
   "unsaved": "Unsaved changes",
+  "preview": {
+    "label": "Preview",
+    "failed": "Could not open the preview"
+  },
   "announce": {
     "added": "{{name}} added in position {{position}} of {{total}}.",
     "duplicated": "{{name}} duplicated. The copy is in position {{position}} of {{total}}.",
