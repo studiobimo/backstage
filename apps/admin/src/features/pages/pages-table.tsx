@@ -2,16 +2,11 @@ import { hasUnpublishedChanges, type PageSummary } from '@studiobimo/backstage/i
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
+import { CardTable } from '@/components/card-table'
+import { PublishStateBadge } from '@/components/publish-state-badge'
+import { RowMenu } from '@/components/row-menu'
 import { Badge } from '@/components/ui/badge'
-import { Frame } from '@/components/ui/frame'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table'
+import { TableCell, TableHead, TableRow } from '@/components/ui/table'
 import { useLocaleConfig } from '@/features/config/queries'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -19,8 +14,7 @@ import { cn } from '@/lib/utils'
 import { languageName } from '../block-form/locale-status'
 import { isPublished } from './page-filters'
 import { pageAddresses, pageLabel } from './page-label'
-import type { PageAction } from './page-row-actions'
-import { PageRowMenu } from './page-row-menu'
+import { type PageAction, useRowActions } from './page-row-actions'
 
 const COLUMN = {
   languages: 'hidden sm:table-cell',
@@ -63,16 +57,16 @@ function LanguageBadges({
 
 function StatusBadge({ page }: { page: PageSummary }) {
   const { t } = useTranslation('pages')
-  const published = isPublished(page)
-  const changed = hasUnpublishedChanges(page)
   return (
-    <Badge variant="outline">
-      <span
-        aria-hidden
-        className={`size-1.5 rounded-full ${changed ? 'bg-warning' : published ? 'bg-success' : 'bg-muted-foreground/64'}`}
-      />
-      {t(changed ? 'list.changed' : published ? 'list.published' : 'list.draft')}
-    </Badge>
+    <PublishStateBadge
+      published={isPublished(page)}
+      changed={hasUnpublishedChanges(page)}
+      labels={{
+        published: t('list.published'),
+        changed: t('list.changed'),
+        draft: t('list.draft')
+      }}
+    />
   )
 }
 
@@ -103,6 +97,23 @@ function TitleCell({ page, name }: { page: PageSummary; name: string }) {
   )
 }
 
+function PageActionsMenu({
+  page,
+  onAction
+}: {
+  page: PageSummary
+  onAction: (action: PageAction) => void
+}) {
+  const { t, i18n } = useTranslation('pages')
+  const actions = useRowActions(page, onAction)
+  return (
+    <RowMenu
+      triggerLabel={t('list.actions.open', { name: pageLabel(page, i18n.language) })}
+      actions={actions}
+    />
+  )
+}
+
 function PageRow({
   page,
   onAction
@@ -128,7 +139,7 @@ function PageRow({
         {formatDateTime(i18n.language, page.updatedAt)}
       </TableCell>
       <TableCell className="w-px">
-        <PageRowMenu page={page} onAction={onAction} />
+        <PageActionsMenu page={page} onAction={onAction} />
       </TableCell>
     </TableRow>
   )
@@ -143,27 +154,24 @@ export function PagesTable({ pages, onAction }: PagesTableProps) {
   const { t } = useTranslation('pages')
   const { hasMultipleLocales } = useLocaleConfig()
   return (
-    <Frame>
-      <Table variant="card">
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('list.columns.title')}</TableHead>
-            {hasMultipleLocales && (
-              <TableHead className={COLUMN.languages}>{t('list.columns.languages')}</TableHead>
-            )}
-            <TableHead>{t('list.columns.status')}</TableHead>
-            <TableHead className={COLUMN.updated}>{t('list.columns.updated')}</TableHead>
-            <TableHead>
-              <span className="sr-only">{t('list.columns.actions')}</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {pages.map((page) => (
-            <PageRow key={page.id} page={page} onAction={onAction} />
-          ))}
-        </TableBody>
-      </Table>
-    </Frame>
+    <CardTable
+      head={
+        <>
+          <TableHead>{t('list.columns.title')}</TableHead>
+          {hasMultipleLocales && (
+            <TableHead className={COLUMN.languages}>{t('list.columns.languages')}</TableHead>
+          )}
+          <TableHead>{t('list.columns.status')}</TableHead>
+          <TableHead className={COLUMN.updated}>{t('list.columns.updated')}</TableHead>
+          <TableHead>
+            <span className="sr-only">{t('list.columns.actions')}</span>
+          </TableHead>
+        </>
+      }
+    >
+      {pages.map((page) => (
+        <PageRow key={page.id} page={page} onAction={onAction} />
+      ))}
+    </CardTable>
   )
 }

@@ -1,19 +1,11 @@
 import type { PageSummary } from '@studiobimo/backstage/internal'
 import { useNavigate } from '@tanstack/react-router'
-import { type LucideIcon, LayoutListIcon, PencilIcon, Trash2Icon } from 'lucide-react'
+import { LayoutListIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import type { RowAction } from '@/components/row-action'
+
 export type PageAction = { kind: 'rename' | 'delete'; page: PageSummary }
-
-export interface RowAction {
-  key: string
-  icon: LucideIcon
-  label: string
-  destructive: boolean
-  run: () => void
-}
-
-export const actionVariant = (action: RowAction) => (action.destructive ? 'destructive' : 'default')
 
 export function useRowActions(
   page: PageSummary,

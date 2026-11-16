@@ -1,8 +1,7 @@
-import { SearchIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { SearchField } from '@/components/search-field'
 import { Badge } from '@/components/ui/badge'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Tabs, TabsList, TabsTab } from '@/components/ui/tabs'
 
 import { PAGE_STATUS_FILTERS, type PageStatusFilter } from './page-filters'
@@ -37,18 +36,12 @@ export function PagesToolbar({
           ))}
         </TabsList>
       </Tabs>
-      <InputGroup className="w-full sm:max-w-64">
-        <InputGroupAddon>
-          <SearchIcon aria-hidden />
-        </InputGroupAddon>
-        <InputGroupInput
-          type="search"
-          aria-label={t('list.filters.searchLabel')}
-          placeholder={t('list.filters.searchPlaceholder')}
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-        />
-      </InputGroup>
+      <SearchField
+        label={t('list.filters.searchLabel')}
+        placeholder={t('list.filters.searchPlaceholder')}
+        value={query}
+        onChange={onQueryChange}
+      />
     </div>
   )
 }
