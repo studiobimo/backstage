@@ -12,7 +12,8 @@ const spanishFirst = defineRegistry([...sampleRegistry.blocks.values()], {
   locales: ['es', 'en'],
   defaultLocale: 'es',
   slots: Object.fromEntries(sampleRegistry.slots),
-  layouts: [...sampleRegistry.layouts.values()]
+  layouts: [...sampleRegistry.layouts.values()],
+  collections: [...sampleRegistry.collections.values()]
 })
 const spanishAdmin = createAdmin(spanishFirst)
 const config = resolveLocaleConfig(spanishFirst)

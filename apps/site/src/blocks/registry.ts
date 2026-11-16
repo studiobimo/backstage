@@ -1,17 +1,12 @@
-import {
-  defineBlock,
-  defineCollection,
-  defineLayout,
-  defineRegistry,
-  SLOT
-} from '@studiobimo/backstage'
+import { defineBlock, defineLayout, defineRegistry, SLOT } from '@studiobimo/backstage'
 
-import { postsSchema } from '../collections/posts/schema.ts'
+import { postsCollection } from '../collections/posts/collection.ts'
 import { SITE_LOCALES } from './locales.ts'
 import { BLOCK_VERSION, migrateColumnCtas, migrateCta } from './migrations.ts'
 import { oneColumnSectionSchema } from './one-column-section/schema.ts'
 import { oneColumnTextSchema } from './one-column-text/schema.ts'
 import { overlayHeroSchema } from './overlay-hero/schema.ts'
+import { postListSchema } from './post-list/schema.ts'
 import { siteFooterSchema } from './site-footer/schema.ts'
 import { siteHeaderSchema } from './site-header/schema.ts'
 import { splitHeroSchema } from './split-hero/schema.ts'
@@ -86,11 +81,14 @@ const twoColumnText = defineBlock({
   }
 })
 
-const posts = defineCollection({
-  name: 'posts',
-  label: 'title',
-  title: { en: 'Posts', es: 'Entradas' },
-  schema: postsSchema
+const postList = defineBlock({
+  name: 'post-list',
+  schema: postListSchema,
+  title: { en: 'Post List', es: 'Lista de entradas' },
+  description: {
+    en: 'Cards for chosen or the latest posts, each linking to its page.',
+    es: 'Tarjetas de entradas elegidas o las más recientes, cada una con enlace a su página.'
+  }
 })
 
 const siteHeader = defineBlock({
@@ -110,6 +108,7 @@ export const registry = defineRegistry(
     oneColumnText,
     twoColumnSection,
     twoColumnText,
+    postList,
     siteHeader,
     siteFooter
   ],
@@ -121,6 +120,6 @@ export const registry = defineRegistry(
       defineLayout({ name: 'minimal' }),
       defineLayout({ name: 'bare' })
     ],
-    collections: [posts]
+    collections: [postsCollection]
   }
 )

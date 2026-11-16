@@ -45,8 +45,16 @@ meanwhile is not republished again.
 
 ## Releases
 
-### Unreleased
+### 0.5.0
 
-- Page snapshots are still `format: 1`. The site now accepts the previous format through
-  `SNAPSHOT_UPGRADES`: a release that raises `SNAPSHOT.format` adds an entry for the old format
-  that maps it to the new one, with a test. No republish is needed yet.
+- **Snapshots are `format: 2`.** A page snapshot now carries the entries its blocks show. The 0.4.0
+  site rejects format 2, so every page published by a 0.5.0 admin answers 404 on an older site.
+  Deploy the admin and the site Workers together, and move both to 0.5.0 before anyone publishes.
+  The 0.5.0 site still reads format 1 through `SNAPSHOT_UPGRADES`, so pages published before the
+  upgrade keep working. Republish all is not required, though a page is in format 2 only once it is
+  published again.
+- **Apply the new D1 migrations, `0010_entries`, `0011_page_entry_refs` and `0012_entry_locales`,**
+  with `make migrate` (add `REMOTE=1` and `ENV=<env>` for a deployed database) before the admin
+  starts serving 0.5.0.
+- **A routed collection (`route: { path: '/posts/:slug' }`) needs a template** in
+  `defineComponents`, and an entry is served at its address only after it is published again.

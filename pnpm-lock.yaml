@@ -196,8 +196,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@studiobimo/backstage':
-        specifier: ^0.4.0
-        version: 0.4.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: ^0.5.0
+        version: 0.5.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1711,8 +1711,8 @@ packages:
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
 
-  '@studiobimo/backstage@0.4.0':
-    resolution: {integrity: sha512-9HNllS3UQsfCnUM/maMM5/NqeZj4Kk5OVkCw4vTKPzzN5fBm1WRx15mYlCoXzac47ZZKMw5/BwcEUza8rDHh0Q==, tarball: https://npm.pkg.github.com/download/@studiobimo/backstage/0.4.0/d36b1262f9f2f878376d028365733c5d07d67243}
+  '@studiobimo/backstage@0.5.0':
+    resolution: {integrity: sha512-WlyOqf/mtJmSnSU/mffMm/PKruFeRbLmBN8KX8jxFrCGBvNze6NA45zXtQA176YDsZ1DZVFlln5OZQGw3/2Jbg==, tarball: https://npm.pkg.github.com/download/@studiobimo/backstage/0.5.0/c7b56ed5c442e7a029e9e4ff9c07ce011d74ff90}
     peerDependencies:
       react: ^19.3.1
       react-dom: ^19.3.1
@@ -5639,7 +5639,7 @@ snapshots:
 
   '@speed-highlight/core@1.2.24': {}
 
-  '@studiobimo/backstage@0.4.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@studiobimo/backstage@0.5.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@tiptap/core': 3.32.2(@tiptap/pm@3.32.2)
       '@tiptap/pm': 3.32.2

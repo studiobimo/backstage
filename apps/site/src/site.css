@@ -227,4 +227,32 @@
   [data-column] > img {
     @apply rounded-lg;
   }
+
+  [data-block='post-list'] {
+    @apply max-w-5xl px-6 py-12;
+  }
+
+  [data-block='post-list'] > ul {
+    @apply my-6 grid list-none gap-6 p-0 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  [data-card] {
+    @apply bg-card text-card-foreground border-border grid content-start gap-2 rounded-lg border p-4;
+  }
+
+  [data-card] > img {
+    @apply rounded-md;
+  }
+
+  [data-card] h3 {
+    @apply text-lg font-semibold;
+  }
+
+  [data-card] p {
+    @apply text-muted-foreground m-0 text-sm;
+  }
+
+  [data-collection='posts'] {
+    @apply mx-auto max-w-3xl px-6 py-12;
+  }
 }

@@ -68,6 +68,8 @@ export const snapshotOf = (overrides: Partial<Snapshot> & { locale: Locale }): S
   publishedAt: 1,
   seo: { title: '', description: '', socialImageId: null },
   blocks: [],
+  entries: {},
+  references: {},
   media: { m1: MEDIA_ENTRY },
   ...overrides
 })
