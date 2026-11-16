@@ -138,6 +138,22 @@ export const entries = sqliteTable(
   (t) => [index('entries_collection').on(t.collection, t.updatedAt)]
 )
 
+export const entryLocales = sqliteTable(
+  'entry_locales',
+  {
+    entryId: text('entry_id')
+      .notNull()
+      .references(() => entries.id, { onDelete: 'cascade' }),
+    collection: text('collection').notNull(),
+    locale: text('locale').notNull(),
+    slug: text('slug')
+  },
+  (t) => [
+    uniqueIndex('entry_locales_pk').on(t.entryId, t.locale),
+    uniqueIndex('entry_locales_slug').on(t.collection, t.locale, t.slug)
+  ]
+)
+
 export const pageEntryRefs = sqliteTable(
   'page_entry_refs',
   {

@@ -16,6 +16,7 @@ const entry = (id: string, overrides: Partial<EntrySummary>): EntrySummary => ({
   version: 1,
   schemaVersion: 1,
   label: { en: id },
+  slugs: {},
   createdAt: 0,
   updatedAt: 0,
   updatedBy: null,
