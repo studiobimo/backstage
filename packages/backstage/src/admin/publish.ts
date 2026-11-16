@@ -4,7 +4,7 @@ import { findPage } from '../db/pages.ts'
 import { planPublish, PUBLISH_PLAN, recordPublished, recordUnpublished } from '../db/publishing.ts'
 import { publishPageSchema } from '../publishing.ts'
 import { resolveLocaleConfig } from '../locales.ts'
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
@@ -12,7 +12,7 @@ import { respondStale } from './pages.ts'
 import { readJsonBody, respondUnpublishable, respondWithError } from './respond.ts'
 import { rebuildPublishedIndex, removeSnapshots, writeSnapshots } from './snapshots.ts'
 
-export const publishRoutes = (registry: Registry) =>
+export const publishRoutes = (registry: AdminRegistry) =>
   new Hono<AccessEnv>()
     .post('/:id/publish', async (c) => {
       const body = await readJsonBody(c, publishPageSchema)
@@ -31,7 +31,8 @@ export const publishRoutes = (registry: Registry) =>
         id,
         await ensureUser(c.env.DB, c.get('editor')),
         publishedAt,
-        body.data.expectedVersion
+        body.data.expectedVersion,
+        plan.refs
       )
       await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
       return c.json({ page: await findPage(c.env.DB, id) })

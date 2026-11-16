@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import { planPreview, PUBLISH_PLAN } from '../db/publishing.ts'
 import { API_ERROR } from '../errors.ts'
 import {
@@ -14,7 +14,7 @@ import {
 import type { AccessEnv } from './auth.ts'
 import { RESPONSE_STATUS, respondUnpublishable, respondWithError } from './respond.ts'
 
-export const previewRoutes = (registry: Registry) =>
+export const previewRoutes = (registry: AdminRegistry) =>
   new Hono<AccessEnv>().post('/:id/preview', async (c) => {
     const now = Date.now()
     const plan = await planPreview(c.env.DB, registry, c.req.param('id'), now)

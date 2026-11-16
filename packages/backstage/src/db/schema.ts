@@ -137,3 +137,18 @@ export const entries = sqliteTable(
   },
   (t) => [index('entries_collection').on(t.collection, t.updatedAt)]
 )
+
+export const pageEntryRefs = sqliteTable(
+  'page_entry_refs',
+  {
+    pageId: text('page_id')
+      .notNull()
+      .references(() => pages.id, { onDelete: 'cascade' }),
+    collection: text('collection').notNull(),
+    entryId: text('entry_id')
+  },
+  (t) => [
+    index('page_entry_refs_page').on(t.pageId),
+    index('page_entry_refs_entry').on(t.collection, t.entryId)
+  ]
+)

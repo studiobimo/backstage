@@ -23,7 +23,7 @@ import {
 } from '../republish.ts'
 import { logEvent } from '../observability.ts'
 import { resolveLocaleConfig } from '../locales.ts'
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import type { AccessEnv } from './auth.ts'
 import { readJsonBody } from './respond.ts'
 import { rebuildPublishedIndex, writeSnapshots } from './snapshots.ts'
@@ -49,7 +49,7 @@ interface PageToRepublish {
 
 const republishPage = async (
   c: Context<AccessEnv>,
-  registry: Registry,
+  registry: AdminRegistry,
   page: PageToRepublish,
   editorId: string,
   publishedAt: number
@@ -57,7 +57,7 @@ const republishPage = async (
   const plan = await planPublish(c.env.DB, registry, page.id, page.version, publishedAt)
   if (plan.status === PUBLISH_PLAN.ready) {
     await writeSnapshots(c.env.SITE, plan.snapshots, resolveLocaleConfig(registry).locales)
-    await recordPublished(c.env.DB, page.id, editorId, publishedAt, page.version)
+    await recordPublished(c.env.DB, page.id, editorId, publishedAt, page.version, plan.refs)
     return null
   }
   return {
@@ -68,7 +68,7 @@ const republishPage = async (
 
 const republishPages = async (
   c: Context<AccessEnv>,
-  registry: Registry,
+  registry: AdminRegistry,
   pages: readonly PageToRepublish[],
   progress: BatchProgress
 ) => {
@@ -91,7 +91,7 @@ const republishPages = async (
   }
 }
 
-export const republishRoutes = (registry: Registry) => {
+export const republishRoutes = (registry: AdminRegistry) => {
   const { locales } = resolveLocaleConfig(registry)
   return new Hono<AccessEnv>()
     .get('/', async (c) => {

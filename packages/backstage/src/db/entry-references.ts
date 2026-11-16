@@ -1,0 +1,129 @@
+import { and, desc, eq, getTableColumns, inArray, isNotNull } from 'drizzle-orm'
+import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
+
+import { validateBlockContent } from '../blocks.ts'
+import { collectionsOf, type AdminRegistry, type Collection } from '../collections.ts'
+import {
+  referenceNeedsOf,
+  type PageEntryRef,
+  type PublishedEntries,
+  type PublishedEntry,
+  type ReferenceField,
+  type ReferenceNeeds
+} from '../references.ts'
+import { entries, pageEntryRefs } from './schema.ts'
+
+const D1_LIMITS = { boundParameters: 100 } as const
+
+const LOOKUP = { idsPerQuery: D1_LIMITS.boundParameters - 2 } as const
+
+const REFS_INSERT = {
+  rowsPerStatement: Math.floor(
+    D1_LIMITS.boundParameters / Object.keys(getTableColumns(pageEntryRefs)).length
+  )
+} as const
+
+const inChunks = <T>(items: readonly T[], size: number) =>
+  Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
+    items.slice(index * size, (index + 1) * size)
+  )
+
+const publishedIn = (collection: Collection) =>
+  and(
+    eq(entries.collection, collection.name),
+    isNotNull(entries.publishedAt),
+    isNotNull(entries.publishedContent)
+  )
+
+const publishedColumns = {
+  id: entries.id,
+  schemaVersion: entries.publishedSchemaVersion,
+  content: entries.publishedContent
+}
+
+type PublishedRow = { id: string; schemaVersion: number | null; content: unknown }
+
+const openRow = (collection: Collection, row: PublishedRow): PublishedEntry[] => {
+  const opened = validateBlockContent(collection, row.schemaVersion ?? 1, row.content)
+  return opened.ok
+    ? [{ id: row.id, schemaVersion: opened.schemaVersion, content: opened.content }]
+    : []
+}
+
+const readChosen = async (d1: AnyD1Database, collection: Collection, ids: readonly string[]) =>
+  (
+    await Promise.all(
+      inChunks([...new Set(ids)], LOOKUP.idsPerQuery).map((chunk) =>
+        drizzle(d1)
+          .select(publishedColumns)
+          .from(entries)
+          .where(and(publishedIn(collection), inArray(entries.id, chunk)))
+      )
+    )
+  )
+    .flat()
+    .flatMap((row) => openRow(collection, row))
+
+const readLatest = async (d1: AnyD1Database, collection: Collection, count: number) =>
+  count === 0
+    ? []
+    : (
+        await drizzle(d1)
+          .select(publishedColumns)
+          .from(entries)
+          .where(publishedIn(collection))
+          .orderBy(desc(entries.publishedAt), desc(entries.id))
+          .limit(count)
+      ).flatMap((row) => openRow(collection, row))
+
+const readPool = async (
+  d1: AnyD1Database,
+  collection: Collection,
+  { ids, latest }: ReferenceNeeds
+) => {
+  const [chosen, newest] = await Promise.all([
+    readChosen(d1, collection, ids),
+    readLatest(d1, collection, latest)
+  ])
+  return {
+    byId: new Map([...chosen, ...newest].map((entry) => [entry.id, entry])),
+    latest: newest
+  }
+}
+
+export const readPublishedEntries = async (
+  d1: AnyD1Database,
+  registry: AdminRegistry,
+  fields: readonly ReferenceField[]
+): Promise<PublishedEntries> => {
+  const known = collectionsOf(registry)
+  const pools = await Promise.all(
+    [...referenceNeedsOf(fields)].flatMap(([name, needs]) => {
+      const collection = known.get(name)
+      return collection
+        ? [readPool(d1, collection, needs).then((pool) => [name, pool] as const)]
+        : []
+    })
+  )
+  return new Map(pools)
+}
+
+export const replaceEntryRefs = (
+  d1: AnyD1Database,
+  pageId: string,
+  refs: readonly PageEntryRef[]
+) => {
+  const db = drizzle(d1)
+  return db.batch([
+    db.delete(pageEntryRefs).where(eq(pageEntryRefs.pageId, pageId)),
+    ...inChunks(refs, REFS_INSERT.rowsPerStatement).map((chunk) =>
+      db
+        .insert(pageEntryRefs)
+        .values(chunk.map(({ collection, entryId }) => ({ pageId, collection, entryId })))
+    )
+  ])
+}
+
+export const clearEntryRefs = async (d1: AnyD1Database, pageId: string) => {
+  await drizzle(d1).delete(pageEntryRefs).where(eq(pageEntryRefs.pageId, pageId))
+}
