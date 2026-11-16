@@ -5,6 +5,7 @@ import {
   type PageSummary
 } from '@studiobimo/backstage/internal'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { ChevronRightIcon, CopyIcon, Trash2Icon } from 'lucide-react'
 import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +25,7 @@ import { BlockForm } from '../block-form/block-form'
 import { EditingLocaleContext, useEditingLocale } from '../block-form/locale-status'
 import type { BlockValue } from '../block-form/value'
 import { BlockPicker } from './block-picker'
-import { EditorHeader } from './editor-header'
+import { EDITOR_BODY, EditorHeader } from './editor-header'
 import { blockTitle } from './localized-text'
 import { PublishNotes } from './publish-notes'
 import { PreviewButton } from './preview-button'
@@ -284,6 +285,7 @@ function EditorChrome({
   locale,
   onReload
 }: EditorChromeProps) {
+  const { t } = useTranslation('pageEditor')
   const hintId = useId()
   const publish = usePublish(page, version)
   const preview = usePreview(page.id)
@@ -293,6 +295,7 @@ function EditorChrome({
   return (
     <>
       <EditorHeader
+        back={{ link: <Link to="/pages" />, label: t('back') }}
         title={title}
         published={page.publishedAt !== null}
         changed={changed}
@@ -348,8 +351,6 @@ function EditorChrome({
     </>
   )
 }
-
-const EDITOR_BODY = 'flex w-full max-w-3xl flex-col gap-8'
 
 function LayoutPicker({
   layouts,

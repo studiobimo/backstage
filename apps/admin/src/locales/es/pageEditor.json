@@ -55,7 +55,8 @@
       "description": "Al recargar, esta página se reemplaza por la última versión guardada. Se perderán estos cambios:",
       "keep": "Conservar mis cambios",
       "discard": "Recargar y descartar",
-      "description_settings": "Recargar reemplaza lo que ves por la última versión guardada. Los cambios sin guardar aquí se perderán."
+      "description_settings": "Recargar reemplaza lo que ves por la última versión guardada. Los cambios sin guardar aquí se perderán.",
+      "description_entry": "Al recargar, esta entrada se sustituye por la última versión guardada. Se perderán tus cambios sin guardar."
     },
     "changes": {
       "added": "{{name}} añadido en la posición {{position}}",
@@ -65,7 +66,8 @@
       "layout": "Diseño cambiado",
       "seo": "Búsqueda y redes cambiado"
     },
-    "description_settings": "{{name}} lo guardó el {{when}}. Tus cambios no se guardaron y siguen aquí. Recarga para ver su versión."
+    "description_settings": "{{name}} lo guardó el {{when}}. Tus cambios no se guardaron y siguen aquí. Recarga para ver su versión.",
+    "description_entry": "{{name}} guardó esta entrada el {{when}}. Tus cambios no se guardaron y siguen aquí. Cópialos o recarga para obtener su versión."
   },
   "seo": {
     "heading": "Buscadores y redes",
@@ -112,7 +114,9 @@
         "failed": "No se pudo despublicar"
       },
       "problems_one": "Hay 1 problema que corregir primero. Abre la página para ver los detalles.",
-      "problems_other": "Hay {{count}} problemas que corregir primero. Abre la página para ver los detalles."
+      "problems_other": "Hay {{count}} problemas que corregir primero. Abre la página para ver los detalles.",
+      "problems_entry_one": "Hay 1 problema que corregir primero. Abre la entrada para ver los detalles.",
+      "problems_entry_other": "Hay {{count}} problemas que corregir primero. Abre la entrada para ver los detalles."
     },
     "problems": {
       "title": "Esta página aún no se puede publicar",
@@ -124,8 +128,18 @@
       "migration_failed": "El bloque {{name}} no se pudo actualizar a su diseño actual. Edítalo y guarda.",
       "unknown_media": "Una imagen que usa {{name}} se eliminó de la biblioteca de medios.",
       "missing_default_locale": "El bloque {{name}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda.",
-      "missing_slug": "Un idioma no tiene dirección. Renombra la página para añadirla."
+      "missing_slug": "Un idioma no tiene dirección. Renombra la página para añadirla.",
+      "title_entry": "Esta entrada aún no se puede publicar",
+      "invalid_content_entry": "La entrada tiene contenido que no es válido. Corrígelo y guarda.",
+      "invalid_content_field_entry": "La entrada tiene un valor que no es válido en {{path}}. Corrígelo y guarda.",
+      "newer_schema_version_entry": "La entrada la guardó una versión más reciente de este sitio. Actualiza el sitio antes de publicar.",
+      "migration_failed_entry": "La entrada no se pudo actualizar a su diseño actual. Edítala y guarda.",
+      "unknown_media_entry": "Se eliminó de la mediateca una imagen que usa esta entrada.",
+      "missing_default_locale_entry": "La entrada no tiene valor en el idioma predeterminado para {{path}}. Complétalo y guarda."
     },
-    "more": "Más opciones de publicación"
+    "more": "Más opciones de publicación",
+    "notLive_entry": "No está en línea. Esta entrada aún no está publicada.",
+    "changedSince_entry": "En línea desde el {{when}}, publicada por {{name}}. Los cambios guardados aún no están en línea. Publica para actualizar la entrada.",
+    "unpublishDescription_entry": "La entrada deja de estar publicada. Tu borrador sigue aquí y puedes publicarlo de nuevo."
   }
 }

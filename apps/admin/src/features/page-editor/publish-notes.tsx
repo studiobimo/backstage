@@ -8,8 +8,11 @@ import { useApiErrorMessage } from '@/lib/api-feedback'
 import { formatDateTime } from '@/lib/format'
 import { publishProblemKey } from '@/lib/publish-problem-key'
 
+type PublishableRecord = Pick<PageSummary, 'publishedAt' | 'publishedBy'>
+
 interface PublishNotesProps {
-  page: PageSummary
+  page: PublishableRecord
+  context?: 'entry'
   dirty: boolean
   changed: boolean
   error: unknown
@@ -20,9 +23,10 @@ interface PublishNotesProps {
 interface ProblemsListProps {
   problems: PublishProblem[]
   blocks: PageBlock[]
+  context?: 'entry'
 }
 
-export function ProblemsList({ problems, blocks }: ProblemsListProps) {
+export function ProblemsList({ problems, blocks, context }: ProblemsListProps) {
   const { t } = useTranslation('pageEditor')
   return (
     <ul className="list-disc pl-4">
@@ -31,7 +35,8 @@ export function ProblemsList({ problems, blocks }: ProblemsListProps) {
           {t(publishProblemKey({ reason, path }), {
             name: blocks.find((block) => block.id === blockId)?.block ?? '',
             path: path ?? '',
-            defaultValue: t('publish.problems.invalid_content', { name: '' })
+            context,
+            defaultValue: t('publish.problems.invalid_content', { name: '', context })
           })}
         </li>
       ))}
@@ -39,24 +44,30 @@ export function ProblemsList({ problems, blocks }: ProblemsListProps) {
   )
 }
 
-function ProblemsAlert({ error, blocks }: { error: ApiError; blocks: PageBlock[] }) {
+interface NoticeProps {
+  error: unknown
+  blocks: PageBlock[]
+  context?: 'entry'
+}
+
+function ProblemsAlert({ error, blocks, context }: NoticeProps & { error: ApiError }) {
   const { t } = useTranslation('pageEditor')
   return (
     <Alert variant="error" role="alert">
       <CircleAlertIcon />
-      <AlertTitle>{t('publish.problems.title')}</AlertTitle>
+      <AlertTitle>{t('publish.problems.title', { context })}</AlertTitle>
       <AlertDescription>
-        <ProblemsList problems={error.problems} blocks={blocks} />
+        <ProblemsList problems={error.problems} blocks={blocks} context={context} />
       </AlertDescription>
     </Alert>
   )
 }
 
-function PublishNotice({ error, blocks }: { error: unknown; blocks: PageBlock[] }) {
+function PublishNotice({ error, blocks, context }: NoticeProps) {
   const messageOf = useApiErrorMessage()
   if (!error) return null
   if (error instanceof ApiError && error.problems.length > 0) {
-    return <ProblemsAlert error={error} blocks={blocks} />
+    return <ProblemsAlert error={error} blocks={blocks} context={context} />
   }
   return (
     <p role="alert" className="text-destructive-foreground text-sm">
@@ -68,25 +79,35 @@ function PublishNotice({ error, blocks }: { error: unknown; blocks: PageBlock[] 
 function usePublishHint({
   page,
   dirty,
-  changed
-}: Pick<PublishNotesProps, 'page' | 'dirty' | 'changed'>) {
+  changed,
+  context
+}: Pick<PublishNotesProps, 'page' | 'dirty' | 'changed' | 'context'>) {
   const { t, i18n } = useTranslation('pageEditor')
   if (dirty) return t('publish.saveFirst')
-  if (page.publishedAt === null) return t('publish.notLive')
+  if (page.publishedAt === null) return t('publish.notLive', { context })
   return t(changed ? 'publish.changedSince' : 'publish.since', {
+    context,
     when: formatDateTime(i18n.language, page.publishedAt),
     name: page.publishedBy ?? t('publish.someone')
   })
 }
 
-export function PublishNotes({ page, dirty, changed, error, blocks, hintId }: PublishNotesProps) {
+export function PublishNotes({
+  page,
+  context,
+  dirty,
+  changed,
+  error,
+  blocks,
+  hintId
+}: PublishNotesProps) {
   const { t } = useTranslation('pageEditor')
   return (
     <section aria-label={t('publish.label')} className="flex flex-col gap-3">
       <p id={hintId} className="text-muted-foreground text-sm">
-        {usePublishHint({ page, dirty, changed })}
+        {usePublishHint({ page, dirty, changed, context })}
       </p>
-      <PublishNotice error={error} blocks={blocks} />
+      <PublishNotice error={error} blocks={blocks} context={context} />
     </section>
   )
 }

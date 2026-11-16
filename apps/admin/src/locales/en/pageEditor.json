@@ -55,7 +55,8 @@
       "description": "Reloading replaces this page with the latest saved version. These changes will be lost:",
       "keep": "Keep my changes",
       "discard": "Reload and discard",
-      "description_settings": "Reloading replaces what is on screen with the latest saved version. Your unsaved changes here will be lost."
+      "description_settings": "Reloading replaces what is on screen with the latest saved version. Your unsaved changes here will be lost.",
+      "description_entry": "Reloading replaces this entry with the latest saved version. Your unsaved changes here will be lost."
     },
     "changes": {
       "added": "{{name}} added at position {{position}}",
@@ -65,7 +66,8 @@
       "layout": "Layout changed",
       "seo": "Search and social changed"
     },
-    "description_settings": "{{name}} saved this on {{when}}. Your changes were not saved and are still here. Reload to get their version."
+    "description_settings": "{{name}} saved this on {{when}}. Your changes were not saved and are still here. Reload to get their version.",
+    "description_entry": "{{name}} saved this entry on {{when}}. Your changes were not saved and are still here. Copy them, or reload to get their version."
   },
   "seo": {
     "heading": "Search and social",
@@ -112,7 +114,9 @@
         "failed": "Could not unpublish"
       },
       "problems_one": "1 problem needs fixing first. Open the page for details.",
-      "problems_other": "{{count}} problems need fixing first. Open the page for details."
+      "problems_other": "{{count}} problems need fixing first. Open the page for details.",
+      "problems_entry_one": "1 problem needs fixing first. Open the entry for details.",
+      "problems_entry_other": "{{count}} problems need fixing first. Open the entry for details."
     },
     "problems": {
       "title": "This page cannot be published yet",
@@ -124,8 +128,18 @@
       "migration_failed": "The block {{name}} could not be upgraded to its current design. Edit it and save.",
       "unknown_media": "An image {{name}} uses was removed from the media library.",
       "missing_default_locale": "The block {{name}} has no value in the default language for {{path}}. Fill it in, then save.",
-      "missing_slug": "A language has no address. Rename the page to add one."
+      "missing_slug": "A language has no address. Rename the page to add one.",
+      "title_entry": "This entry cannot be published yet",
+      "invalid_content_entry": "The entry has content that is not valid. Fix it and save.",
+      "invalid_content_field_entry": "The entry has a value that is not valid in {{path}}. Fix it and save.",
+      "newer_schema_version_entry": "The entry was saved by a newer version of this site. Update the site before publishing.",
+      "migration_failed_entry": "The entry could not be upgraded to its current design. Edit it and save.",
+      "unknown_media_entry": "An image this entry uses was removed from the media library.",
+      "missing_default_locale_entry": "The entry has no value in the default language for {{path}}. Fill it in, then save."
     },
-    "more": "More publishing options"
+    "more": "More publishing options",
+    "notLive_entry": "Not live. This entry is not published yet.",
+    "changedSince_entry": "Live since {{when}}, published by {{name}}. Saved changes are not live yet. Publish to update the entry.",
+    "unpublishDescription_entry": "The entry stops being published. Your draft stays here and you can publish it again."
   }
 }

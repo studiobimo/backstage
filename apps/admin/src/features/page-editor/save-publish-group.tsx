@@ -21,19 +21,22 @@ const LABEL = 'sr-only sm:not-sr-only'
 
 interface UnpublishDialogProps {
   name: string
+  context?: 'entry'
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
 }
 
-function UnpublishDialog({ name, open, onOpenChange, onConfirm }: UnpublishDialogProps) {
+function UnpublishDialog({ name, context, open, onOpenChange, onConfirm }: UnpublishDialogProps) {
   const { t } = useTranslation('pageEditor')
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogPopup>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('publish.unpublishTitle', { name })}</AlertDialogTitle>
-          <AlertDialogDescription>{t('publish.unpublishDescription')}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {t('publish.unpublishDescription', { context })}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogClose render={<Button variant="outline" />}>
@@ -50,6 +53,7 @@ function UnpublishDialog({ name, open, onOpenChange, onConfirm }: UnpublishDialo
 
 interface SavePublishGroupProps {
   name: string
+  context?: 'entry'
   hintId: string
   dirty: boolean
   saving: boolean
@@ -122,6 +126,7 @@ export function SavePublishGroup(props: SavePublishGroupProps) {
       </Group>
       <UnpublishDialog
         name={props.name}
+        context={props.context}
         open={confirming}
         onOpenChange={setConfirming}
         onConfirm={props.onUnpublish}
