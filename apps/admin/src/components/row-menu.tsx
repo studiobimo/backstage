@@ -1,34 +1,28 @@
-import type { PageSummary } from '@studiobimo/backstage/internal'
 import { EllipsisIcon } from 'lucide-react'
 import { lazy, Suspense } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from '@/components/ui/menu'
 import { useMediaQuery } from '@/hooks/use-media-query'
 
-import { pageLabel } from './page-label'
-import { actionVariant, type PageAction, useRowActions } from './page-row-actions'
+import { actionVariant, type RowAction } from './row-action'
 
-const PageRowDrawer = lazy(async () => ({
-  default: (await import('./page-row-drawer')).PageRowDrawer
+const RowDrawer = lazy(async () => ({
+  default: (await import('./row-drawer')).RowDrawer
 }))
 
-interface PageRowMenuProps {
-  page: PageSummary
-  onAction: (action: PageAction) => void
+interface RowMenuProps {
+  triggerLabel: string
+  actions: RowAction[]
 }
 
-export function PageRowMenu({ page, onAction }: PageRowMenuProps) {
-  const { t, i18n } = useTranslation('pages')
+export function RowMenu({ triggerLabel, actions }: RowMenuProps) {
   const isMobile = useMediaQuery('max-md')
-  const actions = useRowActions(page, onAction)
-  const triggerLabel = t('list.actions.open', { name: pageLabel(page, i18n.language) })
 
   if (isMobile) {
     return (
       <Suspense fallback={null}>
-        <PageRowDrawer triggerLabel={triggerLabel} actions={actions} />
+        <RowDrawer triggerLabel={triggerLabel} actions={actions} />
       </Suspense>
     )
   }

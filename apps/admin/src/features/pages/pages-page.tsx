@@ -3,10 +3,10 @@ import { Plus } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ListNotice } from '@/components/list-notice'
 import { PageHeader } from '@/components/page-header'
 import { ShortcutHint, ShortcutTooltip } from '@/components/shortcut-hint'
 import { Button } from '@/components/ui/button'
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { ariaKeyShortcuts, useShortcut } from '@/lib/shortcuts'
 
 import { DeletePageDialog } from './delete-page-dialog'
@@ -19,17 +19,6 @@ import { RepublishAllDialog } from './republish-dialog'
 import { pagesQuery } from './queries'
 
 type Editing = { kind: 'create' } | PageAction
-
-function NoPages({ title, description }: { title: string; description: string }) {
-  return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>{description}</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
-  )
-}
 
 interface PagesPageProps {
   createRequested?: boolean
@@ -70,7 +59,7 @@ export function PagesPage({ createRequested = false, onCreateHandled }: PagesPag
         }
       />
       {pages.length === 0 ? (
-        <NoPages title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
+        <ListNotice title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
       ) : (
         <>
           <PagesToolbar
@@ -81,7 +70,7 @@ export function PagesPage({ createRequested = false, onCreateHandled }: PagesPag
             onQueryChange={setQuery}
           />
           {visible.length === 0 ? (
-            <NoPages title={t('list.noMatchTitle')} description={t('list.noMatchDescription')} />
+            <ListNotice title={t('list.noMatchTitle')} description={t('list.noMatchDescription')} />
           ) : (
             <PagesTable pages={visible} onAction={setEditing} />
           )}

@@ -11,14 +11,14 @@ import {
   DrawerTrigger
 } from '@/components/ui/drawer'
 
-import { actionVariant, type RowAction } from './page-row-actions'
+import { actionVariant, type RowAction } from './row-action'
 
-interface PageRowDrawerProps {
+interface RowDrawerProps {
   triggerLabel: string
   actions: RowAction[]
 }
 
-export function PageRowDrawer({ triggerLabel, actions }: PageRowDrawerProps) {
+export function RowDrawer({ triggerLabel, actions }: RowDrawerProps) {
   return (
     <Drawer>
       <DrawerTrigger render={<Button size="icon" variant="ghost" aria-label={triggerLabel} />}>
