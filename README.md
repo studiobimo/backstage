@@ -61,10 +61,10 @@ What a site author writes. It reaches no database and no Hono.
 
 - Blocks and layouts: `defineBlock`, `defineLayout`, `defineRegistry`, `defineComponents`, `LAYOUT`, `SLOT`
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
-- Fields: `image`, `link`, `localized`, `richText`, `isBlank`
+- Fields: `entries`, `image`, `link`, `localized`, `richText`, `isBlank`
 - Shared constants: `API_ERROR`, `MEDIA`
 - Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionDefinition`,
-  `CollectionDescription`, `ComponentMap`, `EntryLabels`, `LayoutComponents`,
+  `CollectionDescription`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
   `LayoutDefinition`, `LayoutProps`, `Locale`, `LocaleConfig`, `Registry`, `RegistryOptions`, `RichTextDoc`
 
 ### `@studiobimo/backstage/admin`

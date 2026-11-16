@@ -5,6 +5,8 @@ export type TranslatedNode =
   | boolean
   | {
       backstage?: string
+      collection?: string
+      max?: number
       type?: string | string[]
       required?: string[]
       const?: unknown
@@ -48,6 +50,7 @@ export interface MarkedField {
   path: string
   value: unknown
   required: boolean
+  node: Exclude<TranslatedNode, boolean>
 }
 
 export function lacksDefaultLocale(translations: unknown, defaultLocale: string) {
@@ -101,7 +104,7 @@ export function markedFieldsIn(
   required = true
 ): MarkedField[] {
   if (typeof node === 'boolean') return []
-  if (node.backstage === kind) return [{ path, value, required }]
+  if (node.backstage === kind) return [{ path, value, required, node }]
   const branches = [...(node.anyOf ?? []), ...(node.oneOf ?? [])]
   const inBranches = branches
     .filter((branch) => fitsValue(branch, value))
@@ -135,6 +138,35 @@ function markedFieldsInShape(
           properties[key] === undefined || (node.required ?? []).includes(key)
         )
   })
+}
+
+export function mapMarkedFields(
+  node: TranslatedNode,
+  value: unknown,
+  kind: FieldKind,
+  replace: (field: MarkedField) => unknown,
+  path = ''
+): unknown {
+  if (typeof node === 'boolean') return value
+  if (node.backstage === kind) return replace({ path, value, required: true, node })
+  const { items, properties = {}, additionalProperties } = node
+  if (items && !Array.isArray(items)) {
+    return Array.isArray(value)
+      ? value.map((item, index) => mapMarkedFields(items, item, kind, replace, `${path}[${index}]`))
+      : value
+  }
+  if (!isRecord(value)) return value
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      const child = properties[key] ?? additionalProperties
+      return [
+        key,
+        child === undefined
+          ? entry
+          : mapMarkedFields(child, entry, kind, replace, childPath(path, key))
+      ]
+    })
+  )
 }
 
 const localizedEntries = (node: TranslatedNode, value: unknown) =>

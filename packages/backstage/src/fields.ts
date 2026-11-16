@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { RICH_TEXT, richTextDoc } from './rich-text.ts'
 
-export type FieldKind = 'image' | 'richText' | 'link' | 'localized'
+export type FieldKind = 'image' | 'richText' | 'link' | 'localized' | 'reference'
 
 const marked = <T extends z.ZodType>(schema: T, backstage: FieldKind): T =>
   schema.meta({ backstage }) as T

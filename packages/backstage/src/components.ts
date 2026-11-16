@@ -2,6 +2,7 @@ import type { ComponentType, JSXElementConstructor, ReactNode } from 'react'
 import type { z } from 'zod'
 
 import type { Block, LayoutDefinition, Registry } from './blocks.ts'
+import type { AdminRegistry } from './collections.ts'
 
 export interface LayoutProps {
   slots: Readonly<Record<string, ReactNode>>
@@ -17,7 +18,7 @@ export type LayoutComponents<L extends readonly LayoutDefinition[]> = {
 }
 
 export interface ComponentMap {
-  readonly registry: Registry
+  readonly registry: AdminRegistry
   readonly blocks: Readonly<Record<string, JSXElementConstructor<never>>>
   readonly layouts: Readonly<Record<string, ComponentType<LayoutProps>>>
 }

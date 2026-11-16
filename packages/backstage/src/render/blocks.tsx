@@ -5,10 +5,11 @@ import type { ComponentMap } from '../components.ts'
 import { logLine } from '../log.ts'
 import type { PageBlock } from '../pages.ts'
 import type { Snapshot } from '../publishing.ts'
+import { mapMarkedFields, type TranslatedNode } from '../translations.ts'
 
 interface BlocksProps {
   components: ComponentMap
-  snapshot: Pick<Snapshot, 'blocks' | 'pageId'>
+  snapshot: Pick<Snapshot, 'blocks' | 'pageId'> & Partial<Pick<Snapshot, 'entries' | 'references'>>
 }
 
 const BLOCK_DROP = {
@@ -28,6 +29,21 @@ const dropBlock = (pageId: string, block: PageBlock, reason: DropReason) => {
   return []
 }
 
+const withEntries = (
+  node: TranslatedNode,
+  content: unknown,
+  { entries = {}, references = {} }: BlocksProps['snapshot'],
+  blockId: string
+) =>
+  references[blockId]
+    ? mapMarkedFields(node, content, 'reference', ({ path, node: field }) =>
+        (references[blockId]?.[path] ?? []).flatMap((id) => {
+          const entry = entries[field.collection ?? '']?.[id]
+          return entry ? [{ id, content: entry.content }] : []
+        })
+      )
+    : content
+
 export function Blocks({ components, snapshot }: BlocksProps) {
   const { registry } = components
   const { pageId } = snapshot
@@ -42,6 +58,16 @@ export function Blocks({ components, snapshot }: BlocksProps) {
     const Component = components.blocks[definition.name] as
       ComponentType<Record<string, unknown>> | undefined
     if (!Component) return dropBlock(pageId, block, BLOCK_DROP.reason.missingComponent)
-    return [<Component key={block.id} {...(result.content as Record<string, unknown>)} />]
+    return [
+      <Component
+        key={block.id}
+        {...(withEntries(
+          registry.jsonSchema(definition.name),
+          result.content,
+          snapshot,
+          block.id
+        ) as Record<string, unknown>)}
+      />
+    ]
   })
 }

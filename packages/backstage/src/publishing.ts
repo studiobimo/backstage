@@ -6,9 +6,11 @@ import {
   type BlockContentResult,
   type Registry
 } from './blocks.ts'
+import type { AdminRegistry } from './collections.ts'
 import type { FieldIssue } from './errors.ts'
 import { LOCALE, resolveLocaleConfig, type Locale } from './locales.ts'
 import { pageBlockSchema, type PageBlock } from './pages.ts'
+import { localizeEntryContent, NO_REFERENCES, type ResolvedReferences } from './references.ts'
 import {
   isRecord,
   lacksDefaultLocale,
@@ -17,7 +19,7 @@ import {
 } from './translations.ts'
 
 export const SNAPSHOT = {
-  format: 1,
+  format: 2,
   key: { prefix: 'page', separator: ':' }
 } as const
 
@@ -87,6 +89,13 @@ export const snapshotMediaSchema = z.object({
 })
 export type SnapshotMedia = z.infer<typeof snapshotMediaSchema>
 
+const snapshotEntrySchema = z.object({
+  id: z.string(),
+  schemaVersion: z.number().int(),
+  content: z.json()
+})
+type SnapshotEntry = z.infer<typeof snapshotEntrySchema>
+
 export const snapshotSchema = z.object({
   format: z.literal(SNAPSHOT.format),
   pageId: z.string(),
@@ -103,13 +112,17 @@ export const snapshotSchema = z.object({
     socialImageId: z.string().nullable()
   }),
   blocks: z.array(pageBlockSchema),
+  entries: z.record(z.string(), z.record(z.string(), snapshotEntrySchema)),
+  references: z.record(z.string(), z.record(z.string(), z.array(z.string()))),
   media: z.record(z.string(), snapshotMediaSchema)
 })
 export type Snapshot = z.infer<typeof snapshotSchema>
 
 type SnapshotUpgrade = (stored: Record<string, unknown>) => Record<string, unknown>
 
-export const SNAPSHOT_UPGRADES: Record<number, SnapshotUpgrade> = {}
+export const SNAPSHOT_UPGRADES: Record<number, SnapshotUpgrade> = {
+  1: (stored) => ({ ...stored, entries: {}, references: {} })
+}
 
 export const upgradeSnapshot = (
   stored: unknown,
@@ -232,13 +245,27 @@ const missingDefaultLocalePathsIn = (
     required && lacksDefaultLocale(entry, defaultLocale) ? [path] : []
   )
 
+const ANY_NODE: TranslatedNode = true
+
+const collectionNodeOf = (registry: AdminRegistry, collection: string): TranslatedNode =>
+  registry.collectionJsonSchema?.(collection) ?? ANY_NODE
+
+const resolvedEntriesOf = ({ entries }: ResolvedReferences) =>
+  Object.entries(entries).flatMap(([collection, byId]) =>
+    Object.values(byId).map((entry) => ({ collection, entry }))
+  )
+
 export const referencedMediaIds = (
-  registry: Registry,
+  registry: AdminRegistry,
   blocks: readonly PageBlock[],
-  locales: readonly PublishLocaleRow[]
+  locales: readonly PublishLocaleRow[],
+  resolved: ResolvedReferences = NO_REFERENCES
 ) => [
   ...new Set([
     ...blocks.flatMap(({ block, content }) => mediaIdsIn(registry.jsonSchema(block), content)),
+    ...resolvedEntriesOf(resolved).flatMap(({ collection, entry }) =>
+      mediaIdsIn(collectionNodeOf(registry, collection), entry.content)
+    ),
     ...locales.flatMap(({ socialImageId }) => socialImageId ?? [])
   ])
 ]
@@ -279,7 +306,7 @@ export const contentProblems = (
 ]
 
 const referenceProblems = (
-  registry: Registry,
+  registry: AdminRegistry,
   draft: PublishDraft,
   media: ReadonlyMap<string, PublishMediaRow>
 ): PublishProblem[] => [
@@ -305,30 +332,63 @@ export type SnapshotBuild =
   { ok: true; snapshots: Snapshot[] } | { ok: false; problems: PublishProblem[] }
 
 export const buildSnapshots = (
-  registry: Registry,
+  registry: AdminRegistry,
   draft: PublishDraft,
   media: ReadonlyMap<string, PublishMediaRow>,
-  publishedAt: number
+  publishedAt: number,
+  resolved: ResolvedReferences = NO_REFERENCES
 ): SnapshotBuild => {
   const checked = checkBlocks(registry, draft.blocks)
   const valid: PublishDraft = { ...draft, blocks: checked.blocks }
   const problems = [...checked.problems, ...referenceProblems(registry, valid, media)]
   if (problems.length > 0) return { ok: false, problems }
-  const blockMediaIds = referencedMediaIds(registry, valid.blocks, [])
+  const blockMediaIds = referencedMediaIds(registry, valid.blocks, [], resolved)
+  const { locales, defaultLocale } = resolveLocaleConfig(registry)
   return {
     ok: true,
-    snapshots: resolveLocaleConfig(registry).locales.map((locale) =>
-      snapshotOf(valid, locale, blockMediaIds, media, publishedAt)
+    snapshots: locales.map((locale) =>
+      snapshotOf(valid, locale, blockMediaIds, media, publishedAt, {
+        references: resolved.references,
+        entries: entriesForLocale(registry, resolved, locale, defaultLocale)
+      })
     )
   }
 }
+
+const entriesForLocale = (
+  registry: AdminRegistry,
+  { entries }: ResolvedReferences,
+  locale: Locale,
+  defaultLocale: Locale
+): Snapshot['entries'] =>
+  Object.fromEntries(
+    Object.entries(entries).map(([collection, byId]) => [
+      collection,
+      Object.fromEntries(
+        Object.entries(byId).map(([id, { schemaVersion, content }]) => [
+          id,
+          {
+            id,
+            schemaVersion,
+            content: localizeEntryContent(
+              collectionNodeOf(registry, collection),
+              content,
+              locale,
+              defaultLocale
+            ) as SnapshotEntry['content']
+          }
+        ])
+      )
+    ])
+  )
 
 const snapshotOf = (
   draft: PublishDraft,
   locale: Locale,
   mediaIds: readonly string[],
   media: ReadonlyMap<string, PublishMediaRow>,
-  publishedAt: number
+  publishedAt: number,
+  references: Pick<Snapshot, 'entries' | 'references'>
 ): Snapshot => {
   const row = draft.locales.find((candidate) => candidate.locale === locale)
   const ids = [...mediaIds, ...(row?.socialImageId ? [row.socialImageId] : [])]
@@ -348,6 +408,7 @@ const snapshotOf = (
       socialImageId: row?.socialImageId ?? null
     },
     blocks: draft.blocks,
+    ...references,
     media: mediaFor(ids, media, locale)
   }
 }

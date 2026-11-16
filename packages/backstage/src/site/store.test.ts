@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { NO_REFERENCES } from '../references.ts'
 import { SNAPSHOT, SNAPSHOT_UPGRADES, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
 import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../site-publishing.ts'
 import { routeOf } from './routing.ts'
@@ -16,6 +17,7 @@ const snapshotOf = (locale: 'en' | 'es', slug: string | null): Snapshot => ({
   publishedAt: 1,
   seo: { title: '', description: '', socialImageId: null },
   blocks: [],
+  ...NO_REFERENCES,
   media: {},
   locale
 })
