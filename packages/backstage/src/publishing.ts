@@ -6,7 +6,8 @@ import {
   type BlockContentResult,
   type Registry
 } from './blocks.ts'
-import type { AdminRegistry } from './collections.ts'
+import { collectionsOf, type AdminRegistry } from './collections.ts'
+import { entryPathOf, type CollectionRoute } from './entry-pages.ts'
 import type { FieldIssue } from './errors.ts'
 import { LOCALE, resolveLocaleConfig, type Locale } from './locales.ts'
 import { pageBlockSchema, type PageBlock } from './pages.ts'
@@ -92,7 +93,9 @@ export type SnapshotMedia = z.infer<typeof snapshotMediaSchema>
 const snapshotEntrySchema = z.object({
   id: z.string(),
   schemaVersion: z.number().int(),
-  content: z.json()
+  content: z.json(),
+  slug: z.string().optional(),
+  href: z.string().optional()
 })
 type SnapshotEntry = z.infer<typeof snapshotEntrySchema>
 
@@ -355,6 +358,12 @@ export const buildSnapshots = (
   }
 }
 
+const addressOf = (
+  route: CollectionRoute | undefined,
+  slug: string | undefined,
+  { locale, defaultLocale }: { locale: Locale; defaultLocale: Locale }
+) => (route && slug ? { slug, href: entryPathOf(route, slug, locale, defaultLocale) } : {})
+
 export const entriesForLocale = (
   registry: AdminRegistry,
   { entries }: ResolvedReferences,
@@ -365,7 +374,7 @@ export const entriesForLocale = (
     Object.entries(entries).map(([collection, byId]) => [
       collection,
       Object.fromEntries(
-        Object.entries(byId).map(([id, { schemaVersion, content }]) => [
+        Object.entries(byId).map(([id, { schemaVersion, content, slugs }]) => [
           id,
           {
             id,
@@ -375,7 +384,11 @@ export const entriesForLocale = (
               content,
               locale,
               defaultLocale
-            ) as SnapshotEntry['content']
+            ) as SnapshotEntry['content'],
+            ...addressOf(collectionsOf(registry).get(collection)?.route, slugs?.[locale], {
+              locale,
+              defaultLocale
+            })
           }
         ])
       )

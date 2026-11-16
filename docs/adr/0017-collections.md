@@ -92,6 +92,14 @@ This ADR records the decisions they share, so that the later ones do not reopen 
 - Unpublishing or deleting a published entry removes its snapshots and the routes it owns and
   rebuilds the sitemap index.
 - An entry published before its collection had a route is served only after it is published again.
+- A resolved entry of a routed collection also carries `slug` and `href`: the entry's slug for the
+  snapshot's locale from `entry_locales`, and its path built by `entryPathOf`, the helper the site
+  uses for entry routes (locale prefix included). A block links to the entry with `href`, so a
+  renamed address needs no change in the page: publishing the renamed entry refreshes its
+  dependents (COL-5), which resolve the slug again. Both fields are optional in the snapshot, so
+  format 2 needs no bump and a snapshot written before them reads as it did until its page is
+  refreshed or republished. A collection with no route gets neither. The slug is read when the
+  page is published, so a slug changed in a draft shows on a page published before the entry is.
 - Entry preview is a separate story: it needs the preview token of the page preview to carry an
   entry snapshot.
 
