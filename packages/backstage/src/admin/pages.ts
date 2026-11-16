@@ -20,10 +20,11 @@ import {
   renamePageSchema,
   savePageBlocksSchema,
   savePageLayoutSchema,
-  savePageSeoSchema
+  savePageSeoSchema,
+  type PageBlock
 } from '../pages.ts'
 import { resolveLocaleConfig } from '../locales.ts'
-import type { Registry } from '../blocks.ts'
+import { openStoredContent, type Registry } from '../blocks.ts'
 import type { MissingByLocale } from '../translations.ts'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
@@ -60,11 +61,19 @@ const failureOf = async (c: PagesContext, id: string, outcome: PageWrite) => {
   return respondWithError(c, WRITE_ERRORS[outcome])
 }
 
-const blocksResponse = async (c: PagesContext, id: string) => {
+const openPageBlock = (registry: Registry, block: PageBlock): PageBlock => {
+  const definition = registry.get(block.block)
+  if (!definition) return block
+  const opened = openStoredContent(definition, block.schemaVersion, block.content)
+  return { ...block, ...opened, content: opened.content as PageBlock['content'] }
+}
+
+const blocksResponse = async (c: PagesContext, registry: Registry, id: string) => {
   const page = await findPage(c.env.DB, id)
-  if (!page) return null
+  if (!page) return respondWithError(c, API_ERROR.notFound)
+  const blocks = await listPageBlocks(c.env.DB, id)
   return c.json({
-    blocks: await listPageBlocks(c.env.DB, id),
+    blocks: blocks.map((block) => openPageBlock(registry, block)),
     version: page.version,
     layout: page.layout
   })
@@ -114,7 +123,7 @@ export const pagesRoutes = (registry: Registry) => {
     })
     .get('/:id/blocks', async (c) => {
       const id = c.req.param('id')
-      return (await blocksResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
+      return blocksResponse(c, registry, id)
     })
     .put('/:id/blocks', async (c) => {
       const body = await readJsonBody(c, savePageBlocksSchema)
@@ -131,7 +140,7 @@ export const pagesRoutes = (registry: Registry) => {
         id,
         await replacePageBlocks(c.env.DB, id, body.data.blocks, write)
       )
-      return failure ?? (await blocksResponse(c, id)) ?? respondWithError(c, API_ERROR.notFound)
+      return failure ?? blocksResponse(c, registry, id)
     })
     .put('/:id/layout', async (c) => {
       const body = await readJsonBody(c, savePageLayoutSchema)

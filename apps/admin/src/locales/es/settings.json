@@ -69,6 +69,9 @@
       "title": "El sitio todavía no se puede publicar",
       "unknown_block": "{{place}} tiene un bloque que este sitio ya no ofrece. Elige otro diseño y guarda.",
       "invalid_content": "{{place}} tiene contenido que no es válido. Corrígelo y guarda.",
+      "invalid_content_field": "{{place}} tiene un valor no válido en {{path}}. Corrígelo y guarda.",
+      "newer_schema_version": "{{place}} lo guardó una versión más reciente de este sitio. Actualiza el sitio antes de publicar.",
+      "migration_failed": "{{place}} no se pudo actualizar a su diseño actual. Edítalo y guarda.",
       "unknown_media": "{{place}} usa una imagen que se quitó de la biblioteca de medios.",
       "missing_default_locale": "{{place}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda."
     }
