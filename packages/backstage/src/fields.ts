@@ -26,16 +26,20 @@ interface LinkInput {
   label?: string
 }
 
-export const link = ({ requireLabel = false } = {}) => {
-  const label = requireLabel ? z.string().trim().min(1) : z.string().default('')
-  return marked(
-    z.union([
-      z.object({ kind: z.literal(LINK.kind.page), pageId: z.string().min(1), label }),
-      z.object({ href: z.string().regex(RICH_TEXT.safeHref), label })
-    ]),
+const linkShapes = <L extends z.ZodType<string>>(label: L) =>
+  z.union([
+    z.object({ kind: z.literal(LINK.kind.page), pageId: z.string().min(1), label }),
+    z.object({ href: z.string().regex(RICH_TEXT.safeHref), label })
+  ])
+
+export const linkValueSchema = linkShapes(z.string().default(''))
+export type LinkValue = z.output<typeof linkValueSchema>
+
+export const link = ({ requireLabel = false } = {}) =>
+  marked(
+    linkShapes(requireLabel ? z.string().trim().min(1) : z.string().default('')),
     'link'
   ) as unknown as z.ZodType<ResolvedLink, LinkInput>
-}
 
 export const localized = <T extends z.ZodType>(inner: T) =>
   marked(z.partialRecord(z.string(), inner), 'localized')

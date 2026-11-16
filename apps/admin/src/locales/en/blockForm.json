@@ -73,5 +73,19 @@
     "latestCount": "How many",
     "latestHint": "Shows the most recently published entries, newest first.",
     "loadFailed": "The entries could not be loaded."
+  },
+  "link": {
+    "modeLabel": "What the link points to",
+    "page": "A page",
+    "address": "An address",
+    "pageLabel": "Page",
+    "choose": "Choose a page",
+    "pickerLabel": "{{field}}: {{page}}",
+    "search": "Search pages",
+    "empty": "No pages found",
+    "unpublished": "Not published",
+    "unpublishedHint": "This page is not published, so publishing is refused until it is.",
+    "missing": "Page not found",
+    "loadFailed": "The pages could not be loaded."
   }
 }

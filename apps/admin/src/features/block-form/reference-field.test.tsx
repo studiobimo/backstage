@@ -1,14 +1,10 @@
 import { defineCollection, entries, localized } from '@studiobimo/backstage'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { screen, waitFor } from '@testing-library/react'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
-import { testQueryClient } from '@/test/query-client'
-
-import { BlockForm } from './block-form.tsx'
 import type { JsonSchema } from './spec.ts'
+import { lastFieldValue, renderField, useStubbedListing } from './test-support.tsx'
 import { referenceOf } from './reference-value.ts'
 
 const TIMING = { sortableLoadTimeoutMs: 10_000, testTimeoutMs: 20_000 } as const
@@ -41,32 +37,13 @@ const listing = {
   entries: [summary('a', 'Alpha', true), summary('b', 'Beta', true), summary('c', 'Gamma', false)]
 }
 
-function setup(posts: unknown) {
-  const onChange = vi.fn()
-  const user = userEvent.setup({ delay: null })
-  render(
-    <QueryClientProvider client={testQueryClient()}>
-      <BlockForm schema={schema} locales={['en']} value={{ posts } as never} onChange={onChange} />
-    </QueryClientProvider>
-  )
-  return { user, onChange }
-}
+const setup = (posts: unknown) => renderField(schema, 'posts', posts)
 
-const lastValue = (onChange: ReturnType<typeof vi.fn>) =>
-  (onChange.mock.calls.at(-1)?.[0] as { posts: unknown }).posts
+const lastValue = (onChange: ReturnType<typeof vi.fn>) => lastFieldValue(onChange, 'posts')
 
 describe('the entry reference field', { timeout: TIMING.testTimeoutMs }, () => {
   beforeAll(() => import('@/components/sortable-items'))
-  beforeEach(() => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response(JSON.stringify(listing), { status: 200 }))
-    )
-  })
-  afterEach(() => {
-    cleanup()
-    vi.unstubAllGlobals()
-  })
+  useStubbedListing(listing)
 
   it('lists the chosen entries by label and marks one that is not published', async () => {
     setup({ mode: 'chosen', ids: ['c', 'a'] })

@@ -8,6 +8,7 @@ import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
 import { cn } from '@/lib/utils'
 
 import { ImageField } from './image-field.tsx'
+import { LinkField } from './link-field.tsx'
 import { ListField } from './list-field.tsx'
 import { LocalizedField } from './localized-field.tsx'
 import { ReferenceField } from './reference-field.tsx'
@@ -160,6 +161,7 @@ export function FieldNode(props: NodeProps) {
   switch (spec.kind) {
     case 'group':
       if (spec.variant === 'image') return <ImageField {...props} spec={spec} />
+      if (spec.variant === 'link') return <LinkField {...props} spec={spec} />
       return <GroupNode {...props} spec={spec} />
     case 'list':
       return <ListField {...props} spec={spec} />
