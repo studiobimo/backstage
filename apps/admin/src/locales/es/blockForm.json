@@ -55,5 +55,23 @@
     "invalid": "Este texto tiene un formato que el sitio no puede mostrar. Quítalo e inténtalo de nuevo."
   },
   "invalidSummary_one": "{{count}} campo necesita revisión.",
-  "invalidSummary_other": "{{count}} campos necesitan revisión."
+  "invalidSummary_other": "{{count}} campos necesitan revisión.",
+  "reference": {
+    "chosen": "Entradas elegidas",
+    "latest": "Últimas entradas",
+    "modeLabel": "Cómo se eligen las entradas",
+    "add": "Añadir entrada",
+    "search": "Buscar entradas",
+    "empty": "No se encontraron entradas",
+    "none": "Ninguna entrada elegida",
+    "noneDescription": "Añade entradas para mostrarlas en el orden que definas.",
+    "remove": "Quitar {{item}}",
+    "unpublished": "Sin publicar",
+    "missing": "Entrada no encontrada",
+    "count_one": "{{count}} entrada",
+    "count_other": "{{count}} entradas",
+    "latestCount": "Cuántas",
+    "latestHint": "Muestra las entradas publicadas más recientemente, de la más nueva a la más antigua.",
+    "loadFailed": "No se pudieron cargar las entradas."
+  }
 }

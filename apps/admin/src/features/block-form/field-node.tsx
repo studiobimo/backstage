@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { ImageField } from './image-field.tsx'
 import { ListField } from './list-field.tsx'
 import { LocalizedField } from './localized-field.tsx'
+import { ReferenceField } from './reference-field.tsx'
 import { RichTextField } from './rich-text-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
 import type { BlockFormApi } from './validation.ts'
@@ -164,6 +165,8 @@ export function FieldNode(props: NodeProps) {
       return <ListField {...props} spec={spec} />
     case 'localized':
       return <LocalizedField {...props} spec={spec} />
+    case 'reference':
+      return <ReferenceField {...props} spec={spec} />
     default:
       return <LeafNode {...props} />
   }

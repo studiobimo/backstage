@@ -13,6 +13,8 @@ export type { Entry, EntrySummary } from '../entries.ts'
 export { classifyField } from '../field-shapes.ts'
 export type { FieldShape } from '../field-shapes.ts'
 export type { FieldKind } from '../fields.ts'
+export { REFERENCE } from '../references.ts'
+export type { EntryReferenceValue } from '../references.ts'
 export { fieldIssueSchema, fieldIssuesOf } from '../errors.ts'
 export type { FieldIssue } from '../errors.ts'
 export {

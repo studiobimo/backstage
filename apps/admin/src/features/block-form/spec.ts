@@ -22,6 +22,8 @@ export type JsonSchema = {
   minItems?: number
   maxItems?: number
   backstage?: FieldKind
+  collection?: string
+  max?: number
 }
 
 interface Common {
@@ -81,6 +83,12 @@ export interface LocalizedSpec extends Common {
   inner: FieldSpec
 }
 
+export interface ReferenceSpec extends Common {
+  kind: 'reference'
+  collection: string
+  max?: number
+}
+
 export type FieldSpec =
   | TextSpec
   | RichTextSpec
@@ -90,6 +98,7 @@ export type FieldSpec =
   | GroupSpec
   | ListSpec
   | LocalizedSpec
+  | ReferenceSpec
 
 export class UnsupportedSchemaError extends Error {
   constructor(key: string) {
@@ -127,6 +136,9 @@ function parseField(schema: JsonSchema, key: string, required: boolean): FieldSp
       kind: 'localized',
       inner: parseChild(schema.additionalProperties, key, true)
     }
+  }
+  if (shape === 'reference') {
+    return { ...common, kind: 'reference', collection: schema.collection ?? '', max: schema.max }
   }
   if (shape === 'image' || shape === 'link') {
     return { ...common, kind: 'group', variant: shape, fields: groupFields(schema) }
