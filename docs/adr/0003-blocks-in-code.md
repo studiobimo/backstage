@@ -19,7 +19,8 @@ layouts })` maps each block and each layout to a React component. It is type-che
   component, or one whose props are not the schema's output, fails `tsc`. Thumbnails are site-owned: the site Worker serves each
   block's at `/__preview/blocks/<name>/thumbnail.svg` and the admin loads it from the site origin.
   Collections
-  ([E6](../PRD.md#e6-collections)) are defined the same way.
+  ([E6](../PRD.md#e6-collections)) are defined the same way
+  ([ADR-0017](0017-collections.md)).
 - **The site owns its blocks.** Each block lives in the site's `src/blocks/<name>/` with its schema,
   its sample and its component, and the site owns its stylesheet. The admin depends on the site for
   the schema registry, never the reverse, so the admin bundle carries no block component.
