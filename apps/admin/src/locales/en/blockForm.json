@@ -55,5 +55,23 @@
     "invalid": "This text has formatting the site cannot show. Remove it and try again."
   },
   "invalidSummary_one": "{{count}} field needs attention.",
-  "invalidSummary_other": "{{count}} fields need attention."
+  "invalidSummary_other": "{{count}} fields need attention.",
+  "reference": {
+    "chosen": "Chosen entries",
+    "latest": "Latest entries",
+    "modeLabel": "How entries are picked",
+    "add": "Add entry",
+    "search": "Search entries",
+    "empty": "No entries found",
+    "none": "No entries chosen",
+    "noneDescription": "Add entries to show them in the order you set.",
+    "remove": "Remove {{item}}",
+    "unpublished": "Not published",
+    "missing": "Entry not found",
+    "count_one": "{{count}} entry",
+    "count_other": "{{count}} entries",
+    "latestCount": "How many",
+    "latestHint": "Shows the most recently published entries, newest first.",
+    "loadFailed": "The entries could not be loaded."
+  }
 }

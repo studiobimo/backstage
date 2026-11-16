@@ -18,6 +18,7 @@ export interface ValueByKind {
   group: BlockValue
   list: FieldValue[]
   localized: BlockValue
+  reference: BlockValue
 }
 
 const fieldValue: z.ZodType<FieldValue> = z.lazy(() =>
@@ -65,6 +66,8 @@ export function initialValue(spec: FieldSpec): FieldValue | undefined {
       return []
     case 'localized':
       return {}
+    case 'reference':
+      return spec.required ? { mode: 'chosen', ids: [] } : undefined
     default:
       return undefined
   }
