@@ -1,5 +1,4 @@
 # The install reads @studiobimo/backstage from GitHub Packages with the run's GITHUB_TOKEN.
-.github/workflows/ci.yml
 .github/workflows/e2e.yml
 # Backstage is proprietary; the template's LICENSE is MIT.
 LICENSE
