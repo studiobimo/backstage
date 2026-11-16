@@ -1,5 +1,12 @@
-import { defineBlock, defineLayout, defineRegistry, SLOT } from '@studiobimo/backstage'
+import {
+  defineBlock,
+  defineCollection,
+  defineLayout,
+  defineRegistry,
+  SLOT
+} from '@studiobimo/backstage'
 
+import { postsSchema } from '../collections/posts/schema.ts'
 import { SITE_LOCALES } from './locales.ts'
 import { BLOCK_VERSION, migrateColumnCtas, migrateCta } from './migrations.ts'
 import { oneColumnSectionSchema } from './one-column-section/schema.ts'
@@ -79,6 +86,13 @@ const twoColumnText = defineBlock({
   }
 })
 
+const posts = defineCollection({
+  name: 'posts',
+  label: 'title',
+  title: { en: 'Posts', es: 'Entradas' },
+  schema: postsSchema
+})
+
 const siteHeader = defineBlock({
   name: 'site-header',
   schema: siteHeaderSchema
@@ -106,6 +120,7 @@ export const registry = defineRegistry(
       defineLayout({ name: 'default' }),
       defineLayout({ name: 'minimal' }),
       defineLayout({ name: 'bare' })
-    ]
+    ],
+    collections: [posts]
   }
 )
