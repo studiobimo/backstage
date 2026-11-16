@@ -41,11 +41,20 @@ This ADR records the decisions they share, so that the later ones do not reopen 
   `{ mode: 'chosen', ids }` or `{ mode: 'latest', count }`. `defineRegistry` throws if it names an
   unknown collection.
 - Publishing a page resolves each reference from the entries' **published** content only, so a
-  draft never leaks. `latest` orders by `published_at`, newest first. The snapshot carries the
-  resolved entries, with localized values resolved for the snapshot's locale, and its `format`
-  is bumped with an upgrade for the old one.
+  draft never leaks. `latest` orders by `published_at`, newest first. A chosen entry that is
+  unpublished or deleted is dropped from the list, not reported as a problem, so unpublishing an
+  entry never blocks a page. Page preview and republish resolve the same way.
+- The snapshot carries the resolved entries per collection and the ordered ids per block and
+  field path, and its `format` is bumped to 2 with an upgrade for format 1. In a resolved entry a
+  localized value keeps only the snapshot's locale, filled from the default locale when blank, so
+  the component reads it with `useLocalized` like a block's own fields. The block component
+  receives the entries in place of the reference, typed from the collection schema.
+- A collection's own schema cannot hold a reference: resolving one entry would need another, and
+  `defineRegistry` rejects it.
 - The page records what it depends on in `page_entry_refs`: the page, the collection, and the
-  entry, or none for "latest of the collection".
+  entry, or none for "latest of the collection". Every chosen id is recorded, published or not,
+  so publishing it later can refresh the page. The rows are replaced on each publish and removed
+  on unpublish and with the page.
 
 ### Entries can have pages (COL-4)
 

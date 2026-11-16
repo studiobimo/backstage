@@ -82,6 +82,7 @@ export const kv = env.localDevelopment.SITE!
 export const home = { isHome: true, titles: { en: 'Home', es: 'Inicio' } }
 
 const tables = [
+  'page_entry_refs',
   'page_blocks',
   'page_locales',
   'pages',

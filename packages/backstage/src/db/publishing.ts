@@ -1,8 +1,14 @@
 import { and, asc, count, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import type { PageBlock } from '../pages.ts'
+import {
+  entryRefsOf,
+  referenceFieldsIn,
+  resolveReferences,
+  type PageEntryRef
+} from '../references.ts'
 import {
   buildSnapshots,
   checkBlocks,
@@ -14,6 +20,7 @@ import {
 } from '../publishing.ts'
 import type { RepublishScope } from '../republish.ts'
 import { SEO, type PublishedIndex, type PublishedPage } from '../seo.ts'
+import { clearEntryRefs, readPublishedEntries, replaceEntryRefs } from './entry-references.ts'
 import { media, pageBlocks, pageLocales, pages } from './schema.ts'
 
 export const PUBLISH_PLAN = {
@@ -24,7 +31,7 @@ export const PUBLISH_PLAN = {
 } as const
 
 export type PublishPlan =
-  | { status: typeof PUBLISH_PLAN.ready; snapshots: Snapshot[] }
+  | { status: typeof PUBLISH_PLAN.ready; snapshots: Snapshot[]; refs: PageEntryRef[] }
   | { status: typeof PUBLISH_PLAN.notFound }
   | { status: typeof PUBLISH_PLAN.stale }
   | { status: typeof PUBLISH_PLAN.invalid; problems: PublishProblem[] }
@@ -57,21 +64,28 @@ export const readMedia = async (d1: AnyD1Database, ids: string[]) => {
 
 const planDraft = async (
   d1: AnyD1Database,
-  registry: Registry,
+  registry: AdminRegistry,
   draft: PublishDraft,
   publishedAt: number
 ): Promise<PublishPlan> => {
   const { blocks } = checkBlocks(registry, draft.blocks)
-  const mediaRows = await readMedia(d1, referencedMediaIds(registry, blocks, draft.locales))
-  const built = buildSnapshots(registry, draft, mediaRows, publishedAt)
+  const fields = blocks.flatMap(({ id, block, content }) =>
+    referenceFieldsIn(registry.jsonSchema(block), id, content)
+  )
+  const resolved = resolveReferences(fields, await readPublishedEntries(d1, registry, fields))
+  const mediaRows = await readMedia(
+    d1,
+    referencedMediaIds(registry, blocks, draft.locales, resolved)
+  )
+  const built = buildSnapshots(registry, draft, mediaRows, publishedAt, resolved)
   return built.ok
-    ? { status: PUBLISH_PLAN.ready, snapshots: built.snapshots }
+    ? { status: PUBLISH_PLAN.ready, snapshots: built.snapshots, refs: entryRefsOf(fields) }
     : { status: PUBLISH_PLAN.invalid, problems: built.problems }
 }
 
 export const planPublish = async (
   d1: AnyD1Database,
-  registry: Registry,
+  registry: AdminRegistry,
   id: string,
   expectedVersion: number,
   publishedAt: number
@@ -84,7 +98,7 @@ export const planPublish = async (
 
 export const planPreview = async (
   d1: AnyD1Database,
-  registry: Registry,
+  registry: AdminRegistry,
   id: string,
   now: number
 ): Promise<PublishPlan> => {
@@ -97,13 +111,15 @@ export const recordPublished = async (
   id: string,
   editorId: string,
   publishedAt: number,
-  publishedVersion: number
+  publishedVersion: number,
+  refs: readonly PageEntryRef[]
 ) => {
   const db = drizzle(d1)
   await db
     .update(pages)
     .set({ publishedAt, publishedVersion, publishedBy: editorId, updatedAt: pages.updatedAt })
     .where(eq(pages.id, id))
+  await replaceEntryRefs(d1, id, refs)
 }
 
 export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
@@ -118,6 +134,7 @@ export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
     })
     .where(eq(pages.id, id))
     .returning({ id: pages.id })
+  await clearEntryRefs(d1, id)
   return cleared.length > 0
 }
 
