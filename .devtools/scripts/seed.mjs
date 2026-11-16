@@ -3,9 +3,8 @@ import { randomUUID } from 'node:crypto'
 
 import { connect, SeedError } from './seed-api.mjs'
 import { EDITED_POST, PAGES, POSTS, SEED, SITE_SETTINGS, SITE_SLOTS } from './seed-content.mjs'
-import { syncSite } from './seed-site-sync.mjs'
 
-const COMMANDS = ['seed', 'unseed', 'site-sync']
+const COMMANDS = ['seed', 'unseed']
 
 const log = (message) => console.log(`[seed] ${message}`)
 
@@ -170,9 +169,7 @@ const unseed = async (api) => {
 const ACTIONS = { seed, unseed }
 
 const run = async (command) => {
-  const action = ACTIONS[command]
-  if (action) await action(connect())
-  await syncSite(log)
+  await ACTIONS[command](connect())
 }
 
 const command = process.argv[2]

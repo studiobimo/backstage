@@ -28,7 +28,6 @@ local admin with sample content to try collections, references, drafts and the s
 ```sh
 make -C .devtools seed       # posts and pages through the admin API; running it again adds nothing
 make -C .devtools unseed     # removes only what seed created (slugs and titles it marks as seed)
-make -C .devtools site-sync  # copies the admin's local SITE KV into the site's local state
 ```
 
 `seed` creates six posts (four published, one with no Spanish text, one draft) and six pages: a
@@ -37,11 +36,11 @@ about page, a draft, and a published page with later unpublished edits. It also 
 name, header and footer when they are empty, and never overwrites existing ones, so `unseed`
 leaves those alone. `ADMIN_URL` overrides `http://localhost:5173`.
 
-`make dev` gives the admin and the site separate local state
-([studiobimo/project-template#84](https://github.com/studiobimo/project-template/issues/84)), so
-the site would never see what the admin publishes. `seed` and `unseed` run `site-sync` at the end,
-and you can run it after publishing by hand. The site caches pages for about 45 seconds, so a
-change can take that long to show.
+`make dev` keeps the admin's and the site's local D1, KV and R2 in one shared `.dev-state`, so
+the site shows what the admin publishes with no sync step. The site caches pages for about 45
+seconds, so a change can take that long to show. Local data from before this, in
+`apps/*/.wrangler/state`, is no longer read: run `make -C .devtools migrate` and `seed` once to
+re-create it.
 
 ## Bindings and variables
 

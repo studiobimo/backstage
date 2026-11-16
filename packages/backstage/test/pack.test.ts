@@ -55,6 +55,7 @@ const README = {
 const CONSUMER_MIGRATIONS = {
   timeoutMs: 180_000,
   binding: 'DB',
+  localState: '.dev-state',
   dir: 'node_modules/@studiobimo/backstage/migrations',
   makefile: '-include node_modules/@studiobimo/backstage/backstage.mk\n',
   listTables: "SELECT name FROM sqlite_master WHERE type = 'table'",
@@ -242,6 +243,8 @@ describe('the packed migrations', () => {
             'execute',
             CONSUMER_MIGRATIONS.binding,
             '--local',
+            '--persist-to',
+            join(consumer, CONSUMER_MIGRATIONS.localState),
             '--json',
             '--command',
             sql

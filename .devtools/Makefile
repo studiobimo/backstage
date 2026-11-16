@@ -31,16 +31,12 @@ e2e: build ## Playwright: the publish loop through both Workers, and an axe scan
 SEED_SCRIPT := $(ROOT)/.devtools/scripts/seed.mjs
 
 .PHONY: seed
-seed: ## Fill the running local admin with sample posts and pages through its API, then run site-sync (needs make dev)
+seed: ## Fill the running local admin with sample posts and pages through its API (needs make dev)
 	cd $(ROOT) && $(MISE) exec -- node $(SEED_SCRIPT) seed
 
 .PHONY: unseed
-unseed: ## Remove the sample posts and pages that seed created, then run site-sync (needs make dev)
+unseed: ## Remove the sample posts and pages that seed created (needs make dev)
 	cd $(ROOT) && $(MISE) exec -- node $(SEED_SCRIPT) unseed
-
-.PHONY: site-sync
-site-sync: ## Copy the admin's local SITE KV into the site's local state, which make dev keeps apart
-	cd $(ROOT) && $(MISE) exec -- node $(SEED_SCRIPT) site-sync
 
 LINKED_FILES := package.json pnpm-lock.yaml pnpm-workspace.yaml
 

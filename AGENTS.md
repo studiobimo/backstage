@@ -417,7 +417,7 @@ shadcn mcp`). At the start of any UI/UX task, check that its tools are loaded; i
 - The preview tool may fail to start `make` with a `getcwd` error. Start the dev server from the
   repo root with `make -C .devtools dev` and use the port it prints.
 - Local admin needs `apps/admin/.dev.vars` with `DEV_AUTH=true` and the migration applied
-  (`pnpm exec wrangler d1 migrations apply DB --local`, from `apps/admin`).
+  (`make -C .devtools migrate`, which targets the shared `.dev-state`; `make dev` runs it too).
   The file is gitignored. Tests that expect a refused request clear `DEV_AUTH` themselves.
 - Keep scope to the issue. Features the PRD lists as separate stories (for example SEO fields,
   PAG-3) get their own issue and PR.
