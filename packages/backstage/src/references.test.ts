@@ -14,7 +14,7 @@ import {
   type ResolvedEntry
 } from './references.ts'
 import { localized } from './fields.ts'
-import { SNAPSHOT, upgradeSnapshot } from './publishing.ts'
+import { entriesForLocale, SNAPSHOT, snapshotSchema, upgradeSnapshot } from './publishing.ts'
 
 const post = defineCollection({
   name: 'post',
@@ -147,5 +147,77 @@ describe('snapshot format', () => {
       entries: {},
       references: {}
     })
+  })
+})
+
+const story = defineCollection({
+  name: 'story',
+  label: 'title',
+  route: { path: '/stories/:slug' },
+  schema: z.object({ title: localized(z.string()) })
+})
+
+const storyList = defineBlock({
+  name: 'story-list',
+  schema: z.object({ stories: entries(story) })
+})
+
+const routedRegistry = defineRegistry([list, storyList], { collections: [post, story] })
+
+const resolvedWith = (collection: string, slugs?: Record<string, string>) => ({
+  entries: { [collection]: { e1: { ...published('e1'), content: { title: {} }, slugs } } },
+  references: {}
+})
+
+describe('the address of a resolved entry', () => {
+  it('carries the slug and the path of the locale for a routed collection', () => {
+    const resolved = resolvedWith('story', { en: 'first', es: 'primero' })
+    expect(entriesForLocale(routedRegistry, resolved, 'en', 'en').story?.e1).toMatchObject({
+      slug: 'first',
+      href: '/stories/first'
+    })
+    expect(entriesForLocale(routedRegistry, resolved, 'es', 'en').story?.e1).toMatchObject({
+      slug: 'primero',
+      href: '/es/stories/primero'
+    })
+  })
+
+  it('leaves it out for a collection with no route', () => {
+    const resolved = resolvedWith('post', { en: 'first' })
+    const entry = entriesForLocale(routedRegistry, resolved, 'en', 'en').post?.e1
+    expect(entry).not.toHaveProperty('slug')
+    expect(entry).not.toHaveProperty('href')
+  })
+
+  it('leaves it out when the locale has no slug', () => {
+    const resolved = resolvedWith('story', { en: 'first' })
+    expect(entriesForLocale(routedRegistry, resolved, 'es', 'en').story?.e1).not.toHaveProperty(
+      'href'
+    )
+  })
+
+  it('reads a format 2 snapshot stored without it', () => {
+    const stored = {
+      format: SNAPSHOT.format,
+      pageId: 'p',
+      locale: 'en',
+      isHome: false,
+      slug: 'a',
+      title: 'A',
+      layout: 'default',
+      version: 1,
+      publishedAt: 1,
+      seo: { title: '', description: '', socialImageId: null },
+      blocks: [],
+      entries: { story: { e1: { id: 'e1', schemaVersion: 1, content: {} } } },
+      references: {},
+      media: {}
+    }
+    expect(snapshotSchema.safeParse(stored).success).toBe(true)
+  })
+
+  it('is typed on the resolved entry of a routed collection only', () => {
+    expectTypeOf<ResolvedEntry<typeof story>>().toHaveProperty('href')
+    expectTypeOf<ResolvedEntry<typeof post>>().not.toHaveProperty('href')
   })
 })

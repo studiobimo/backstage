@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { Collection } from './collections.ts'
+import type { Collection, RoutedCollection } from './collections.ts'
 import { isBlank, isRecord, mapMarkedFields, markedFieldsIn } from './translations.ts'
 import type { TranslatedNode } from './translations.ts'
 
@@ -13,10 +13,15 @@ export type EntryReferenceValue =
   | { mode: typeof REFERENCE.mode.chosen; ids: string[] }
   | { mode: typeof REFERENCE.mode.latest; count: number }
 
-export interface ResolvedEntry<C extends Collection = Collection> {
+interface EntryAddress {
+  slug?: string
+  href?: string
+}
+
+export type ResolvedEntry<C extends Collection = Collection> = {
   id: string
   content: z.output<C['schema']>
-}
+} & (C extends RoutedCollection ? EntryAddress : unknown)
 
 const referenceSchema = (max: number): z.ZodType<EntryReferenceValue> =>
   z.discriminatedUnion('mode', [
@@ -62,6 +67,7 @@ export interface PublishedEntry {
   id: string
   schemaVersion: number
   content: unknown
+  slugs?: Readonly<Record<string, string>>
 }
 
 interface PublishedPool {

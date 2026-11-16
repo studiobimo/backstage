@@ -11,6 +11,7 @@ import {
   type ReferenceField,
   type ReferenceNeeds
 } from '../references.ts'
+import { readPublishedEntrySlugs } from './entry-slugs.ts'
 import { entries, pageEntryRefs } from './schema.ts'
 
 const D1_LIMITS = { boundParameters: 100 } as const
@@ -76,6 +77,22 @@ const readLatest = async (d1: AnyD1Database, collection: Collection, count: numb
           .limit(count)
       ).flatMap((row) => openRow(collection, row))
 
+const readSlugsOf = async (d1: AnyD1Database, collection: string, ids: string[]) =>
+  new Map(
+    (
+      await Promise.all(
+        inChunks(ids, LOOKUP.idsPerQuery).map((chunk) =>
+          readPublishedEntrySlugs(d1, collection, chunk)
+        )
+      )
+    ).flatMap((byEntry) => [...byEntry])
+  )
+
+const publishedSlugsOf = (slugs: Record<string, string | null> | undefined) =>
+  Object.fromEntries(
+    Object.entries(slugs ?? {}).flatMap(([locale, slug]) => (slug ? [[locale, slug]] : []))
+  )
+
 const readPool = async (
   d1: AnyD1Database,
   collection: Collection,
@@ -85,9 +102,17 @@ const readPool = async (
     readChosen(d1, collection, ids),
     readLatest(d1, collection, latest)
   ])
+  const everyone = [...chosen, ...newest]
+  const slugs = collection.route
+    ? await readSlugsOf(d1, collection.name, [...new Set(everyone.map(({ id }) => id))])
+    : new Map<string, Record<string, string | null>>()
+  const withSlugs = (entry: PublishedEntry): PublishedEntry => {
+    const own = publishedSlugsOf(slugs.get(entry.id))
+    return Object.keys(own).length > 0 ? { ...entry, slugs: own } : entry
+  }
   return {
-    byId: new Map([...chosen, ...newest].map((entry) => [entry.id, entry])),
-    latest: newest
+    byId: new Map(everyone.map((entry) => [entry.id, withSlugs(entry)])),
+    latest: newest.map(withSlugs)
   }
 }
 

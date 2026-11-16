@@ -8,7 +8,13 @@ import {
   type EntryLabels
 } from '../collections.ts'
 import { ENTRY_WRITE, findEntrySlugs, type EntryWrite } from '../db/entries.ts'
-import { resolveEntrySlugs, slugsClash, writeEntrySlugs } from '../db/entry-slugs.ts'
+import {
+  clearPublishedSlugs,
+  recordPublishedSlugs,
+  resolveEntrySlugs,
+  slugsClash,
+  writeEntrySlugs
+} from '../db/entry-slugs.ts'
 import type { CollectionRoute } from '../entry-pages.ts'
 import type { Entry } from '../entries.ts'
 import type { EntrySnapshot } from '../entry-publishing.ts'
@@ -106,6 +112,7 @@ export const writeEntryPages = async (
 ) => {
   if (!isRouted(collection) || !plan.slugs) return
   await writeEntrySlugs(c.env.DB, collection.name, entryId, plan.slugs)
+  await recordPublishedSlugs(c.env.DB, entryId)
   await writeSnapshotFamily(
     c.env.SITE,
     entrySnapshotsOf(collection.name, collection.route),
@@ -120,13 +127,15 @@ const removeEntryPages = async (
   registry: AdminRegistry,
   collection: RoutedEntryCollection,
   entryId: string
-) =>
-  removeSnapshotFamily(
+) => {
+  await clearPublishedSlugs(c.env.DB, entryId)
+  return removeSnapshotFamily(
     c.env.SITE,
     entrySnapshotsOf(collection.name, collection.route),
     entryId,
     resolveLocaleConfig(registry).locales
   )
+}
 
 export const withoutEntryPages = async (
   c: Context<AccessEnv>,
