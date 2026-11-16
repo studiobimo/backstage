@@ -50,16 +50,25 @@ is missing, when a required binding is not declared. Declare them in every envir
 
 Admin Worker, typed as `AdminEnv` from `@studiobimo/backstage/admin`:
 
-| Name                 | Kind                   | Required | Purpose                                                      |
-| -------------------- | ---------------------- | -------- | ------------------------------------------------------------ |
-| `DB`                 | D1 database            | yes      | pages, settings, media records (`make -C .devtools migrate`) |
-| `SITE`               | KV namespace           | yes      | published snapshots, shared with the site Worker             |
-| `MEDIA`              | R2 bucket              | yes      | uploaded images, shared with the site Worker                 |
-| `ASSETS`             | static assets          | yes      | the admin SPA                                                |
-| `SITE_ORIGIN`        | variable               | no       | the site's origin, so the page editor can frame its preview  |
-| `ACCESS_TEAM_DOMAIN` | secret                 | deployed | Cloudflare Access team domain                                |
-| `ACCESS_AUD`         | secret                 | deployed | Cloudflare Access application audience                       |
-| `DEV_AUTH`           | local `.dev.vars` only | no       | `true` skips Access on localhost; refused on a deployed host |
+| Name                 | Kind                   | Required   | Purpose                                                             |
+| -------------------- | ---------------------- | ---------- | ------------------------------------------------------------------- |
+| `DB`                 | D1 database            | yes        | pages, settings, media records (`make -C .devtools migrate`)        |
+| `SITE`               | KV namespace           | yes        | published snapshots, shared with the site Worker                    |
+| `MEDIA`              | R2 bucket              | yes        | uploaded images, shared with the site Worker                        |
+| `ASSETS`             | static assets          | yes        | the admin SPA                                                       |
+| `SITE_ORIGIN`        | variable               | no         | the site's origin, so the page editor can frame its preview         |
+| `AUTH_MODE`          | variable               | no         | `access` (default) or `magic-link`                                  |
+| `ACCESS_TEAM_DOMAIN` | secret                 | access     | Cloudflare Access team domain                                       |
+| `ACCESS_AUD`         | secret                 | access     | Cloudflare Access application audience                              |
+| `EMAIL`              | `send_email` binding   | magic-link | sends the sign-in link                                              |
+| `AUTH_EMAIL_FROM`    | variable               | magic-link | the sender address, on a domain you have onboarded to Email Service |
+| `DEV_AUTH`           | local `.dev.vars` only | no         | `true` skips Access on localhost; refused on a deployed host        |
+
+Magic link (`AUTH_MODE=magic-link`) signs in people already in the `users` table, so add the
+first owner with `INSERT INTO users (id, email, created_at)` until user management lands. The
+link works once and expires in 15 minutes. The session lives in D1 and in a `__Host-` cookie,
+and requests are rate limited per email and per IP. Pass `createAdmin(registry, { mailer })` to
+send the link through something other than the `EMAIL` binding.
 
 Site Worker, typed as `SiteEnv` from `@studiobimo/backstage/site`:
 
