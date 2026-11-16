@@ -2,6 +2,7 @@ import { createMiddleware } from 'hono/factory'
 
 import { API_ERROR } from '../errors.ts'
 import { logEvent } from '../observability.ts'
+import type { EmailBinding } from './mailer.ts'
 import { respondWithError } from './respond.ts'
 
 export interface AdminEnv {
@@ -13,6 +14,9 @@ export interface AdminEnv {
   ACCESS_TEAM_DOMAIN?: string
   ACCESS_AUD?: string
   DEV_AUTH?: string
+  AUTH_MODE?: string
+  AUTH_EMAIL_FROM?: string
+  EMAIL?: EmailBinding
 }
 
 const BINDINGS = {

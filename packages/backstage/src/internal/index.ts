@@ -96,3 +96,11 @@ export {
 export { pathOf } from '../site/routing.ts'
 export { entryPathOf } from '../entry-pages.ts'
 export type { CollectionRoute } from '../entry-pages.ts'
+export {
+  AUTH,
+  authModeSchema,
+  authSessionResponseSchema,
+  requestLinkSchema,
+  verifyLinkSchema
+} from '../auth.ts'
+export type { AuthMode, AuthSessionResponse, RequestLinkInput } from '../auth.ts'

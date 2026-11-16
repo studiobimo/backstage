@@ -89,6 +89,9 @@
   "apiErrors": {
     "invalid": "Revisa los campos e inténtalo de nuevo.",
     "forbidden": "No tienes acceso para hacer eso. Inicia sesión de nuevo y reintenta.",
+    "unauthorized": "Tu sesión terminó. Inicia sesión de nuevo para continuar.",
+    "invalid_login_link": "Este enlace de acceso no es válido o ya venció. Solicita uno nuevo.",
+    "too_many_requests": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
     "slug_taken": "Otra página ya usa esa dirección en este idioma.",
     "home_taken": "La página de inicio ya existe.",
     "stale_version": "Se guardó una versión más reciente. Recarga la última versión e inténtalo de nuevo.",

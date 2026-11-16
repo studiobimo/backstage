@@ -2,6 +2,17 @@ import { z } from 'zod'
 
 export const API_ERROR = {
   forbidden: { code: 'forbidden', status: 403, message: 'Forbidden' },
+  unauthorized: { code: 'unauthorized', status: 401, message: 'Sign in to continue' },
+  invalidLoginLink: {
+    code: 'invalid_login_link',
+    status: 400,
+    message: 'This sign-in link is invalid or has expired'
+  },
+  tooManyRequests: {
+    code: 'too_many_requests',
+    status: 429,
+    message: 'Too many attempts. Try again later'
+  },
   invalid: { code: 'invalid', status: 400, message: 'Invalid input' },
   slugTaken: { code: 'slug_taken', status: 409, message: 'That slug is already used' },
   homeTaken: { code: 'home_taken', status: 409, message: 'The home page already exists' },

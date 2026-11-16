@@ -36,7 +36,7 @@ export const versionedWrite = async (
 export const respondUnpublishable = (c: Context, problems: readonly PublishProblem[]) =>
   c.json({ ...errorBody(API_ERROR.unpublishable), problems }, API_ERROR.unpublishable.status)
 
-export const RESPONSE_STATUS = { created: 201, noContent: 204 } as const
+export const RESPONSE_STATUS = { created: 201, accepted: 202, noContent: 204 } as const
 
 const JSON_BODY = { mediaType: 'application/json', parameterSeparator: ';' } as const
 
