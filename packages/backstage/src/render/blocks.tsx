@@ -39,7 +39,7 @@ const withEntries = (
     ? mapMarkedFields(node, content, 'reference', ({ path, node: field }) =>
         (references[blockId]?.[path] ?? []).flatMap((id) => {
           const entry = entries[field.collection ?? '']?.[id]
-          return entry ? [{ id, content: entry.content }] : []
+          return entry ? [{ id, content: entry.content, slug: entry.slug, href: entry.href }] : []
         })
       )
     : content
