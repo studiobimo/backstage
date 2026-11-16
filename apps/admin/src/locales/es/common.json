@@ -28,7 +28,8 @@
     "blocks": "Vistas previas de bloques",
     "toggle": "Mostrar u ocultar la barra lateral",
     "groups": {
-      "workspace": "Espacio de trabajo"
+      "workspace": "Espacio de trabajo",
+      "collections": "Colecciones"
     },
     "sections": {
       "pages": {
@@ -48,6 +49,9 @@
         "items": {
           "general": "General"
         }
+      },
+      "collections": {
+        "title": "Colecciones"
       }
     }
   },
@@ -79,7 +83,8 @@
       "pages": "Páginas",
       "actions": "Acciones"
     },
-    "escape": "Esc"
+    "escape": "Esc",
+    "newEntry": "Nueva entrada en {{collection}}"
   },
   "apiErrors": {
     "invalid": "Revisa los campos e inténtalo de nuevo.",

@@ -17,19 +17,19 @@ import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/format'
 
-import type { DraftChange, PageDraft } from './draft'
+import type { DraftChange } from './draft'
 
 interface StaleAlertProps {
   current?: PageStamp
-  draft?: PageDraft
+  draft?: unknown
   changes?: DraftChange[]
-  scope?: 'settings'
+  scope?: 'settings' | 'entry'
   onReload: () => void
 }
 
 type CopyState = 'idle' | 'copied' | 'failed'
 
-function useCopyDraft(draft?: PageDraft) {
+function useCopyDraft(draft?: unknown) {
   const [state, setState] = useState<CopyState>('idle')
   const copy = async () => {
     try {
@@ -113,7 +113,7 @@ export function StaleAlert({ current, draft, changes, scope, onReload }: StaleAl
         )}
       </AlertDescription>
       <AlertAction>
-        {draft && (
+        {draft !== undefined && (
           <Button variant="outline" size="sm" onClick={() => void copy()}>
             {state === 'copied' ? <CheckIcon aria-hidden /> : <ClipboardIcon aria-hidden />}
             {t(`stale.copy.${state}`)}

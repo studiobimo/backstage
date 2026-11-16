@@ -1,14 +1,15 @@
 import { ArrowLeftIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTab } from '@/components/ui/tabs'
-import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
 import { languageName, type LocaleStatus } from '../block-form/locale-status'
+
+export const EDITOR_BODY = 'flex w-full max-w-3xl flex-col gap-8'
 
 interface LocaleTabsProps {
   locales: readonly string[]
@@ -91,6 +92,7 @@ function EditorStatus({ published, changed, dirty }: EditorStatusProps) {
 }
 
 interface EditorHeaderProps {
+  back: { link: ReactElement; label: string }
   title: string
   published: boolean
   changed: boolean
@@ -100,6 +102,7 @@ interface EditorHeaderProps {
 }
 
 export function EditorHeader({
+  back,
   title,
   published,
   changed,
@@ -107,11 +110,10 @@ export function EditorHeader({
   locale,
   actions
 }: EditorHeaderProps) {
-  const { t } = useTranslation('pageEditor')
   return (
     <header className="sticky top-0 z-20 -mt-4 border-b bg-background py-3">
       <div className="flex items-center gap-2 sm:gap-3">
-        <Button size="icon" variant="ghost" aria-label={t('back')} render={<Link to="/pages" />}>
+        <Button size="icon" variant="ghost" aria-label={back.label} render={back.link}>
           <ArrowLeftIcon aria-hidden />
         </Button>
         <h1 className="min-w-0 flex-1 truncate text-xl sm:text-2xl">{title}</h1>

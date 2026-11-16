@@ -28,7 +28,8 @@
     "blocks": "Block previews",
     "toggle": "Toggle the sidebar",
     "groups": {
-      "workspace": "Workspace"
+      "workspace": "Workspace",
+      "collections": "Collections"
     },
     "sections": {
       "pages": {
@@ -48,6 +49,9 @@
         "items": {
           "general": "General"
         }
+      },
+      "collections": {
+        "title": "Collections"
       }
     }
   },
@@ -79,7 +83,8 @@
       "pages": "Pages",
       "actions": "Actions"
     },
-    "escape": "Esc"
+    "escape": "Esc",
+    "newEntry": "New entry in {{collection}}"
   },
   "apiErrors": {
     "invalid": "Check the fields and try again.",
