@@ -73,7 +73,9 @@
       "newer_schema_version": "{{place}} was saved by a newer version of this site. Update the site before publishing.",
       "migration_failed": "{{place}} could not be upgraded to its current design. Edit it and save.",
       "unknown_media": "{{place}} uses an image that was removed from the media library.",
-      "missing_default_locale": "{{place}} has no value in the default language for {{path}}. Fill it in, then save."
+      "missing_default_locale": "{{place}} has no value in the default language for {{path}}. Fill it in, then save.",
+      "unpublished_page_link": "{{place}} links to a page in {{path}} that is not published. Publish that page or pick another.",
+      "page_link_missing_slug": "{{place}} links to a page in {{path}} that has no address in every language. Rename that page to add one."
     }
   }
 }

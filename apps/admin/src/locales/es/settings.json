@@ -73,7 +73,9 @@
       "newer_schema_version": "{{place}} lo guardó una versión más reciente de este sitio. Actualiza el sitio antes de publicar.",
       "migration_failed": "{{place}} no se pudo actualizar a su diseño actual. Edítalo y guarda.",
       "unknown_media": "{{place}} usa una imagen que se quitó de la biblioteca de medios.",
-      "missing_default_locale": "{{place}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda."
+      "missing_default_locale": "{{place}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda.",
+      "unpublished_page_link": "{{place}} enlaza en {{path}} a una página que no está publicada. Publica esa página o elige otra.",
+      "page_link_missing_slug": "{{place}} enlaza en {{path}} a una página sin dirección en todos los idiomas. Renombra esa página para añadir una."
     }
   }
 }

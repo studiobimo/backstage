@@ -128,6 +128,8 @@
       "migration_failed": "The block {{name}} could not be upgraded to its current design. Edit it and save.",
       "unknown_media": "An image {{name}} uses was removed from the media library.",
       "missing_default_locale": "The block {{name}} has no value in the default language for {{path}}. Fill it in, then save.",
+      "unpublished_page_link": "The block {{name}} links to a page in {{path}} that is not published. Publish that page or pick another.",
+      "page_link_missing_slug": "The block {{name}} links to a page in {{path}} that has no address in every language. Rename that page to add one.",
       "missing_slug": "A language has no address. Rename the page to add one.",
       "title_entry": "This entry cannot be published yet",
       "invalid_content_entry": "The entry has content that is not valid. Fix it and save.",

@@ -6,13 +6,14 @@ import type { PublishProblem } from '../publishing.ts'
 import {
   buildSiteSnapshots,
   sameSiteVersions,
+  siteLinkedPageIds,
   siteMediaIds,
   type SiteDraft,
   type SitePublication,
   type SiteSnapshot,
   type SiteVersions
 } from '../site-publishing.ts'
-import { readMedia } from './publishing.ts'
+import { readMedia, readPageAddresses } from './publishing.ts'
 import { siteBlocks, sitePublication, siteSettings, users } from './schema.ts'
 import { readSiteBlocks } from './site-blocks.ts'
 import { readVersionedSiteSettings } from './settings.ts'
@@ -50,7 +51,8 @@ export const planSitePublish = async (
 ): Promise<SitePublishPlan> => {
   const { draft, versions } = await readSiteDraft(d1)
   const mediaRows = await readMedia(d1, siteMediaIds(registry, draft))
-  const built = buildSiteSnapshots(registry, draft, mediaRows, publishedAt)
+  const addresses = await readPageAddresses(d1, siteLinkedPageIds(registry, draft))
+  const built = buildSiteSnapshots(registry, draft, mediaRows, publishedAt, addresses)
   if (!built.ok) return { status: SITE_PUBLISH_PLAN.invalid, problems: built.problems }
   return { status: SITE_PUBLISH_PLAN.ready, snapshots: built.snapshots, versions }
 }

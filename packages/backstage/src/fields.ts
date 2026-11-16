@@ -12,14 +12,30 @@ export const image = () =>
 
 export const richText = () => marked(richTextDoc, 'richText')
 
-export const link = ({ requireLabel = false } = {}) =>
-  marked(
-    z.object({
-      href: z.string().regex(RICH_TEXT.safeHref),
-      label: requireLabel ? z.string().trim().min(1) : z.string().default('')
-    }),
+export const LINK = { kind: { page: 'page' } } as const
+
+interface ResolvedLink {
+  href: string
+  label: string
+}
+
+interface LinkInput {
+  href?: string
+  kind?: typeof LINK.kind.page
+  pageId?: string
+  label?: string
+}
+
+export const link = ({ requireLabel = false } = {}) => {
+  const label = requireLabel ? z.string().trim().min(1) : z.string().default('')
+  return marked(
+    z.union([
+      z.object({ kind: z.literal(LINK.kind.page), pageId: z.string().min(1), label }),
+      z.object({ href: z.string().regex(RICH_TEXT.safeHref), label })
+    ]),
     'link'
-  )
+  ) as unknown as z.ZodType<ResolvedLink, LinkInput>
+}
 
 export const localized = <T extends z.ZodType>(inner: T) =>
   marked(z.partialRecord(z.string(), inner), 'localized')

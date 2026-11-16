@@ -83,7 +83,7 @@ export interface PublishedTarget {
 const localePrefix = (locale: Locale, defaultLocale: Locale) =>
   locale === defaultLocale ? '' : `/${locale}`
 
-const pageTarget = (page: PublishedPage, defaultLocale: Locale): PublishedTarget => ({
+export const pageTarget = (page: PublishedPage, defaultLocale: Locale): PublishedTarget => ({
   publishedAt: page.publishedAt,
   isLive: (locale) => page.isHome || Boolean(page.slugs[locale]),
   pathOf: (locale) => {
