@@ -1,5 +1,6 @@
 import type { UseMutationResult } from '@tanstack/react-query'
 import { CircleAlertIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import {
   AlertDialog,
@@ -20,7 +21,7 @@ interface DeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  description: string
+  description: ReactNode
   cancelLabel: string
   confirmLabel: string
 }

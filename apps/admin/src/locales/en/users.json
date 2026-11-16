@@ -1,0 +1,34 @@
+{
+  "title": "Users",
+  "description": {
+    "owner": "Invite people to edit this site and choose who is an owner.",
+    "editor": "The people who can sign in here. Only an owner can invite or remove people."
+  },
+  "role": {
+    "owner": "Owner",
+    "editor": "Editor",
+    "failed": "Could not change the role"
+  },
+  "invite": {
+    "title": "Invite someone",
+    "description": "Owners can invite and remove people. Editors edit and publish.",
+    "email": "Email address",
+    "role": "Role",
+    "submit": "Invite",
+    "done": "{{email}} was invited"
+  },
+  "list": {
+    "person": "Person",
+    "role": "Role",
+    "actions": "Actions",
+    "you": "You",
+    "roleOf": "Role of {{email}}",
+    "remove": "Remove {{email}}"
+  },
+  "remove": {
+    "title": "Remove this person?",
+    "description": "They lose access right away and are signed out. Pages they saved stay as they are.",
+    "cancel": "Cancel",
+    "confirm": "Remove"
+  }
+}

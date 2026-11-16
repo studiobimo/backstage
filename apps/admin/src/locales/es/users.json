@@ -1,0 +1,34 @@
+{
+  "title": "Usuarios",
+  "description": {
+    "owner": "Invita a personas a editar este sitio y elige quién es propietario.",
+    "editor": "Las personas que pueden iniciar sesión aquí. Solo un propietario puede invitar o quitar personas."
+  },
+  "role": {
+    "owner": "Propietario",
+    "editor": "Editor",
+    "failed": "No se pudo cambiar el rol"
+  },
+  "invite": {
+    "title": "Invitar a alguien",
+    "description": "Los propietarios invitan y quitan personas. Los editores editan y publican.",
+    "email": "Correo electrónico",
+    "role": "Rol",
+    "submit": "Invitar",
+    "done": "Se invitó a {{email}}"
+  },
+  "list": {
+    "person": "Persona",
+    "role": "Rol",
+    "actions": "Acciones",
+    "you": "Tú",
+    "roleOf": "Rol de {{email}}",
+    "remove": "Quitar a {{email}}"
+  },
+  "remove": {
+    "title": "¿Quitar a esta persona?",
+    "description": "Pierde el acceso de inmediato y se cierra su sesión. Las páginas que guardó se quedan como están.",
+    "cancel": "Cancelar",
+    "confirm": "Quitar"
+  }
+}

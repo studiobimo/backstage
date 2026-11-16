@@ -1,6 +1,6 @@
 # ADR-0005: Cloudflare Access first, magic link later
 
-- **Status:** Accepted. Magic link is implemented (AUT-3); roles follow (AUT-4)
+- **Status:** Accepted. Magic link (AUT-3) and roles (AUT-4) are implemented
 - **Date:** 2026-11-07
 
 ## Context

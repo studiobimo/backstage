@@ -58,17 +58,27 @@ Admin Worker, typed as `AdminEnv` from `@studiobimo/backstage/admin`:
 | `ASSETS`             | static assets          | yes        | the admin SPA                                                       |
 | `SITE_ORIGIN`        | variable               | no         | the site's origin, so the page editor can frame its preview         |
 | `AUTH_MODE`          | variable               | no         | `access` (default) or `magic-link`                                  |
+| `OWNER_EMAIL`        | variable               | yes        | the address (or comma-separated addresses) that are always owners   |
 | `ACCESS_TEAM_DOMAIN` | secret                 | access     | Cloudflare Access team domain                                       |
 | `ACCESS_AUD`         | secret                 | access     | Cloudflare Access application audience                              |
 | `EMAIL`              | `send_email` binding   | magic-link | sends the sign-in link                                              |
 | `AUTH_EMAIL_FROM`    | variable               | magic-link | the sender address, on a domain you have onboarded to Email Service |
 | `DEV_AUTH`           | local `.dev.vars` only | no         | `true` skips Access on localhost; refused on a deployed host        |
 
-Magic link (`AUTH_MODE=magic-link`) signs in people already in the `users` table, so add the
-first owner with `INSERT INTO users (id, email, created_at)` until user management lands. The
-link works once and expires in 15 minutes. The session lives in D1 and in a `__Host-` cookie,
-and requests are rate limited per email and per IP. Pass `createAdmin(registry, { mailer })` to
-send the link through something other than the `EMAIL` binding.
+Magic link (`AUTH_MODE=magic-link`) signs in people already in the `users` table. The link
+works once and expires in 15 minutes. The session lives in D1 and in a `__Host-` cookie, and
+requests are rate limited per email and per IP. Pass `createAdmin(registry, { mailer })` to send
+the link through something other than the `EMAIL` binding.
+
+Roles and who may sign in work the same in both modes. A person is an `owner` or an `editor`.
+Owners invite and remove people and change roles on the Users page (`/api/v1/users`); editors edit
+and publish and can see who has access. Only people in the `users` table get in, so an owner
+invites someone before they can sign in (with Access, they must also pass the Access policy).
+Removing someone ends their sessions at once. The last owner cannot be removed or demoted.
+
+`OWNER_EMAIL` is how the first owner is made: set it to one address, or a comma-separated list,
+and each one is an owner whenever they sign in, created or promoted if need be. Without it nobody
+is an owner and nobody can be invited. Under `DEV_AUTH` the local developer is an owner.
 
 Site Worker, typed as `SiteEnv` from `@studiobimo/backstage/site`:
 

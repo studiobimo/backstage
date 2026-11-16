@@ -1,43 +1,58 @@
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-interface ChoiceSelectProps {
-  label: string
-  description?: string
+interface ChoiceOption {
   value: string
-  options: readonly { value: string; label: string }[]
-  onChange: (value: string) => void
-  disabled?: boolean
+  label: string
 }
 
-export function ChoiceSelect({
+interface OptionSelectProps {
+  label: string
+  value: string
+  options: readonly ChoiceOption[]
+  onChange: (value: string) => void
+  disabled?: boolean
+  className?: string
+}
+
+export function OptionSelect({
   label,
-  description,
   value,
   options,
   onChange,
-  disabled
-}: ChoiceSelectProps) {
+  disabled,
+  className
+}: OptionSelectProps) {
+  return (
+    <Select
+      items={options}
+      value={value}
+      disabled={disabled}
+      onValueChange={(next: string | null) => next !== null && onChange(next)}
+    >
+      <SelectTrigger aria-label={label} className={className}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectPopup>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectPopup>
+    </Select>
+  )
+}
+
+interface ChoiceSelectProps extends Omit<OptionSelectProps, 'className'> {
+  description?: string
+}
+
+export function ChoiceSelect({ description, ...select }: ChoiceSelectProps) {
   return (
     <Field className="max-w-xs">
-      <FieldLabel>{label}</FieldLabel>
-      <Select
-        items={options}
-        value={value}
-        disabled={disabled}
-        onValueChange={(next: string | null) => next !== null && onChange(next)}
-      >
-        <SelectTrigger aria-label={label}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectPopup>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectPopup>
-      </Select>
+      <FieldLabel>{select.label}</FieldLabel>
+      <OptionSelect {...select} />
       {description && <FieldDescription>{description}</FieldDescription>}
     </Field>
   )

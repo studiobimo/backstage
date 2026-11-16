@@ -2,6 +2,7 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import { ChevronRight, FileText, Image, Settings2, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { useIsOwner } from '@/features/users/queries'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
@@ -14,7 +15,7 @@ import {
   SidebarMenuSubItem
 } from '@/components/ui/sidebar'
 
-type SectionPath = '/pages' | '/media' | '/settings'
+type SectionPath = '/pages' | '/media' | '/settings' | '/settings/users'
 
 interface NavSectionItem {
   key: string
@@ -28,14 +29,17 @@ export interface NavSectionDefinition {
   items: NavSectionItem[]
 }
 
-const sections: NavSectionDefinition[] = [
+const sectionsFor = (isOwner: boolean): NavSectionDefinition[] => [
   { key: 'pages', icon: FileText, path: '/pages', items: [{ key: 'all', path: '/pages' }] },
   { key: 'media', icon: Image, path: '/media', items: [{ key: 'uploads', path: '/media' }] },
   {
     key: 'settings',
     icon: Settings2,
     path: '/settings',
-    items: [{ key: 'general', path: '/settings' }]
+    items: [
+      { key: 'general', path: '/settings' },
+      ...(isOwner ? [{ key: 'users', path: '/settings/users' as const }] : [])
+    ]
   }
 ]
 
@@ -94,6 +98,7 @@ export function NavSection({
 export function NavMain() {
   const { t } = useTranslation()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const sections = sectionsFor(useIsOwner())
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t('nav.groups.workspace')}</SidebarGroupLabel>

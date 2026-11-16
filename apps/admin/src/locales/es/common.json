@@ -47,7 +47,8 @@
       "settings": {
         "title": "Ajustes",
         "items": {
-          "general": "General"
+          "general": "General",
+          "users": "Usuarios"
         }
       },
       "collections": {
