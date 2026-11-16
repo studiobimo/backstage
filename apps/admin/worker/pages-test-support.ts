@@ -88,7 +88,8 @@ const tables = [
   'media',
   'site_settings',
   'site_blocks',
-  'site_publication'
+  'site_publication',
+  'entries'
 ]
 
 export const useFreshPagesDb = () => {

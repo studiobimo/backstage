@@ -2,7 +2,7 @@ import { eq, type SQL } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import type { PageStamp } from '../pages.ts'
-import { pages, siteBlocks, siteSettings, users } from './schema.ts'
+import { entries, pages, siteBlocks, siteSettings, users } from './schema.ts'
 
 export interface VersionedWrite {
   expectedVersion: number
@@ -28,7 +28,7 @@ export const writeVersionedRow = async (
   return changed.length > 0 ? ROW_WRITE.ok : ROW_WRITE.stale
 }
 
-type StampedTable = typeof pages | typeof siteSettings | typeof siteBlocks
+type StampedTable = typeof pages | typeof siteSettings | typeof siteBlocks | typeof entries
 
 export const readStamp = async (
   d1: AnyD1Database,

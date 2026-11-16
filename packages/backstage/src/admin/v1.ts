@@ -1,8 +1,10 @@
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import { Hono } from 'hono'
 
 import { blocksRoutes } from './blocks.ts'
+import { collectionsRoutes } from './collections.ts'
 import { configRoutes } from './config.ts'
+import { entryPublishRoutes } from './entry-publish.ts'
 import { layoutsRoutes } from './layouts.ts'
 import { mediaRoutes } from './media.ts'
 import { republishRoutes } from './republish.ts'
@@ -15,9 +17,11 @@ import { siteOriginRoutes } from './site-origin.ts'
 import { slotsRoutes } from './slots.ts'
 import type { AdminEnv } from './env.ts'
 
-export const v1Routes = (registry: Registry) =>
+export const v1Routes = (registry: AdminRegistry) =>
   new Hono<{ Bindings: AdminEnv }>()
     .route('/blocks', blocksRoutes(registry))
+    .route('/collections', collectionsRoutes(registry))
+    .route('/collections', entryPublishRoutes(registry))
     .route('/config', configRoutes(registry))
     .route('/layouts', layoutsRoutes(registry))
     .route('/media', mediaRoutes(registry))

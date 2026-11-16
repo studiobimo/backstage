@@ -1,4 +1,15 @@
 export { BLOCK_PREVIEW, blockThumbnailUrl, siteOriginResponseSchema } from '../blocks.ts'
+export {
+  collectionDescriptionSchema,
+  collectionsResponseSchema,
+  entriesResponseSchema,
+  entryResponseSchema,
+  entrySchema,
+  entrySummarySchema,
+  createEntrySchema,
+  saveEntrySchema
+} from '../entries.ts'
+export type { Entry, EntrySummary } from '../entries.ts'
 export { classifyField } from '../field-shapes.ts'
 export type { FieldShape } from '../field-shapes.ts'
 export type { FieldKind } from '../fields.ts'

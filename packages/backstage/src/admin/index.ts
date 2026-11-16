@@ -5,7 +5,7 @@ import { secureHeaders } from 'hono/secure-headers'
 
 import { API_ERROR } from '../errors.ts'
 import { OBSERVABILITY, observe, reportError, respondHealthy } from '../observability.ts'
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import { requireAccess } from './auth.ts'
 import { requireBindings, type AdminEnv } from './env.ts'
 import { respondWithError } from './respond.ts'
@@ -14,7 +14,7 @@ import { v1Routes } from './v1.ts'
 
 const API_PATH = '/api'
 
-export const createAdmin = (registry: Registry) => {
+export const createAdmin = (registry: AdminRegistry) => {
   const api = new Hono<{ Bindings: AdminEnv }>().basePath(API_PATH)
 
   api.use(...observe)
