@@ -79,6 +79,7 @@
     "page": "A page",
     "address": "An address",
     "pageLabel": "Page",
+    "pageRequired": "Choose the page to link to.",
     "choose": "Choose a page",
     "pickerLabel": "{{field}}: {{page}}",
     "search": "Search pages",

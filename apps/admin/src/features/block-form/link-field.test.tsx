@@ -1,9 +1,14 @@
 import { link } from '@studiobimo/backstage'
-import { screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
+import { testQueryClient } from '@/test/query-client'
+
 import type { JsonSchema } from './spec.ts'
+import { BlockForm } from './block-form.tsx'
 import { lastFieldValue, renderField, useStubbedListing } from './test-support.tsx'
 
 const schema = z.toJSONSchema(z.object({ cta: link() }), { io: 'input' }) as JsonSchema
@@ -64,5 +69,22 @@ describe('the link field', () => {
   it('says so when the chosen page no longer exists', async () => {
     setup({ kind: 'page', pageId: 'gone', label: '' })
     expect(await screen.findByRole('button', { name: /Page not found/ })).toBeInTheDocument()
+  })
+
+  it('tells the editor to choose a page when saving a page link with none', async () => {
+    const user = userEvent.setup({ delay: null })
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <BlockForm
+          schema={schema}
+          locales={['en']}
+          value={{ cta: { kind: 'page', pageId: '', label: 'Go' } } as never}
+          onSubmit={vi.fn()}
+        />
+      </QueryClientProvider>
+    )
+    expect(screen.queryByText('Choose the page to link to.')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(await screen.findByText('Choose the page to link to.')).toBeInTheDocument()
   })
 })
