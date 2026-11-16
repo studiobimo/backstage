@@ -42,8 +42,9 @@ export const sendTo = (
   target: Pick<typeof app, 'request'>,
   method: string,
   path: string,
-  body?: unknown
-) => request(env.localDevelopment, method, path, body, target)
+  body?: unknown,
+  bindings: Partial<typeof env.localDevelopment> = {}
+) => request({ ...env.localDevelopment, ...bindings }, method, path, body, target)
 
 const recordingDb = (statements: string[]) =>
   new Proxy(db, {

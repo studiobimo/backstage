@@ -68,13 +68,17 @@ export { publishProblemsResponseSchema } from '../publishing.ts'
 export type { PublishProblem } from '../publishing.ts'
 export {
   KV_LIMITS,
+  entryDependentsResponseSchema,
+  kvWritesToRefresh,
   kvWritesToRepublish,
   republishBatchSchema,
   republishScopeSchema,
   republishStatusResponseSchema
 } from '../republish.ts'
 export type {
+  EntryDependents,
   RepublishBatch,
+  RepublishEntry,
   RepublishScope,
   RepublishSkipped,
   RepublishStatus

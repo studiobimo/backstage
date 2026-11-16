@@ -355,7 +355,7 @@ export const buildSnapshots = (
   }
 }
 
-const entriesForLocale = (
+export const entriesForLocale = (
   registry: AdminRegistry,
   { entries }: ResolvedReferences,
   locale: Locale,

@@ -12,13 +12,16 @@ import {
 import {
   buildSnapshots,
   checkBlocks,
+  entriesForLocale,
+  mediaFor,
   referencedMediaIds,
   type PublishDraft,
   type PublishMediaRow,
   type PublishProblem,
   type Snapshot
 } from '../publishing.ts'
-import type { RepublishScope } from '../republish.ts'
+import { resolveLocaleConfig } from '../locales.ts'
+import type { RepublishEntry, RepublishScope } from '../republish.ts'
 import { SEO, type PublishedIndex, type PublishedPage } from '../seo.ts'
 import { clearEntryRefs, readPublishedEntries, replaceEntryRefs } from './entry-references.ts'
 import { media, pageBlocks, pageLocales, pages } from './schema.ts'
@@ -62,6 +65,20 @@ export const readMedia = async (d1: AnyD1Database, ids: string[]) => {
   return new Map(rows.map((row) => [row.id, row]))
 }
 
+const resolveBlockReferences = async (
+  d1: AnyD1Database,
+  registry: AdminRegistry,
+  blocks: readonly PageBlock[]
+) => {
+  const fields = blocks.flatMap(({ id, block, content }) =>
+    referenceFieldsIn(registry.jsonSchema(block), id, content)
+  )
+  return {
+    fields,
+    resolved: resolveReferences(fields, await readPublishedEntries(d1, registry, fields))
+  }
+}
+
 const planDraft = async (
   d1: AnyD1Database,
   registry: AdminRegistry,
@@ -69,10 +86,7 @@ const planDraft = async (
   publishedAt: number
 ): Promise<PublishPlan> => {
   const { blocks } = checkBlocks(registry, draft.blocks)
-  const fields = blocks.flatMap(({ id, block, content }) =>
-    referenceFieldsIn(registry.jsonSchema(block), id, content)
-  )
-  const resolved = resolveReferences(fields, await readPublishedEntries(d1, registry, fields))
+  const { fields, resolved } = await resolveBlockReferences(d1, registry, blocks)
   const mediaRows = await readMedia(
     d1,
     referencedMediaIds(registry, blocks, draft.locales, resolved)
@@ -81,6 +95,29 @@ const planDraft = async (
   return built.ok
     ? { status: PUBLISH_PLAN.ready, snapshots: built.snapshots, refs: entryRefsOf(fields) }
     : { status: PUBLISH_PLAN.invalid, problems: built.problems }
+}
+
+export const refreshSnapshots = async (
+  d1: AnyD1Database,
+  registry: AdminRegistry,
+  snapshots: readonly Snapshot[]
+): Promise<Snapshot[]> => {
+  const [first] = snapshots
+  if (!first) return []
+  const blocks = first.blocks.filter(({ block }) => registry.get(block))
+  const { resolved } = await resolveBlockReferences(d1, registry, blocks)
+  const { defaultLocale } = resolveLocaleConfig(registry)
+  const socialImageIds = snapshots.flatMap(({ seo }) => seo.socialImageId ?? [])
+  const mediaIds = [
+    ...new Set([...referencedMediaIds(registry, blocks, [], resolved), ...socialImageIds])
+  ]
+  const mediaRows = await readMedia(d1, mediaIds)
+  return snapshots.map((snapshot) => ({
+    ...snapshot,
+    references: resolved.references,
+    entries: entriesForLocale(registry, resolved, snapshot.locale, defaultLocale),
+    media: mediaFor(mediaIds, mediaRows, snapshot.locale)
+  }))
 }
 
 export const planPublish = async (
@@ -165,10 +202,14 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
   return { format: SEO.format, pages: [...entries.values()] }
 }
 
-const republishFilter = ({ since, cursor }: RepublishScope) =>
+const dependsOnEntry = ({ collection, entryId }: RepublishEntry) =>
+  sql`${pages.id} IN (SELECT page_id FROM page_entry_refs WHERE collection = ${collection} AND (entry_id = ${entryId} OR entry_id IS NULL))`
+
+const republishFilter = ({ since, cursor, entry }: RepublishScope) =>
   and(
     isNotNull(pages.publishedAt),
-    since === null ? undefined : lt(pages.publishedAt, since),
+    entry ? dependsOnEntry(entry) : undefined,
+    since === null || entry ? undefined : lt(pages.publishedAt, since),
     cursor === null ? undefined : gt(pages.id, cursor)
   )
 

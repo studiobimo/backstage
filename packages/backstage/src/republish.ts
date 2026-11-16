@@ -28,9 +28,19 @@ export const kvWritesPerPage = (locales: readonly Locale[]) =>
 export const kvWritesToRepublish = (pageCount: number, locales: readonly Locale[]) =>
   pageCount === 0 ? 0 : pageCount * kvWritesPerPage(locales) + REPUBLISH.writes.perIndexRebuild
 
+export const kvWritesToRefresh = (pageCount: number, locales: readonly Locale[]) =>
+  pageCount * locales.length
+
+const republishEntrySchema = z.object({
+  collection: z.string().min(1),
+  entryId: z.string().min(1)
+})
+export type RepublishEntry = z.infer<typeof republishEntrySchema>
+
 export const republishScopeSchema = z.object({
   since: z.number().int().min(0).nullable(),
-  cursor: z.string().nullable()
+  cursor: z.string().nullable(),
+  entry: republishEntrySchema.optional()
 })
 export type RepublishScope = z.infer<typeof republishScopeSchema>
 
@@ -61,3 +71,13 @@ export const republishBatchSchema = z.object({
   halted: z.boolean()
 })
 export type RepublishBatch = z.infer<typeof republishBatchSchema>
+
+const entryDependentsSchema = z.object({
+  pages: z.number().int(),
+  writes: z.number().int(),
+  pending: z.boolean(),
+  batch: republishBatchSchema.nullable()
+})
+export type EntryDependents = z.infer<typeof entryDependentsSchema>
+
+export const entryDependentsResponseSchema = z.object({ republish: entryDependentsSchema })

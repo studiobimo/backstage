@@ -66,10 +66,36 @@ This ADR records the decisions they share, so that the later ones do not reopen 
 
 ### Publishing an entry republishes its dependents (COL-5)
 
-- Publishing, unpublishing or deleting a published entry republishes every published page in
-  `page_entry_refs` that names the entry, or the collection's "latest". It reuses the batches and
-  the KV write budget of [ADR-0014](0014-republish-all-in-batches.md), and the admin shows how
-  many pages will update, with progress.
+- Publishing, unpublishing or deleting a **published** entry refreshes every published page in
+  `page_entry_refs` that names the entry, or its collection's "latest". An entry that was never
+  published changes nothing a page shows, so it refreshes nothing.
+- **A page is refreshed from what it published, never from its draft.** Pages keep no copy of
+  their published blocks, but the published snapshot in KV holds them. The refresh reads the
+  stored snapshot of each locale, resolves its references again from the entries' published
+  content and rewrites only `entries`, `references` and `media`. The title, slug, layout, blocks,
+  `version` and `published_version` stay as published, so a newer unpublished draft never goes
+  live as a side effect. This differs on purpose from republish-all
+  ([ADR-0014](0014-republish-all-in-batches.md)), which republishes the saved version because an
+  upgrade is meant to reach every page's current content.
+- **It is the same batch endpoint with a narrower scope.** `POST /api/v1/republish` takes an
+  optional `entry: { collection, entryId }`. The work list is the published pages that depend on
+  that entry after the cursor (page id order), and `GET /api/v1/republish?collection=&entryId=`
+  returns the pages left and the KV writes they need. With an entry scope, `since` plays no part,
+  because a refresh leaves `published_at` alone and the cursor alone marks progress.
+- **Cost.** A refresh writes one snapshot per locale. The route key is unchanged and the sitemap
+  index is not rebuilt, since no slug or `published_at` changes. The estimate is
+  `kvWritesToRefresh`, pages times locales, counted by a test against the real writes.
+- **Inline when it fits, a cursor when it does not.** The entry publish, unpublish and delete
+  requests count the dependents after their own write. When they fit one batch
+  (`republishBatchSize`), the request refreshes them and answers
+  `republish: { pages, writes, pending: false, batch }`. Otherwise it answers
+  `{ pages, writes, pending: true, batch: null }` and the admin drives the batch endpoint with the
+  entry scope from a null cursor, with the same pause, progress and halt rules as republish-all.
+  The request's own D1 calls stand in for the batch overhead the size already allows. Unpublish
+  and delete keep the references, so the same lookup finds the pages afterwards. Deleting now
+  answers `200` with `republish` instead of `204`.
+- The admin shows the page count and the KV writes before publishing or unpublishing an entry (the
+  status request above, before the action) and progress while a pending run is driven.
 
 ## Consequences
 
