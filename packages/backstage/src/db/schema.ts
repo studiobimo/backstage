@@ -31,6 +31,12 @@ export const media = sqliteTable('media', {
   createdAt: createdAt()
 })
 
+const publication = () => ({
+  publishedAt: integer('published_at'),
+  publishedVersion: integer('published_version'),
+  publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' })
+})
+
 export const pages = sqliteTable(
   'pages',
   {
@@ -41,9 +47,7 @@ export const pages = sqliteTable(
     createdAt: createdAt(),
     updatedAt: integer('updated_at').notNull().$defaultFn(now).$onUpdateFn(now),
     updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
-    publishedAt: integer('published_at'),
-    publishedVersion: integer('published_version'),
-    publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' }),
+    ...publication(),
     missingTranslations: text('missing_translations', { mode: 'json' }).$type<MissingByLocale>()
   },
   (t) => [
@@ -113,3 +117,23 @@ export const sitePublication = sqliteTable('site_publication', {
   publishedBy: text('published_by').references(() => users.id, { onDelete: 'set null' }),
   versions: text('versions', { mode: 'json' }).$type<SiteVersions>().notNull()
 })
+
+export const entries = sqliteTable(
+  'entries',
+  {
+    id: text('id').primaryKey(),
+    collection: text('collection').notNull(),
+    version: integer('version').notNull().default(1),
+    schemaVersion: integer('schema_version').notNull().default(1),
+    content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
+    label: text('label', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
+    ...publication(),
+    publishedContent: text('published_content', { mode: 'json' }).$type<unknown>(),
+    publishedSchemaVersion: integer('published_schema_version'),
+    createdAt: createdAt(),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    updatedAt: integer('updated_at').notNull().$defaultFn(now),
+    updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
+  },
+  (t) => [index('entries_collection').on(t.collection, t.updatedAt)]
+)
