@@ -3,5 +3,13 @@
   "untitled": "Untitled",
   "back": "All {{name}}",
   "delete": "Delete entry",
-  "missing": "This collection is not defined on this site."
+  "missing": "This collection is not defined on this site.",
+  "dependents": {
+    "note_one": "1 published page shows this entry and will update, using {{writes}} KV writes.",
+    "note_other": "{{count}} published pages show this entry and will update, using {{writes}} KV writes.",
+    "updated_one": "1 page updated",
+    "updated_other": "{{count}} pages updated",
+    "title": "Updating the pages that show this entry",
+    "description": "Visitors keep seeing the current pages while this runs. Keep this tab open until it finishes."
+  }
 }
