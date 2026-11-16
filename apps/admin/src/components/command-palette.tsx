@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
+import type { TFunction } from 'i18next'
 import {
   ArrowDownIcon,
   ArrowUpIcon,
   CornerDownLeftIcon,
   FileTextIcon,
   ImageIcon,
+  LibraryIcon,
   MoonIcon,
   PlusIcon,
   SearchIcon,
@@ -35,6 +37,9 @@ import {
   CommandSeparator
 } from '@/components/ui/command'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
+import { collectionTitle } from '@/features/collections/collection-text'
+import { type CollectionOption, collectionsQuery } from '@/features/collections/queries'
+import { configQuery } from '@/features/config/queries'
 import { pageLabel } from '@/features/pages/page-label'
 import { pagesQuery } from '@/features/pages/queries'
 import { setThemePreference, THEME, type ThemePreference } from '@/lib/theme'
@@ -59,20 +64,72 @@ const THEME_ICONS: Record<ThemePreference, ReactNode> = {
   system: <SunMoonIcon aria-hidden />
 }
 
+const paletteItem =
+  (close: () => void) => (value: string, label: string, icon: ReactNode, run: () => void) => ({
+    value,
+    label,
+    icon,
+    run: () => {
+      close()
+      run()
+    }
+  })
+
+interface CollectionItemsContext {
+  collections: CollectionOption[]
+  language: string
+  defaultLocale: string
+  t: TFunction<'common'>
+  navigate: ReturnType<typeof useNavigate>
+  item: (value: string, label: string, icon: ReactNode, run: () => void) => PaletteItem
+}
+
+function collectionItems({
+  collections,
+  language,
+  defaultLocale,
+  t,
+  navigate,
+  item
+}: CollectionItemsContext) {
+  const label = (collection: CollectionOption) =>
+    collectionTitle(collection, language, defaultLocale)
+  return {
+    go: collections.map((collection) =>
+      item(
+        `go-collection-${collection.name}`,
+        label(collection),
+        <LibraryIcon aria-hidden />,
+        () => void navigate({ to: '/collections/$name', params: { name: collection.name } })
+      )
+    ),
+    actions: collections.map((collection) =>
+      item(
+        `action-new-entry-${collection.name}`,
+        t('palette.newEntry', { collection: label(collection) }),
+        <PlusIcon aria-hidden />,
+        () => void navigate({ to: '/collections/$name/new', params: { name: collection.name } })
+      )
+    )
+  }
+}
+
 function usePaletteGroups(close: () => void): PaletteGroup[] {
   const { t, i18n } = useTranslation('common')
   const navigate = useNavigate()
   const { data: pages = [] } = useQuery(pagesQuery)
+  const { data: collections = [] } = useQuery(collectionsQuery)
+  const { data: config } = useQuery(configQuery)
   return useMemo(() => {
     const go = (to: '/pages' | '/media' | '/settings') => () => void navigate({ to })
-    const item = (value: string, label: string, icon: ReactNode, run: () => void) => ({
-      value,
-      label,
-      icon,
-      run: () => {
-        close()
-        run()
-      }
+    const item = paletteItem(close)
+    const entries = collectionItems({
+      collections,
+      language: i18n.language,
+      defaultLocale: config?.defaultLocale ?? '',
+      t,
+      navigate,
+      item
     })
     return [
       {
@@ -91,7 +148,8 @@ function usePaletteGroups(close: () => void): PaletteGroup[] {
             t('nav.sections.settings.title'),
             <SettingsIcon aria-hidden />,
             go('/settings')
-          )
+          ),
+          ...entries.go
         ]
       },
       {
@@ -116,6 +174,7 @@ function usePaletteGroups(close: () => void): PaletteGroup[] {
             <PlusIcon aria-hidden />,
             () => void navigate({ to: '/pages', search: { create: true } })
           ),
+          ...entries.actions,
           ...THEME.preferences.map((preference) =>
             item(
               `theme-${preference}`,
@@ -127,7 +186,7 @@ function usePaletteGroups(close: () => void): PaletteGroup[] {
         ]
       }
     ].filter((group) => group.items.length > 0)
-  }, [t, i18n.language, navigate, pages, close])
+  }, [t, i18n.language, navigate, pages, collections, config, close])
 }
 
 function PaletteFooter() {

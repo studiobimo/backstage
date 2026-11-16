@@ -20,6 +20,7 @@ import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sideb
 import { ToastProvider } from '@/components/ui/toast'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { CONTENT_WIDTH, type ContentWidth, DEFAULT_CONTENT_WIDTH } from '@/lib/content-width'
+import { useCollectionScreen } from '@/features/collections/use-collection-screen'
 import { useDocumentTitle, useScreenTitle } from '@/lib/screen-title'
 import { ariaKeyShortcuts } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
@@ -46,6 +47,7 @@ function PageBreadcrumb() {
   const { t } = useTranslation()
   const title = useScreenTitle()
   const editing = useMatch({ from: '/pages_/$pageId', shouldThrow: false })
+  const collection = useCollectionScreen()
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -54,6 +56,18 @@ function PageBreadcrumb() {
             <BreadcrumbItem>
               <BreadcrumbLink render={<Link to="/pages" />}>
                 {t('nav.sections.pages.title')}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+          </>
+        )}
+        {collection?.entry !== undefined && (
+          <>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                render={<Link to="/collections/$name" params={{ name: collection.name }} />}
+              >
+                {collection.list}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

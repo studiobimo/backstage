@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { site } from '@/config/site'
+import { useCollectionScreen } from '@/features/collections/use-collection-screen'
 import { pageLabel } from '@/features/pages/page-label'
 import { pagesQuery } from '@/features/pages/queries'
 
@@ -20,7 +21,9 @@ export function useScreenTitle() {
   const titleKey = useMatches({ select: (matches) => matches.at(-1)?.staticData.title })
   const editing = useMatch({ from: '/pages_/$pageId', shouldThrow: false })
   const { data: pages } = useQuery({ ...pagesQuery, enabled: Boolean(editing) })
+  const collectionScreen = useCollectionScreen()
   const editedPage = pages?.find((candidate) => candidate.id === editing?.params.pageId)
+  if (collectionScreen) return collectionScreen.entry ?? collectionScreen.list
   if (editedPage) return pageLabel(editedPage, i18n.language)
   return titleKey ? t(titleKey) : ''
 }
