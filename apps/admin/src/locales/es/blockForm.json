@@ -73,5 +73,19 @@
     "latestCount": "Cuántas",
     "latestHint": "Muestra las entradas publicadas más recientemente, de la más nueva a la más antigua.",
     "loadFailed": "No se pudieron cargar las entradas."
+  },
+  "link": {
+    "modeLabel": "A qué apunta el enlace",
+    "page": "Una página",
+    "address": "Una dirección",
+    "pageLabel": "Página",
+    "choose": "Elige una página",
+    "pickerLabel": "{{field}}: {{page}}",
+    "search": "Buscar páginas",
+    "empty": "No se encontraron páginas",
+    "unpublished": "Sin publicar",
+    "unpublishedHint": "Esta página no está publicada, así que no se podrá publicar hasta que lo esté.",
+    "missing": "Página no encontrada",
+    "loadFailed": "No se pudieron cargar las páginas."
   }
 }
