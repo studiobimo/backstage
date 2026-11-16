@@ -83,15 +83,19 @@ describe('the address of an entry in a page snapshot', () => {
     })
   })
 
-  it('follows a slug that is renamed and published again', async () => {
+  it('keeps the published slug until a renamed slug is published, then follows it', async () => {
     const storyId = await createStory('Big launch')
-    const pageId = await publishedPageListing(storyId)
     const renamed = await send('PUT', `${ENTRY_PATH}/${storyId}`, {
       content: content('Big launch'),
       expectedVersion: 1,
       slugs: { en: 'the-launch' }
     })
     expect(renamed.status).toBe(200)
+    const pageId = await publishedPageListing(storyId)
+    expect(await addressIn(pageId, 'en', storyId)).toEqual({
+      slug: 'big-launch',
+      href: '/stories/big-launch'
+    })
     const published = await send('POST', `${ENTRY_PATH}/${storyId}/publish`, {
       expectedVersion: 2
     })

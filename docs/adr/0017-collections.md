@@ -65,7 +65,7 @@ This ADR records the decisions they share, so that the later ones do not reopen 
   same path and a path that starts with a locale code. The prefix is the same in every locale,
   and a locale other than the default adds its code in front, as for pages.
 - A routed collection needs a template: `defineComponents(registry, { blocks, layouts, collections:
-  { blog: Post } })`. The key is required for each routed collection and refused for the others,
+{ blog: Post } })`. The key is required for each routed collection and refused for the others,
   and the component's props are the collection's schema output, so a missing or mistyped template
   fails `tsc` like a missing block component. The template receives the entry's content with each
   localized value reduced to the snapshot's locale, filled from the default locale when blank, the
@@ -93,13 +93,16 @@ This ADR records the decisions they share, so that the later ones do not reopen 
   rebuilds the sitemap index.
 - An entry published before its collection had a route is served only after it is published again.
 - A resolved entry of a routed collection also carries `slug` and `href`: the entry's slug for the
-  snapshot's locale from `entry_locales`, and its path built by `entryPathOf`, the helper the site
-  uses for entry routes (locale prefix included). A block links to the entry with `href`, so a
-  renamed address needs no change in the page: publishing the renamed entry refreshes its
-  dependents (COL-5), which resolve the slug again. Both fields are optional in the snapshot, so
-  format 2 needs no bump and a snapshot written before them reads as it did until its page is
-  refreshed or republished. A collection with no route gets neither. The slug is read when the
-  page is published, so a slug changed in a draft shows on a page published before the entry is.
+  snapshot's locale, and its path built by `entryPathOf`, the helper the site uses for entry routes
+  (locale prefix included). A block links to the entry with `href`, so a renamed address needs no
+  change in the page: publishing the renamed entry refreshes its dependents (COL-5), which resolve
+  the slug again. Both fields are optional in the snapshot, so format 2 needs no bump and a
+  snapshot written before them reads as it did until its page is refreshed or republished. A
+  collection with no route gets neither.
+- The slug comes from `entry_locales.published_slug`, not from `slug`. Publishing the entry copies
+  `slug` into `published_slug` (the draft slug is editable on every save), and unpublishing clears
+  it, so a page published while a slug change is still a draft links to the address the site
+  serves. The migration fills it for entries that are already published.
 - Entry preview is a separate story: it needs the preview token of the page preview to carry an
   entry snapshot.
 

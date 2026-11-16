@@ -11,7 +11,7 @@ import {
   type ReferenceField,
   type ReferenceNeeds
 } from '../references.ts'
-import { readEntrySlugs } from './entry-slugs.ts'
+import { readPublishedEntrySlugs } from './entry-slugs.ts'
 import { entries, pageEntryRefs } from './schema.ts'
 
 const D1_LIMITS = { boundParameters: 100 } as const
@@ -81,7 +81,9 @@ const readSlugsOf = async (d1: AnyD1Database, collection: string, ids: string[])
   new Map(
     (
       await Promise.all(
-        inChunks(ids, LOOKUP.idsPerQuery).map((chunk) => readEntrySlugs(d1, collection, chunk))
+        inChunks(ids, LOOKUP.idsPerQuery).map((chunk) =>
+          readPublishedEntrySlugs(d1, collection, chunk)
+        )
       )
     ).flatMap((byEntry) => [...byEntry])
   )
