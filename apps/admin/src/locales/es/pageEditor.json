@@ -128,6 +128,8 @@
       "migration_failed": "El bloque {{name}} no se pudo actualizar a su diseño actual. Edítalo y guarda.",
       "unknown_media": "Una imagen que usa {{name}} se eliminó de la biblioteca de medios.",
       "missing_default_locale": "El bloque {{name}} no tiene valor en el idioma por defecto para {{path}}. Complétalo y guarda.",
+      "unpublished_page_link": "El bloque {{name}} enlaza en {{path}} a una página que no está publicada. Publica esa página o elige otra.",
+      "page_link_missing_slug": "El bloque {{name}} enlaza en {{path}} a una página sin dirección en todos los idiomas. Renombra esa página para añadir una.",
       "missing_slug": "Un idioma no tiene dirección. Renombra la página para añadirla.",
       "title_entry": "Esta entrada aún no se puede publicar",
       "invalid_content_entry": "La entrada tiene contenido que no es válido. Corrígelo y guarda.",

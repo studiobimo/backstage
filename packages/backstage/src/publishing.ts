@@ -10,6 +10,7 @@ import { collectionsOf, type AdminRegistry } from './collections.ts'
 import { entryPathOf, type CollectionRoute } from './entry-pages.ts'
 import type { FieldIssue } from './errors.ts'
 import { LOCALE, resolveLocaleConfig, type Locale } from './locales.ts'
+import { pageLinkIssuesIn, resolvePageLinks, type PageAddresses } from './page-links.ts'
 import { pageBlockSchema, type PageBlock } from './pages.ts'
 import { localizeEntryContent, NO_REFERENCES, type ResolvedReferences } from './references.ts'
 import {
@@ -68,7 +69,9 @@ export const PUBLISH_PROBLEM = {
   migrationFailed: 'migration_failed',
   unknownMedia: 'unknown_media',
   missingDefaultLocale: 'missing_default_locale',
-  missingSlug: 'missing_slug'
+  missingSlug: 'missing_slug',
+  unpublishedPageLink: 'unpublished_page_link',
+  pageLinkMissingSlug: 'page_link_missing_slug'
 } as const
 
 export type PublishProblemReason = (typeof PUBLISH_PROBLEM)[keyof typeof PUBLISH_PROBLEM]
@@ -293,6 +296,24 @@ export const mediaFor = (
     })
   )
 
+const PAGE_LINK_REASON = {
+  unpublished: PUBLISH_PROBLEM.unpublishedPageLink,
+  missingSlug: PUBLISH_PROBLEM.pageLinkMissingSlug
+} as const
+
+export const NO_PAGES: PageAddresses = new Map()
+
+export const pageLinkProblems = (
+  node: TranslatedNode,
+  content: unknown,
+  addresses: PageAddresses,
+  locales: readonly Locale[],
+  location: ProblemLocation
+): PublishProblem[] =>
+  pageLinkIssuesIn(node, content, addresses, locales).map(({ path, reason }) =>
+    problemOf(PAGE_LINK_REASON[reason], { ...location, path })
+  )
+
 export const contentProblems = (
   node: TranslatedNode,
   content: unknown,
@@ -311,7 +332,8 @@ export const contentProblems = (
 const referenceProblems = (
   registry: AdminRegistry,
   draft: PublishDraft,
-  media: ReadonlyMap<string, PublishMediaRow>
+  media: ReadonlyMap<string, PublishMediaRow>,
+  addresses: PageAddresses
 ): PublishProblem[] => [
   ...(registry.hasLayout(draft.page.layout) ? [] : [problemOf(PUBLISH_PROBLEM.unknownLayout)]),
   ...draft.locales.flatMap(({ slug }) =>
@@ -326,10 +348,36 @@ const referenceProblems = (
       resolveLocaleConfig(registry).defaultLocale
     )
   ),
+  ...draft.blocks.flatMap(({ id, block, content }) =>
+    pageLinkProblems(
+      registry.jsonSchema(block),
+      content,
+      addresses,
+      resolveLocaleConfig(registry).locales,
+      { blockId: id }
+    )
+  ),
   ...(draft.locales.some(({ socialImageId }) => socialImageId && !media.has(socialImageId))
     ? [problemOf(PUBLISH_PROBLEM.unknownMedia)]
     : [])
 ]
+
+const resolveBlockLinks = (
+  registry: AdminRegistry,
+  blocks: readonly PageBlock[],
+  locale: Locale,
+  addresses: PageAddresses
+): PageBlock[] =>
+  blocks.map((block) => ({
+    ...block,
+    content: resolvePageLinks(
+      registry.jsonSchema(block.block),
+      block.content,
+      locale,
+      addresses,
+      resolveLocaleConfig(registry)
+    ) as PageBlock['content']
+  }))
 
 export type SnapshotBuild =
   { ok: true; snapshots: Snapshot[] } | { ok: false; problems: PublishProblem[] }
@@ -339,21 +387,29 @@ export const buildSnapshots = (
   draft: PublishDraft,
   media: ReadonlyMap<string, PublishMediaRow>,
   publishedAt: number,
-  resolved: ResolvedReferences = NO_REFERENCES
+  resolved: ResolvedReferences = NO_REFERENCES,
+  addresses: PageAddresses = NO_PAGES
 ): SnapshotBuild => {
   const checked = checkBlocks(registry, draft.blocks)
   const valid: PublishDraft = { ...draft, blocks: checked.blocks }
-  const problems = [...checked.problems, ...referenceProblems(registry, valid, media)]
+  const problems = [...checked.problems, ...referenceProblems(registry, valid, media, addresses)]
   if (problems.length > 0) return { ok: false, problems }
   const blockMediaIds = referencedMediaIds(registry, valid.blocks, [], resolved)
   const { locales, defaultLocale } = resolveLocaleConfig(registry)
   return {
     ok: true,
     snapshots: locales.map((locale) =>
-      snapshotOf(valid, locale, blockMediaIds, media, publishedAt, {
-        references: resolved.references,
-        entries: entriesForLocale(registry, resolved, locale, defaultLocale)
-      })
+      snapshotOf(
+        { ...valid, blocks: resolveBlockLinks(registry, valid.blocks, locale, addresses) },
+        locale,
+        blockMediaIds,
+        media,
+        publishedAt,
+        {
+          references: resolved.references,
+          entries: entriesForLocale(registry, resolved, locale, defaultLocale)
+        }
+      )
     )
   }
 }

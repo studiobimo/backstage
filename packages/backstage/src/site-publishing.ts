@@ -5,6 +5,8 @@ import { resolveLocaleConfig, type Locale } from './locales.ts'
 import {
   contentProblems,
   failureProblems,
+  NO_PAGES,
+  pageLinkProblems,
   mediaFor,
   mediaIdsIn,
   problemOf,
@@ -13,6 +15,7 @@ import {
   type PublishMediaRow,
   type PublishProblem
 } from './publishing.ts'
+import { pageLinkIdsIn, resolvePageLinks, type PageAddresses } from './page-links.ts'
 import { siteSettingsJsonSchema, type SiteSettings } from './settings.ts'
 import { siteBlockSchema, type SiteBlock } from './slots.ts'
 
@@ -98,27 +101,60 @@ export const siteMediaIds = (registry: Registry, draft: SiteDraft) => [
   ])
 ]
 
+export const siteLinkedPageIds = (registry: Registry, draft: SiteDraft) => [
+  ...new Set(
+    slotsToPublish(registry, draft).flatMap(({ checked }) =>
+      checked.ok
+        ? pageLinkIdsIn(registry.jsonSchema(checked.value.block), checked.value.content)
+        : []
+    )
+  )
+]
+
 const slotProblems = (
   registry: Registry,
   slot: string,
   checked: CheckedSlot,
-  media: ReadonlyMap<string, PublishMediaRow>
+  media: ReadonlyMap<string, PublishMediaRow>,
+  addresses: PageAddresses
+) => {
+  if (!checked.ok) return checked.problems
+  const node = registry.jsonSchema(checked.value.block)
+  const { defaultLocale, locales } = resolveLocaleConfig(registry)
+  return [
+    ...contentProblems(node, checked.value.content, media, { slot }, defaultLocale),
+    ...pageLinkProblems(node, checked.value.content, addresses, locales, { slot })
+  ]
+}
+
+const slotsFor = (
+  registry: Registry,
+  published: Record<string, SiteBlock>,
+  locale: Locale,
+  addresses: PageAddresses
 ) =>
-  checked.ok
-    ? contentProblems(
-        registry.jsonSchema(checked.value.block),
-        checked.value.content,
-        media,
-        { slot },
-        resolveLocaleConfig(registry).defaultLocale
-      )
-    : checked.problems
+  Object.fromEntries(
+    Object.entries(published).map(([slot, stored]) => [
+      slot,
+      {
+        ...stored,
+        content: resolvePageLinks(
+          registry.jsonSchema(stored.block),
+          stored.content,
+          locale,
+          addresses,
+          resolveLocaleConfig(registry)
+        ) as SiteBlock['content']
+      }
+    ])
+  )
 
 export const buildSiteSnapshots = (
   registry: Registry,
   draft: SiteDraft,
   media: ReadonlyMap<string, PublishMediaRow>,
-  publishedAt: number
+  publishedAt: number,
+  addresses: PageAddresses = NO_PAGES
 ): SiteSnapshotBuild => {
   const slots = slotsToPublish(registry, draft)
   const problems = [
@@ -129,7 +165,7 @@ export const buildSiteSnapshots = (
       {},
       resolveLocaleConfig(registry).defaultLocale
     ),
-    ...slots.flatMap(({ slot, checked }) => slotProblems(registry, slot, checked, media))
+    ...slots.flatMap(({ slot, checked }) => slotProblems(registry, slot, checked, media, addresses))
   ]
   if (problems.length > 0) return { ok: false, problems }
   const published = Object.fromEntries(
@@ -149,7 +185,7 @@ export const buildSiteSnapshots = (
         description: defaultDescription?.[locale] ?? '',
         socialImageId: defaultSocialImage?.id ?? null
       },
-      slots: published,
+      slots: slotsFor(registry, published, locale, addresses),
       media: mediaFor(mediaIds, media, locale)
     }))
   }

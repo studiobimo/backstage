@@ -14,6 +14,7 @@ import {
   checkBlocks,
   entriesForLocale,
   mediaFor,
+  NO_PAGES,
   referencedMediaIds,
   type PublishDraft,
   type PublishMediaRow,
@@ -21,6 +22,7 @@ import {
   type Snapshot
 } from '../publishing.ts'
 import { resolveLocaleConfig } from '../locales.ts'
+import { pageLinkIdsIn, type PageAddresses } from '../page-links.ts'
 import type { RepublishEntry, RepublishScope } from '../republish.ts'
 import { SEO, type PublishedEntryPage, type PublishedIndex, type PublishedPage } from '../seo.ts'
 import { clearEntryRefs, readPublishedEntries, replaceEntryRefs } from './entry-references.ts'
@@ -91,7 +93,11 @@ const planDraft = async (
     d1,
     referencedMediaIds(registry, blocks, draft.locales, resolved)
   )
-  const built = buildSnapshots(registry, draft, mediaRows, publishedAt, resolved)
+  const addresses = await readPageAddresses(
+    d1,
+    blocks.flatMap(({ block, content }) => pageLinkIdsIn(registry.jsonSchema(block), content))
+  )
+  const built = buildSnapshots(registry, draft, mediaRows, publishedAt, resolved, addresses)
   return built.ok
     ? { status: PUBLISH_PLAN.ready, snapshots: built.snapshots, refs: entryRefsOf(fields) }
     : { status: PUBLISH_PLAN.invalid, problems: built.problems }
@@ -202,7 +208,10 @@ const readPublishedEntryPages = async (d1: AnyD1Database): Promise<PublishedEntr
   return [...grouped.values()]
 }
 
-export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIndex> => {
+const readPublishedPages = async (
+  d1: AnyD1Database,
+  ids?: readonly string[]
+): Promise<Map<string, PublishedPage>> => {
   const rows = await drizzle(d1)
     .select({
       pageId: pages.id,
@@ -213,7 +222,7 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
     })
     .from(pages)
     .leftJoin(pageLocales, eq(pageLocales.pageId, pages.id))
-    .where(isNotNull(pages.publishedAt))
+    .where(and(isNotNull(pages.publishedAt), ids ? inArray(pages.id, [...ids]) : undefined))
     .orderBy(asc(pages.publishedAt), asc(pages.id))
   const byPage = new Map<string, PublishedPage>()
   for (const { pageId, isHome, publishedAt, locale, slug } of rows) {
@@ -226,12 +235,19 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
     if (locale) entry.slugs[locale] = slug
     byPage.set(pageId, entry)
   }
-  return {
-    format: SEO.format,
-    pages: [...byPage.values()],
-    entries: await readPublishedEntryPages(d1)
-  }
+  return byPage
 }
+
+export const readPageAddresses = async (
+  d1: AnyD1Database,
+  ids: readonly string[]
+): Promise<PageAddresses> => (ids.length === 0 ? NO_PAGES : readPublishedPages(d1, ids))
+
+export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIndex> => ({
+  format: SEO.format,
+  pages: [...(await readPublishedPages(d1)).values()],
+  entries: await readPublishedEntryPages(d1)
+})
 
 const dependsOnEntry = ({ collection, entryId }: RepublishEntry) =>
   sql`${pages.id} IN (SELECT page_id FROM page_entry_refs WHERE collection = ${collection} AND (entry_id = ${entryId} OR entry_id IS NULL))`

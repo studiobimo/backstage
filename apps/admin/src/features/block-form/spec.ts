@@ -21,6 +21,7 @@ export type JsonSchema = {
   maximum?: number
   minItems?: number
   maxItems?: number
+  anyOf?: JsonSchema[]
   backstage?: FieldKind
   collection?: string
   max?: number
@@ -118,6 +119,9 @@ function groupFields(schema: JsonSchema): FieldSpec[] {
   )
 }
 
+const editableShape = (schema: JsonSchema) =>
+  schema.anyOf?.find((branch) => branch.properties?.href) ?? schema
+
 function parseChild(schema: JsonSchema | undefined, key: string, required: boolean): FieldSpec {
   if (!schema) throw new UnsupportedSchemaError(key)
   return parseField(schema, key, required)
@@ -141,7 +145,7 @@ function parseField(schema: JsonSchema, key: string, required: boolean): FieldSp
     return { ...common, kind: 'reference', collection: schema.collection ?? '', max: schema.max }
   }
   if (shape === 'image' || shape === 'link') {
-    return { ...common, kind: 'group', variant: shape, fields: groupFields(schema) }
+    return { ...common, kind: 'group', variant: shape, fields: groupFields(editableShape(schema)) }
   }
   if (shape === 'array') {
     return {
