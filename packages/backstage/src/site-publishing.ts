@@ -4,6 +4,7 @@ import { validateBlockContent, type Registry } from './blocks.ts'
 import { resolveLocaleConfig, type Locale } from './locales.ts'
 import {
   contentProblems,
+  failureProblems,
   mediaFor,
   mediaIdsIn,
   problemOf,
@@ -63,17 +64,15 @@ export interface SiteDraft {
 export type SiteSnapshotBuild =
   { ok: true; snapshots: SiteSnapshot[] } | { ok: false; problems: PublishProblem[] }
 
-type CheckedSlot = { ok: true; value: SiteBlock } | { ok: false; problem: PublishProblem }
+type CheckedSlot = { ok: true; value: SiteBlock } | { ok: false; problems: PublishProblem[] }
 
 const checkSlotBlock = (registry: Registry, slot: string, stored: SiteBlock): CheckedSlot => {
   const definition = registry.get(stored.block)
   if (!definition || !registry.slots.get(slot)?.includes(definition.name)) {
-    return { ok: false, problem: problemOf(PUBLISH_PROBLEM.unknownBlock, { slot }) }
+    return { ok: false, problems: [problemOf(PUBLISH_PROBLEM.unknownBlock, { slot })] }
   }
   const result = validateBlockContent(definition, stored.schemaVersion, stored.content)
-  if (!result.ok) {
-    return { ok: false, problem: problemOf(PUBLISH_PROBLEM.invalidContent, { slot }) }
-  }
+  if (!result.ok) return { ok: false, problems: failureProblems(result, { slot }) }
   return {
     ok: true,
     value: {
@@ -113,7 +112,7 @@ const slotProblems = (
         { slot },
         resolveLocaleConfig(registry).defaultLocale
       )
-    : [checked.problem]
+    : checked.problems
 
 export const buildSiteSnapshots = (
   registry: Registry,
