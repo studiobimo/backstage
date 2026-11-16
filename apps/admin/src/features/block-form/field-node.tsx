@@ -161,7 +161,7 @@ export function FieldNode(props: NodeProps) {
   switch (spec.kind) {
     case 'group':
       if (spec.variant === 'image') return <ImageField {...props} spec={spec} />
-      if (spec.variant === 'link') return <LinkField {...props} spec={spec} />
+      if (spec.variant === 'link' && spec.acceptsPage) return <LinkField {...props} spec={spec} />
       return <GroupNode {...props} spec={spec} />
     case 'list':
       return <ListField {...props} spec={spec} />

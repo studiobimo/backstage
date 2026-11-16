@@ -79,6 +79,7 @@
     "page": "Una página",
     "address": "Una dirección",
     "pageLabel": "Página",
+    "pageRequired": "Elige la página a la que enlazar.",
     "choose": "Elige una página",
     "pickerLabel": "{{field}}: {{page}}",
     "search": "Buscar páginas",

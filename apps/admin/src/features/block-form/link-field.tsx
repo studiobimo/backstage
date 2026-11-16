@@ -31,6 +31,7 @@ export function LinkField(props: NodeProps<GroupSpec>) {
       {(field) => {
         const current = readValue(field.state.value)
         const mode = linkModeOf(current)
+        const pageId = pageLinkDraftOf(current)?.pageId ?? ''
         const switchMode = (next: string) => {
           if (next === mode) return
           field.handleChange(linkValueFor(next as LinkMode, current))
@@ -59,13 +60,20 @@ export function LinkField(props: NodeProps<GroupSpec>) {
               <>
                 <form.AppField name={fieldName([...path, 'pageId'])}>
                   {(pageField) => (
-                    <FieldFrame label={t('link.pageLabel')}>
-                      <PagePicker
-                        pageId={pageLinkDraftOf(current)?.pageId ?? ''}
-                        label={label}
-                        onChange={(pageId) => pageField.handleChange(pageId)}
-                      />
-                    </FieldFrame>
+                    <form.Subscribe selector={(state) => state.submissionAttempts > 0}>
+                      {(attempted) => (
+                        <FieldFrame
+                          label={t('link.pageLabel')}
+                          message={attempted && !pageId ? t('link.pageRequired') : undefined}
+                        >
+                          <PagePicker
+                            pageId={pageId}
+                            label={label}
+                            onChange={(chosen) => pageField.handleChange(chosen)}
+                          />
+                        </FieldFrame>
+                      )}
+                    </form.Subscribe>
                   )}
                 </form.AppField>
                 <GroupFields {...props} spec={pageFields(spec)} />

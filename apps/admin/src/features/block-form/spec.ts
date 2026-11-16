@@ -69,6 +69,7 @@ interface SelectSpec extends Common {
 export interface GroupSpec extends Common {
   kind: 'group'
   variant?: 'image' | 'link'
+  acceptsPage?: boolean
   fields: readonly FieldSpec[]
 }
 
@@ -119,6 +120,9 @@ function groupFields(schema: JsonSchema): FieldSpec[] {
   )
 }
 
+const acceptsPage = (schema: JsonSchema) =>
+  schema.anyOf?.some((branch) => branch.properties?.pageId !== undefined) ?? false
+
 const editableShape = (schema: JsonSchema) =>
   schema.anyOf?.find((branch) => branch.properties?.href) ?? schema
 
@@ -145,7 +149,13 @@ function parseField(schema: JsonSchema, key: string, required: boolean): FieldSp
     return { ...common, kind: 'reference', collection: schema.collection ?? '', max: schema.max }
   }
   if (shape === 'image' || shape === 'link') {
-    return { ...common, kind: 'group', variant: shape, fields: groupFields(editableShape(schema)) }
+    return {
+      ...common,
+      kind: 'group',
+      variant: shape,
+      acceptsPage: shape === 'link' && acceptsPage(schema),
+      fields: groupFields(editableShape(schema))
+    }
   }
   if (shape === 'array') {
     return {
