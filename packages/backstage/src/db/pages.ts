@@ -1,6 +1,7 @@
 import { and, asc, eq, exists, getTableColumns, inArray, isNull, sql, type SQL } from 'drizzle-orm'
 import type { BatchItem } from 'drizzle-orm/batch'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
+import { alias } from 'drizzle-orm/sqlite-core'
 
 import {
   pageSlugsOf,
@@ -59,15 +60,26 @@ const guardUnique = async (write: () => Promise<PageWrite>): Promise<PageWrite> 
   }
 }
 
-const pageWithPublisher = (db: Database) =>
+const updaters = alias(users, 'updaters')
+const publishers = alias(users, 'publishers')
+
+const personOf = (person: { name: string | null; email: string | null }) =>
+  person.name || person.email || null
+
+const pageWithPeople = (db: Database) =>
   db
-    .select({ page: pages, publisherName: users.name, publisherEmail: users.email })
+    .select({
+      page: pages,
+      updater: { name: updaters.name, email: updaters.email },
+      publisher: { name: publishers.name, email: publishers.email }
+    })
     .from(pages)
-    .leftJoin(users, eq(users.id, pages.publishedBy))
+    .leftJoin(updaters, eq(updaters.id, pages.updatedBy))
+    .leftJoin(publishers, eq(publishers.id, pages.publishedBy))
 
 const readPages = async (db: Database, id?: string): Promise<Page[]> => {
   const [rows, locales] = await Promise.all([
-    pageWithPublisher(db)
+    pageWithPeople(db)
       .where(id === undefined ? undefined : eq(pages.id, id))
       .orderBy(pages.createdAt),
     db
@@ -75,15 +87,16 @@ const readPages = async (db: Database, id?: string): Promise<Page[]> => {
       .from(pageLocales)
       .where(id === undefined ? undefined : eq(pageLocales.pageId, id))
   ])
-  return rows.map(({ page: row, publisherName, publisherEmail }) => ({
+  return rows.map(({ page: row, updater, publisher }) => ({
     id: row.id,
     isHome: row.isHome,
     version: row.version,
     layout: row.layout,
     updatedAt: row.updatedAt,
+    updatedBy: updater ? personOf(updater) : null,
     publishedAt: row.publishedAt,
     publishedVersion: row.publishedVersion,
-    publishedBy: row.publishedAt ? publisherName || publisherEmail || null : null,
+    publishedBy: row.publishedAt && publisher ? personOf(publisher) : null,
     locales: locales
       .filter((locale) => locale.pageId === row.id)
       .map(({ locale, slug, title }) => ({ locale, slug, title }))

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { slugSchema } from './pages.ts'
+import { authorshipSchema, slugSchema } from './pages.ts'
 import { publishPageSchema } from './publishing.ts'
 
 const expectedVersion = publishPageSchema.shape.expectedVersion
@@ -12,19 +12,14 @@ export const createEntrySchema = z.object({
 export const saveEntrySchema = createEntrySchema.extend({ expectedVersion })
 export const publishEntrySchema = publishPageSchema
 
-export const entrySummarySchema = z.object({
+export const entrySummarySchema = authorshipSchema.extend({
   id: z.string(),
   collection: z.string(),
   version: z.number().int(),
   schemaVersion: z.number().int(),
   label: z.record(z.string(), z.string()),
   slugs: z.record(z.string(), z.string().nullable()).default({}),
-  createdAt: z.number().int(),
-  updatedAt: z.number().int(),
-  updatedBy: z.string().nullable(),
-  publishedAt: z.number().int().nullable(),
-  publishedVersion: z.number().int().nullable(),
-  publishedBy: z.string().nullable()
+  createdAt: z.number().int()
 })
 export type EntrySummary = z.infer<typeof entrySummarySchema>
 
