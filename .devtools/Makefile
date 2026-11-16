@@ -28,6 +28,16 @@ dev: ## Apply local D1 migrations, then run the admin (5173) and site (5174) dev
 e2e: build ## Playwright: the publish loop through both Workers, and an axe scan of the page editor
 	cd $(ROOT) && $(MISE) exec -- pnpm exec playwright test -c e2e/playwright.config.ts
 
+SEED_SCRIPT := $(ROOT)/.devtools/scripts/seed.mjs
+
+.PHONY: seed
+seed: ## Fill the running local admin with sample posts and pages through its API (needs make dev)
+	cd $(ROOT) && $(MISE) exec -- node $(SEED_SCRIPT) seed
+
+.PHONY: unseed
+unseed: ## Remove the sample posts and pages that seed created (needs make dev)
+	cd $(ROOT) && $(MISE) exec -- node $(SEED_SCRIPT) unseed
+
 LINKED_FILES := package.json pnpm-lock.yaml pnpm-workspace.yaml
 
 .PHONY: link-local

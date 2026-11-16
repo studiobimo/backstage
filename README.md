@@ -20,6 +20,28 @@ make -C .devtools migrate    # apply the D1 migrations locally (REMOTE=1 ENV=pro
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
 
+### Sample content
+
+With `make -C .devtools dev` running (and `DEV_AUTH=true` in `apps/admin/.dev.vars`), fill the
+local admin with sample content to try collections, references, drafts and the site:
+
+```sh
+make -C .devtools seed       # posts and pages through the admin API; running it again adds nothing
+make -C .devtools unseed     # removes only what seed created (slugs and titles it marks as seed)
+```
+
+`seed` creates six posts (four published, one with no Spanish text, one draft) and six pages: a
+home page only if none exists, a blog with the latest posts, one with chosen posts in order, an
+about page, a draft, and a published page with later unpublished edits. It also fills the site
+name, header and footer when they are empty, and never overwrites existing ones, so `unseed`
+leaves those alone. `ADMIN_URL` overrides `http://localhost:5173`.
+
+`make dev` keeps the admin's and the site's local D1, KV and R2 in one shared `.dev-state`, so
+the site shows what the admin publishes with no sync step. The site caches pages for about 45
+seconds, so a change can take that long to show. Local data from before this, in
+`apps/*/.wrangler/state`, is no longer read: run `make -C .devtools migrate` and `seed` once to
+re-create it.
+
 ## Bindings and variables
 
 The admin Worker answers every request except `/api/health` with a 500, and logs which binding

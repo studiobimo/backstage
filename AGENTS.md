@@ -33,7 +33,6 @@ AGENTS.md  CLAUDE.md     this guide; CLAUDE.md only imports it
 <!-- Add the project's own directories above, one line each: path, then what lives there. -->
 
 <!-- >>> template:rules -->
-
 ## Non-negotiables
 
 These hold in every studiobimo repo. Git hooks, CI and an agent hook all enforce them, so a
@@ -85,12 +84,12 @@ and `git push` when the PR-size rule is violated, and blocks non-conventional br
 Some files here are not this repo's to edit. Changing them locally only creates drift, which a
 weekly workflow reports as an issue.
 
-| To change                                                                                                                   | Edit it in                                 | It reaches this repo by                           |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------- |
-| CI behaviour (lint, PR checks, release)                                                                                     | `studiobimo/.github`, `.github/workflows/` | the `@v1` tag moving                              |
-| Branch and PR-size rules                                                                                                    | `studiobimo/.github`, `.devtools/`         | the `@v1` tag moving; lefthook refetches it daily |
-| Shared hooks and tool versions                                                                                              | `studiobimo/project-template`              | `make -C .devtools sync`                          |
-| Files and blocks listed in the template's `.template/manifest`, and in the manifest of each profile in `.template-profiles` | `studiobimo/project-template`              | `make -C .devtools sync`                          |
+| To change | Edit it in | It reaches this repo by |
+| --- | --- | --- |
+| CI behaviour (lint, PR checks, release) | `studiobimo/.github`, `.github/workflows/` | the `@v1` tag moving |
+| Branch and PR-size rules | `studiobimo/.github`, `.devtools/` | the `@v1` tag moving; lefthook refetches it daily |
+| Shared hooks and tool versions | `studiobimo/project-template` | `make -C .devtools sync` |
+| Files and blocks listed in the template's `.template/manifest`, and in the manifest of each profile in `.template-profiles` | `studiobimo/project-template` | `make -C .devtools sync` |
 
 A managed block sits between `>>> template:<name>` and `<<< template:<name>` marker lines, like
 this section. Edit outside the markers freely; inside them, change the template instead. If a
@@ -153,7 +152,6 @@ This overrides "Comments say why, not what" in the Vite block below.
   pull request changes, so fix each warning it reports rather than leaving it for later.
 
 <!-- >>> template:vite -->
-
 ## Web app: Vite, React and TanStack
 
 The `vite-react-tanstack` profile keeps this section, the shared configs in `.devtools/vite/`
@@ -301,11 +299,9 @@ make -C .devtools dev       # Vite dev server on http://localhost:5173
 make -C .devtools ci        # build, types, ESLint, knip, jscpd, Prettier, tests, budget, audit
 make -C .devtools fmt       # Prettier over the web sources
 ```
-
 <!-- <<< template:vite -->
 
 <!-- >>> template:cloudflare -->
-
 ## Hosting: Cloudflare Workers
 
 The `cloudflare` profile keeps this section and `.devtools/host/` in step with the template.
@@ -317,7 +313,9 @@ every entry of `APPS`), so run `wrangler` there.
 - **One Worker serves the app.** Static files come from `dist/client`, and any path that is
   not a file falls back to `index.html` for the router. Only `/api/*` runs the Hono app in
   `worker/index.ts`. `make -C .devtools dev` runs it in workerd beside the client, with
-  the bindings in `wrangler.jsonc` simulated locally.
+  the bindings in `wrangler.jsonc` simulated locally. Every app keeps that local D1, KV and R2
+  in `.dev-state/` at the repository's root, so in a workspace each app sees what another
+  wrote. Give other local `wrangler` commands `--persist-to <root>/.dev-state` to reach it.
 - **Environments.** The top level of `wrangler.jsonc` is local development. Deploys go to
   `env.development` or `env.production`, as `<name>-development` and `<name>-production`.
   Neither inherits bindings or vars from the top level, so restate them in each. A project
@@ -332,8 +330,13 @@ every entry of `APPS`), so run `wrangler` there.
   production when `release.yml` calls it for a release. A run from Actions defaults to the
   first environment in `DEPLOY_ENVS`. It needs a repository variable,
   `CLOUDFLARE_ACCOUNT_ID`, and in each of its GitHub environments a `CLOUDFLARE_API_TOKEN`
-  secret, from the "Edit Cloudflare Workers" template and limited to the account. Don't also
-  connect Workers Builds, or every push deploys twice.
+  secret, from the "Edit Cloudflare Workers" template and limited to the account.
+- **Or Workers Builds runs it**, with no Cloudflare credential in GitHub: connect the repo
+  to each Worker, set its branch to the environment's, and its deploy command to
+  `make -C .devtools deploy ENV=<env>`. The image has no mise, so the target uses its node
+  and pnpm, and refuses to deploy unless they are the ones `mise.toml` pins: set the build
+  variables `NODE_VERSION` and `PNPM_VERSION` to match. Use one of the two, never both, or
+  every push deploys twice.
 - **Secrets** are never committed. List their names in `.dev.vars.example`. Put local
   values in `.dev.vars`, and deployed ones with
   `pnpm exec wrangler secret put <NAME> --env <env>`.
@@ -345,7 +348,6 @@ every entry of `APPS`), so run `wrangler` there.
 - **One schema per concept** holds across the boundary: a route validates its input with
   the feature's schema from `src/features/<name>/schema.ts`, or from a workspace's shared
   package.
-
 <!-- <<< template:cloudflare -->
 
 ## Shared constants (this project's own rules)
@@ -415,7 +417,7 @@ shadcn mcp`). At the start of any UI/UX task, check that its tools are loaded; i
 - The preview tool may fail to start `make` with a `getcwd` error. Start the dev server from the
   repo root with `make -C .devtools dev` and use the port it prints.
 - Local admin needs `apps/admin/.dev.vars` with `DEV_AUTH=true` and the migration applied
-  (`pnpm exec wrangler d1 migrations apply DB --local`, from `apps/admin`). The file is
-  gitignored. Tests that expect a refused request clear `DEV_AUTH` themselves.
+  (`make -C .devtools migrate`, which targets the shared `.dev-state`; `make dev` runs it too).
+  The file is gitignored. Tests that expect a refused request clear `DEV_AUTH` themselves.
 - Keep scope to the issue. Features the PRD lists as separate stories (for example SEO fields,
   PAG-3) get their own issue and PR.

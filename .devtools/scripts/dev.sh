@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ADMIN_DIR="$ROOT/apps/admin"
 SITE_DIR="$ROOT/apps/site"
+SHARED_STATE="$ROOT/.dev-state"
 ADMIN_PORT=5173
 SITE_PORT=5174
 
@@ -54,8 +55,8 @@ stop_children() {
 }
 trap stop_children INT TERM EXIT
 
-echo "[dev] applying local D1 migrations"
-(cd "$ADMIN_DIR" && pnpm exec wrangler d1 migrations apply DB --local)
+echo "[dev] applying local D1 migrations to the shared state in $SHARED_STATE"
+(cd "$ADMIN_DIR" && pnpm exec wrangler d1 migrations apply DB --local --persist-to "$SHARED_STATE")
 
 echo "[dev] admin http://localhost:$ADMIN_PORT  site http://localhost:$SITE_PORT"
 (cd "$ADMIN_DIR" && exec pnpm exec vite --port "$ADMIN_PORT" --strictPort) 2>&1 | sed 's/^/[admin] /' &
