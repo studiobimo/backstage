@@ -1,33 +1,24 @@
 import type { ResolvedEntry } from '@studiobimo/backstage'
-import { slugify } from '@studiobimo/backstage/internal'
-import { useDefaultLocale, useImage, useLocale, useLocalized } from '@studiobimo/backstage/render'
+import { useImage, useLocalized } from '@studiobimo/backstage/render'
 import type { z } from 'zod'
 
 import type { postsCollection } from '../../collections/posts/collection.ts'
-import { POSTS_ROUTE } from '../../collections/posts/route.ts'
 import { Heading } from '../parts.tsx'
 import type { postListSchema } from './schema.ts'
 
-function usePostPath(title: string | undefined) {
-  const locale = useLocale()
-  const defaultLocale = useDefaultLocale()
-  const prefix = locale === defaultLocale ? '' : `/${locale}`
-  return `${prefix}${POSTS_ROUTE.prefix}/${slugify(title ?? '')}`
-}
-
-function PostCard({ content }: Pick<ResolvedEntry<typeof postsCollection>, 'content'>) {
+function PostCard({
+  content,
+  href
+}: Pick<ResolvedEntry<typeof postsCollection>, 'content' | 'href'>) {
   const title = useLocalized(content.title)
   const summary = useLocalized(content.summary)
   const cover = useImage(content.cover && { id: content.cover.id, alt: '' })
-  const path = usePostPath(title)
   return (
     <li data-card>
       {cover ? (
         <img src={cover.src} width={cover.width} height={cover.height} alt={cover.alt} />
       ) : null}
-      <h3>
-        <a href={path}>{title}</a>
-      </h3>
+      <h3>{href ? <a href={href}>{title}</a> : title}</h3>
       {summary ? <p>{summary}</p> : null}
     </li>
   )
@@ -39,8 +30,8 @@ export function PostList({ heading, posts }: z.output<typeof postListSchema>) {
     <section data-block="post-list">
       <Heading value={heading} />
       <ul>
-        {posts.map(({ id, content }) => (
-          <PostCard key={id} content={content} />
+        {posts.map(({ id, content, href }) => (
+          <PostCard key={id} content={content} href={href} />
         ))}
       </ul>
     </section>

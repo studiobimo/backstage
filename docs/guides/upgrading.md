@@ -53,7 +53,8 @@ meanwhile is not republished again.
   The 0.5.0 site still reads format 1 through `SNAPSHOT_UPGRADES`, so pages published before the
   upgrade keep working. Republish all is not required, though a page is in format 2 only once it is
   published again.
-- **Apply the new D1 migrations, `0010_entries`, `0011_page_entry_refs` and `0012_entry_locales`,**
+- **Apply the new D1 migrations, `0010_entries`, `0011_page_entry_refs`, `0012_entry_locales` and `0013` (the published slug,
+  added in 0.5.1),**
   with `make migrate` (add `REMOTE=1` and `ENV=<env>` for a deployed database) before the admin
   starts serving 0.5.0.
 - **A routed collection (`route: { path: '/posts/:slug' }`) needs a template** in

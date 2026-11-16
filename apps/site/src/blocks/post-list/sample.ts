@@ -5,6 +5,7 @@ import type { postListSchema } from './schema.ts'
 
 const post = (id: string, title: [string, string], summary: [string, string]) => ({
   id,
+  href: `/posts/${id}`,
   content: { title: words(...title), summary: words(...summary) }
 })
 

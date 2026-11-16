@@ -1,1 +1,1 @@
-export const POSTS_ROUTE = { path: '/posts/:slug', prefix: '/posts' } as const
+export const POSTS_ROUTE = { path: '/posts/:slug' } as const
