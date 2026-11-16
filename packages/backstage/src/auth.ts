@@ -48,9 +48,9 @@ export const authSessionResponseSchema = z.object({
 })
 export type AuthSessionResponse = z.infer<typeof authSessionResponseSchema>
 
-export const requestLinkSchema = z.object({
-  email: z.string().trim().toLowerCase().max(AUTH.emailMaxLength).pipe(z.email())
-})
+export const emailSchema = z.string().trim().toLowerCase().max(AUTH.emailMaxLength).pipe(z.email())
+
+export const requestLinkSchema = z.object({ email: emailSchema })
 export type RequestLinkInput = z.input<typeof requestLinkSchema>
 
 export const verifyLinkSchema = z.object({ token: z.string().min(1).max(AUTH.token.maxLength) })

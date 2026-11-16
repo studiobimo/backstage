@@ -1,19 +1,18 @@
 import { sql } from 'drizzle-orm'
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
+import { ROLE, ROLES } from '../users.ts'
 import type { SiteVersions } from '../site-publishing.ts'
 import type { MissingByLocale } from '../translations.ts'
 
 const now = () => Date.now()
 const createdAt = () => integer('created_at').notNull().$defaultFn(now)
 
-export const roles = ['owner', 'editor'] as const
-
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
   name: text('name').notNull().default(''),
-  role: text('role', { enum: roles }).notNull().default('editor'),
+  role: text('role', { enum: ROLES }).notNull().default(ROLE.editor),
   createdAt: createdAt()
 })
 

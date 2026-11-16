@@ -6,12 +6,13 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import app from './index'
 import { openTestEnv } from './test-env'
 
-const { dispose, env: testEnv } = await openTestEnv()
+const { dispose, db, env: testEnv } = await openTestEnv()
 afterAll(dispose)
 
 const TEAM_DOMAIN = 'https://studio.cloudflareaccess.com'
 const AUDIENCE = 'aud-tag'
 const KEY_ID = 'key-1'
+const OWNER = 'owner@studio.test'
 const ALGORITHM = { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' } as const
 
 const base64Url = (input: ArrayBuffer | string) => {
@@ -31,7 +32,14 @@ const generateKeyPair = () =>
 
 const signToken = async (privateKey: CryptoKey, claims: Record<string, unknown>, kid = KEY_ID) => {
   const now = Math.floor(Date.now() / 1000)
-  const payload = { iss: TEAM_DOMAIN, aud: [AUDIENCE], iat: now, exp: now + 300, ...claims }
+  const payload = {
+    iss: TEAM_DOMAIN,
+    aud: [AUDIENCE],
+    iat: now,
+    exp: now + 300,
+    email: OWNER,
+    ...claims
+  }
   const signingInput = `${base64Url(JSON.stringify({ alg: 'RS256', typ: 'JWT', kid }))}.${base64Url(JSON.stringify(payload))}`
   const signature = await crypto.subtle.sign(
     ALGORITHM,
@@ -41,7 +49,12 @@ const signToken = async (privateKey: CryptoKey, claims: Record<string, unknown>,
   return `${signingInput}.${base64Url(signature)}`
 }
 
-const deployedEnv = { ...testEnv.deployed, ACCESS_TEAM_DOMAIN: TEAM_DOMAIN, ACCESS_AUD: AUDIENCE }
+const deployedEnv = {
+  ...testEnv.deployed,
+  ACCESS_TEAM_DOMAIN: TEAM_DOMAIN,
+  ACCESS_AUD: AUDIENCE,
+  OWNER_EMAIL: OWNER
+}
 
 const request = (
   token?: string,
@@ -137,6 +150,67 @@ describe('access verification', () => {
     await serveCerts()
     const env = { ...deployedEnv, ACCESS_TEAM_DOMAIN: `${TEAM_DOMAIN}/` }
     expect((await request(await signToken(trusted.privateKey, {}), env)).status).toBe(200)
+  })
+})
+
+describe('users in Access mode', () => {
+  const STRANGER = 'stranger@studio.test'
+  const INVITED = 'invited@studio.test'
+  const USERS_URL = 'https://admin.example.com/api/v1/users'
+
+  const asUser = async (email: string, method = 'GET', body?: unknown) => {
+    await serveCerts()
+    const token = await signToken(trusted.privateKey, { email })
+    return app.request(
+      USERS_URL,
+      {
+        method,
+        headers: {
+          'Cf-Access-Jwt-Assertion': token,
+          'content-type': 'application/json'
+        },
+        body: body === undefined ? undefined : JSON.stringify(body)
+      },
+      deployedEnv
+    )
+  }
+
+  beforeAll(async () => {
+    await db.prepare('DELETE FROM users').run()
+  })
+
+  it('makes the OWNER_EMAIL address an owner and refuses people nobody invited', async () => {
+    expect((await asUser(OWNER)).status).toBe(200)
+    expect((await asUser(STRANGER)).status).toBe(403)
+  })
+
+  it('lets an invited editor in, but not to invite anyone', async () => {
+    const invite = await asUser(OWNER, 'POST', { email: INVITED, role: 'editor' })
+    expect(invite.status).toBe(201)
+    expect((await asUser(INVITED)).status).toBe(200)
+    const refused = await asUser(INVITED, 'POST', { email: STRANGER, role: 'editor' })
+    expect(refused.status).toBe(403)
+  })
+
+  it('locks a person out once an owner removes them', async () => {
+    const { users } = (await (await asUser(OWNER)).json()) as {
+      users: { id: string; email: string }[]
+    }
+    const invited = users.find((user) => user.email === INVITED)!
+    await serveCerts()
+    const removal = await app.request(
+      `${USERS_URL}/${invited.id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Cf-Access-Jwt-Assertion': await signToken(trusted.privateKey, { email: OWNER }),
+          'content-type': 'application/json'
+        }
+      },
+      deployedEnv
+    )
+    expect(removal.status).toBe(204)
+    expect((await asUser(INVITED)).status).toBe(403)
   })
 })
 

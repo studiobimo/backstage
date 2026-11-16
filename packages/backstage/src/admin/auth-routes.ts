@@ -7,11 +7,11 @@ import { AUTH, requestLinkSchema, verifyLinkSchema, type AuthSessionResponse } f
 import {
   consumeLoginToken,
   countAttempts,
-  findUserByEmail,
   purgeExpiredAuth,
   recordAttempt,
   storeLoginToken
 } from '../db/auth.ts'
+import { findUserByEmail, ownerEmailsOf, resolveUser } from '../db/users.ts'
 import { API_ERROR } from '../errors.ts'
 import { reportError } from '../observability.ts'
 import { randomToken, sha256Hex } from './auth-tokens.ts'
@@ -93,7 +93,9 @@ export const authRoutes = (mailer: LoginMailer) =>
       if (!(await withinRateLimit(c.env.DB, email, clientIp(c), now))) {
         return respondWithError(c, API_ERROR.tooManyRequests)
       }
-      if (await findUserByEmail(c.env.DB, email)) {
+      const known =
+        ownerEmailsOf(c.env.OWNER_EMAIL).includes(email) || (await findUserByEmail(c.env.DB, email))
+      if (known) {
         await inBackground(c, issueLoginLink(c, mailer, email))
       }
       return c.body(null, RESPONSE_STATUS.accepted)
@@ -102,7 +104,9 @@ export const authRoutes = (mailer: LoginMailer) =>
       const body = await readJsonBody(c, verifyLinkSchema)
       if (!body.ok) return body.response
       const email = await consumeLoginToken(c.env.DB, await sha256Hex(body.data.token), Date.now())
-      const user = email && (await findUserByEmail(c.env.DB, email))
+      const user =
+        email &&
+        (await resolveUser(c.env.DB, { email, name: '' }, ownerEmailsOf(c.env.OWNER_EMAIL)))
       if (!user) return respondWithError(c, API_ERROR.invalidLoginLink)
       await startSession(c, c.env.DB, user.id)
       return c.body(null, RESPONSE_STATUS.noContent)

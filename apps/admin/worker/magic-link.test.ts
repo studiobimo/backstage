@@ -1,8 +1,8 @@
-import { createAdmin, type LoginLinkMessage } from '@studiobimo/backstage/admin'
+import type { LoginLinkMessage } from '@studiobimo/backstage/admin'
 import { AUTH } from '@studiobimo/backstage/internal'
-import { registry } from 'backstage-site/registry'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
+import { app, mail, sent } from './magic-link-test-support'
 import { openTestEnv } from './test-env'
 
 const { dispose, db, env: testEnv } = await openTestEnv()
@@ -15,18 +15,6 @@ const PROTECTED_PATH = '/api/v1/blocks'
 const MINUTE_MS = 60_000
 const STRANGER_EMAIL = 'nobody@studio.test'
 const HASH_LENGTH = 64
-
-const sent: LoginLinkMessage[] = []
-let failMail = false
-
-const app = createAdmin(registry, {
-  mailer: {
-    sendLoginLink: async (message) => {
-      if (failMail) throw new Error('mail down')
-      sent.push(message)
-    }
-  }
-})
 
 type TestEnv = typeof testEnv.deployed & { AUTH_MODE?: string }
 
@@ -79,7 +67,7 @@ const rows = async (table: string) =>
 
 beforeEach(async () => {
   sent.length = 0
-  failMail = false
+  mail.fail = false
   await db.batch(
     ['sessions', 'login_tokens', 'auth_attempts', 'users'].map((table) =>
       db.prepare(`DELETE FROM ${table}`)
@@ -119,7 +107,7 @@ describe('requesting a link', () => {
   })
 
   it('still answers the same when the mail cannot be sent', async () => {
-    failMail = true
+    mail.fail = true
     const response = await requestLink(KNOWN_EMAIL)
     expect(response.status).toBe(202)
   })

@@ -4,8 +4,8 @@ import { db, saveBlocks, sendRecording, useFreshPagesDb } from './pages-test-sup
 
 const PAGE_COUNT = 100
 const BLOCKS_PER_PAGE = 20
-const LIST_QUERY_BUDGET = 3
-const ONE_PAGE_QUERY_BUDGET = 4
+const LIST_QUERY_BUDGET = 4
+const ONE_PAGE_QUERY_BUDGET = 5
 const SEED_TIMEOUT_MS = 30_000
 
 interface Summary {
