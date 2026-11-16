@@ -39,7 +39,8 @@ const scopeQuerySchema = z.object({
   since: z.coerce.number().int().min(0).optional(),
   cursor: z.string().optional(),
   collection: z.string().min(1).optional(),
-  entryId: z.string().min(1).optional()
+  entryId: z.string().min(1).optional(),
+  linkedTo: z.string().min(1).optional()
 })
 
 const REPUBLISH_LOG = { halted: 'republish halted' } as const
@@ -66,7 +67,15 @@ const republishPage = async (
   const plan = await planPublish(c.env.DB, registry, page.id, page.version, publishedAt)
   if (plan.status === PUBLISH_PLAN.ready) {
     await writeSnapshots(c.env.SITE, plan.snapshots, resolveLocaleConfig(registry).locales)
-    await recordPublished(c.env.DB, page.id, editorId, publishedAt, page.version, plan.refs)
+    await recordPublished(
+      c.env.DB,
+      page.id,
+      editorId,
+      publishedAt,
+      page.version,
+      plan.refs,
+      plan.linkedPageIds
+    )
     return null
   }
   return {
@@ -169,7 +178,8 @@ export const republishRoutes = (registry: AdminRegistry) => {
       const scope: RepublishScope = {
         since: query.since ?? Date.now(),
         cursor: query.cursor ?? null,
-        entry
+        entry,
+        linkedTo: query.linkedTo
       }
       const { remaining, changed } = await countRepublishable(c.env.DB, scope)
       return c.json({

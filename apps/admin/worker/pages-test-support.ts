@@ -84,6 +84,7 @@ export const home = { isHome: true, titles: { en: 'Home', es: 'Inicio' } }
 
 const tables = [
   'page_entry_refs',
+  'page_link_refs',
   'page_blocks',
   'page_locales',
   'pages',

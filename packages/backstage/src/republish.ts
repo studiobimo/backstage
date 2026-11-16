@@ -40,7 +40,8 @@ export type RepublishEntry = z.infer<typeof republishEntrySchema>
 export const republishScopeSchema = z.object({
   since: z.number().int().min(0).nullable(),
   cursor: z.string().nullable(),
-  entry: republishEntrySchema.optional()
+  entry: republishEntrySchema.optional(),
+  linkedTo: z.string().min(1).optional()
 })
 export type RepublishScope = z.infer<typeof republishScopeSchema>
 

@@ -25,6 +25,8 @@ import {
 } from '../pages.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 import { openStoredContent, type Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
+import { republishLinkedTo } from './page-dependents.ts'
 import type { MissingByLocale } from '../translations.ts'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
@@ -93,7 +95,7 @@ const listPageSummaries = async (d1: D1Database, registry: Registry) => {
   return pages.map((page) => ({ ...page, missing: missing.get(page.id) ?? empty }))
 }
 
-export const pagesRoutes = (registry: Registry) => {
+export const pagesRoutes = (registry: AdminRegistry) => {
   const { locales } = resolveLocaleConfig(registry)
   return new Hono<AccessEnv>()
     .get('/', async (c) => c.json({ pages: await listPageSummaries(c.env.DB, registry) }))
@@ -119,6 +121,7 @@ export const pagesRoutes = (registry: Registry) => {
       if (wasPublished) await removeSnapshots(c.env.SITE, id, locales)
       const failure = await failureOf(c, id, await deletePage(c.env.DB, id))
       if (wasPublished) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
+      if (wasPublished && !failure) await republishLinkedTo(c, registry, id)
       return failure ?? c.body(null, RESPONSE_STATUS.noContent)
     })
     .get('/:id/blocks', async (c) => {

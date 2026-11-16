@@ -169,3 +169,15 @@ export const pageEntryRefs = sqliteTable(
     index('page_entry_refs_entry').on(t.collection, t.entryId)
   ]
 )
+
+export const pageLinkRefs = sqliteTable(
+  'page_link_refs',
+  {
+    pageId: text('page_id').references(() => pages.id, { onDelete: 'cascade' }),
+    targetPageId: text('target_page_id').notNull()
+  },
+  (t) => [
+    index('page_link_refs_page').on(t.pageId),
+    index('page_link_refs_target').on(t.targetPageId)
+  ]
+)
