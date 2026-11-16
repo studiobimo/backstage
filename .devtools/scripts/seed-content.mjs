@@ -18,7 +18,7 @@ const paragraph = (text) => ({
 
 const copy = (en, es) => ({ en: paragraph(en), es: paragraph(es) })
 
-const link = (en, es, href, hrefEs = href) => ({
+const link = (en, es, href, hrefEs) => ({
   en: { href, label: en },
   es: { href: hrefEs, label: es }
 })
@@ -219,8 +219,8 @@ export const SITE_SLOTS = {
     'site-header',
     {
       navigation: [
-        { link: link('Home', 'Inicio', '/'), dropdown: [] },
-        { link: link('Blog', 'Blog', `/${slug('blog')}`), dropdown: [] },
+        { link: link('Home', 'Inicio', '/', '/es'), dropdown: [] },
+        { link: link('Blog', 'Blog', `/${slug('blog')}`, `/es/${slug('blog')}`), dropdown: [] },
         {
           link: link('Pages', 'Páginas', `/${slug('about')}`, `/es/${slug('acerca-de')}`),
           dropdown: [
@@ -238,7 +238,7 @@ export const SITE_SLOTS = {
       columns: [
         {
           heading: words('Read', 'Leer'),
-          links: [link('Blog', 'Blog', `/${slug('blog')}`)]
+          links: [link('Blog', 'Blog', `/${slug('blog')}`, `/es/${slug('blog')}`)]
         }
       ],
       contact: { email: 'hello@example.com' }
