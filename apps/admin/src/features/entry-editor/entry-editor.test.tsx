@@ -32,7 +32,7 @@ interface Reply {
 const json = ({ status, body }: Reply) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status })
 
-const mockApi = (replies: { write?: Reply; publish?: Reply } = {}) => {
+const mockApi = (replies: { write?: Reply; publish?: Reply; collections?: unknown[] } = {}) => {
   const writes: { method: string; url: string; body: Record<string, unknown> }[] = []
   vi.stubGlobal(
     'fetch',
@@ -54,11 +54,13 @@ const mockApi = (replies: { write?: Reply; publish?: Reply } = {}) => {
         )
       }
       if (url.endsWith('/e1')) return json({ status: 200, body: { entry: stored } })
-      return json({ status: 200, body: { collections: [postsCollection] } })
+      return json({ status: 200, body: { collections: replies.collections ?? [postsCollection] } })
     })
   )
   return writes
 }
+
+const routed = { ...postsCollection, route: { path: '/blog/:slug' } }
 
 const renderEditor = (entryId?: string) =>
   render(
@@ -227,5 +229,23 @@ describe('EntryEditor publishing', { timeout: 15_000 }, () => {
     await user.click(await screen.findByRole('button', { name: 'Delete entry' }))
     expect(writes).toHaveLength(0)
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument()
+  })
+
+  it('has no address field for a collection without a route', async () => {
+    mockApi()
+    renderEditor('e1')
+    await screen.findByLabelText('Title')
+    expect(screen.queryByLabelText('Address')).not.toBeInTheDocument()
+  })
+
+  it('edits the address of a routed collection one locale at a time and saves it', async () => {
+    const writes = mockApi({ collections: [routed] })
+    const user = userEvent.setup()
+    renderEditor('e1')
+    const address = await screen.findByLabelText('Address')
+    expect(address).toHaveValue('')
+    await user.type(address, 'hello')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(writes[0]?.body).toMatchObject({ slugs: { en: 'hello' } }))
   })
 })

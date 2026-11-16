@@ -41,6 +41,7 @@ import { PublishNotes } from '../page-editor/publish-notes'
 import { SavePublishGroup } from '../page-editor/save-publish-group'
 import { StaleAlert } from '../page-editor/stale-alert'
 import { usePublishActions } from '../page-editor/use-publish-actions'
+import { EntrySlugField } from './entry-slug-field'
 import { useEntrySave } from './use-entry-save'
 
 const newEntryContent = (schema: JsonSchema): BlockValue => {
@@ -49,6 +50,11 @@ const newEntryContent = (schema: JsonSchema): BlockValue => {
   } catch {
     return {}
   }
+}
+
+const typedSlugs = (edits: Record<string, string>) => {
+  const typed = Object.entries(edits).filter(([, value]) => value !== '')
+  return typed.length > 0 ? Object.fromEntries(typed) : undefined
 }
 
 const UNPUBLISHED = { publishedAt: null, publishedBy: null } as const
@@ -131,11 +137,16 @@ function useEntryDraft(collection: CollectionOption, entry: Entry | undefined) {
   )
   const [content, setContent] = useState(saved)
   const [created, setCreated] = useState(false)
-  const dirty = !sameContent(content, saved) && !created
+  const [slugEdits, setSlugEdits] = useState<Record<string, string>>({})
+  const slugsDirty = Object.entries(slugEdits).some(
+    ([slug, value]) => value !== (entry?.slugs[slug] ?? '')
+  )
+  const dirty = (!sameContent(content, saved) || slugsDirty) && !created
   const save = useEntrySave({
     collection: collection.name,
     entry,
     content,
+    slugs: typedSlugs(slugEdits),
     onCreated: (next) => {
       flushSync(() => setCreated(true))
       void navigate({
@@ -151,7 +162,9 @@ function useEntryDraft(collection: CollectionOption, entry: Entry | undefined) {
       if (refusedLocale) setLocale(refusedLocale)
     })
   useShortcut('save', (dirty || entry === undefined) && !save.saving, onSave)
-  return { content, setContent, dirty, save, onSave, locale, setLocale }
+  const setSlug = (slug: string) => setSlugEdits((edits) => ({ ...edits, [locale]: slug }))
+  const slug = slugEdits[locale] ?? entry?.slugs[locale] ?? ''
+  return { content, setContent, dirty, save, onSave, locale, setLocale, slug, setSlug }
 }
 
 interface EntryNoticesProps {
@@ -200,6 +213,26 @@ function EntryNotices({
         dependents={dependents}
       />
     </>
+  )
+}
+
+function RoutedSlug({
+  collection,
+  draft
+}: {
+  collection: CollectionOption
+  draft: ReturnType<typeof useEntryDraft>
+}) {
+  const { defaultLocale } = useLocaleConfig()
+  if (!collection.route) return null
+  return (
+    <EntrySlugField
+      route={collection.route}
+      locale={draft.locale}
+      defaultLocale={defaultLocale}
+      value={draft.slug}
+      onChange={draft.setSlug}
+    />
   )
 }
 
@@ -268,6 +301,7 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
           hintId={hintId}
           onReload={onReload}
         />
+        <RoutedSlug collection={collection} draft={draft} />
         <BlockForm
           schema={collection.schema}
           locales={locales}

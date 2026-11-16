@@ -12,6 +12,10 @@ import { apiRequest } from '@/lib/api'
 
 import type { JsonSchema } from '../block-form/spec'
 
+export interface EntrySlugEdits {
+  slugs?: Record<string, string>
+}
+
 const collectionSchema = collectionDescriptionSchema.extend({ schema: z.custom<JsonSchema>() })
 
 export type CollectionOption = z.infer<typeof collectionSchema>
@@ -66,11 +70,11 @@ const readPublishOutcome = async (response: Response) =>
 
 export const createEntryMutation = (queryClient: QueryClient, collection: string) =>
   mutationOptions({
-    mutationFn: async (content: Entry['content']) =>
+    mutationFn: async (create: EntrySlugEdits & { content: Entry['content'] }) =>
       readEntry(
         await apiRequest(entriesPath(collection), {
           method: 'POST',
-          body: JSON.stringify({ content })
+          body: JSON.stringify(create)
         })
       ),
     onSuccess: (entry) => keepEntry(queryClient, entry)
@@ -78,7 +82,9 @@ export const createEntryMutation = (queryClient: QueryClient, collection: string
 
 export const saveEntryMutation = (queryClient: QueryClient, collection: string, id: string) =>
   mutationOptions({
-    mutationFn: async (save: { content: Entry['content']; expectedVersion: number }) =>
+    mutationFn: async (
+      save: EntrySlugEdits & { content: Entry['content']; expectedVersion: number }
+    ) =>
       readEntry(
         await apiRequest(entriesPath(collection, id), {
           method: 'PUT',
