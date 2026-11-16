@@ -3,6 +3,7 @@ import { Clapperboard } from 'lucide-react'
 import type { ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { NavCollections } from '@/components/nav-collections'
 import { NavMain } from '@/components/nav-main'
 import { NavSecondary } from '@/components/nav-secondary'
 import { NavUser } from '@/components/nav-user'
@@ -38,6 +39,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain />
+        <NavCollections />
         <NavSecondary className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
