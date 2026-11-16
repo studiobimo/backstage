@@ -119,6 +119,9 @@
       "unknown_layout": "The layout no longer exists. Pick another one and save.",
       "unknown_block": "The block {{name}} no longer exists. Remove it and save.",
       "invalid_content": "The block {{name}} has content that is not valid. Fix it and save.",
+      "invalid_content_field": "The block {{name}} has a value that is not valid in {{path}}. Fix it and save.",
+      "newer_schema_version": "The block {{name}} was saved by a newer version of this site. Update the site before publishing.",
+      "migration_failed": "The block {{name}} could not be upgraded to its current design. Edit it and save.",
       "unknown_media": "An image {{name}} uses was removed from the media library.",
       "missing_default_locale": "The block {{name}} has no value in the default language for {{path}}. Fill it in, then save.",
       "missing_slug": "A language has no address. Rename the page to add one."

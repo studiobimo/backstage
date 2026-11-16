@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
 import {
+  CONTENT_FAILURE,
   defineBlock,
   defineLayout,
   defineRegistry,
   describeBlocks,
   describeSlots,
   layoutNames,
+  openStoredContent,
   upgradeBlockContent,
   validateBlockContent
 } from './blocks.ts'
@@ -181,8 +183,45 @@ describe('block content', () => {
     })
   })
 
-  it('refuses a version newer than the block', () => {
-    expect(upgradeBlockContent(note, 3, {}).ok).toBe(false)
+  it('refuses a version newer than the block and says why', () => {
+    expect(upgradeBlockContent(note, 3, {})).toMatchObject({
+      ok: false,
+      failure: CONTENT_FAILURE.newerVersion
+    })
+  })
+
+  it('reports a migration that throws instead of throwing', () => {
+    const broken = defineBlock({
+      name: 'broken',
+      version: 2,
+      schema: z.object({}),
+      migrate: () => {
+        throw new Error('no')
+      }
+    })
+    expect(upgradeBlockContent(broken, 1, {})).toMatchObject({
+      ok: false,
+      failure: CONTENT_FAILURE.migrationFailed
+    })
+  })
+
+  it('names the invalid field', () => {
+    expect(validateBlockContent(note, 2, { text: '' })).toMatchObject({
+      ok: false,
+      failure: CONTENT_FAILURE.invalid,
+      issues: [{ path: ['text'] }]
+    })
+  })
+
+  it('opens content as stored when it cannot be upgraded', () => {
+    expect(openStoredContent(note, 3, { text: 'x' })).toEqual({
+      schemaVersion: 3,
+      content: { text: 'x' }
+    })
+    expect(openStoredContent(note, 1, { body: 'Hi' })).toEqual({
+      schemaVersion: 2,
+      content: { text: 'Hi' }
+    })
   })
 
   it('validates migrated content against the schema', () => {
