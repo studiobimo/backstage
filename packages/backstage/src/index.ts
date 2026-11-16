@@ -18,6 +18,8 @@ export type { BlockComponents, ComponentMap, LayoutComponents, LayoutProps } fro
 export { API_ERROR } from './errors.ts'
 export type { ApiError } from './errors.ts'
 export { image, link, localized, richText } from './fields.ts'
+export { entries } from './references.ts'
+export type { EntryReferenceValue, ResolvedEntry } from './references.ts'
 export type { LocaleConfig } from './locales.ts'
 export { MEDIA } from './media.ts'
 export type { Locale } from './pages.ts'

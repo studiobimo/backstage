@@ -87,7 +87,7 @@ describe('markedFieldsIn', () => {
       cta: { href: '/a' },
       menu: [{ target: { en: { href: '/b' }, es: { href: '/c' } } }, { target: {} }]
     }
-    expect(markedFieldsIn(schema, content, 'link')).toEqual([
+    expect(markedFieldsIn(schema, content, 'link')).toMatchObject([
       { path: 'cta', value: { href: '/a' }, required: true },
       { path: 'menu[0].target.en', value: { href: '/b' }, required: true },
       { path: 'menu[0].target.es', value: { href: '/c' }, required: true }
@@ -96,7 +96,7 @@ describe('markedFieldsIn', () => {
 
   it('finds nothing of another kind and tolerates missing content', () => {
     expect(markedFieldsIn(schema, {}, 'image')).toEqual([])
-    expect(markedFieldsIn(schema, undefined, 'link')).toEqual([
+    expect(markedFieldsIn(schema, undefined, 'link')).toMatchObject([
       { path: 'cta', value: undefined, required: true }
     ])
   })

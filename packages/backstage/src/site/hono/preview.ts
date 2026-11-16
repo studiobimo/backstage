@@ -4,6 +4,7 @@ import { BLOCK_PREVIEW, LAYOUT } from '../../blocks.ts'
 import { API_ERROR } from '../../errors.ts'
 import type { LocaleConfig } from '../../locales.ts'
 import { MEDIA } from '../../media.ts'
+import { NO_REFERENCES } from '../../references.ts'
 import { SNAPSHOT, type Snapshot } from '../../publishing.ts'
 import { renderPreview, type DocumentContext } from './document.tsx'
 import { respondWithError } from './respond.ts'
@@ -58,6 +59,7 @@ const snapshotOfSample = (
       content: samples[name] as Snapshot['blocks'][number]['content']
     }
   ],
+  ...NO_REFERENCES,
   media,
   locale
 })

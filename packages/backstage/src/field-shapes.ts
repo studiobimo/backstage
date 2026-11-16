@@ -7,6 +7,7 @@ export type FieldShape =
   | 'image'
   | 'link'
   | 'localized'
+  | 'reference'
   | 'array'
   | 'object'
   | 'select'
@@ -20,7 +21,8 @@ const MARKED_SHAPES: Record<string, FieldShape> = {
   richText: 'richText',
   image: 'image',
   link: 'link',
-  localized: 'localized'
+  localized: 'localized',
+  reference: 'reference'
 }
 
 const TYPE_SHAPES: Record<string, FieldShape> = {
@@ -41,7 +43,7 @@ export function classifyField(node: SchemaNode): FieldShape {
   return typed ?? 'unsupported'
 }
 
-const OPAQUE_SHAPES: readonly FieldShape[] = ['richText', 'image', 'link']
+const OPAQUE_SHAPES: readonly FieldShape[] = ['richText', 'image', 'link', 'reference']
 
 const joinPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)
 
@@ -67,4 +69,16 @@ export function unrenderableFieldIn(node: SchemaNode, path: string): string | un
   return childrenOf(node, path)
     .map(([child, childPath]) => unrenderableFieldIn(child, childPath))
     .find((found) => found !== undefined)
+}
+
+export interface ReferencePlace {
+  path: string
+  collection: string
+}
+
+export function referencePlacesIn(node: SchemaNode, path = ''): ReferencePlace[] {
+  const shape = classifyField(node)
+  if (shape === 'reference') return [{ path, collection: node.collection ?? '' }]
+  if (OPAQUE_SHAPES.includes(shape)) return []
+  return childrenOf(node, path).flatMap(([child, childPath]) => referencePlacesIn(child, childPath))
 }

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { fieldIssuesOf, type FieldIssue } from './errors.ts'
-import { unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
+import { referencePlacesIn, unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
 import { assertCollection, type Collection } from './collections.ts'
 import { resolveLocaleConfig, type LocaleConfig } from './locales.ts'
 
@@ -144,6 +144,31 @@ export function assertRenderable(
   return schema
 }
 
+function assertReferences(
+  blocks: ReadonlyMap<string, Block>,
+  collections: ReadonlyMap<string, Collection>
+) {
+  for (const block of blocks.values()) {
+    for (const { path, collection } of referencePlacesIn(
+      schemaNodeOf(block.schema) as SchemaNode
+    )) {
+      if (!collections.has(collection)) {
+        throw new Error(
+          `Block "${block.name}" field "${path || '(root)'}" refers to the unknown collection "${collection}"`
+        )
+      }
+    }
+  }
+  for (const collection of collections.values()) {
+    const [place] = referencePlacesIn(schemaNodeOf(collection.schema) as SchemaNode)
+    if (place) {
+      throw new Error(
+        `Collection "${collection.name}" field "${place.path || '(root)'}" cannot refer to entries`
+      )
+    }
+  }
+}
+
 export function defineRegistry<
   const B extends readonly Block[],
   const L extends readonly LayoutDefinition[] = readonly [],
@@ -163,6 +188,7 @@ export function defineRegistry<
   const layoutsByName = indexByName(layouts, 'Layout')
   const collectionsByName = indexByName(collections, 'Collection')
   collectionsByName.forEach(assertCollection)
+  assertReferences(byName, collectionsByName)
   return {
     locales,
     defaultLocale,

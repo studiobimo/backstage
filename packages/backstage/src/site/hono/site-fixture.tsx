@@ -2,8 +2,13 @@ import type { ReactNode } from 'react'
 import { z } from 'zod'
 
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '../../blocks.ts'
+import { defineCollection } from '../../collections.ts'
 import { defineComponents } from '../../components.ts'
+import { localized } from '../../fields.ts'
+import { useLocalized } from '../../render/context.ts'
+import { entries, type ResolvedEntry } from '../../references.ts'
 import type { LocaleConfig } from '../../locales.ts'
+import { NO_REFERENCES } from '../../references.ts'
 import { SNAPSHOT, snapshotRecords, type Snapshot } from '../../publishing.ts'
 import { EMPTY_PUBLISHED_INDEX, SEO, upsertIntoIndex } from '../../seo.ts'
 import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../../site-publishing.ts'
@@ -13,8 +18,20 @@ import type { CreateSiteOptions } from './create-site.ts'
 const note = defineBlock({ name: 'note', schema: z.object({ text: z.string() }) })
 const header = defineBlock({ name: 'header', schema: z.object({ text: z.string() }) })
 
+export const post = defineCollection({
+  name: 'post',
+  label: 'title',
+  schema: z.object({ title: localized(z.string()) })
+})
+
+const postList = defineBlock({
+  name: 'post-list',
+  schema: z.object({ posts: entries(post, { max: 5 }) })
+})
+
 const registryFor = (locales: LocaleConfig) =>
-  defineRegistry([note, header], {
+  defineRegistry([note, header, postList], {
+    collections: [post],
     ...locales,
     slots: { [SLOT.header]: [header.name] },
     layouts: [defineLayout({ name: 'default' })]
@@ -25,6 +42,10 @@ const Layout = ({ slots, children }: { slots: Record<string, ReactNode>; childre
     <div data-slot-header>{slots[SLOT.header]}</div>
     <main>{children}</main>
   </>
+)
+
+const PostItem = ({ title }: { title: Partial<Record<string, string>> }) => (
+  <li>{useLocalized(title)}</li>
 )
 
 export const FIXTURE = {
@@ -42,7 +63,14 @@ export const fixtureComponents = (locales: LocaleConfig = FIXTURE_LOCALES) =>
   defineComponents(registryFor(locales), {
     blocks: {
       note: ({ text }: { text: string }) => <p>{text}</p>,
-      header: ({ text }: { text: string }) => <header>{text}</header>
+      header: ({ text }: { text: string }) => <header>{text}</header>,
+      'post-list': ({ posts }: { posts: ResolvedEntry<typeof post>[] }) => (
+        <ul>
+          {posts.map(({ id, content }) => (
+            <PostItem key={id} title={content.title} />
+          ))}
+        </ul>
+      )
     },
     layouts: { default: Layout }
   })
@@ -71,6 +99,7 @@ export const pageSnapshot = (overrides: Partial<Snapshot> = {}): Snapshot => ({
   publishedAt: 1,
   seo: { title: '', description: '', socialImageId: null },
   blocks: [{ id: 'b1', block: 'note', schemaVersion: 1, content: { text: 'Hello there' } }],
+  ...NO_REFERENCES,
   media: {},
   ...overrides
 })
