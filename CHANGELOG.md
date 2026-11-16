@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/studiobimo/backstage/compare/v0.5.0...v0.5.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **core:** carry the slug and path of routed entries in resolved references ([#390](https://github.com/studiobimo/backstage/issues/390)) ([95a3783](https://github.com/studiobimo/backstage/commit/95a3783e907fa9a0433318a7b06e680586d8a364))
+
 ## [0.5.0](https://github.com/studiobimo/backstage/compare/v0.4.0...v0.5.0) (2026-11-16)
 
 
