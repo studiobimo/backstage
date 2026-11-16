@@ -18,6 +18,7 @@ export {
   perLocaleKeys,
   resolveLocaleConfig
 } from '../locales.ts'
+export { PAGE_PREVIEW, previewResponseSchema } from '../page-preview.ts'
 export { RICH_TEXT } from '../rich-text.ts'
 export {
   hasUnpublishedChanges,

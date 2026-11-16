@@ -8,8 +8,10 @@ const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
 export const siteOriginResponseSchema = z.object({ origin: z.url() })
 
+export const PREVIEW_ROOT = '/__preview'
+
 export const BLOCK_PREVIEW = {
-  path: '/__preview/blocks',
+  path: `${PREVIEW_ROOT}/blocks`,
   localeParam: 'locale',
   thumbnailFile: 'thumbnail.svg'
 } as const

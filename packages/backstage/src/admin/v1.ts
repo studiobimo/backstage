@@ -7,6 +7,7 @@ import { layoutsRoutes } from './layouts.ts'
 import { mediaRoutes } from './media.ts'
 import { republishRoutes } from './republish.ts'
 import { pagesRoutes } from './pages.ts'
+import { previewRoutes } from './preview.ts'
 import { publishRoutes } from './publish.ts'
 import { settingsRoutes } from './settings.ts'
 import { sitePublishRoutes } from './site-publish.ts'
@@ -23,6 +24,7 @@ export const v1Routes = (registry: Registry) =>
     .route('/republish', republishRoutes(registry))
     .route('/pages', pagesRoutes(registry))
     .route('/pages', publishRoutes(registry))
+    .route('/pages', previewRoutes(registry))
     .route('/settings', settingsRoutes())
     .route('/site-origin', siteOriginRoutes())
     .route('/site', sitePublishRoutes(registry))

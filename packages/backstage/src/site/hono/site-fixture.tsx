@@ -92,11 +92,16 @@ const publishedIndexOf = (snapshots: Snapshot[]) =>
     EMPTY_PUBLISHED_INDEX
   )
 
-export const memoryKv = (snapshots: Snapshot[] = [], sites: SiteSnapshot[] = []) => {
+export const memoryKv = (
+  snapshots: Snapshot[] = [],
+  sites: SiteSnapshot[] = [],
+  extra: Record<string, string> = {}
+) => {
   const records = new Map<string, string>([
     [SEO.indexKey, JSON.stringify(publishedIndexOf(snapshots))],
     ...snapshotRecords(snapshots).map(({ key, value }): [string, string] => [key, value]),
-    ...sites.map((site): [string, string] => [siteSnapshotKey(site.locale), JSON.stringify(site)])
+    ...sites.map((site): [string, string] => [siteSnapshotKey(site.locale), JSON.stringify(site)]),
+    ...Object.entries(extra)
   ])
   return {
     get: async (key: string, options?: { type: 'json' }) => {

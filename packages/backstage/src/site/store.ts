@@ -1,4 +1,5 @@
 import { LOCALE, type Locale } from '../locales.ts'
+import { isPreviewExpired, isPreviewToken, pagePreviewSchema, previewKey } from '../page-preview.ts'
 import { readableSnapshotSchema, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
 import { siteSnapshotKey, siteSnapshotSchema } from '../site-publishing.ts'
 import type { Route } from './routing.ts'
@@ -37,4 +38,10 @@ export async function findSiteSnapshot(kv: KvReader, locale: Locale) {
     await kv.get(siteSnapshotKey(locale), { type: 'json' })
   )
   return parsed.success ? parsed.data : null
+}
+
+export async function findPagePreview(kv: KvReader, token: string, now = Date.now()) {
+  if (!isPreviewToken(token)) return null
+  const parsed = pagePreviewSchema.safeParse(await kv.get(previewKey(token), { type: 'json' }))
+  return parsed.success && !isPreviewExpired(parsed.data, now) ? parsed.data : null
 }

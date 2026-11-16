@@ -10,6 +10,7 @@ import { renderSlots } from '../../render/slots.tsx'
 import type { SiteSnapshot } from '../../site-publishing.ts'
 import { renderHtml } from '../html.ts'
 import { localeName, switcherLabel } from '../locales.ts'
+import { previewPathOf } from '../../page-preview.ts'
 import { pathOf } from '../routing.ts'
 import { descriptionOf, documentTitleOf, socialImageOf } from './head.ts'
 import { linksOf } from './origin.ts'
@@ -28,6 +29,7 @@ export interface PageProps extends DocumentContext {
   translations: readonly Snapshot[]
   site: SiteSnapshot | null
   siteOrigin: string
+  preview?: { token: string }
 }
 
 export type PreviewProps = Pick<PageProps, 'components' | 'locales' | 'snapshot' | 'stylesheetPath'>
@@ -48,8 +50,9 @@ function PageContent({ components, snapshot }: Pick<PreviewProps, 'components' |
 function LanguageSwitcher({
   snapshot,
   translations,
-  locales
-}: Pick<PageProps, 'snapshot' | 'translations' | 'locales'>) {
+  locales,
+  preview
+}: Pick<PageProps, 'snapshot' | 'translations' | 'locales' | 'preview'>) {
   if (!hasMultipleLocales(locales)) return null
   const pages = [snapshot, ...translations].sort(
     (a, b) =>
@@ -61,7 +64,9 @@ function LanguageSwitcher({
         {pages.map(({ locale, slug }) => (
           <li key={locale}>
             <a
-              href={pathOf({ locale, slug }, locales)}
+              href={
+                preview ? previewPathOf(preview.token, locale) : pathOf({ locale, slug }, locales)
+              }
               hrefLang={locale}
               lang={locale}
               aria-current={locale === snapshot.locale ? 'page' : undefined}
@@ -82,7 +87,8 @@ function Head({
   site,
   stylesheetPath,
   head,
-  locales
+  locales,
+  preview
 }: PageProps) {
   const title = documentTitleOf(snapshot, site)
   const description = descriptionOf(snapshot, site)
@@ -95,10 +101,16 @@ function Head({
       <title>{title}</title>
       <link rel="stylesheet" href={stylesheetPath} />
       {description ? <meta name="description" content={description} /> : null}
-      <link rel="canonical" href={canonical} />
-      {alternates.map(({ hreflang, href }) => (
-        <link key={hreflang} rel="alternate" hrefLang={hreflang} href={href} />
-      ))}
+      {preview ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : (
+        <>
+          <link rel="canonical" href={canonical} />
+          {alternates.map(({ hreflang, href }) => (
+            <link key={hreflang} rel="alternate" hrefLang={hreflang} href={href} />
+          ))}
+        </>
+      )}
       <meta property="og:title" content={title} />
       {site ? <meta property="og:site_name" content={site.siteName} /> : null}
       {socialImage ? (
@@ -148,7 +160,7 @@ function PreviewDocument(props: PreviewProps) {
 }
 
 function Document(props: PageProps) {
-  const { components, snapshot, translations, locales, site } = props
+  const { components, snapshot, translations, locales, site, preview } = props
   const layoutComponent =
     components.layouts[snapshot.layout] ?? components.layouts[LAYOUT.default] ?? FallbackLayout
   return (
@@ -161,7 +173,12 @@ function Document(props: PageProps) {
             children: <PageContent components={components} snapshot={snapshot} />
           })}
         </SnapshotProvider>
-        <LanguageSwitcher snapshot={snapshot} translations={translations} locales={locales} />
+        <LanguageSwitcher
+          snapshot={snapshot}
+          translations={translations}
+          locales={locales}
+          preview={preview}
+        />
       </body>
     </html>
   )
