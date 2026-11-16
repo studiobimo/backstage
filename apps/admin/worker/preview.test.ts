@@ -82,7 +82,9 @@ describe('draft preview API', () => {
     expect(response.status).toBe(UNPUBLISHABLE)
     expect(await response.json()).toMatchObject({
       code: 'unpublishable',
-      problems: [{ reason: 'invalid_content', blockId: 'b1' }]
+      problems: expect.arrayContaining([
+        { reason: 'invalid_content', blockId: 'b1', path: 'title' }
+      ])
     })
     expect((await kv.list()).keys).toEqual([])
   })
