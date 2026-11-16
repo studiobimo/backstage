@@ -137,7 +137,9 @@ describe('processImage size cap', () => {
     expect(result).toMatchObject({ contentType: 'image/jpeg' })
     expect(result.file.name).toBe('a.jpg')
   })
+})
 
+describe('processImage fallbacks and refusals', () => {
   it('falls back to JPEG for a WebP source when the browser cannot encode WebP', async () => {
     const { codec, encode } = codecFor({ width: 10, height: 10 })
     const png = new Blob([new Uint8Array(10)], { type: 'image/png' })

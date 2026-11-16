@@ -67,15 +67,13 @@ const republishPage = async (
   const plan = await planPublish(c.env.DB, registry, page.id, page.version, publishedAt)
   if (plan.status === PUBLISH_PLAN.ready) {
     await writeSnapshots(c.env.SITE, plan.snapshots, resolveLocaleConfig(registry).locales)
-    await recordPublished(
-      c.env.DB,
-      page.id,
+    await recordPublished(c.env.DB, page.id, {
       editorId,
       publishedAt,
-      page.version,
-      plan.refs,
-      plan.linkedPageIds
-    )
+      publishedVersion: page.version,
+      refs: plan.refs,
+      linkedPageIds: plan.linkedPageIds
+    })
     return null
   }
   return {
