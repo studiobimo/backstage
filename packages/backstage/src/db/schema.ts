@@ -146,7 +146,8 @@ export const entryLocales = sqliteTable(
       .references(() => entries.id, { onDelete: 'cascade' }),
     collection: text('collection').notNull(),
     locale: text('locale').notNull(),
-    slug: text('slug')
+    slug: text('slug'),
+    publishedSlug: text('published_slug')
   },
   (t) => [
     uniqueIndex('entry_locales_pk').on(t.entryId, t.locale),
