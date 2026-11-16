@@ -3,6 +3,7 @@ import {
   pageBlocksResponseSchema,
   pageSchema,
   pageSeoResponseSchema,
+  previewResponseSchema,
   type PageBlock,
   type PageBlocksResponse,
   type PageSeo,
@@ -14,6 +15,7 @@ import { z } from 'zod'
 import { apiRequest } from '@/lib/api'
 
 import type { JsonSchema } from '../block-form/spec'
+import { siteOriginQuery } from '../block-preview/queries'
 
 const blockDescriptionsSchema = z.object({
   blocks: z.array(
@@ -106,6 +108,16 @@ export const unpublishPageMutation = (queryClient: QueryClient, pageId: string) 
   mutationOptions({
     mutationFn: () => publishRequest(pageId, { method: 'DELETE' }),
     onSuccess: () => refreshPages(queryClient)
+  })
+
+export const createPreviewMutation = (queryClient: QueryClient, pageId: string) =>
+  mutationOptions({
+    mutationFn: async () => {
+      const { path } = previewResponseSchema.parse(
+        await (await apiRequest(`/pages/${pageId}/preview`, { method: 'POST' })).json()
+      )
+      return `${await queryClient.fetchQuery(siteOriginQuery)}${path}`
+    }
   })
 
 export const pageSeoKey = (pageId: string) => ['page-seo', pageId] as const

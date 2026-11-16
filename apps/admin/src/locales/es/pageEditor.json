@@ -18,6 +18,10 @@
     "edit": "Editar {{name}}"
   },
   "unsaved": "Cambios sin guardar",
+  "preview": {
+    "label": "Vista previa",
+    "failed": "No se pudo abrir la vista previa"
+  },
   "announce": {
     "added": "{{name}} añadido en la posición {{position}} de {{total}}.",
     "duplicated": "{{name}} duplicado. La copia está en la posición {{position}} de {{total}}.",

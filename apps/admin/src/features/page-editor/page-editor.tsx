@@ -27,8 +27,10 @@ import { BlockPicker } from './block-picker'
 import { EditorHeader } from './editor-header'
 import { blockTitle } from './localized-text'
 import { PublishNotes } from './publish-notes'
+import { PreviewButton } from './preview-button'
 import { SavePublishGroup } from './save-publish-group'
 import { StaleAlert } from './stale-alert'
+import { usePreview } from './use-preview'
 import { usePublish } from './use-publish'
 import type { LocaleStatus } from '../block-form/locale-status'
 import { pageLabel } from '../pages/page-label'
@@ -284,6 +286,7 @@ function EditorChrome({
 }: EditorChromeProps) {
   const hintId = useId()
   const publish = usePublish(page, version)
+  const preview = usePreview(page.id)
   const changed = hasUnpublishedChanges(page, version)
   const onSave = () => void save.save()
   useShortcut('save', dirty && !save.saving, onSave)
@@ -296,19 +299,27 @@ function EditorChrome({
         dirty={dirty}
         locale={locale}
         actions={
-          <SavePublishGroup
-            name={title}
-            hintId={hintId}
-            dirty={dirty}
-            saving={save.saving}
-            published={page.publishedAt !== null}
-            changed={changed}
-            publishing={publish.publishing}
-            unpublishing={publish.unpublishing}
-            onSave={onSave}
-            onPublish={publish.publish}
-            onUnpublish={publish.unpublish}
-          />
+          <>
+            <PreviewButton
+              hintId={hintId}
+              disabled={dirty}
+              previewing={preview.previewing}
+              onPreview={preview.preview}
+            />
+            <SavePublishGroup
+              name={title}
+              hintId={hintId}
+              dirty={dirty}
+              saving={save.saving}
+              published={page.publishedAt !== null}
+              changed={changed}
+              publishing={publish.publishing}
+              unpublishing={publish.unpublishing}
+              onSave={onSave}
+              onPublish={publish.publish}
+              onUnpublish={publish.unpublish}
+            />
+          </>
         }
       />
       <div className={cn(EDITOR_BODY, 'empty:hidden')}>
