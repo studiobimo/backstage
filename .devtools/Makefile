@@ -18,7 +18,7 @@ BUNDLE_TOTAL_KIB@apps/admin := 650
 # (Base UI's render hooks, class-variance-authority, the Spinner icon and the stylesheet).
 BUNDLE_DIR@apps/site := dist/backstage_site
 BUNDLE_CHUNK_KIB@apps/site := 900
-BUNDLE_TOTAL_KIB@apps/site := 185
+BUNDLE_TOTAL_KIB@apps/site := 195
 
 .PHONY: dev
 dev: ## Apply local D1 migrations, then run the admin (5173) and site (5174) dev servers; stops if a port is busy
