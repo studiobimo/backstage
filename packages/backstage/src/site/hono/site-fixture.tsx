@@ -58,9 +58,10 @@ const PostPage = ({ title }: { title: Partial<Record<string, string>> }) => (
   </article>
 )
 
-const PostItem = ({ title }: { title: Partial<Record<string, string>> }) => (
-  <li>{useLocalized(title)}</li>
-)
+const PostItem = ({ title, href }: { title: Partial<Record<string, string>>; href?: string }) => {
+  const text = useLocalized(title)
+  return <li>{href ? <a href={href}>{text}</a> : text}</li>
+}
 
 export const FIXTURE = {
   stylesheet: 'body { margin: 0 }',
@@ -80,8 +81,8 @@ export const fixtureComponents = (locales: LocaleConfig = FIXTURE_LOCALES) =>
       header: ({ text }: { text: string }) => <header>{text}</header>,
       'post-list': ({ posts }: { posts: ResolvedEntry<typeof post>[] }) => (
         <ul>
-          {posts.map(({ id, content }) => (
-            <PostItem key={id} title={content.title} />
+          {posts.map(({ id, content, href }) => (
+            <PostItem key={id} title={content.title} href={href} />
           ))}
         </ul>
       )
