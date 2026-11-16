@@ -58,11 +58,42 @@ This ADR records the decisions they share, so that the later ones do not reopen 
 
 ### Entries can have pages (COL-4)
 
-- `route: { path: '/blog/:slug' }` on a collection declares one `:slug` parameter. An entry then
-  has a slug per locale, derived from its label and editable. Publishing it writes an entry
-  snapshot and a route key per locale, reusing the page helpers and the sitemap, and
-  `createSite` renders it in the layout with the template component given to
-  `defineComponents`. Unpublishing removes both.
+- `route: { path: '/blog/:slug' }` on a collection declares the entry URL. The path starts with a
+  slash, has one or more fixed segments of lowercase letters, digits and hyphens, and ends with
+  `:slug`. A bare `/:slug` is refused, because pages own the first segment, and so are the
+  segments the site reserves (`media`, `health`). `defineRegistry` refuses two collections with the
+  same path and a path that starts with a locale code. The prefix is the same in every locale,
+  and a locale other than the default adds its code in front, as for pages.
+- A routed collection needs a template: `defineComponents(registry, { blocks, layouts, collections:
+  { blog: Post } })`. The key is required for each routed collection and refused for the others,
+  and the component's props are the collection's schema output, so a missing or mistyped template
+  fails `tsc` like a missing block component. The template receives the entry's content with each
+  localized value reduced to the snapshot's locale, filled from the default locale when blank, the
+  same as a resolved reference.
+- An entry of a routed collection has a slug per locale in `entry_locales` (unique per collection
+  and locale), derived from the entry's label on its first save and kept after that, so a changed
+  title never moves a URL. The editor may set any of them, validated with the page slug rule. A
+  locale with no label of its own derives from the default locale's label, and a taken slug gets
+  `-2`, `-3` and so on. Publishing derives a missing slug as well, so an entry saved before its
+  collection gained a route can be published. If no slug can be derived (the label has no letters
+  or digits), publishing reports `missing_slug`.
+- Publishing an entry writes, per locale, an entry snapshot `entry:<collection>:<id>:<locale>` and a
+  route key `route:<locale>:<fixed segments>/<slug>`, whose value is the entry id. It shares the
+  page helpers: the same route-key prefix (a page slug never contains a `/`, so the keys cannot
+  meet), the same replace-then-delete-stale-routes write that only deletes a route the entry still
+  owns, and the same rebuild of the sitemap index, which now lists published entries too. The
+  write costs the same as a page: two KV writes per locale and one for the index.
+- The site reads the route key, then the snapshot, and serves it only if the snapshot's slug and
+  collection are the ones requested ([ADR-0004](0004-publish-to-kv.md)), so a renamed entry
+  never answers at its old address. `createSite` renders it inside the default layout with the
+  template, with the title from the entry's label (and the site name), the canonical link, the
+  hreflang alternates and the language switcher, and with the page cache policy. The
+  `head` option of `createSite` still receives page snapshots only.
+- Unpublishing or deleting a published entry removes its snapshots and the routes it owns and
+  rebuilds the sitemap index.
+- An entry published before its collection had a route is served only after it is published again.
+- Entry preview is a separate story: it needs the preview token of the page preview to carry an
+  entry snapshot.
 
 ### Publishing an entry republishes its dependents (COL-5)
 

@@ -5,6 +5,8 @@ import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 import { openStoredContent } from '../blocks.ts'
 import type { Collection, EntryLabels } from '../collections.ts'
 import type { Entry } from '../entries.ts'
+import type { EntrySlugs } from '../entry-snapshot-build.ts'
+import { entrySlugWrites, readEntrySlugs, writeEntrySlugs } from './entry-slugs.ts'
 import { entries, users } from './schema.ts'
 import { ROW_WRITE, readStamp, type VersionedWrite } from './versioned-row.ts'
 
@@ -37,7 +39,11 @@ const readEntryRows = (d1: AnyD1Database, collection: string, id?: string) =>
 
 type EntryRow = Awaited<ReturnType<typeof readEntryRows>>[number]
 
-const toEntry = (collection: Collection, { entry, updater, publisher }: EntryRow): Entry => {
+const toEntry = (
+  collection: Collection,
+  { entry, updater, publisher }: EntryRow,
+  slugs: EntrySlugs = {}
+): Entry => {
   const opened = openStoredContent(collection, entry.schemaVersion, entry.content)
   return {
     id: entry.id,
@@ -45,6 +51,7 @@ const toEntry = (collection: Collection, { entry, updater, publisher }: EntryRow
     version: entry.version,
     schemaVersion: opened.schemaVersion,
     label: entry.label,
+    slugs,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     updatedBy: updater ? personOf(updater) : null,
@@ -55,35 +62,56 @@ const toEntry = (collection: Collection, { entry, updater, publisher }: EntryRow
   }
 }
 
-export const listEntries = async (d1: AnyD1Database, collection: Collection) =>
-  (await readEntryRows(d1, collection.name)).map((row) => toEntry(collection, row))
+const slugsOf = (d1: AnyD1Database, collection: Collection, ids?: string[]) =>
+  collection.route
+    ? readEntrySlugs(d1, collection.name, ids)
+    : Promise.resolve(new Map<string, EntrySlugs>())
+
+export const listEntries = async (d1: AnyD1Database, collection: Collection) => {
+  const [rows, slugs] = await Promise.all([
+    readEntryRows(d1, collection.name),
+    slugsOf(d1, collection)
+  ])
+  return rows.map((row) => toEntry(collection, row, slugs.get(row.entry.id)))
+}
 
 export const findEntry = async (d1: AnyD1Database, collection: Collection, id: string) => {
-  const [row] = await readEntryRows(d1, collection.name, id)
-  return row ? toEntry(collection, row) : undefined
+  const [[row], slugs] = await Promise.all([
+    readEntryRows(d1, collection.name, id),
+    slugsOf(d1, collection, [id])
+  ])
+  return row ? toEntry(collection, row, slugs.get(id)) : undefined
 }
+
+export const findEntrySlugs = async (d1: AnyD1Database, collection: Collection, id: string) =>
+  (await slugsOf(d1, collection, [id])).get(id) ?? {}
 
 export interface EntryContent {
   content: unknown
   labels: EntryLabels
+  slugs?: EntrySlugs | null
 }
 
 export const createEntry = async (
   d1: AnyD1Database,
   collection: Collection,
   id: string,
-  { content, labels }: EntryContent,
+  { content, labels, slugs }: EntryContent,
   editorId: string
 ) => {
-  await drizzle(d1).insert(entries).values({
-    id,
-    collection: collection.name,
-    schemaVersion: collection.version,
-    content,
-    label: labels,
-    createdBy: editorId,
-    updatedBy: editorId
-  })
+  const db = drizzle(d1)
+  await db.batch([
+    db.insert(entries).values({
+      id,
+      collection: collection.name,
+      schemaVersion: collection.version,
+      content,
+      label: labels,
+      createdBy: editorId,
+      updatedBy: editorId
+    }),
+    ...(slugs ? entrySlugWrites(db, collection.name, id, slugs) : [])
+  ])
 }
 
 const entryMatches = (collection: Collection, id: string) =>
@@ -107,7 +135,7 @@ export const updateEntry = async (
   d1: AnyD1Database,
   collection: Collection,
   id: string,
-  { content, labels }: EntryContent,
+  { content, labels, slugs }: EntryContent,
   { expectedVersion, editorId }: VersionedWrite
 ) => {
   const changed = await drizzle(d1)
@@ -122,6 +150,7 @@ export const updateEntry = async (
     })
     .where(and(entryMatches(collection, id), eq(entries.version, expectedVersion)))
     .returning({ id: entries.id })
+  if (changed.length > 0 && slugs) await writeEntrySlugs(d1, collection.name, id, slugs)
   return outcomeOf(d1, collection, id, changed)
 }
 

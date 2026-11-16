@@ -25,6 +25,7 @@ export const helloEntry: EntrySummary = {
   version: 1,
   schemaVersion: 1,
   label: { en: 'Hello world', es: 'Hola mundo' },
+  slugs: {},
   createdAt: 0,
   updatedAt: 1000,
   updatedBy: null,
