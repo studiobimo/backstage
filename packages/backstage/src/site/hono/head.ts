@@ -3,12 +3,18 @@ import type { SiteSnapshot } from '../../site-publishing.ts'
 
 const DOCUMENT_TITLE = { separator: ' | ' } as const
 
-export const documentTitleOf = (snapshot: Snapshot, site: SiteSnapshot | null) => {
-  const pageTitle = snapshot.seo.title || snapshot.title
-  return !site?.siteName || site.siteName === pageTitle
+const titledWithSite = (pageTitle: string, site: SiteSnapshot | null) =>
+  !site?.siteName || site.siteName === pageTitle
     ? pageTitle
     : `${pageTitle}${DOCUMENT_TITLE.separator}${site.siteName}`
-}
+
+export const documentTitleOf = (snapshot: Snapshot, site: SiteSnapshot | null) =>
+  titledWithSite(snapshot.seo.title || snapshot.title, site)
+
+export const entryDocumentTitleOf = (
+  snapshot: Pick<Snapshot, 'title'>,
+  site: SiteSnapshot | null
+) => titledWithSite(snapshot.title, site)
 
 export const descriptionOf = (snapshot: Snapshot, site: SiteSnapshot | null) =>
   snapshot.seo.description || site?.seo.description || ''
