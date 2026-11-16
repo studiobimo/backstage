@@ -9,6 +9,7 @@ import { aboutPage } from '@/test/fixtures'
 import { DEFAULT_TEST_CONFIG, testQueryClient } from '@/test/query-client'
 
 const apiBodies: Record<string, unknown> = {
+  '/api/auth/session': { mode: 'access', authenticated: true },
   '/api/v1/config': DEFAULT_TEST_CONFIG,
   '/api/v1/pages': { pages: [aboutPage] },
   '/api/v1/pages/p1/blocks': { blocks: [], layout: 'default', version: 1 },
