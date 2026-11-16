@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/studiobimo/backstage/compare/v0.5.1...v0.5.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **core:** hand resolved entries their slug and path when rendering blocks ([#392](https://github.com/studiobimo/backstage/issues/392)) ([a787c25](https://github.com/studiobimo/backstage/commit/a787c25d303019ec88d7b3e2fb135bd8e48624a3))
+
 ## [0.5.1](https://github.com/studiobimo/backstage/compare/v0.5.0...v0.5.1) (2026-11-16)
 
 
