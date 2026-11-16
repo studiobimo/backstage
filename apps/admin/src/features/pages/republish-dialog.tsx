@@ -102,14 +102,19 @@ function Confirmation({ status, started }: { status: RepublishStatus; started: b
   )
 }
 
-interface DialogActionsProps {
+interface RepublishActionsProps {
   republish: ReturnType<typeof useRepublish>
-  status: RepublishStatus | undefined
+  remaining: number
   started: boolean
   finished: boolean
 }
 
-function DialogActions({ republish, status, started, finished }: DialogActionsProps) {
+export function RepublishActions({
+  republish,
+  remaining,
+  started,
+  finished
+}: RepublishActionsProps) {
   const { t } = useTranslation('pages')
   const { phase } = republish.progress
   if (phase === REPUBLISH_PHASE.running) {
@@ -125,13 +130,38 @@ function DialogActions({ republish, status, started, finished }: DialogActionsPr
         {t(finished ? 'republish.close' : 'form.cancel')}
       </AlertDialogClose>
       {phase !== REPUBLISH_PHASE.done && (
-        <Button
-          disabled={!status || status.remaining === 0}
-          onClick={() => void republish.run(status?.remaining ?? 0)}
-        >
+        <Button disabled={remaining === 0} onClick={() => void republish.run(remaining)}>
           {t(started ? 'republish.resumeAction' : 'republish.start')}
         </Button>
       )}
+    </>
+  )
+}
+
+export function RepublishProgressView({
+  progress,
+  pages
+}: {
+  progress: RepublishProgress
+  pages: PageSummary[]
+}) {
+  const { t } = useTranslation('pages')
+  const running = progress.phase === REPUBLISH_PHASE.running
+  const finished = progress.phase !== REPUBLISH_PHASE.idle && !running
+  return (
+    <>
+      {running && (
+        <Progress value={progress.processed} max={Math.max(progress.total, 1)}>
+          <ProgressLabel>
+            {t('republish.running', { done: progress.processed, total: progress.total })}
+          </ProgressLabel>
+          <ProgressTrack>
+            <ProgressIndicator />
+          </ProgressTrack>
+        </Progress>
+      )}
+      {finished && <Summary progress={progress} />}
+      <SkippedPages progress={progress} pages={pages} />
     </>
   )
 }
@@ -166,23 +196,12 @@ export function RepublishAllDialog({ pages }: { pages: PageSummary[] }) {
           </AlertDialogHeader>
           <div className="flex flex-col gap-3 px-6 pb-2">
             {!running && !finished && status && <Confirmation status={status} started={started} />}
-            {running && (
-              <Progress value={progress.processed} max={Math.max(progress.total, 1)}>
-                <ProgressLabel>
-                  {t('republish.running', { done: progress.processed, total: progress.total })}
-                </ProgressLabel>
-                <ProgressTrack>
-                  <ProgressIndicator />
-                </ProgressTrack>
-              </Progress>
-            )}
-            {finished && <Summary progress={progress} />}
-            <SkippedPages progress={progress} pages={pages} />
+            <RepublishProgressView progress={progress} pages={pages} />
           </div>
           <AlertDialogFooter>
-            <DialogActions
+            <RepublishActions
               republish={republish}
-              status={status}
+              remaining={status?.remaining ?? 0}
               started={scope.since !== null}
               finished={finished}
             />

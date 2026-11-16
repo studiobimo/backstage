@@ -38,7 +38,11 @@ const mockApi = (entries: EntrySummary[]) => {
     vi.fn(async (url: string, init?: RequestInit) => {
       const method = init?.method ?? 'GET'
       calls.push({ method, url })
-      if (method === 'DELETE') return new Response(null, { status: 204 })
+      if (method === 'DELETE') {
+        return new Response(
+          JSON.stringify({ republish: { pages: 0, writes: 0, pending: false, batch: null } })
+        )
+      }
       if (url.endsWith('/entries')) return new Response(JSON.stringify({ entries }))
       return new Response(JSON.stringify({ collections: [postsCollection] }))
     })

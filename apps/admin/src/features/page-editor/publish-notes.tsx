@@ -18,6 +18,7 @@ interface PublishNotesProps {
   error: unknown
   blocks: PageBlock[]
   hintId: string
+  dependents?: string
 }
 
 interface ProblemsListProps {
@@ -99,13 +100,14 @@ export function PublishNotes({
   changed,
   error,
   blocks,
-  hintId
+  hintId,
+  dependents
 }: PublishNotesProps) {
   const { t } = useTranslation('pageEditor')
   return (
     <section aria-label={t('publish.label')} className="flex flex-col gap-3">
       <p id={hintId} className="text-muted-foreground text-sm">
-        {usePublishHint({ page, dirty, changed, context })}
+        {[usePublishHint({ page, dirty, changed, context }), dependents].filter(Boolean).join(' ')}
       </p>
       <PublishNotice error={error} blocks={blocks} context={context} />
     </section>
