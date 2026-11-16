@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/studiobimo/backstage/compare/v0.5.2...v0.6.0) (2026-11-16)
+
+
+### Features
+
+* **admin:** pick a page in the link field ([#405](https://github.com/studiobimo/backstage/issues/405)) ([f4933c0](https://github.com/studiobimo/backstage/commit/f4933c0c4b066920a045d13086c81adeafd4892b))
+* **core:** link to a page and resolve its address for each locale ([#403](https://github.com/studiobimo/backstage/issues/403)) ([53a575b](https://github.com/studiobimo/backstage/commit/53a575b303ad315d890e949c8c54d4c4a1938890))
+* **core:** republish pages that link to a changed page ([#404](https://github.com/studiobimo/backstage/issues/404)) ([72eed0d](https://github.com/studiobimo/backstage/commit/72eed0d03fb259fee5f14fe7ba981778b6b4b82d))
+* **devtools:** add seed and unseed for local sample content on the shared dev state ([#399](https://github.com/studiobimo/backstage/issues/399)) ([263f308](https://github.com/studiobimo/backstage/commit/263f3080c5b2fdb837c122eb93aa0ee38ca586d0))
+
+
+### Bug Fixes
+
+* **admin:** say when a page link has no page chosen, and hide the picker on older sites ([#406](https://github.com/studiobimo/backstage/issues/406)) ([58e8104](https://github.com/studiobimo/backstage/commit/58e8104db4ae98e53e53240ef7eae7da002ee1b5))
+* **devtools:** point the seeded spanish header and footer links at spanish pages ([#401](https://github.com/studiobimo/backstage/issues/401)) ([5d9ab92](https://github.com/studiobimo/backstage/commit/5d9ab923c2f6018c4d587c8c57072950dd9ce4ce))
+
 ## [0.5.2](https://github.com/studiobimo/backstage/compare/v0.5.1...v0.5.2) (2026-11-16)
 
 
