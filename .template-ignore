@@ -1,3 +1,9 @@
 # The install reads @studiobimo/backstage from GitHub Packages with the run's GITHUB_TOKEN.
 .github/workflows/ci.yml
 .github/workflows/e2e.yml
+# Backstage is proprietary; the template's LICENSE is MIT.
+LICENSE
+# Codex keeps the shadcn MCP server that AGENTS.md asks for before UI work.
+.codex/config.toml
+# The generated drizzle snapshots in packages/backstage/migrations/meta are near copies of each other.
+.jscpd.json
