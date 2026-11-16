@@ -1,6 +1,7 @@
 import {
   collectionDescriptionSchema,
   entriesResponseSchema,
+  entryDependentsResponseSchema,
   entryResponseSchema,
   type Entry
 } from '@studiobimo/backstage/internal'
@@ -10,6 +11,10 @@ import { z } from 'zod'
 import { apiRequest } from '@/lib/api'
 
 import type { JsonSchema } from '../block-form/spec'
+
+export interface EntrySlugEdits {
+  slugs?: Record<string, string>
+}
 
 const collectionSchema = collectionDescriptionSchema.extend({ schema: z.custom<JsonSchema>() })
 
@@ -58,13 +63,18 @@ const keepEntry = (queryClient: QueryClient, entry: Entry) => {
 const readEntry = async (response: Response) =>
   entryResponseSchema.parse(await response.json()).entry
 
+const publishOutcomeSchema = entryResponseSchema.extend(entryDependentsResponseSchema.shape)
+
+const readPublishOutcome = async (response: Response) =>
+  publishOutcomeSchema.parse(await response.json())
+
 export const createEntryMutation = (queryClient: QueryClient, collection: string) =>
   mutationOptions({
-    mutationFn: async (content: Entry['content']) =>
+    mutationFn: async (create: EntrySlugEdits & { content: Entry['content'] }) =>
       readEntry(
         await apiRequest(entriesPath(collection), {
           method: 'POST',
-          body: JSON.stringify({ content })
+          body: JSON.stringify(create)
         })
       ),
     onSuccess: (entry) => keepEntry(queryClient, entry)
@@ -72,7 +82,9 @@ export const createEntryMutation = (queryClient: QueryClient, collection: string
 
 export const saveEntryMutation = (queryClient: QueryClient, collection: string, id: string) =>
   mutationOptions({
-    mutationFn: async (save: { content: Entry['content']; expectedVersion: number }) =>
+    mutationFn: async (
+      save: EntrySlugEdits & { content: Entry['content']; expectedVersion: number }
+    ) =>
       readEntry(
         await apiRequest(entriesPath(collection, id), {
           method: 'PUT',
@@ -84,9 +96,10 @@ export const saveEntryMutation = (queryClient: QueryClient, collection: string, 
 
 export const deleteEntryMutation = (queryClient: QueryClient, collection: string) =>
   mutationOptions({
-    mutationFn: async (id: string) => {
-      await apiRequest(entriesPath(collection, id), { method: 'DELETE' })
-    },
+    mutationFn: async (id: string) =>
+      entryDependentsResponseSchema.parse(
+        await (await apiRequest(entriesPath(collection, id), { method: 'DELETE' })).json()
+      ).republish,
     onSuccess: () => refreshEntries(queryClient, collection)
   })
 
@@ -95,18 +108,18 @@ const publishPath = (collection: string, id: string) => `${entriesPath(collectio
 export const publishEntryMutation = (queryClient: QueryClient, collection: string, id: string) =>
   mutationOptions({
     mutationFn: async (expectedVersion: number) =>
-      readEntry(
+      readPublishOutcome(
         await apiRequest(publishPath(collection, id), {
           method: 'POST',
           body: JSON.stringify({ expectedVersion })
         })
       ),
-    onSuccess: (entry) => keepEntry(queryClient, entry)
+    onSuccess: ({ entry }) => keepEntry(queryClient, entry)
   })
 
 export const unpublishEntryMutation = (queryClient: QueryClient, collection: string, id: string) =>
   mutationOptions({
     mutationFn: async () =>
-      readEntry(await apiRequest(publishPath(collection, id), { method: 'DELETE' })),
-    onSuccess: (entry) => keepEntry(queryClient, entry)
+      readPublishOutcome(await apiRequest(publishPath(collection, id), { method: 'DELETE' })),
+    onSuccess: ({ entry }) => keepEntry(queryClient, entry)
   })

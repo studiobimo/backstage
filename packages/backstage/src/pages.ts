@@ -14,14 +14,14 @@ export const PAGE = {
 export const perLocale = <T extends z.ZodType>(value: T, locales: readonly Locale[]) =>
   z.object(perLocaleKeys(locales, () => value) as Record<Locale, T>)
 
-const slug = z.string().max(PAGE.slug.maxLength).regex(PAGE.slug.pattern)
+export const slugSchema = z.string().max(PAGE.slug.maxLength).regex(PAGE.slug.pattern)
 const title = z.string().trim().min(1).max(PAGE.title.maxLength)
 
 export const pageInputSchema = (locales: readonly Locale[]) =>
   z.discriminatedUnion('isHome', [
     z.object({
       isHome: z.literal(false),
-      slugs: perLocale(slug, locales),
+      slugs: perLocale(slugSchema, locales),
       titles: perLocale(title, locales)
     }),
     z.object({ isHome: z.literal(true), titles: perLocale(title, locales) })

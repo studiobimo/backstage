@@ -11,10 +11,18 @@ export type {
   Collection,
   CollectionDefinition,
   CollectionDescription,
-  EntryLabels
+  EntryLabels,
+  RoutedCollection
 } from './collections.ts'
 export { defineComponents } from './components.ts'
-export type { BlockComponents, ComponentMap, LayoutComponents, LayoutProps } from './components.ts'
+export type {
+  BlockComponents,
+  CollectionComponents,
+  ComponentMap,
+  LayoutComponents,
+  LayoutProps
+} from './components.ts'
+export type { CollectionRoute } from './entry-pages.ts'
 export { API_ERROR } from './errors.ts'
 export type { ApiError } from './errors.ts'
 export { image, link, localized, richText } from './fields.ts'

@@ -46,7 +46,8 @@ describe('worker', () => {
       'one-column-section',
       'one-column-text',
       'two-column-section',
-      'two-column-text'
+      'two-column-text',
+      'post-list'
     ])
     const hero = blocks.find((block) => block.name === 'split-hero')
     expect(hero?.version).toBe(2)

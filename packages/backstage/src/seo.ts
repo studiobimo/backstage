@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { PREVIEW_ROOT } from './blocks.ts'
+import { entryPathOf, type CollectionRoute } from './entry-pages.ts'
 import { hasMultipleLocales, LOCALE, type Locale, type LocaleConfig } from './locales.ts'
 import type { Snapshot } from './publishing.ts'
 
@@ -27,13 +28,22 @@ const publishedPageSchema = z.object({
 })
 export type PublishedPage = z.infer<typeof publishedPageSchema>
 
+const publishedEntryPageSchema = z.object({
+  collection: z.string(),
+  entryId: z.string(),
+  slugs: z.record(z.string(), z.string().nullable()),
+  publishedAt: z.number().int()
+})
+export type PublishedEntryPage = z.infer<typeof publishedEntryPageSchema>
+
 export const publishedIndexSchema = z.object({
   format: z.literal(SEO.format),
-  pages: z.array(publishedPageSchema)
+  pages: z.array(publishedPageSchema),
+  entries: z.array(publishedEntryPageSchema).default([])
 })
-export type PublishedIndex = z.infer<typeof publishedIndexSchema>
+export type PublishedIndex = z.input<typeof publishedIndexSchema>
 
-export const EMPTY_PUBLISHED_INDEX: PublishedIndex = { format: SEO.format, pages: [] }
+export const EMPTY_PUBLISHED_INDEX: PublishedIndex = { format: SEO.format, pages: [], entries: [] }
 
 const removeFromIndex = (index: PublishedIndex, pageId: string): PublishedIndex => ({
   ...index,
@@ -64,40 +74,67 @@ export interface AlternateLink {
 
 const originOf = (siteUrl: string) => new URL(siteUrl).origin
 
-const pathOf = (page: PublishedPage, locale: Locale, defaultLocale: Locale) => {
-  const prefix = locale === defaultLocale ? '' : `/${locale}`
-  if (page.isHome) return prefix === '' ? '/' : `${prefix}/`
-  return `${prefix}/${page.slugs[locale]}`
+export interface PublishedTarget {
+  publishedAt: number
+  isLive(locale: Locale): boolean
+  pathOf(locale: Locale): string
 }
 
-const isLive = (page: PublishedPage, locale: Locale) => page.isHome || Boolean(page.slugs[locale])
+const localePrefix = (locale: Locale, defaultLocale: Locale) =>
+  locale === defaultLocale ? '' : `/${locale}`
+
+const pageTarget = (page: PublishedPage, defaultLocale: Locale): PublishedTarget => ({
+  publishedAt: page.publishedAt,
+  isLive: (locale) => page.isHome || Boolean(page.slugs[locale]),
+  pathOf: (locale) => {
+    const prefix = localePrefix(locale, defaultLocale)
+    if (page.isHome) return prefix === '' ? '/' : `${prefix}/`
+    return `${prefix}/${page.slugs[locale]}`
+  }
+})
+
+export const entryTarget = (
+  entry: PublishedEntryPage,
+  route: CollectionRoute,
+  defaultLocale: Locale
+): PublishedTarget => ({
+  publishedAt: entry.publishedAt,
+  isLive: (locale) => Boolean(entry.slugs[locale]),
+  pathOf: (locale) => entryPathOf(route, entry.slugs[locale] ?? '', locale, defaultLocale)
+})
+
+export const targetUrl = (siteUrl: string, target: PublishedTarget, locale: Locale) =>
+  `${originOf(siteUrl)}${target.pathOf(locale)}`
 
 export const canonicalUrl = (
   siteUrl: string,
   page: PublishedPage,
   locale: Locale,
   defaultLocale: Locale = LOCALE.default.defaultLocale
-) => `${originOf(siteUrl)}${pathOf(page, locale, defaultLocale)}`
+) => targetUrl(siteUrl, pageTarget(page, defaultLocale), locale)
+
+export const targetAlternates = (
+  siteUrl: string,
+  target: PublishedTarget,
+  config: LocaleConfig
+): AlternateLink[] => {
+  if (!hasMultipleLocales(config)) return []
+  const { locales, defaultLocale } = config
+  const live = locales.filter((locale) => target.isLive(locale))
+  const links = live.map((locale) => ({
+    hreflang: locale,
+    href: targetUrl(siteUrl, target, locale)
+  }))
+  return live.includes(defaultLocale)
+    ? [...links, { hreflang: SEO.xDefault, href: targetUrl(siteUrl, target, defaultLocale) }]
+    : links
+}
 
 export const alternateLinks = (
   siteUrl: string,
   page: PublishedPage,
   config: LocaleConfig = LOCALE.default
-): AlternateLink[] => {
-  if (!hasMultipleLocales(config)) return []
-  const { locales, defaultLocale } = config
-  const live = locales.filter((locale) => isLive(page, locale))
-  const links = live.map((locale) => ({
-    hreflang: locale,
-    href: canonicalUrl(siteUrl, page, locale, defaultLocale)
-  }))
-  return live.includes(defaultLocale)
-    ? [
-        ...links,
-        { hreflang: SEO.xDefault, href: canonicalUrl(siteUrl, page, defaultLocale, defaultLocale) }
-      ]
-    : links
-}
+): AlternateLink[] => targetAlternates(siteUrl, pageTarget(page, config.defaultLocale), config)
 
 const escapeXml = (text: string) =>
   text
@@ -107,12 +144,12 @@ const escapeXml = (text: string) =>
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&apos;')
 
-const urlEntry = (siteUrl: string, page: PublishedPage, locale: Locale, config: LocaleConfig) =>
+const urlEntry = (siteUrl: string, target: PublishedTarget, locale: Locale, config: LocaleConfig) =>
   [
     '  <url>',
-    `    <loc>${escapeXml(canonicalUrl(siteUrl, page, locale, config.defaultLocale))}</loc>`,
-    `    <lastmod>${new Date(page.publishedAt).toISOString()}</lastmod>`,
-    ...alternateLinks(siteUrl, page, config).map(
+    `    <loc>${escapeXml(targetUrl(siteUrl, target, locale))}</loc>`,
+    `    <lastmod>${new Date(target.publishedAt).toISOString()}</lastmod>`,
+    ...targetAlternates(siteUrl, target, config).map(
       ({ hreflang, href }) =>
         `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${escapeXml(href)}"/>`
     ),
@@ -122,15 +159,17 @@ const urlEntry = (siteUrl: string, page: PublishedPage, locale: Locale, config: 
 export const buildSitemap = (
   siteUrl: string,
   pages: readonly PublishedPage[],
-  config: LocaleConfig = LOCALE.default
+  config: LocaleConfig = LOCALE.default,
+  entries: readonly PublishedTarget[] = []
 ) =>
   [
     SEO.xml.header,
     `<urlset xmlns="${SEO.xml.namespace}" xmlns:xhtml="${SEO.xml.xhtmlNamespace}">`,
-    ...pages.flatMap((page) =>
-      config.locales
-        .filter((locale) => isLive(page, locale))
-        .map((locale) => urlEntry(siteUrl, page, locale, config))
+    ...[...pages.map((page) => pageTarget(page, config.defaultLocale)), ...entries].flatMap(
+      (target) =>
+        config.locales
+          .filter((locale) => target.isLive(locale))
+          .map((locale) => urlEntry(siteUrl, target, locale, config))
     ),
     '</urlset>',
     ''

@@ -91,6 +91,7 @@ const tables = [
   'site_settings',
   'site_blocks',
   'site_publication',
+  'entry_locales',
   'entries'
 ]
 

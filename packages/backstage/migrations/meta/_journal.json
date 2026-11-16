@@ -85,6 +85,20 @@
       "when": 1794788439071,
       "tag": "0011_page_entry_refs",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1794790023982,
+      "tag": "0012_entry_locales",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1794834945412,
+      "tag": "0013_entry_published_slug",
+      "breakpoints": true
     }
   ]
 }

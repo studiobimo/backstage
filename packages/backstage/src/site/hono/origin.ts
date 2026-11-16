@@ -1,9 +1,14 @@
+import type { CollectionRoute } from '../../entry-pages.ts'
+import type { EntrySnapshot } from '../../entry-publishing.ts'
 import type { LocaleConfig } from '../../locales.ts'
 import type { Snapshot } from '../../publishing.ts'
 import {
   alternateLinks,
   canonicalUrl,
   EMPTY_PUBLISHED_INDEX,
+  entryTarget,
+  targetAlternates,
+  targetUrl,
   upsertIntoIndex,
   type AlternateLink
 } from '../../seo.ts'
@@ -39,5 +44,30 @@ export const linksOf = (
   return {
     canonical: canonicalUrl(siteOrigin, page!, snapshot.locale, locales.defaultLocale),
     alternates: alternateLinks(siteOrigin, page!, locales)
+  }
+}
+
+export const entryLinksOf = (
+  siteOrigin: string,
+  snapshot: EntrySnapshot,
+  translations: readonly EntrySnapshot[],
+  locales: LocaleConfig,
+  route: CollectionRoute
+): PageLinks => {
+  const target = entryTarget(
+    {
+      collection: snapshot.collection,
+      entryId: snapshot.entryId,
+      publishedAt: snapshot.publishedAt,
+      slugs: Object.fromEntries(
+        [snapshot, ...translations].map(({ locale, slug }) => [locale, slug])
+      )
+    },
+    route,
+    locales.defaultLocale
+  )
+  return {
+    canonical: targetUrl(siteOrigin, target, snapshot.locale),
+    alternates: targetAlternates(siteOrigin, target, locales)
   }
 }

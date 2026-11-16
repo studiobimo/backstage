@@ -5,8 +5,8 @@ export { renderHtml } from './html.ts'
 export { localeName, LOCALE_NAME, SWITCHER_LABEL, switcherLabel } from './locales.ts'
 export { respondWithMedia } from './media.ts'
 export type { MediaObject, MediaReader } from './media.ts'
-export { parseRoute, pathOf, routeOf } from './routing.ts'
-export type { Route } from './routing.ts'
+export { parseEntryRoute, parseRoute, pathOf, routeOf } from './routing.ts'
+export type { EntryRoute, Route } from './routing.ts'
 export { readPublishedPages, respondWithRobots, respondWithSitemap } from './seo.ts'
 export {
   alternateLinks,
@@ -19,6 +19,18 @@ export {
 export type { AlternateLink } from '../seo.ts'
 export { routeKey, SNAPSHOT, snapshotKey, snapshotRecords, snapshotSchema } from '../publishing.ts'
 export type { Snapshot } from '../publishing.ts'
+export {
+  ENTRY_SNAPSHOT,
+  entryRouteKey,
+  entryRouteKeysOf,
+  entrySnapshotKey,
+  entrySnapshotKeysOf,
+  entrySnapshotRecords,
+  entrySnapshotSchema
+} from '../entry-publishing.ts'
+export type { EntrySnapshot } from '../entry-publishing.ts'
+export { entryPathOf } from '../entry-pages.ts'
+export type { CollectionRoute } from '../entry-pages.ts'
 export type { PageBlock } from '../pages.ts'
 export {
   SITE_SNAPSHOT,
@@ -27,7 +39,13 @@ export {
   siteSnapshotSchema
 } from '../site-publishing.ts'
 export type { SiteSnapshot } from '../site-publishing.ts'
-export { findPublished, findSiteSnapshot, findTranslations } from './store.ts'
+export {
+  findEntryTranslations,
+  findPublished,
+  findPublishedEntry,
+  findSiteSnapshot,
+  findTranslations
+} from './store.ts'
 export type { KvReader } from './store.ts'
 
 export interface SiteEnv {

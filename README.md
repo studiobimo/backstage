@@ -63,9 +63,9 @@ What a site author writes. It reaches no database and no Hono.
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
 - Fields: `entries`, `image`, `link`, `localized`, `richText`, `isBlank`
 - Shared constants: `API_ERROR`, `MEDIA`
-- Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionDefinition`,
-  `CollectionDescription`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
-  `LayoutDefinition`, `LayoutProps`, `Locale`, `LocaleConfig`, `Registry`, `RegistryOptions`, `RichTextDoc`
+- Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionComponents`,
+  `CollectionDefinition`, `CollectionDescription`, `CollectionRoute`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
+  `LayoutDefinition`, `LayoutProps`, `Locale`, `LocaleConfig`, `Registry`, `RegistryOptions`, `RoutedCollection`, `RichTextDoc`
 
 ### `@studiobimo/backstage/admin`
 
@@ -79,10 +79,13 @@ The client's admin Worker. The only entry that reaches D1.
 The client's site Worker, which reads what the admin publishes. It reaches no database and no Hono.
 
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
-- Routing: `parseRoute`, `pathOf`, `routeOf`, and the `Route` type
+- Reading published entries: `findPublishedEntry`, `findEntryTranslations`
+- Routing: `parseRoute`, `parseEntryRoute`, `pathOf`, `entryPathOf`, `routeOf`, and the `Route`, `EntryRoute` and
+  `CollectionRoute` types
 - The KV layout: `routeKey`, `snapshotKey`, `siteSnapshotKey`, `SNAPSHOT`, `SITE_SNAPSHOT`,
   `snapshotRecords`, `siteSnapshotRecords`, `snapshotSchema`, `siteSnapshotSchema`, and the
-  `PageBlock`, `Snapshot` and `SiteSnapshot` types
+  `PageBlock`, `Snapshot` and `SiteSnapshot` types; for entries `entryRouteKey`, `entryRouteKeysOf`,
+  `entrySnapshotKey`, `entrySnapshotKeysOf`, `ENTRY_SNAPSHOT`, `entrySnapshotRecords`, `entrySnapshotSchema` and the `EntrySnapshot` type
 - SEO: `SEO`, `alternateLinks`, `canonicalUrl`, `EMPTY_PUBLISHED_INDEX`, `publishedIndexSchema`,
   `upsertIntoIndex`, `readPublishedPages`, `respondWithRobots`, `respondWithSitemap`, and the
   `AlternateLink` type

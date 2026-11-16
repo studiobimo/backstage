@@ -2,6 +2,8 @@ import { Hono, type Context } from 'hono'
 
 import { API_ERROR } from '../../errors.ts'
 import type { ComponentMap } from '../../components.ts'
+import { collectionsOf } from '../../collections.ts'
+import { routesOf } from '../../entry-pages.ts'
 import { resolveLocaleConfig } from '../../locales.ts'
 import { OBSERVABILITY, observe, reportError, respondHealthy } from '../../observability.ts'
 import { SEO } from '../../seo.ts'
@@ -12,6 +14,7 @@ import { respondWithRobots, respondWithSitemap } from '../seo.ts'
 import { findPublished, findSiteSnapshot, findTranslations } from '../store.ts'
 import type { SiteEnv } from '../index.ts'
 import { renderPage, type DocumentContext, type SiteHead } from './document.tsx'
+import { renderEntryRoute } from './entry-route.ts'
 import { atSiteOrigin, siteOriginOf } from './origin.ts'
 import { previewRoutes, type SitePreview } from './preview.ts'
 import { pagePreviewRoutes } from './page-preview.ts'
@@ -41,6 +44,7 @@ export const createSite = (options: CreateSiteOptions) => {
     stylesheetPath: stylesheetPathFor(stylesheet),
     head
   }
+  const entryRoutes = routesOf(collectionsOf(components.registry).values())
   const app: SiteApp = new Hono<{ Bindings: SiteEnv }>()
 
   app.use(...observe)
@@ -48,7 +52,12 @@ export const createSite = (options: CreateSiteOptions) => {
 
   app.get(OBSERVABILITY.health.path, respondHealthy)
   app.get(SEO.sitemapPath, (c) =>
-    respondWithSitemap(c.env.SITE, atSiteOrigin(c.req.raw, siteOriginOf(c.env)), locales)
+    respondWithSitemap(
+      c.env.SITE,
+      atSiteOrigin(c.req.raw, siteOriginOf(c.env)),
+      locales,
+      entryRoutes
+    )
   )
   app.get(SEO.robotsPath, (c) => respondWithRobots(atSiteOrigin(c.req.raw, siteOriginOf(c.env))))
   app.route('/', stylesheetRoutes(stylesheet))
@@ -63,6 +72,8 @@ export const createSite = (options: CreateSiteOptions) => {
   routes?.(app)
 
   const renderRoute = async (c: Context<{ Bindings: SiteEnv }>) => {
+    const entryPage = await renderEntryRoute(c, document, entryRoutes, CACHED)
+    if (entryPage) return entryPage
     const route = routeOf(c.req.raw, locales)
     const snapshot = route && (await findPublished(c.env.SITE, route))
     if (!snapshot) return respondWithError(c, API_ERROR.notFound, CACHED)

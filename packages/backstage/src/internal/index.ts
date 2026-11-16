@@ -93,3 +93,5 @@ export {
   richTextPlain
 } from '../translations.ts'
 export { pathOf } from '../site/routing.ts'
+export { entryPathOf } from '../entry-pages.ts'
+export type { CollectionRoute } from '../entry-pages.ts'

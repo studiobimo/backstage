@@ -1,10 +1,14 @@
 import { z } from 'zod'
 
+import { slugSchema } from './pages.ts'
 import { publishPageSchema } from './publishing.ts'
 
 const expectedVersion = publishPageSchema.shape.expectedVersion
 
-export const createEntrySchema = z.object({ content: z.json() })
+export const createEntrySchema = z.object({
+  content: z.json(),
+  slugs: z.record(z.string(), slugSchema).optional()
+})
 export const saveEntrySchema = createEntrySchema.extend({ expectedVersion })
 export const publishEntrySchema = publishPageSchema
 
@@ -14,6 +18,7 @@ export const entrySummarySchema = z.object({
   version: z.number().int(),
   schemaVersion: z.number().int(),
   label: z.record(z.string(), z.string()),
+  slugs: z.record(z.string(), z.string().nullable()).default({}),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
   updatedBy: z.string().nullable(),
@@ -33,6 +38,7 @@ export const collectionDescriptionSchema = z.object({
   name: z.string(),
   version: z.number().int(),
   label: z.string(),
+  route: z.object({ path: z.string() }).optional(),
   schema: z.record(z.string(), z.unknown()),
   title: z.record(z.string(), z.string()).optional(),
   description: z.record(z.string(), z.string()).optional()

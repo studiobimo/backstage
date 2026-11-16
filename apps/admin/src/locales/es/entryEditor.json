@@ -3,5 +3,15 @@
   "untitled": "Sin título",
   "back": "Todo en {{name}}",
   "delete": "Eliminar entrada",
-  "missing": "Esta colección no está definida en este sitio."
+  "missing": "Esta colección no está definida en este sitio.",
+  "slug": "Dirección",
+  "slugHint": "Déjala en blanco para derivarla del título. Letras minúsculas, números y guiones.",
+  "dependents": {
+    "note_one": "1 página publicada muestra esta entrada y se actualizará, con {{writes}} escrituras en KV.",
+    "note_other": "{{count}} páginas publicadas muestran esta entrada y se actualizarán, con {{writes}} escrituras en KV.",
+    "updated_one": "1 página actualizada",
+    "updated_other": "{{count}} páginas actualizadas",
+    "title": "Actualizando las páginas que muestran esta entrada",
+    "description": "Los visitantes siguen viendo las páginas actuales mientras esto se ejecuta. Mantén esta pestaña abierta hasta que termine."
+  }
 }

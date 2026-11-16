@@ -22,9 +22,9 @@ import {
 } from '../publishing.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 import type { RepublishEntry, RepublishScope } from '../republish.ts'
-import { SEO, type PublishedIndex, type PublishedPage } from '../seo.ts'
+import { SEO, type PublishedEntryPage, type PublishedIndex, type PublishedPage } from '../seo.ts'
 import { clearEntryRefs, readPublishedEntries, replaceEntryRefs } from './entry-references.ts'
-import { media, pageBlocks, pageLocales, pages } from './schema.ts'
+import { entries, entryLocales, media, pageBlocks, pageLocales, pages } from './schema.ts'
 
 export const PUBLISH_PLAN = {
   ready: 'ready',
@@ -175,6 +175,33 @@ export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
   return cleared.length > 0
 }
 
+const readPublishedEntryPages = async (d1: AnyD1Database): Promise<PublishedEntryPage[]> => {
+  const rows = await drizzle(d1)
+    .select({
+      entryId: entries.id,
+      collection: entries.collection,
+      publishedAt: entries.publishedAt,
+      locale: entryLocales.locale,
+      slug: entryLocales.slug
+    })
+    .from(entries)
+    .innerJoin(entryLocales, eq(entryLocales.entryId, entries.id))
+    .where(isNotNull(entries.publishedAt))
+    .orderBy(asc(entries.publishedAt), asc(entries.id))
+  const grouped = new Map<string, PublishedEntryPage>()
+  for (const { entryId, collection, publishedAt, locale, slug } of rows) {
+    const page = grouped.get(entryId) ?? {
+      entryId,
+      collection,
+      publishedAt: publishedAt ?? 0,
+      slugs: {}
+    }
+    page.slugs[locale] = slug
+    grouped.set(entryId, page)
+  }
+  return [...grouped.values()]
+}
+
 export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIndex> => {
   const rows = await drizzle(d1)
     .select({
@@ -188,18 +215,22 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
     .leftJoin(pageLocales, eq(pageLocales.pageId, pages.id))
     .where(isNotNull(pages.publishedAt))
     .orderBy(asc(pages.publishedAt), asc(pages.id))
-  const entries = new Map<string, PublishedPage>()
+  const byPage = new Map<string, PublishedPage>()
   for (const { pageId, isHome, publishedAt, locale, slug } of rows) {
-    const entry = entries.get(pageId) ?? {
+    const entry = byPage.get(pageId) ?? {
       pageId,
       isHome,
       publishedAt: publishedAt ?? 0,
       slugs: {}
     }
     if (locale) entry.slugs[locale] = slug
-    entries.set(pageId, entry)
+    byPage.set(pageId, entry)
   }
-  return { format: SEO.format, pages: [...entries.values()] }
+  return {
+    format: SEO.format,
+    pages: [...byPage.values()],
+    entries: await readPublishedEntryPages(d1)
+  }
 }
 
 const dependsOnEntry = ({ collection, entryId }: RepublishEntry) =>

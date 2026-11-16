@@ -19,6 +19,7 @@ import {
 } from '../db/entries.ts'
 import { ensureUser } from '../db/users.ts'
 import { createEntrySchema, saveEntrySchema } from '../entries.ts'
+import { planEntrySlugs, withoutEntryPages } from './entry-pages.ts'
 import { API_ERROR } from '../errors.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 
@@ -75,8 +76,19 @@ export const collectionsRoutes = (registry: AdminRegistry) =>
       const valid = contentOf(registry, found.collection, body.data.content)
       if (!valid.ok) return respondInvalid(c, valid.issues)
       const id = crypto.randomUUID()
+      const planned = await planEntrySlugs(c, registry, found.collection, id, {
+        labels: valid.labels,
+        provided: body.data.slugs
+      })
+      if (!planned.ok) return planned.response
       const editorId = await ensureUser(c.env.DB, c.get('editor'))
-      await createEntry(c.env.DB, found.collection, id, valid, editorId)
+      await createEntry(
+        c.env.DB,
+        found.collection,
+        id,
+        { ...valid, slugs: planned.slugs },
+        editorId
+      )
       const entry = await findEntry(c.env.DB, found.collection, id)
       return c.json({ entry }, RESPONSE_STATUS.created)
     })
@@ -92,8 +104,19 @@ export const collectionsRoutes = (registry: AdminRegistry) =>
       const valid = contentOf(registry, found.collection, body.data.content)
       if (!valid.ok) return respondInvalid(c, valid.issues)
       const id = c.req.param('id')
+      const planned = await planEntrySlugs(c, registry, found.collection, id, {
+        labels: valid.labels,
+        provided: body.data.slugs
+      })
+      if (!planned.ok) return planned.response
       const write = await versionedWrite(c, body.data.expectedVersion)
-      const outcome = await updateEntry(c.env.DB, found.collection, id, valid, write)
+      const outcome = await updateEntry(
+        c.env.DB,
+        found.collection,
+        id,
+        { ...valid, slugs: planned.slugs },
+        write
+      )
       if (outcome === ENTRY_WRITE.stale) return respondEntryStale(c, id)
       if (outcome === ENTRY_WRITE.notFound) return respondWithError(c, API_ERROR.notFound)
       return entryResponse(c, found.collection, id)
@@ -101,6 +124,12 @@ export const collectionsRoutes = (registry: AdminRegistry) =>
     .delete('/:name/entries/:id', async (c) => {
       const found = collectionOf(registry, c)
       if (!found.ok) return found.response
-      const republish = await removeAndRepublish(c, registry, found.collection, deleteEntry)
+      const republish = await removeAndRepublish(
+        c,
+        registry,
+        found.collection,
+        (d1, collection, id) =>
+          withoutEntryPages(c, registry, collection, id, () => deleteEntry(d1, collection, id))
+      )
       return republish ? c.json({ republish }) : respondWithError(c, API_ERROR.notFound)
     })

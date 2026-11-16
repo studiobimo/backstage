@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { fieldIssuesOf, type FieldIssue } from './errors.ts'
 import { referencePlacesIn, unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
 import { assertCollection, type Collection } from './collections.ts'
+import { assertRoutesAvailable } from './entry-pages.ts'
 import { resolveLocaleConfig, type LocaleConfig } from './locales.ts'
 
 export const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
@@ -188,6 +189,7 @@ export function defineRegistry<
   const layoutsByName = indexByName(layouts, 'Layout')
   const collectionsByName = indexByName(collections, 'Collection')
   collectionsByName.forEach(assertCollection)
+  assertRoutesAvailable(collectionsByName.values(), locales)
   assertReferences(byName, collectionsByName)
   return {
     locales,

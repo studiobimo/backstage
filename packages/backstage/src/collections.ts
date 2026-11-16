@@ -7,6 +7,7 @@ import {
   type CollectionRegistry,
   type Registry
 } from './blocks.ts'
+import { assertEntryRoute, type CollectionRoute } from './entry-pages.ts'
 import type { SchemaNode } from './field-shapes.ts'
 import { isRecord } from './translations.ts'
 
@@ -14,8 +15,13 @@ type LabelKey<S extends z.ZodType> = z.ZodType extends S
   ? string
   : Extract<keyof z.input<S>, string>
 
-export interface CollectionDefinition<S extends z.ZodType = z.ZodType, N extends string = string> {
+export interface CollectionDefinition<
+  S extends z.ZodType = z.ZodType,
+  N extends string = string,
+  R extends CollectionRoute | undefined = CollectionRoute | undefined
+> {
   name: N
+  route?: R
   label: LabelKey<S>
   version?: number
   schema: S
@@ -32,15 +38,29 @@ export interface Collection<
   version: number
 }
 
-export function defineCollection<S extends z.ZodType, const N extends string>(
-  definition: CollectionDefinition<S, N>
-): Collection<S, N> {
+export type RoutedCollection<
+  S extends z.ZodType = z.ZodType,
+  N extends string = string
+> = Collection<S, N> & { route: CollectionRoute }
+
+type DefinedCollection<
+  S extends z.ZodType,
+  N extends string,
+  R extends CollectionRoute | undefined
+> = R extends CollectionRoute ? RoutedCollection<S, N> : Collection<S, N>
+
+export function defineCollection<
+  S extends z.ZodType,
+  const N extends string,
+  const R extends CollectionRoute | undefined = undefined
+>(definition: CollectionDefinition<S, N, R>): DefinedCollection<S, N, R> {
   if (!NAME_PATTERN.test(definition.name)) {
     throw new Error(
       `Collection name "${definition.name}" must be lowercase letters, digits and hyphens`
     )
   }
-  return { ...definition, version: definition.version ?? 1 }
+  if (definition.route) assertEntryRoute(definition.name, definition.route)
+  return { ...definition, version: definition.version ?? 1 } as DefinedCollection<S, N, R>
 }
 
 type MaybeNode = SchemaNode | boolean | undefined
@@ -84,6 +104,7 @@ export interface CollectionDescription {
   name: string
   version: number
   label: string
+  route?: CollectionRoute
   schema: Readonly<Record<string, unknown>>
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
@@ -98,10 +119,11 @@ export const describeCollections = (
   registry: Partial<CollectionRegistry>
 ): CollectionDescription[] =>
   [...collectionsOf(registry).values()].map(
-    ({ name, version, label, schema, title, description }) => ({
+    ({ name, version, label, route, schema, title, description }) => ({
       name,
       version,
       label,
+      route,
       schema: schemaNodeOf(schema),
       title,
       description

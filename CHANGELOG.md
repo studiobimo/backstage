@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.5.2](https://github.com/studiobimo/backstage/compare/v0.5.1...v0.5.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **core:** hand resolved entries their slug and path when rendering blocks ([#392](https://github.com/studiobimo/backstage/issues/392)) ([a787c25](https://github.com/studiobimo/backstage/commit/a787c25d303019ec88d7b3e2fb135bd8e48624a3))
+
+## [0.5.1](https://github.com/studiobimo/backstage/compare/v0.5.0...v0.5.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* **core:** carry the slug and path of routed entries in resolved references ([#390](https://github.com/studiobimo/backstage/issues/390)) ([95a3783](https://github.com/studiobimo/backstage/commit/95a3783e907fa9a0433318a7b06e680586d8a364))
+
+## [0.5.0](https://github.com/studiobimo/backstage/compare/v0.4.0...v0.5.0) (2026-11-16)
+
+
+### Features
+
+* **admin:** add an entry reference widget to the block form ([#373](https://github.com/studiobimo/backstage/issues/373)) ([c6531e4](https://github.com/studiobimo/backstage/commit/c6531e48d615eda0f7a7b3f8939949b82f0d9f33))
+* **admin:** add collections to the sidebar, breadcrumb and command palette ([#380](https://github.com/studiobimo/backstage/issues/380)) ([069d7bc](https://github.com/studiobimo/backstage/commit/069d7bcafebf1a8fd190010c98782338494a24e1))
+* **admin:** edit the address of an entry in a routed collection ([#387](https://github.com/studiobimo/backstage/issues/387)) ([db88338](https://github.com/studiobimo/backstage/commit/db8833867723671e0741551db047cd8a1617472b))
+* **admin:** list, create, edit and delete collection entries ([#379](https://github.com/studiobimo/backstage/issues/379)) ([93a269e](https://github.com/studiobimo/backstage/commit/93a269ed7823134435c28be9f4fe9c6ec90bc2bb))
+* **admin:** show and drive the pages an entry change republishes ([#383](https://github.com/studiobimo/backstage/issues/383)) ([f237e3f](https://github.com/studiobimo/backstage/commit/f237e3f48e469ff8351e540292b3d1937ff8c54d))
+* **core:** add the entries field and render resolved entries in blocks ([#371](https://github.com/studiobimo/backstage/issues/371)) ([2ee8726](https://github.com/studiobimo/backstage/commit/2ee872665909e1085d0d3fae2eb30fcc43b93e45))
+* **core:** publish entries of a routed collection with slugs ([#386](https://github.com/studiobimo/backstage/issues/386)) ([1c4c8d9](https://github.com/studiobimo/backstage/commit/1c4c8d9ccdda3b4ee9bb2f93fdb69e6825a5ebfe))
+* **core:** republish pages that show an updated entry ([#378](https://github.com/studiobimo/backstage/issues/378)) ([acbf033](https://github.com/studiobimo/backstage/commit/acbf03341bb5eb1d91222f267f3c438558833817))
+* **core:** resolve entry references when a page is published ([#372](https://github.com/studiobimo/backstage/issues/372)) ([13592c9](https://github.com/studiobimo/backstage/commit/13592c95f3fdd7e2f03f387dff1e68500907eb88))
+* **site:** render entry pages from a collection route ([#385](https://github.com/studiobimo/backstage/issues/385)) ([6cd8252](https://github.com/studiobimo/backstage/commit/6cd82522f2c2db3a979f6ca9e284fd0c3d12e5e0))
+
+
+### Bug Fixes
+
+* **admin:** show the publish changes label and note for a live page ([#384](https://github.com/studiobimo/backstage/issues/384)) ([1445140](https://github.com/studiobimo/backstage/commit/144514076400bd5e72a92f167eeec4e865f0c72a))
+
 ## [0.4.0](https://github.com/studiobimo/backstage/compare/v0.3.0...v0.4.0) (2026-11-16)
 
 

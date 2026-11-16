@@ -12,10 +12,11 @@ interface SaveTarget {
   collection: string
   entry?: Pick<Entry, 'id' | 'version'>
   content: BlockValue
+  slugs?: Record<string, string>
   onCreated: (entry: Entry) => void
 }
 
-export function useEntrySave({ collection, entry, content: draft, onCreated }: SaveTarget) {
+export function useEntrySave({ collection, entry, content: draft, slugs, onCreated }: SaveTarget) {
   const content = draft as Entry['content']
   const queryClient = useQueryClient()
   const messageOf = useApiErrorMessage()
@@ -30,8 +31,8 @@ export function useEntrySave({ collection, entry, content: draft, onCreated }: S
     create.reset()
     update.reset()
     try {
-      if (entry) await update.mutateAsync({ content, expectedVersion: entry.version })
-      else onCreated(await create.mutateAsync(content))
+      if (entry) await update.mutateAsync({ content, slugs, expectedVersion: entry.version })
+      else onCreated(await create.mutateAsync({ content, slugs }))
       return []
     } catch (failure) {
       return fieldIssuesFrom(failure)

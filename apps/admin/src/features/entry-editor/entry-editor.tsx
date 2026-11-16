@@ -20,6 +20,12 @@ import { EditingLocaleContext, type LocaleStatus } from '../block-form/locale-st
 import { type JsonSchema, parseBlockSchema } from '../block-form/spec'
 import { type BlockValue, initialGroup } from '../block-form/value'
 import { collectionTitle, entryLabelText } from '../collections/collection-text'
+import { EntryRepublishDialog } from '../collections/entry-republish'
+import {
+  reportingOutcome,
+  useDependentsNote,
+  useDependentsOutcome
+} from '../collections/use-entry-dependents'
 import { DeleteEntryDialog } from '../collections/delete-entry-dialog'
 import {
   type CollectionOption,
@@ -35,6 +41,7 @@ import { PublishNotes } from '../page-editor/publish-notes'
 import { SavePublishGroup } from '../page-editor/save-publish-group'
 import { StaleAlert } from '../page-editor/stale-alert'
 import { usePublishActions } from '../page-editor/use-publish-actions'
+import { EntrySlugField } from './entry-slug-field'
 import { useEntrySave } from './use-entry-save'
 
 const newEntryContent = (schema: JsonSchema): BlockValue => {
@@ -43,6 +50,11 @@ const newEntryContent = (schema: JsonSchema): BlockValue => {
   } catch {
     return {}
   }
+}
+
+const typedSlugs = (edits: Record<string, string>) => {
+  const typed = Object.entries(edits).filter(([, value]) => value !== '')
+  return typed.length > 0 ? Object.fromEntries(typed) : undefined
 }
 
 const UNPUBLISHED = { publishedAt: null, publishedBy: null } as const
@@ -61,14 +73,27 @@ const localeGaps = (
     ])
   )
 
-function usePublishing(collection: string, entry: Entry | undefined) {
+function usePublishing(collection: string, entry: Entry | undefined, dirty: boolean) {
   const queryClient = useQueryClient()
+  const outcome = useDependentsOutcome()
   const id = entry?.id ?? ''
-  return usePublishActions(entry?.version ?? 0, {
-    publish: publishEntryMutation(queryClient, collection, id),
-    unpublish: unpublishEntryMutation(queryClient, collection, id),
+  const actions = usePublishActions(entry?.version ?? 0, {
+    publish: reportingOutcome(publishEntryMutation(queryClient, collection, id), outcome.report),
+    unpublish: reportingOutcome(
+      unpublishEntryMutation(queryClient, collection, id),
+      outcome.report
+    ),
     context: 'entry'
   })
+  const target = entry && { collection, entryId: entry.id }
+  const dependents = useDependentsNote(target, !dirty && !actions.publishing)
+  return { ...actions, outcome, target, dependents }
+}
+
+function PendingRepublish({ publishing }: { publishing: ReturnType<typeof usePublishing> }) {
+  const { target, outcome } = publishing
+  if (!target) return null
+  return <EntryRepublishDialog entry={target} pending={outcome.pending} onClose={outcome.clear} />
 }
 
 interface EntryEditorBodyProps {
@@ -112,11 +137,16 @@ function useEntryDraft(collection: CollectionOption, entry: Entry | undefined) {
   )
   const [content, setContent] = useState(saved)
   const [created, setCreated] = useState(false)
-  const dirty = !sameContent(content, saved) && !created
+  const [slugEdits, setSlugEdits] = useState<Record<string, string>>({})
+  const slugsDirty = Object.entries(slugEdits).some(
+    ([slug, value]) => value !== (entry?.slugs[slug] ?? '')
+  )
+  const dirty = (!sameContent(content, saved) || slugsDirty) && !created
   const save = useEntrySave({
     collection: collection.name,
     entry,
     content,
+    slugs: typedSlugs(slugEdits),
     onCreated: (next) => {
       flushSync(() => setCreated(true))
       void navigate({
@@ -132,7 +162,9 @@ function useEntryDraft(collection: CollectionOption, entry: Entry | undefined) {
       if (refusedLocale) setLocale(refusedLocale)
     })
   useShortcut('save', (dirty || entry === undefined) && !save.saving, onSave)
-  return { content, setContent, dirty, save, onSave, locale, setLocale }
+  const setSlug = (slug: string) => setSlugEdits((edits) => ({ ...edits, [locale]: slug }))
+  const slug = slugEdits[locale] ?? entry?.slugs[locale] ?? ''
+  return { content, setContent, dirty, save, onSave, locale, setLocale, slug, setSlug }
 }
 
 interface EntryNoticesProps {
@@ -140,6 +172,7 @@ interface EntryNoticesProps {
   draft: ReturnType<typeof useEntryDraft>
   publishError: unknown
   unsavedChanges: boolean
+  dependents?: string
   hintId: string
   onReload: () => void
 }
@@ -149,6 +182,7 @@ function EntryNotices({
   draft,
   publishError,
   unsavedChanges,
+  dependents,
   hintId,
   onReload
 }: EntryNoticesProps) {
@@ -176,8 +210,29 @@ function EntryNotices({
         error={publishError}
         blocks={[]}
         hintId={hintId}
+        dependents={dependents}
       />
     </>
+  )
+}
+
+function RoutedSlug({
+  collection,
+  draft
+}: {
+  collection: CollectionOption
+  draft: ReturnType<typeof useEntryDraft>
+}) {
+  const { defaultLocale } = useLocaleConfig()
+  if (!collection.route) return null
+  return (
+    <EntrySlugField
+      route={collection.route}
+      locale={draft.locale}
+      defaultLocale={defaultLocale}
+      value={draft.slug}
+      onChange={draft.setSlug}
+    />
   )
 }
 
@@ -187,16 +242,16 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
   const { locales, defaultLocale } = useLocaleConfig()
   const draft = useEntryDraft(collection, entry)
   const { content, dirty, save, locale } = draft
-  const publish = usePublishing(collection.name, entry)
+  const publish = usePublishing(collection.name, entry, dirty)
+  const { dependents } = publish
   const editing = useMemo(
     () => ({ locales, active: locale, fallback: defaultLocale }),
     [locales, locale, defaultLocale]
   )
   const published = entry !== undefined && entry.publishedAt !== null
   const unsavedChanges = entry !== undefined && hasUnpublishedChanges(entry)
-  const title = entry
-    ? entryLabelText(entry.label, i18n.language, defaultLocale) || t('untitled')
-    : t('new')
+  const label = entry && entryLabelText(entry.label, i18n.language, defaultLocale)
+  const title = entry ? label || t('untitled') : t('new')
   return (
     <EditingLocaleContext.Provider value={editing}>
       <EditorHeader
@@ -220,6 +275,7 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
             <SavePublishGroup
               name={title}
               context="entry"
+              dependents={dependents}
               hintId={hintId}
               dirty={dirty || entry === undefined}
               saving={save.saving}
@@ -241,9 +297,11 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
           draft={draft}
           publishError={publish.error}
           unsavedChanges={unsavedChanges}
+          dependents={dependents}
           hintId={hintId}
           onReload={onReload}
         />
+        <RoutedSlug collection={collection} draft={draft} />
         <BlockForm
           schema={collection.schema}
           locales={locales}
@@ -253,6 +311,7 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
           className="max-w-none"
         />
       </div>
+      <PendingRepublish publishing={publish} />
     </EditingLocaleContext.Provider>
   )
 }
