@@ -3,5 +3,7 @@
   "untitled": "Sin título",
   "back": "Todo en {{name}}",
   "delete": "Eliminar entrada",
-  "missing": "Esta colección no está definida en este sitio."
+  "missing": "Esta colección no está definida en este sitio.",
+  "slug": "Dirección",
+  "slugHint": "Déjala en blanco para derivarla del título. Letras minúsculas, números y guiones."
 }

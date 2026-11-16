@@ -3,5 +3,7 @@
   "untitled": "Untitled",
   "back": "All {{name}}",
   "delete": "Delete entry",
-  "missing": "This collection is not defined on this site."
+  "missing": "This collection is not defined on this site.",
+  "slug": "Address",
+  "slugHint": "Leave blank to derive it from the title. Lowercase letters, numbers and hyphens."
 }
