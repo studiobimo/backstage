@@ -87,6 +87,11 @@ describe('SavePublishGroup', () => {
     expect(screen.getByRole('button', { name: /Save/ }).hasAttribute('disabled')).toBe(true)
   })
 
+  it('offers to publish the changes of a live page saved since it was published', () => {
+    renderGroup({ publishedAt: 1, publishedVersion: 2 })
+    expect(screen.getByRole('button', { name: 'Publish changes' })).toBeTruthy()
+  })
+
   it('saves from the keyboard only while there are unsaved changes', async () => {
     const dirty = renderGroup({ dirty: true })
     await dirty.user.keyboard('{Control>}s{/Control}')

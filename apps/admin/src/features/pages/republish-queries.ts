@@ -9,10 +9,14 @@ import { apiRequest } from '@/lib/api'
 
 const REPUBLISH_API = { path: '/republish', queryKey: ['republish'] } as const
 
-const statusPath = ({ since, cursor }: RepublishScope) => {
+const statusPath = ({ since, cursor, entry }: RepublishScope) => {
   const params = new URLSearchParams()
   if (since !== null) params.set('since', String(since))
   if (cursor !== null) params.set('cursor', cursor)
+  if (entry) {
+    params.set('collection', entry.collection)
+    params.set('entryId', entry.entryId)
+  }
   const query = params.toString()
   return query ? `${REPUBLISH_API.path}?${query}` : REPUBLISH_API.path
 }

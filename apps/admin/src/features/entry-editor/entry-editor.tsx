@@ -20,6 +20,12 @@ import { EditingLocaleContext, type LocaleStatus } from '../block-form/locale-st
 import { type JsonSchema, parseBlockSchema } from '../block-form/spec'
 import { type BlockValue, initialGroup } from '../block-form/value'
 import { collectionTitle, entryLabelText } from '../collections/collection-text'
+import { EntryRepublishDialog } from '../collections/entry-republish'
+import {
+  reportingOutcome,
+  useDependentsNote,
+  useDependentsOutcome
+} from '../collections/use-entry-dependents'
 import { DeleteEntryDialog } from '../collections/delete-entry-dialog'
 import {
   type CollectionOption,
@@ -67,14 +73,27 @@ const localeGaps = (
     ])
   )
 
-function usePublishing(collection: string, entry: Entry | undefined) {
+function usePublishing(collection: string, entry: Entry | undefined, dirty: boolean) {
   const queryClient = useQueryClient()
+  const outcome = useDependentsOutcome()
   const id = entry?.id ?? ''
-  return usePublishActions(entry?.version ?? 0, {
-    publish: publishEntryMutation(queryClient, collection, id),
-    unpublish: unpublishEntryMutation(queryClient, collection, id),
+  const actions = usePublishActions(entry?.version ?? 0, {
+    publish: reportingOutcome(publishEntryMutation(queryClient, collection, id), outcome.report),
+    unpublish: reportingOutcome(
+      unpublishEntryMutation(queryClient, collection, id),
+      outcome.report
+    ),
     context: 'entry'
   })
+  const target = entry && { collection, entryId: entry.id }
+  const dependents = useDependentsNote(target, !dirty && !actions.publishing)
+  return { ...actions, outcome, target, dependents }
+}
+
+function PendingRepublish({ publishing }: { publishing: ReturnType<typeof usePublishing> }) {
+  const { target, outcome } = publishing
+  if (!target) return null
+  return <EntryRepublishDialog entry={target} pending={outcome.pending} onClose={outcome.clear} />
 }
 
 interface EntryEditorBodyProps {
@@ -153,6 +172,7 @@ interface EntryNoticesProps {
   draft: ReturnType<typeof useEntryDraft>
   publishError: unknown
   unsavedChanges: boolean
+  dependents?: string
   hintId: string
   onReload: () => void
 }
@@ -162,6 +182,7 @@ function EntryNotices({
   draft,
   publishError,
   unsavedChanges,
+  dependents,
   hintId,
   onReload
 }: EntryNoticesProps) {
@@ -189,6 +210,7 @@ function EntryNotices({
         error={publishError}
         blocks={[]}
         hintId={hintId}
+        dependents={dependents}
       />
     </>
   )
@@ -220,16 +242,16 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
   const { locales, defaultLocale } = useLocaleConfig()
   const draft = useEntryDraft(collection, entry)
   const { content, dirty, save, locale } = draft
-  const publish = usePublishing(collection.name, entry)
+  const publish = usePublishing(collection.name, entry, dirty)
+  const { dependents } = publish
   const editing = useMemo(
     () => ({ locales, active: locale, fallback: defaultLocale }),
     [locales, locale, defaultLocale]
   )
   const published = entry !== undefined && entry.publishedAt !== null
   const unsavedChanges = entry !== undefined && hasUnpublishedChanges(entry)
-  const title = entry
-    ? entryLabelText(entry.label, i18n.language, defaultLocale) || t('untitled')
-    : t('new')
+  const label = entry && entryLabelText(entry.label, i18n.language, defaultLocale)
+  const title = entry ? label || t('untitled') : t('new')
   return (
     <EditingLocaleContext.Provider value={editing}>
       <EditorHeader
@@ -253,6 +275,7 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
             <SavePublishGroup
               name={title}
               context="entry"
+              dependents={dependents}
               hintId={hintId}
               dirty={dirty || entry === undefined}
               saving={save.saving}
@@ -274,6 +297,7 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
           draft={draft}
           publishError={publish.error}
           unsavedChanges={unsavedChanges}
+          dependents={dependents}
           hintId={hintId}
           onReload={onReload}
         />
@@ -287,6 +311,7 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
           className="max-w-none"
         />
       </div>
+      <PendingRepublish publishing={publish} />
     </EditingLocaleContext.Provider>
   )
 }

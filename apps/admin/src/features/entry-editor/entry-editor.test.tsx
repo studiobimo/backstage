@@ -20,6 +20,8 @@ vi.mock('@tanstack/react-router', async () => ({
   useNavigate: () => navigate
 }))
 
+const NO_DEPENDENTS = { pages: 0, writes: 0, pending: false, batch: null }
+
 const stored: Entry = { ...helloEntry, content: { title: { en: 'Hello world', es: 'Hola mundo' } } }
 
 interface Reply {
@@ -40,7 +42,9 @@ const mockApi = (replies: { write?: Reply; publish?: Reply; collections?: unknow
         writes.push({ method, url, body: JSON.parse((init?.body as string) ?? '{}') })
       }
       if (url.endsWith('/publish')) {
-        return json(replies.publish ?? { status: 200, body: { entry: stored } })
+        return json(
+          replies.publish ?? { status: 200, body: { entry: stored, republish: NO_DEPENDENTS } }
+        )
       }
       if (method === 'POST' || method === 'PUT') {
         const content = JSON.parse(init?.body as string).content

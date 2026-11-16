@@ -16,7 +16,7 @@ import { useApiErrorMessage } from '@/lib/api-feedback'
 
 interface DeleteDialogProps {
   id: string
-  remove: UseMutationResult<void, Error, string>
+  remove: UseMutationResult<unknown, Error, string>
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string

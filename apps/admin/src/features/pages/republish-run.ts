@@ -1,8 +1,14 @@
-import { republishScopeSchema, type RepublishScope } from '@studiobimo/backstage/internal'
+import {
+  republishScopeSchema,
+  type RepublishEntry,
+  type RepublishScope
+} from '@studiobimo/backstage/internal'
 
 const STORED_RUN_KEY = 'backstage:republish-run'
 
 export const NEW_RUN: RepublishScope = { since: null, cursor: null }
+
+export const entryRun = (entry: RepublishEntry): RepublishScope => ({ ...NEW_RUN, entry })
 
 export const readStoredRun = (): RepublishScope => {
   try {
