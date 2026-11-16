@@ -23,6 +23,6 @@ export const sitePublishRoutes = (registry: Registry) =>
       }
       await writeSiteSnapshots(c.env.SITE, plan.snapshots)
       const editorId = await ensureUser(c.env.DB, c.get('editor'))
-      await recordSitePublished(c.env.DB, editorId, publishedAt, plan.versions)
+      await recordSitePublished(c.env.DB, editorId, publishedAt, plan.versions, plan.linkedPageIds)
       return c.json({ publication: await readSitePublication(c.env.DB) })
     })

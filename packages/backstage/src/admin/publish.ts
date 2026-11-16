@@ -5,12 +5,19 @@ import { planPublish, PUBLISH_PLAN, recordPublished, recordUnpublished } from '.
 import { publishPageSchema } from '../publishing.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 import type { AdminRegistry } from '../collections.ts'
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
+import { republishLinkedTo } from './page-dependents.ts'
 import { respondStale } from './pages.ts'
 import { readJsonBody, respondUnpublishable, respondWithError } from './respond.ts'
 import { rebuildPublishedIndex, removeSnapshots, writeSnapshots } from './snapshots.ts'
+
+const respondChanged = async (c: Context<AccessEnv>, registry: AdminRegistry, id: string) => {
+  await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
+  const republish = await republishLinkedTo(c, registry, id)
+  return c.json({ page: await findPage(c.env.DB, id), republish })
+}
 
 export const publishRoutes = (registry: AdminRegistry) =>
   new Hono<AccessEnv>()
@@ -32,16 +39,15 @@ export const publishRoutes = (registry: AdminRegistry) =>
         await ensureUser(c.env.DB, c.get('editor')),
         publishedAt,
         body.data.expectedVersion,
-        plan.refs
+        plan.refs,
+        plan.linkedPageIds
       )
-      await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
-      return c.json({ page: await findPage(c.env.DB, id) })
+      return respondChanged(c, registry, id)
     })
     .delete('/:id/publish', async (c) => {
       const id = c.req.param('id')
       if (!(await findPage(c.env.DB, id))) return respondWithError(c, API_ERROR.notFound)
       await removeSnapshots(c.env.SITE, id, resolveLocaleConfig(registry).locales)
       await recordUnpublished(c.env.DB, id)
-      await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
-      return c.json({ page: await findPage(c.env.DB, id) })
+      return respondChanged(c, registry, id)
     })

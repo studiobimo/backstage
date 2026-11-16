@@ -13,6 +13,7 @@ import {
   type SiteSnapshot,
   type SiteVersions
 } from '../site-publishing.ts'
+import { replacePageLinkRefs } from './page-link-references.ts'
 import { readMedia, readPageAddresses } from './publishing.ts'
 import { siteBlocks, sitePublication, siteSettings, users } from './schema.ts'
 import { readSiteBlocks } from './site-blocks.ts'
@@ -25,7 +26,12 @@ const SETTINGS_ROW_ID = 'site'
 export const SITE_PUBLISH_PLAN = { ready: 'ready', invalid: 'invalid' } as const
 
 export type SitePublishPlan =
-  | { status: typeof SITE_PUBLISH_PLAN.ready; snapshots: SiteSnapshot[]; versions: SiteVersions }
+  | {
+      status: typeof SITE_PUBLISH_PLAN.ready
+      snapshots: SiteSnapshot[]
+      versions: SiteVersions
+      linkedPageIds: string[]
+    }
   | { status: typeof SITE_PUBLISH_PLAN.invalid; problems: PublishProblem[] }
 
 const readSiteDraft = async (
@@ -51,23 +57,31 @@ export const planSitePublish = async (
 ): Promise<SitePublishPlan> => {
   const { draft, versions } = await readSiteDraft(d1)
   const mediaRows = await readMedia(d1, siteMediaIds(registry, draft))
-  const addresses = await readPageAddresses(d1, siteLinkedPageIds(registry, draft))
+  const linkedPageIds = siteLinkedPageIds(registry, draft)
+  const addresses = await readPageAddresses(d1, linkedPageIds)
   const built = buildSiteSnapshots(registry, draft, mediaRows, publishedAt, addresses)
   if (!built.ok) return { status: SITE_PUBLISH_PLAN.invalid, problems: built.problems }
-  return { status: SITE_PUBLISH_PLAN.ready, snapshots: built.snapshots, versions }
+  return {
+    status: SITE_PUBLISH_PLAN.ready,
+    snapshots: built.snapshots,
+    versions,
+    linkedPageIds
+  }
 }
 
 export const recordSitePublished = async (
   d1: AnyD1Database,
   editorId: string,
   publishedAt: number,
-  versions: SiteVersions
+  versions: SiteVersions,
+  linkedPageIds: readonly string[]
 ) => {
   const values = { id: PUBLICATION_ROW_ID, publishedAt, publishedBy: editorId, versions }
   await drizzle(d1)
     .insert(sitePublication)
     .values(values)
     .onConflictDoUpdate({ target: sitePublication.id, set: values })
+  await replacePageLinkRefs(d1, null, linkedPageIds)
 }
 
 const readCurrentVersions = async (d1: AnyD1Database): Promise<SiteVersions> => {

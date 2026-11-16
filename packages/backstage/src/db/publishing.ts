@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm'
+import { and, asc, count, eq, gt, inArray, isNotNull, lt, ne, sql } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import type { AdminRegistry } from '../collections.ts'
@@ -25,8 +25,17 @@ import { resolveLocaleConfig } from '../locales.ts'
 import { pageLinkIdsIn, type PageAddresses } from '../page-links.ts'
 import type { RepublishEntry, RepublishScope } from '../republish.ts'
 import { SEO, type PublishedEntryPage, type PublishedIndex, type PublishedPage } from '../seo.ts'
+import { clearPageLinkRefs, replacePageLinkRefs } from './page-link-references.ts'
 import { clearEntryRefs, readPublishedEntries, replaceEntryRefs } from './entry-references.ts'
-import { entries, entryLocales, media, pageBlocks, pageLocales, pages } from './schema.ts'
+import {
+  entries,
+  entryLocales,
+  media,
+  pageBlocks,
+  pageLinkRefs,
+  pageLocales,
+  pages
+} from './schema.ts'
 
 export const PUBLISH_PLAN = {
   ready: 'ready',
@@ -36,7 +45,12 @@ export const PUBLISH_PLAN = {
 } as const
 
 export type PublishPlan =
-  | { status: typeof PUBLISH_PLAN.ready; snapshots: Snapshot[]; refs: PageEntryRef[] }
+  | {
+      status: typeof PUBLISH_PLAN.ready
+      snapshots: Snapshot[]
+      refs: PageEntryRef[]
+      linkedPageIds: string[]
+    }
   | { status: typeof PUBLISH_PLAN.notFound }
   | { status: typeof PUBLISH_PLAN.stale }
   | { status: typeof PUBLISH_PLAN.invalid; problems: PublishProblem[] }
@@ -93,13 +107,20 @@ const planDraft = async (
     d1,
     referencedMediaIds(registry, blocks, draft.locales, resolved)
   )
-  const addresses = await readPageAddresses(
-    d1,
-    blocks.flatMap(({ block, content }) => pageLinkIdsIn(registry.jsonSchema(block), content))
-  )
+  const linkedPageIds = [
+    ...new Set(
+      blocks.flatMap(({ block, content }) => pageLinkIdsIn(registry.jsonSchema(block), content))
+    )
+  ]
+  const addresses = await readPageAddresses(d1, linkedPageIds)
   const built = buildSnapshots(registry, draft, mediaRows, publishedAt, resolved, addresses)
   return built.ok
-    ? { status: PUBLISH_PLAN.ready, snapshots: built.snapshots, refs: entryRefsOf(fields) }
+    ? {
+        status: PUBLISH_PLAN.ready,
+        snapshots: built.snapshots,
+        refs: entryRefsOf(fields),
+        linkedPageIds
+      }
     : { status: PUBLISH_PLAN.invalid, problems: built.problems }
 }
 
@@ -155,7 +176,8 @@ export const recordPublished = async (
   editorId: string,
   publishedAt: number,
   publishedVersion: number,
-  refs: readonly PageEntryRef[]
+  refs: readonly PageEntryRef[],
+  linkedPageIds: readonly string[]
 ) => {
   const db = drizzle(d1)
   await db
@@ -163,6 +185,7 @@ export const recordPublished = async (
     .set({ publishedAt, publishedVersion, publishedBy: editorId, updatedAt: pages.updatedAt })
     .where(eq(pages.id, id))
   await replaceEntryRefs(d1, id, refs)
+  await replacePageLinkRefs(d1, id, linkedPageIds)
 }
 
 export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
@@ -178,6 +201,7 @@ export const recordUnpublished = async (d1: AnyD1Database, id: string) => {
     .where(eq(pages.id, id))
     .returning({ id: pages.id })
   await clearEntryRefs(d1, id)
+  await clearPageLinkRefs(d1, id)
   return cleared.length > 0
 }
 
@@ -252,11 +276,18 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
 const dependsOnEntry = ({ collection, entryId }: RepublishEntry) =>
   sql`${pages.id} IN (SELECT page_id FROM page_entry_refs WHERE collection = ${collection} AND (entry_id = ${entryId} OR entry_id IS NULL))`
 
-const republishFilter = ({ since, cursor, entry }: RepublishScope) =>
+const dependsOnPage = (targetPageId: string) =>
+  inArray(
+    pages.id,
+    sql`(SELECT ${pageLinkRefs.pageId} FROM ${pageLinkRefs} WHERE ${pageLinkRefs.targetPageId} = ${targetPageId})`
+  )
+
+const republishFilter = ({ since, cursor, entry, linkedTo }: RepublishScope) =>
   and(
     isNotNull(pages.publishedAt),
     entry ? dependsOnEntry(entry) : undefined,
-    since === null || entry ? undefined : lt(pages.publishedAt, since),
+    linkedTo ? and(dependsOnPage(linkedTo), ne(pages.id, linkedTo)) : undefined,
+    since === null || entry || linkedTo ? undefined : lt(pages.publishedAt, since),
     cursor === null ? undefined : gt(pages.id, cursor)
   )
 

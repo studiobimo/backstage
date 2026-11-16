@@ -8,7 +8,6 @@ import {
   kvWritesToRefresh,
   republishBatchSize,
   type EntryDependents,
-  type RepublishEntry,
   type RepublishScope
 } from '../republish.ts'
 import type { AdminRegistry, Collection } from '../collections.ts'
@@ -18,13 +17,13 @@ import { runRepublishBatch } from './republish.ts'
 
 const NO_DEPENDENTS: EntryDependents = { pages: 0, writes: 0, pending: false, batch: null }
 
-const republishDependents = async (
+export const republishDependents = async (
   c: Context<AccessEnv>,
   registry: AdminRegistry,
-  entry: RepublishEntry
+  dependsOn: Pick<RepublishScope, 'entry' | 'linkedTo'>
 ): Promise<EntryDependents> => {
   const { locales } = resolveLocaleConfig(registry)
-  const scope: RepublishScope = { since: null, cursor: null, entry }
+  const scope: RepublishScope = { since: null, cursor: null, ...dependsOn }
   const { remaining } = await countRepublishable(c.env.DB, scope)
   const writes = kvWritesToRefresh(remaining, locales)
   if (remaining === 0) return NO_DEPENDENTS
@@ -43,7 +42,7 @@ export const republishDependentsOf = (
   wasPublished: boolean
 ) =>
   wasPublished
-    ? republishDependents(c, registry, { collection: collection.name, entryId })
+    ? republishDependents(c, registry, { entry: { collection: collection.name, entryId } })
     : Promise.resolve(NO_DEPENDENTS)
 
 export const removeAndRepublish = async (

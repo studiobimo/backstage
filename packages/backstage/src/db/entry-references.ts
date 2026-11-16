@@ -11,10 +11,9 @@ import {
   type ReferenceField,
   type ReferenceNeeds
 } from '../references.ts'
+import { D1_LIMITS, inChunks } from './chunks.ts'
 import { readPublishedEntrySlugs } from './entry-slugs.ts'
 import { entries, pageEntryRefs } from './schema.ts'
-
-const D1_LIMITS = { boundParameters: 100 } as const
 
 const LOOKUP = { idsPerQuery: D1_LIMITS.boundParameters - 2 } as const
 
@@ -23,11 +22,6 @@ const REFS_INSERT = {
     D1_LIMITS.boundParameters / Object.keys(getTableColumns(pageEntryRefs)).length
   )
 } as const
-
-const inChunks = <T>(items: readonly T[], size: number) =>
-  Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
-    items.slice(index * size, (index + 1) * size)
-  )
 
 const publishedIn = (collection: Collection) =>
   and(
