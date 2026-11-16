@@ -6,6 +6,13 @@ export type {
   Registry,
   RegistryOptions
 } from './blocks.ts'
+export { defineCollection, describeCollections } from './collections.ts'
+export type {
+  Collection,
+  CollectionDefinition,
+  CollectionDescription,
+  EntryLabels
+} from './collections.ts'
 export { defineComponents } from './components.ts'
 export type { BlockComponents, ComponentMap, LayoutComponents, LayoutProps } from './components.ts'
 export { API_ERROR } from './errors.ts'

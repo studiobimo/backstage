@@ -2,9 +2,10 @@ import { z } from 'zod'
 
 import { fieldIssuesOf, type FieldIssue } from './errors.ts'
 import { unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
+import { assertCollection, type Collection } from './collections.ts'
 import { resolveLocaleConfig, type LocaleConfig } from './locales.ts'
 
-const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
+export const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
 
 export const siteOriginResponseSchema = z.object({ origin: z.url() })
 
@@ -63,10 +64,12 @@ export function defineLayout<const N extends string>(
 }
 
 export interface RegistryOptions<
-  L extends readonly LayoutDefinition[] = readonly LayoutDefinition[]
+  L extends readonly LayoutDefinition[] = readonly LayoutDefinition[],
+  C extends readonly Collection[] = readonly Collection[]
 > extends Partial<LocaleConfig> {
   slots?: Readonly<Record<string, readonly string[]>>
   layouts?: L
+  collections?: C
 }
 
 export interface Registry<
@@ -81,6 +84,13 @@ export interface Registry<
   isSlotBlock(name: string): boolean
   hasLayout(name: string): boolean
   jsonSchema(name: string): z.core.JSONSchema.BaseSchema
+}
+
+export interface CollectionRegistry<C extends readonly Collection[] = readonly Collection[]> {
+  readonly __collections?: C
+  readonly collections: ReadonlyMap<string, Collection>
+  getCollection(name: string): Collection | undefined
+  collectionJsonSchema(name: string): z.core.JSONSchema.BaseSchema
 }
 
 function indexByName<T extends { name: string }>(items: readonly T[], kind: string) {
@@ -110,47 +120,69 @@ function indexSlots(
   return bySlot
 }
 
-function assertRenderable(block: Block) {
+export const schemaNodeOf = (schema: z.ZodType) =>
+  z.toJSONSchema(schema, { io: 'input', cycles: 'throw' })
+
+export function assertRenderable(
+  { name, schema: zodSchema }: { name: string; schema: z.ZodType },
+  kind = 'Block'
+): SchemaNode {
   let schema: SchemaNode
   try {
-    schema = z.toJSONSchema(block.schema, { io: 'input', cycles: 'throw' }) as SchemaNode
+    schema = schemaNodeOf(zodSchema) as SchemaNode
   } catch {
     throw new Error(
-      `Block "${block.name}" has a schema the admin cannot describe (recursive or unrepresentable)`
+      `${kind} "${name}" has a schema the admin cannot describe (recursive or unrepresentable)`
     )
   }
   const field = unrenderableFieldIn(schema, '')
   if (field !== undefined) {
     throw new Error(
-      `Block "${block.name}" field "${field || '(root)'}" uses a schema shape the admin form cannot render (unions, nullable and referenced fields are not supported)`
+      `${kind} "${name}" field "${field || '(root)'}" uses a schema shape the admin form cannot render (unions, nullable and referenced fields are not supported)`
     )
   }
+  return schema
 }
 
 export function defineRegistry<
   const B extends readonly Block[],
-  const L extends readonly LayoutDefinition[] = readonly []
->(blocks: B, options: RegistryOptions<L> = {}): Registry<B, L> {
-  const { slots = {}, layouts = [] as unknown as L, ...localeOptions } = options
+  const L extends readonly LayoutDefinition[] = readonly [],
+  const C extends readonly Collection[] = readonly []
+>(blocks: B, options: RegistryOptions<L, C> = {}): Registry<B, L> & CollectionRegistry<C> {
+  const {
+    slots = {},
+    layouts = [] as unknown as L,
+    collections = [] as unknown as C,
+    ...localeOptions
+  } = options
   const { locales, defaultLocale } = resolveLocaleConfig(localeOptions)
   const byName = indexByName(blocks, 'Block')
-  byName.forEach(assertRenderable)
+  byName.forEach((block) => assertRenderable(block))
   const bySlot = indexSlots(slots, byName)
   const slotBlocks = new Set([...bySlot.values()].flat())
   const layoutsByName = indexByName(layouts, 'Layout')
+  const collectionsByName = indexByName(collections, 'Collection')
+  collectionsByName.forEach(assertCollection)
   return {
     locales,
     defaultLocale,
     blocks: byName,
     slots: bySlot,
     layouts: layoutsByName,
+    collections: collectionsByName,
     get: (name) => byName.get(name),
+    getCollection: (name) => collectionsByName.get(name),
     isSlotBlock: (name) => slotBlocks.has(name),
     hasLayout: (name) => name === LAYOUT.default || layoutsByName.has(name),
     jsonSchema(name) {
       const block = byName.get(name)
       if (!block) throw new Error(`Unknown block "${name}"`)
-      return z.toJSONSchema(block.schema, { io: 'input', cycles: 'throw' })
+      return schemaNodeOf(block.schema)
+    },
+    collectionJsonSchema(name) {
+      const collection = collectionsByName.get(name)
+      if (!collection) throw new Error(`Unknown collection "${name}"`)
+      return schemaNodeOf(collection.schema)
     }
   }
 }
