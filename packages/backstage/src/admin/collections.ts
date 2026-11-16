@@ -23,6 +23,7 @@ import { API_ERROR } from '../errors.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 
 import type { AccessEnv } from './auth.ts'
+import { removeAndRepublish } from './entry-dependents.ts'
 import {
   readJsonBody,
   respondInvalid,
@@ -100,8 +101,6 @@ export const collectionsRoutes = (registry: AdminRegistry) =>
     .delete('/:name/entries/:id', async (c) => {
       const found = collectionOf(registry, c)
       if (!found.ok) return found.response
-      const outcome = await deleteEntry(c.env.DB, found.collection, c.req.param('id'))
-      return outcome === ENTRY_WRITE.ok
-        ? c.body(null, RESPONSE_STATUS.noContent)
-        : respondWithError(c, API_ERROR.notFound)
+      const republish = await removeAndRepublish(c, registry, found.collection, deleteEntry)
+      return republish ? c.json({ republish }) : respondWithError(c, API_ERROR.notFound)
     })

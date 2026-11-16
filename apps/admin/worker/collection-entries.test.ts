@@ -56,7 +56,7 @@ describe('saving entries with optimistic versions', () => {
 
   it('deletes an entry, answering not found afterwards', async () => {
     const { id } = await createPost()
-    expect((await sendCollections('DELETE', `/blog/entries/${id}`)).status).toBe(204)
+    expect((await sendCollections('DELETE', `/blog/entries/${id}`)).status).toBe(200)
     expect((await sendCollections('GET', `/blog/entries/${id}`)).status).toBe(404)
     expect((await sendCollections('DELETE', `/blog/entries/${id}`)).status).toBe(404)
   })

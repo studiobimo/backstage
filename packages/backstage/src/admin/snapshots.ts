@@ -5,6 +5,7 @@ import { readPublishedIndex } from '../db/publishing.ts'
 import { SEO } from '../seo.ts'
 import {
   routeKeysOf,
+  snapshotKey,
   snapshotKeysOf,
   snapshotRecords,
   readableSnapshotSchema,
@@ -12,7 +13,7 @@ import {
 } from '../publishing.ts'
 import { siteSnapshotRecords, type SiteSnapshot } from '../site-publishing.ts'
 
-const readSnapshots = async (kv: KVNamespace, pageId: string, locales: readonly string[]) =>
+export const readSnapshots = async (kv: KVNamespace, pageId: string, locales: readonly string[]) =>
   (
     await Promise.all(snapshotKeysOf(pageId, locales).map((key) => kv.get(key, { type: 'json' })))
   ).flatMap((stored) => {
@@ -42,6 +43,13 @@ export const writeSnapshots = async (
     previous.filter((route) => !current.has(route))
   )
 }
+
+export const rewriteSnapshots = (kv: KVNamespace, snapshots: readonly Snapshot[]) =>
+  Promise.all(
+    snapshots.map((snapshot) =>
+      kv.put(snapshotKey(snapshot.pageId, snapshot.locale), JSON.stringify(snapshot))
+    )
+  )
 
 export const removeSnapshots = async (
   kv: KVNamespace,

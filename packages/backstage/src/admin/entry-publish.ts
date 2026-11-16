@@ -18,6 +18,7 @@ import type { TranslatedNode } from '../translations.ts'
 
 import type { AccessEnv } from './auth.ts'
 import { collectionOf, respondEntryStale } from './collections.ts'
+import { removeAndRepublish, republishDependentsOf } from './entry-dependents.ts'
 import { readJsonBody, respondUnpublishable, respondWithError } from './respond.ts'
 
 interface PublishCheck {
@@ -64,13 +65,21 @@ export const entryPublishRoutes = (registry: AdminRegistry) =>
         publishedSchemaVersion: entry.schemaVersion
       })
       if (outcome === ENTRY_WRITE.stale) return respondEntryStale(c, id)
-      return c.json({ entry: await findEntry(c.env.DB, collection, id) })
+      return c.json({
+        entry: await findEntry(c.env.DB, collection, id),
+        republish: await republishDependentsOf(c, registry, collection, id, true)
+      })
     })
     .delete('/:name/entries/:id/publish', async (c) => {
       const found = collectionOf(registry, c)
       if (!found.ok) return found.response
       const id = c.req.param('id')
-      const outcome = await recordEntryUnpublished(c.env.DB, found.collection, id)
-      if (outcome === ENTRY_WRITE.notFound) return respondWithError(c, API_ERROR.notFound)
-      return c.json({ entry: await findEntry(c.env.DB, found.collection, id) })
+      const republish = await removeAndRepublish(
+        c,
+        registry,
+        found.collection,
+        recordEntryUnpublished
+      )
+      if (!republish) return respondWithError(c, API_ERROR.notFound)
+      return c.json({ entry: await findEntry(c.env.DB, found.collection, id), republish })
     })

@@ -7,12 +7,14 @@ import {
   planPublish,
   PUBLISH_PLAN,
   readRepublishBatch,
-  recordPublished
+  recordPublished,
+  refreshSnapshots
 } from '../db/publishing.ts'
 import { ensureUser } from '../db/users.ts'
 import {
   KV_LIMITS,
   kvWritesPerPage,
+  kvWritesToRefresh,
   kvWritesToRepublish,
   REPUBLISH,
   republishBatchSize,
@@ -26,11 +28,18 @@ import { resolveLocaleConfig } from '../locales.ts'
 import type { AdminRegistry } from '../collections.ts'
 import type { AccessEnv } from './auth.ts'
 import { readJsonBody } from './respond.ts'
-import { rebuildPublishedIndex, writeSnapshots } from './snapshots.ts'
+import {
+  readSnapshots,
+  rebuildPublishedIndex,
+  rewriteSnapshots,
+  writeSnapshots
+} from './snapshots.ts'
 
 const scopeQuerySchema = z.object({
   since: z.coerce.number().int().min(0).optional(),
-  cursor: z.string().optional()
+  cursor: z.string().optional(),
+  collection: z.string().min(1).optional(),
+  entryId: z.string().min(1).optional()
 })
 
 const REPUBLISH_LOG = { halted: 'republish halted' } as const
@@ -66,17 +75,40 @@ const republishPage = async (
   }
 }
 
-const republishPages = async (
+type PageAction = (page: PageToRepublish) => Promise<RepublishSkipped | null>
+
+const refreshPage = async (
   c: Context<AccessEnv>,
   registry: AdminRegistry,
-  pages: readonly PageToRepublish[],
-  progress: BatchProgress
-) => {
+  page: PageToRepublish
+): Promise<RepublishSkipped | null> => {
+  const { locales } = resolveLocaleConfig(registry)
+  const published = await readSnapshots(c.env.SITE, page.id, locales)
+  if (published.length === 0) return { pageId: page.id, problems: [] }
+  await rewriteSnapshots(c.env.SITE, await refreshSnapshots(c.env.DB, registry, published))
+  return null
+}
+
+const actionFor = async (
+  c: Context<AccessEnv>,
+  registry: AdminRegistry,
+  scope: RepublishScope
+): Promise<PageAction> => {
+  if (scope.entry) return (page) => refreshPage(c, registry, page)
   const editorId = await ensureUser(c.env.DB, c.get('editor'))
   const publishedAt = Date.now()
+  return (page) => republishPage(c, registry, page, editorId, publishedAt)
+}
+
+const republishPages = async (
+  c: Context<AccessEnv>,
+  pages: readonly PageToRepublish[],
+  action: PageAction,
+  progress: BatchProgress
+) => {
   for (const page of pages) {
     try {
-      const skipped = await republishPage(c, registry, page, editorId, publishedAt)
+      const skipped = await action(page)
       if (skipped) progress.skipped.push(skipped)
       else progress.republished.push(page.id)
       progress.cursor = page.id
@@ -91,21 +123,62 @@ const republishPages = async (
   }
 }
 
+export const runRepublishBatch = async (
+  c: Context<AccessEnv>,
+  registry: AdminRegistry,
+  requested: RepublishScope
+): Promise<RepublishBatch> => {
+  const { locales } = resolveLocaleConfig(registry)
+  const since = requested.since ?? Date.now()
+  const scope: RepublishScope = { ...requested, since }
+  const pages = await readRepublishBatch(c.env.DB, scope, republishBatchSize(locales))
+  const progress: BatchProgress = {
+    republished: [],
+    skipped: [],
+    cursor: scope.cursor,
+    halted: false
+  }
+  await republishPages(c, pages, await actionFor(c, registry, scope), progress)
+  const { remaining } = await countRepublishable(c.env.DB, { ...scope, cursor: progress.cursor })
+  const done = !progress.halted && remaining === 0
+  const rebuilds = !scope.entry && done && (pages.length > 0 || scope.cursor !== null)
+  if (rebuilds) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
+  const perPage = scope.entry ? locales.length : kvWritesPerPage(locales)
+  return {
+    since,
+    cursor: progress.cursor,
+    republished: progress.republished,
+    skipped: progress.skipped,
+    remaining,
+    writes:
+      progress.republished.length * perPage + (rebuilds ? REPUBLISH.writes.perIndexRebuild : 0),
+    done,
+    halted: progress.halted
+  }
+}
+
 export const republishRoutes = (registry: AdminRegistry) => {
   const { locales } = resolveLocaleConfig(registry)
   return new Hono<AccessEnv>()
     .get('/', async (c) => {
       const query = scopeQuerySchema.parse(c.req.query())
+      const entry =
+        query.collection && query.entryId
+          ? { collection: query.collection, entryId: query.entryId }
+          : undefined
       const scope: RepublishScope = {
         since: query.since ?? Date.now(),
-        cursor: query.cursor ?? null
+        cursor: query.cursor ?? null,
+        entry
       }
       const { remaining, changed } = await countRepublishable(c.env.DB, scope)
       return c.json({
         status: {
           remaining,
-          changed,
-          writes: kvWritesToRepublish(remaining, locales),
+          changed: entry ? 0 : changed,
+          writes: entry
+            ? kvWritesToRefresh(remaining, locales)
+            : kvWritesToRepublish(remaining, locales),
           dailyWriteLimit: KV_LIMITS.freePlanWritesPerDay
         }
       })
@@ -113,35 +186,6 @@ export const republishRoutes = (registry: AdminRegistry) => {
     .post('/', async (c) => {
       const body = await readJsonBody(c, republishScopeSchema)
       if (!body.ok) return body.response
-      const since = body.data.since ?? Date.now()
-      const pages = await readRepublishBatch(
-        c.env.DB,
-        { since, cursor: body.data.cursor },
-        republishBatchSize(locales)
-      )
-      const progress: BatchProgress = {
-        republished: [],
-        skipped: [],
-        cursor: body.data.cursor,
-        halted: false
-      }
-      await republishPages(c, registry, pages, progress)
-      const { remaining } = await countRepublishable(c.env.DB, { since, cursor: progress.cursor })
-      const done = !progress.halted && remaining === 0
-      const rebuilds = done && (pages.length > 0 || body.data.cursor !== null)
-      if (rebuilds) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
-      const response: RepublishBatch = {
-        since,
-        cursor: progress.cursor,
-        republished: progress.republished,
-        skipped: progress.skipped,
-        remaining,
-        writes:
-          progress.republished.length * kvWritesPerPage(locales) +
-          (rebuilds ? REPUBLISH.writes.perIndexRebuild : 0),
-        done,
-        halted: progress.halted
-      }
-      return c.json(response)
+      return c.json(await runRepublishBatch(c, registry, body.data))
     })
 }
