@@ -37,7 +37,7 @@ jobs:
       # Packages (the reusable's opt-in github-packages input). A called job cannot hold more than
       # its caller, so every caller grants it up front. It is read-only.
       packages: read
-    uses: studiobimo/.github/.github/workflows/ci-project.yml@v1
+    uses: studiobimo/.github/.github/workflows/ci-project.yml@a7a92ff941759b05e63617a488c0ccbebbdb5736
     with:
       full: ${{ inputs.full || false }}
       timeout-minutes: 20
