@@ -1,8 +1,15 @@
+import type { CollectionRoute } from '../entry-pages.ts'
+import {
+  entryRouteKey,
+  entrySnapshotKey,
+  entrySnapshotSchema,
+  type EntrySnapshot
+} from '../entry-publishing.ts'
 import { LOCALE, type Locale } from '../locales.ts'
 import { isPreviewExpired, isPreviewToken, pagePreviewSchema, previewKey } from '../page-preview.ts'
 import { readableSnapshotSchema, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
 import { siteSnapshotKey, siteSnapshotSchema } from '../site-publishing.ts'
-import type { Route } from './routing.ts'
+import type { EntryRoute, Route } from './routing.ts'
 
 export interface KvReader {
   get(key: string): Promise<string | null>
@@ -44,4 +51,39 @@ export async function findPagePreview(kv: KvReader, token: string, now = Date.no
   if (!isPreviewToken(token)) return null
   const parsed = pagePreviewSchema.safeParse(await kv.get(previewKey(token), { type: 'json' }))
   return parsed.success && !isPreviewExpired(parsed.data, now) ? parsed.data : null
+}
+
+async function readEntrySnapshot(
+  kv: KvReader,
+  collection: string,
+  entryId: string,
+  locale: Locale
+) {
+  const parsed = entrySnapshotSchema.safeParse(
+    await kv.get(entrySnapshotKey(collection, entryId, locale), { type: 'json' })
+  )
+  return parsed.success ? parsed.data : null
+}
+
+export async function findPublishedEntry(
+  kv: KvReader,
+  { collection, locale, slug }: EntryRoute,
+  route: CollectionRoute
+) {
+  const entryId = await kv.get(entryRouteKey(locale, route, slug))
+  if (!entryId) return null
+  const snapshot = await readEntrySnapshot(kv, collection, entryId, locale)
+  return snapshot?.slug === slug && snapshot.collection === collection ? snapshot : null
+}
+
+export async function findEntryTranslations(
+  kv: KvReader,
+  snapshot: EntrySnapshot,
+  locales: readonly Locale[] = LOCALE.default.locales
+) {
+  const others = locales.filter((locale) => locale !== snapshot.locale)
+  const found = await Promise.all(
+    others.map((locale) => readEntrySnapshot(kv, snapshot.collection, snapshot.entryId, locale))
+  )
+  return found.filter((translation) => translation !== null)
 }
