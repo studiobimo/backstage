@@ -1,0 +1,46 @@
+{
+  "list": {
+    "create": "New entry",
+    "untitled": "Untitled",
+    "emptyTitle": "No entries yet",
+    "emptyDescription": "Create the first entry to start filling this collection.",
+    "noMatchTitle": "No entries match",
+    "noMatchDescription": "Try another search.",
+    "searchLabel": "Search entries",
+    "searchPlaceholder": "Search entries",
+    "published": "Published",
+    "changed": "Unpublished changes",
+    "draft": "Draft",
+    "sort": {
+      "label": "Sort entries",
+      "ascending": "Ascending. Switch to descending",
+      "descending": "Descending. Switch to ascending",
+      "options": {
+        "label": "Title",
+        "updated": "Last saved",
+        "published": "Published state"
+      }
+    },
+    "columns": {
+      "label": "Title",
+      "status": "Status",
+      "updated": "Last saved",
+      "actions": "Actions"
+    },
+    "actions": {
+      "open": "Actions for {{name}}",
+      "edit": "Edit",
+      "delete": "Delete"
+    }
+  },
+  "delete": {
+    "title": "Delete {{name}}?",
+    "description": "The entry is removed, and unpublished if it was live. This cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete entry"
+  },
+  "missing": {
+    "title": "Collection not found",
+    "description": "This collection is not defined on this site."
+  }
+}
