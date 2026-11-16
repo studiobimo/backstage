@@ -1,0 +1,46 @@
+{
+  "list": {
+    "create": "Nueva entrada",
+    "untitled": "Sin título",
+    "emptyTitle": "Aún no hay entradas",
+    "emptyDescription": "Crea la primera entrada para empezar a llenar esta colección.",
+    "noMatchTitle": "Ninguna entrada coincide",
+    "noMatchDescription": "Prueba con otra búsqueda.",
+    "searchLabel": "Buscar entradas",
+    "searchPlaceholder": "Buscar entradas",
+    "published": "Publicada",
+    "changed": "Cambios sin publicar",
+    "draft": "Borrador",
+    "sort": {
+      "label": "Ordenar entradas",
+      "ascending": "Ascendente. Cambiar a descendente",
+      "descending": "Descendente. Cambiar a ascendente",
+      "options": {
+        "label": "Título",
+        "updated": "Último guardado",
+        "published": "Estado de publicación"
+      }
+    },
+    "columns": {
+      "label": "Título",
+      "status": "Estado",
+      "updated": "Último guardado",
+      "actions": "Acciones"
+    },
+    "actions": {
+      "open": "Acciones de {{name}}",
+      "edit": "Editar",
+      "delete": "Eliminar"
+    }
+  },
+  "delete": {
+    "title": "¿Eliminar {{name}}?",
+    "description": "Se elimina la entrada y, si estaba en línea, se despublica. No se puede deshacer.",
+    "cancel": "Cancelar",
+    "confirm": "Eliminar entrada"
+  },
+  "missing": {
+    "title": "Colección no encontrada",
+    "description": "Esta colección no está definida en este sitio."
+  }
+}
