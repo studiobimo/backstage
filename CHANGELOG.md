@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/studiobimo/backstage/compare/v0.3.0...v0.4.0) (2026-11-16)
+
+
+### Features
+
+* **admin:** add a preview action to the page editor ([#366](https://github.com/studiobimo/backstage/issues/366)) ([9770973](https://github.com/studiobimo/backstage/commit/97709733f2c73c74ac37f1d510fab6fd6d8b2ace))
+* **core:** define collections like blocks ([#365](https://github.com/studiobimo/backstage/issues/365)) ([a8a3629](https://github.com/studiobimo/backstage/commit/a8a362949c3c3253a6a815a944e70f23bec7761a))
+* **core:** migrate stored blocks across schema versions ([#362](https://github.com/studiobimo/backstage/issues/362)) ([cd82c94](https://github.com/studiobimo/backstage/commit/cd82c94b0a1ec0e6368d8f71e150bd3947766870))
+* **core:** preview a page draft on the site through an expiring link ([#364](https://github.com/studiobimo/backstage/issues/364)) ([181c1b4](https://github.com/studiobimo/backstage/commit/181c1b49f0af5e90fe3778ef7bf56d2e1b201be6))
+* **core:** store collection entries and serve them from the admin API ([#368](https://github.com/studiobimo/backstage/issues/368)) ([8046ea7](https://github.com/studiobimo/backstage/commit/8046ea76ff700ae4fcac6a7b3a44dad319545ca1))
+
 ## [0.3.0](https://github.com/studiobimo/backstage/compare/v0.2.1...v0.3.0) (2026-11-15)
 
 
