@@ -10,7 +10,7 @@ import { ChevronRightIcon, CopyIcon, Trash2Icon } from 'lucide-react'
 import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ChoiceSelect } from '@/components/choice-select'
+import { FrameSection } from '@/components/frame-section'
 import { IconButton } from '@/components/icon-button'
 import { LeaveGuard } from '@/components/leave-guard'
 import type { SortableSlot } from '@/components/sortable-items'
@@ -26,6 +26,7 @@ import { EditingLocaleContext, useEditingLocale } from '../block-form/locale-sta
 import type { BlockValue } from '../block-form/value'
 import { BlockPicker } from './block-picker'
 import { EDITOR_BODY, EditorHeader } from './editor-header'
+import { LayoutPicker } from './layout-picker'
 import { blockTitle } from './localized-text'
 import { PublishNotes } from './publish-notes'
 import { PreviewButton } from './preview-button'
@@ -65,6 +66,8 @@ import {
 } from './queries'
 import { type SeoDefaults, SeoSection } from './seo-section'
 
+const BLOCK_LIST_CLASS = 'gap-0 divide-y'
+
 const SortableItems = lazy(() => import('@/components/sortable-items'))
 
 interface SavedPage extends PageDraft {
@@ -100,8 +103,8 @@ function BlockRow({
       data-block-id={block.id}
       tabIndex={-1}
       className={cn(
-        'rounded-lg border bg-card shadow-xs/5 outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        slot?.dragging && 'z-10 shadow-lg ring-2 ring-ring/24'
+        'bg-card outline-none first:rounded-t-[calc(var(--radius-xl)-1px)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+        slot?.dragging && 'relative z-10 rounded-lg shadow-lg ring-2 ring-ring/24'
       )}
     >
       <Collapsible>
@@ -353,30 +356,6 @@ function EditorChrome({
   )
 }
 
-function LayoutPicker({
-  layouts,
-  value,
-  onChange
-}: {
-  layouts: string[]
-  value: string
-  onChange: (layout: string) => void
-}) {
-  const { t } = useTranslation('pageEditor')
-  return (
-    <ChoiceSelect
-      label={t('layout.label')}
-      description={t('layout.description')}
-      value={value}
-      options={layouts.map((name) => ({
-        value: name,
-        label: t(`layout.names.${name}`, { defaultValue: name })
-      }))}
-      onChange={onChange}
-    />
-  )
-}
-
 function EmptyBlocks() {
   const { t } = useTranslation('pageEditor')
   return (
@@ -422,17 +401,44 @@ function BlockList({
       ) : (
         <Suspense
           fallback={
-            <ul className="flex flex-col gap-2">
+            <ul className={BLOCK_LIST_CLASS}>
               {blocks.map((block, index) => renderRow(block.id, index))}
             </ul>
           }
         >
-          <SortableItems keys={blocks.map((block) => block.id)} names={names} onMove={actions.move}>
+          <SortableItems
+            className={BLOCK_LIST_CLASS}
+            keys={blocks.map((block) => block.id)}
+            names={names}
+            onMove={actions.move}
+          >
             {renderRow}
           </SortableItems>
         </Suspense>
       )}
     </div>
+  )
+}
+
+function BlocksFrame({
+  actions,
+  options
+}: {
+  actions: ReturnType<typeof useBlockActions>
+  options: BlockOption[]
+}) {
+  const { t } = useTranslation('pageEditor')
+  return (
+    <FrameSection
+      title={t('blocks.heading')}
+      description={t('blocks.description')}
+      panelClassName="p-0"
+    >
+      <BlockList actions={actions} options={options} />
+      <div className={cn('p-3', actions.blocks.length > 0 && 'border-t')}>
+        <BlockPicker options={options} onPick={actions.add} />
+      </div>
+    </FrameSection>
   )
 }
 
@@ -506,12 +512,9 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
       )}
       <LeaveGuard dirty={dirty} />
       <div className={EDITOR_BODY}>
-        <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
-        <BlockList actions={actions} options={options} />
-        <div>
-          <BlockPicker options={options} onPick={actions.add} />
-        </div>
+        <BlocksFrame actions={actions} options={options} />
         <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
+        <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
         <p role="status" aria-live="polite" className="sr-only">
           {actions.announcement}
         </p>

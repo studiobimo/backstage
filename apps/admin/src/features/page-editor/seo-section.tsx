@@ -3,6 +3,7 @@ import { isSeoMissing, PAGE, type LocaleSeo, type PageSeo } from '@studiobimo/ba
 import { LanguagesIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { FrameSection } from '@/components/frame-section'
 import { Badge } from '@/components/ui/badge'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -44,36 +45,38 @@ function LocaleFields({
   const { t } = useTranslation('pageEditor')
   const { title, description } = PAGE.seo
   return (
-    <div className="flex max-w-xl flex-col gap-5">
-      <Field>
-        <FieldLabel>{t('seo.title.label')}</FieldLabel>
-        <Input
-          lang={locale}
-          value={value.title}
-          maxLength={title.maxLength}
-          placeholder={fallbackTitle}
-          onChange={(event) => onChange({ ...value, title: event.target.value })}
-        />
-        <FieldDescription>
-          {t('seo.title.description', { count: value.title.length, max: title.maxLength })}
-        </FieldDescription>
-      </Field>
-      <Field>
-        <FieldLabel>{t('seo.description.label')}</FieldLabel>
-        <Textarea
-          lang={locale}
-          value={value.description}
-          placeholder={fallbackDescription}
-          maxLength={description.maxLength}
-          onChange={(event) => onChange({ ...value, description: event.target.value })}
-        />
-        <FieldDescription>
-          {t('seo.description.hint', {
-            count: value.description.length,
-            max: description.maxLength
-          })}
-        </FieldDescription>
-      </Field>
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="flex flex-col gap-5">
+        <Field>
+          <FieldLabel>{t('seo.title.label')}</FieldLabel>
+          <Input
+            lang={locale}
+            value={value.title}
+            maxLength={title.maxLength}
+            placeholder={fallbackTitle}
+            onChange={(event) => onChange({ ...value, title: event.target.value })}
+          />
+          <FieldDescription>
+            {t('seo.title.description', { count: value.title.length, max: title.maxLength })}
+          </FieldDescription>
+        </Field>
+        <Field>
+          <FieldLabel>{t('seo.description.label')}</FieldLabel>
+          <Textarea
+            lang={locale}
+            value={value.description}
+            placeholder={fallbackDescription}
+            maxLength={description.maxLength}
+            onChange={(event) => onChange({ ...value, description: event.target.value })}
+          />
+          <FieldDescription>
+            {t('seo.description.hint', {
+              count: value.description.length,
+              max: description.maxLength
+            })}
+          </FieldDescription>
+        </Field>
+      </div>
       <Field>
         <FieldLabel>{t('seo.image.label')}</FieldLabel>
         <MediaPicker
@@ -96,12 +99,11 @@ export function SeoSection({ value, defaults, onChange }: SeoSectionProps) {
   const { active } = useEditingLocale()
   const locale = active as Locale
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="seo-heading">
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 id="seo-heading" className="font-medium text-lg">
-            {t('seo.heading')}
-          </h2>
+    <FrameSection
+      title={t('seo.heading')}
+      description={t('seo.intro')}
+      badges={
+        <>
           {isSeoMissing(value, locale) && (
             <Badge variant="warning">{t('blockForm:locale.missing')}</Badge>
           )}
@@ -109,9 +111,9 @@ export function SeoSection({ value, defaults, onChange }: SeoSectionProps) {
             <LanguagesIcon aria-hidden />
             {locale.toUpperCase()}
           </Badge>
-        </div>
-        <p className="text-muted-foreground text-sm">{t('seo.intro')}</p>
-      </div>
+        </>
+      }
+    >
       <LocaleFields
         key={locale}
         locale={locale}
@@ -121,6 +123,6 @@ export function SeoSection({ value, defaults, onChange }: SeoSectionProps) {
         hasSocialImage={defaults.hasSocialImage}
         onChange={(next) => onChange({ ...value, [locale]: next })}
       />
-    </section>
+    </FrameSection>
   )
 }
