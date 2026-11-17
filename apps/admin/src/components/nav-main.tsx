@@ -47,6 +47,15 @@ function isWithin(pathname: string, path: SectionPath) {
   return pathname === path || pathname.startsWith(`${path}/`)
 }
 
+function activeItemPath(pathname: string, items: NavSectionItem[]) {
+  return items
+    .filter((item) => isWithin(pathname, item.path))
+    .reduce<SectionPath | null>(
+      (best, item) => (best === null || item.path.length > best.length ? item.path : best),
+      null
+    )
+}
+
 export function NavSection({
   section,
   pathname
@@ -58,6 +67,7 @@ export function NavSection({
   const { key, icon: Icon, path, items } = section
   const title = t(`nav.sections.${key}.title`)
   const active = isWithin(pathname, path)
+  const activeItem = activeItemPath(pathname, items)
 
   if (items.length <= 1) {
     return (
@@ -83,7 +93,7 @@ export function NavSection({
             <SidebarMenuSubItem key={item.key}>
               <SidebarMenuSubButton
                 render={<Link to={item.path} />}
-                isActive={isWithin(pathname, item.path)}
+                isActive={item.path === activeItem}
               >
                 <span>{t(`nav.sections.${key}.items.${item.key}`)}</span>
               </SidebarMenuSubButton>
