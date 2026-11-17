@@ -36,6 +36,7 @@ describe('BlockForm fields', () => {
     setup()
     expect(textbox('Title')).toBeInTheDocument()
     expect(textbox('Slug').tagName).toBe('INPUT')
+    expect(textbox('Accent')).toBeInTheDocument()
     expect(textbox('Columns')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: /Featured/ })).not.toBeChecked()
     expect(screen.getByRole('combobox', { name: 'Theme' })).toHaveTextContent('light')

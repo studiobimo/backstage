@@ -11,6 +11,12 @@ import {
   saveSettings
 } from './site-publish-test-support'
 
+const insertImage = (id: string, extension: string, fileName: string, mime: string, alt: object) =>
+  db
+    .prepare(`INSERT INTO media VALUES (?, ?, ?, ?, 10, 40, 20, 0, ?, NULL, 1)`)
+    .bind(id, `media/${id}.${extension}`, fileName, mime, JSON.stringify(alt))
+    .run()
+
 describe('publishing the site', () => {
   useFreshPagesDb()
 
@@ -26,12 +32,7 @@ describe('publishing the site', () => {
   })
 
   it('publishes the default description and social image with the site', async () => {
-    await db
-      .prepare(
-        "INSERT INTO media VALUES ('d1', 'media/d1.png', 'a.png', 'image/png', 10, 40, 20, 0, ?, NULL, 1)"
-      )
-      .bind(JSON.stringify({ en: 'A cat', es: 'Un gato' }))
-      .run()
+    await insertImage('d1', 'png', 'a.png', 'image/png', { en: 'A cat', es: 'Un gato' })
     await saveSettings({
       siteName: { en: 'Studio' },
       defaultDescription: { en: 'Studio site', es: 'Sitio del estudio' },
@@ -41,6 +42,25 @@ describe('publishing the site', () => {
     const es = await publishedSite('es')
     expect(es?.seo).toEqual({ description: 'Sitio del estudio', socialImageId: 'd1' })
     expect(es?.media.d1).toMatchObject({ key: 'media/d1.png', alt: 'Un gato' })
+  })
+
+  it('publishes the logo and the theme color as the site brand, with the logo media', async () => {
+    await insertImage('l1', 'svg', 'mark.svg', 'image/svg+xml', { en: 'Mark' })
+    await saveSettings({
+      siteName: { en: 'Studio' },
+      logo: { id: 'l1', alt: '' },
+      themeColor: '#1A2B3C'
+    })
+    await publishSite()
+    const site = await publishedSite('en')
+    expect(site?.brand).toEqual({ logo: { id: 'l1', alt: '' }, themeColor: '#1a2b3c' })
+    expect(site?.media.l1).toMatchObject({ key: 'media/l1.svg' })
+  })
+
+  it('publishes an empty brand when no logo or theme color is set', async () => {
+    await saveName({ en: 'Studio' })
+    await publishSite()
+    expect((await publishedSite('en'))?.brand).toEqual({ logo: null, themeColor: null })
   })
 
   it('records who published and when', async () => {

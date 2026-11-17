@@ -43,6 +43,10 @@ describe('parseBlockSchema', () => {
     expect(byKey('cta')).toMatchObject({ kind: 'group', variant: 'link' })
   })
 
+  it('reads a hex color as its own kind', () => {
+    expect(byKey('accent')).toMatchObject({ kind: 'hexColor', required: false })
+  })
+
   it('reads lists and nested groups', () => {
     expect(byKey('items')).toMatchObject({
       kind: 'list',
