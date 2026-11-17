@@ -25,7 +25,7 @@ export type {
 export type { CollectionRoute } from './entry-pages.ts'
 export { API_ERROR } from './errors.ts'
 export type { ApiError } from './errors.ts'
-export { image, link, localized, richText } from './fields.ts'
+export { hexColor, image, link, localized, richText } from './fields.ts'
 export type { LinkInput, ResolvedLink } from './fields.ts'
 export { entries } from './references.ts'
 export type { EntryReferenceValue, ResolvedEntry } from './references.ts'

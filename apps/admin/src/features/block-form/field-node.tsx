@@ -7,6 +7,7 @@ import { type FieldChromeProps, FieldHeading } from '@/components/form/fields'
 import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
 import { cn } from '@/lib/utils'
 
+import { HexColorField } from './hex-color-field.tsx'
 import { ImageField } from './image-field.tsx'
 import { LinkField } from './link-field.tsx'
 import { ListField } from './list-field.tsx'
@@ -58,6 +59,8 @@ function LeafNode({ form, spec, path, label, chrome, translated, icon }: NodePro
         switch (spec.kind) {
           case 'richText':
             return <RichTextField {...props} />
+          case 'hexColor':
+            return <HexColorField {...props} />
           case 'text':
             return (
               <field.TextField
@@ -119,38 +122,32 @@ export function GroupFields({ form, spec, path, translated, className }: GroupFi
 function GroupLegend({
   label,
   badge,
-  optional,
-  section
+  optional
 }: {
   label: string
   badge?: ReactNode
   optional?: boolean
-  section?: boolean
 }) {
   return (
     <FieldsetLegend className="mb-1 w-full">
-      <FieldHeading legend section={section} label={label} badge={badge} optional={optional} />
+      <FieldHeading legend label={label} badge={badge} optional={optional} />
     </FieldsetLegend>
   )
 }
 
 function GroupNode(props: NodeProps<GroupSpec>) {
   const { spec, label, chrome } = props
-  const section = props.path.length === 1 && !spec.variant
   return (
-    <Fieldset
-      className={cn('flex w-full max-w-none flex-col gap-4', section && 'mt-2 gap-5 border-t pt-6')}
-    >
+    <Fieldset className="flex w-full max-w-none flex-col gap-4">
       <GroupLegend
         label={label}
         badge={chrome?.badge}
         optional={chrome?.optional ?? (!spec.required && !props.translated)}
-        section={section}
       />
       {spec.description && (
         <p className="-mt-2.5 text-muted-foreground text-xs">{spec.description}</p>
       )}
-      <GroupFields {...props} className={section ? undefined : 'border-s ps-4'} />
+      <GroupFields {...props} className="border-s ps-4" />
       {chrome?.footer}
     </Fieldset>
   )
