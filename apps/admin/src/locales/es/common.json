@@ -19,7 +19,7 @@
     }
   },
   "brand": {
-    "tagline": "Administración"
+    "credit": "Con tecnología de bimo.dev"
   },
   "nav": {
     "label": "Principal",
@@ -56,9 +56,11 @@
       }
     }
   },
+  "userAvatar": {
+    "unknown": "Usuario desconocido"
+  },
   "user": {
     "name": "Editor",
-    "notifications": "Notificaciones",
     "signOut": "Cerrar sesión"
   },
   "sort": {

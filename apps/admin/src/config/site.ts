@@ -5,5 +5,6 @@ export const site = {
   url: 'https://backstage.example.com',
   ogImage: '/og.png',
   themeColor: '#ffffff',
-  locale: 'en_US'
+  locale: 'en_US',
+  creditUrl: 'https://bimo.dev'
 } as const
