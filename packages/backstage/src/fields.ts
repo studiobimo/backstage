@@ -2,13 +2,18 @@ import { z } from 'zod'
 
 import { RICH_TEXT, richTextDoc } from './rich-text.ts'
 
-export type FieldKind = 'image' | 'richText' | 'link' | 'localized' | 'reference'
+export type FieldKind = 'image' | 'richText' | 'link' | 'localized' | 'reference' | 'hexColor'
 
 const marked = <T extends z.ZodType>(schema: T, backstage: FieldKind): T =>
   schema.meta({ backstage }) as T
 
 export const image = () =>
   marked(z.object({ id: z.string().min(1), alt: z.string().default('') }), 'image')
+
+export const HEX_COLOR = { pattern: /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/ } as const
+
+export const hexColor = () =>
+  marked(z.string().trim().regex(HEX_COLOR.pattern).toLowerCase(), 'hexColor')
 
 export const richText = () => marked(richTextDoc, 'richText')
 

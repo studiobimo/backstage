@@ -8,6 +8,7 @@ export type FieldShape =
   | 'link'
   | 'localized'
   | 'reference'
+  | 'hexColor'
   | 'array'
   | 'object'
   | 'select'
@@ -22,7 +23,8 @@ const MARKED_SHAPES: Record<string, FieldShape> = {
   image: 'image',
   link: 'link',
   localized: 'localized',
-  reference: 'reference'
+  reference: 'reference',
+  hexColor: 'hexColor'
 }
 
 const TYPE_SHAPES: Record<string, FieldShape> = {

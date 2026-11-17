@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 
+import { NO_SITE_BRAND, type SiteBrand } from '../brand.ts'
 import { LOCALE, type Locale } from '../locales.ts'
 import type { Snapshot } from '../publishing.ts'
 import { isBlank } from '../translations.ts'
@@ -8,6 +9,7 @@ export interface RenderContext {
   locale: Locale
   defaultLocale: Locale
   media: Snapshot['media']
+  brand?: SiteBrand
 }
 
 const RenderReactContext = createContext<RenderContext>({
@@ -46,3 +48,7 @@ export function useImage(image: { id: string; alt: string } | undefined): Render
     alt: image.alt || found.alt
   }
 }
+
+export const useBrand = () => useContext(RenderReactContext).brand ?? NO_SITE_BRAND
+
+export const useLogo = () => useImage(useBrand().logo ?? undefined)

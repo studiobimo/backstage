@@ -1,3 +1,4 @@
+import { NO_SITE_BRAND } from '../../brand.ts'
 import type { ReactNode } from 'react'
 import { z } from 'zod'
 
@@ -141,6 +142,7 @@ export const siteSnapshot = (overrides: Partial<SiteSnapshot> = {}): SiteSnapsho
   publishedAt: 1,
   siteName: 'Studio',
   seo: { description: '', socialImageId: null },
+  brand: NO_SITE_BRAND,
   slots: { header: { block: 'header', schemaVersion: 1, content: { text: 'Studio header' } } },
   media: {},
   ...overrides

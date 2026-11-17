@@ -12,7 +12,7 @@ export {
 export type { Entry, EntrySummary } from '../entries.ts'
 export { classifyField } from '../field-shapes.ts'
 export type { FieldShape } from '../field-shapes.ts'
-export { LINK, linkValueSchema } from '../fields.ts'
+export { HEX_COLOR, LINK, linkValueSchema } from '../fields.ts'
 export type { FieldKind, LinkValue } from '../fields.ts'
 export { REFERENCE } from '../references.ts'
 export type { EntryReferenceValue } from '../references.ts'
