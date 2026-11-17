@@ -4,6 +4,14 @@
   "back": "All {{name}}",
   "delete": "Delete entry",
   "missing": "This collection is not defined on this site.",
+  "address": {
+    "heading": "Web address",
+    "description": "Where this entry appears on your site."
+  },
+  "content": {
+    "heading": "Content",
+    "description": "What visitors read on this entry."
+  },
   "slug": "Address",
   "slugHint": "Leave blank to derive it from the title. Lowercase letters, numbers and hyphens.",
   "dependents": {

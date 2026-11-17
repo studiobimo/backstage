@@ -18,6 +18,8 @@
     "done": "Se invitó a {{email}}"
   },
   "list": {
+    "heading": "Personas con acceso",
+    "description": "Todas las personas que pueden iniciar sesión en este sitio.",
     "person": "Persona",
     "role": "Rol",
     "actions": "Acciones",

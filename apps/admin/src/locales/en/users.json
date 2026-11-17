@@ -18,6 +18,8 @@
     "done": "{{email}} was invited"
   },
   "list": {
+    "heading": "People with access",
+    "description": "Everyone who can sign in to this site.",
     "person": "Person",
     "role": "Role",
     "actions": "Actions",

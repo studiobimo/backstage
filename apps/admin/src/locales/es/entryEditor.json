@@ -4,6 +4,14 @@
   "back": "Todo en {{name}}",
   "delete": "Eliminar entrada",
   "missing": "Esta colección no está definida en este sitio.",
+  "address": {
+    "heading": "Dirección web",
+    "description": "Dónde aparece esta entrada en tu sitio."
+  },
+  "content": {
+    "heading": "Contenido",
+    "description": "Lo que leen los visitantes en esta entrada."
+  },
   "slug": "Dirección",
   "slugHint": "Déjala en blanco para derivarla del título. Letras minúsculas, números y guiones.",
   "dependents": {

@@ -29,6 +29,10 @@
     "hint": "Di qué muestra la imagen, como se lo dirías a alguien que no puede verla.",
     "needsAttention": "Corregir"
   },
+  "upload": {
+    "heading": "Nueva imagen",
+    "description": "Elige un archivo y descríbelo en cada idioma."
+  },
   "submit": "Subir imagen",
   "uploaded": {
     "title": "Imagen subida"

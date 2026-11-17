@@ -6,11 +6,14 @@ import { useTranslation } from 'react-i18next'
 
 import { useAppForm } from '@/components/form/app-form'
 import { fieldErrorsOf } from '@/components/form/locale-errors'
+import { FrameSection } from '@/components/frame-section'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
 import { toastManager } from '@/components/ui/toast'
 import { useApiErrorMessage } from '@/lib/api-feedback'
+import { CONTROL_WIDTH } from '@/lib/content-width'
+import { cn } from '@/lib/utils'
 
 import { inviteUserMutation } from './queries'
 import { useRoleOptions } from './role-options'
@@ -41,13 +44,11 @@ export function InviteForm() {
     }
   })
   return (
-    <section aria-labelledby="invite-heading" className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h2 id="invite-heading" className="text-xl">
-          {t('invite.title')}
-        </h2>
-        <p className="text-muted-foreground text-sm">{t('invite.description')}</p>
-      </div>
+    <FrameSection
+      title={t('invite.title')}
+      description={t('invite.description')}
+      panelClassName="flex flex-col gap-4"
+    >
       {failure && (
         <Alert variant="error" role="alert">
           <CircleAlertIcon />
@@ -62,26 +63,30 @@ export function InviteForm() {
           void form.handleSubmit()
         }}
       >
-        <div className="w-full sm:max-w-sm">
+        <div className="w-full sm:flex-1">
           <form.AppField name="email">
             {(field) => (
               <field.TextField label={t('invite.email')} inputMode="email" autoComplete="off" />
             )}
           </form.AppField>
         </div>
-        <div className="w-full sm:max-w-44">
+        <div className={CONTROL_WIDTH.compact}>
           <form.AppField name="role">
             {(field) => <field.SelectField label={t('invite.role')} options={roleOptions} />}
           </form.AppField>
         </div>
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(submitting) => (
-            <Button type="submit" loading={submitting} className="sm:mt-6.5">
+            <Button
+              type="submit"
+              loading={submitting}
+              className={cn(CONTROL_WIDTH.action, 'sm:mt-6.5')}
+            >
               {t('invite.submit')}
             </Button>
           )}
         </form.Subscribe>
       </Form>
-    </section>
+    </FrameSection>
   )
 }
