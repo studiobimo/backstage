@@ -202,9 +202,15 @@ describe('verifying a link', () => {
     const cookie = await signIn()
     expect((await callWithCookie(cookie)).status).toBe(200)
     const session = await callWithCookie(cookie, `/api/auth${AUTH.paths.session}`)
-    expect(await session.json()).toEqual({ mode: 'magic-link', authenticated: true })
+    expect(await session.json()).toEqual({
+      mode: 'magic-link',
+      authenticated: true,
+      signOut: 'session'
+    })
   })
+})
 
+describe('refusing a link', () => {
   it('refuses a link used a second time', async () => {
     const token = await issueToken()
     expect((await verify(token)).status).toBe(204)
@@ -231,7 +237,23 @@ describe('verifying a link', () => {
   it('refuses a link whose user has been removed since', async () => {
     const token = await issueToken()
     await db.prepare('DELETE FROM users').run()
+    await db
+      .prepare('INSERT INTO users (id, email, name, created_at) VALUES (?, ?, ?, ?)')
+      .bind('user-2', 'someone-else@studio.test', '', Date.now())
+      .run()
     expect((await verify(token)).status).toBe(400)
+  })
+
+  it('makes the first person to sign in the owner when nobody is set up yet', async () => {
+    await db.prepare('DELETE FROM users').run()
+    await requestLink(STRANGER_EMAIL, { env: { ...magicLinkEnv, OWNER_EMAIL: undefined } })
+    expect(sent).toHaveLength(1)
+    const response = await verify(tokenOf(sent[0]!), {
+      env: { ...magicLinkEnv, OWNER_EMAIL: undefined }
+    })
+    expect(response.status).toBe(204)
+    const [claimed] = await rows('users')
+    expect(claimed).toMatchObject({ email: STRANGER_EMAIL, role: 'owner' })
   })
 
   it('lets only one of two concurrent uses succeed', async () => {
@@ -282,7 +304,11 @@ describe('the gate in magic-link mode', () => {
 
   it('reports an unauthenticated visitor to the sign-in page', async () => {
     const response = await app.request(`${ORIGIN}/api/auth${AUTH.paths.session}`, {}, magicLinkEnv)
-    expect(await response.json()).toEqual({ mode: 'magic-link', authenticated: false })
+    expect(await response.json()).toEqual({
+      mode: 'magic-link',
+      authenticated: false,
+      signOut: 'session'
+    })
   })
 })
 
@@ -310,7 +336,11 @@ describe('choosing the mode', () => {
     const gated = await app.request(`${ORIGIN}${PROTECTED_PATH}`, {}, accessEnv)
     expect(gated.status).toBe(403)
     const session = await app.request(`${ORIGIN}/api/auth${AUTH.paths.session}`, {}, accessEnv)
-    expect(await session.json()).toEqual({ mode: 'access', authenticated: false })
+    expect(await session.json()).toEqual({
+      mode: 'access',
+      authenticated: false,
+      signOut: 'access'
+    })
   })
 
   it('does not accept a session cookie in Access mode', async () => {

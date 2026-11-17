@@ -90,6 +90,40 @@ export const removeUser = async (d1: AnyD1Database, id: string) => {
   return true
 }
 
+const CLAIM_FIRST_OWNER_SQL = [
+  'INSERT INTO users (id, email, name, role, created_at)',
+  'SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM users)'
+].join(' ')
+
+const claimFirstOwner = async (d1: AnyD1Database, identity: Identity) => {
+  await d1
+    .prepare(CLAIM_FIRST_OWNER_SQL)
+    .bind(crypto.randomUUID(), identity.email, identity.name, ROLE.owner, Date.now())
+    .run()
+  return findUserByEmail(d1, identity.email)
+}
+
+export const hasNoUsers = async (d1: AnyD1Database) => {
+  const [row] = await drizzle(d1)
+    .select({ total: sql<number>`count(*)` })
+    .from(users)
+  return row?.total === 0
+}
+
+export const setUserName = async (d1: AnyD1Database, id: string, name: string) => {
+  await drizzle(d1).update(users).set({ name }).where(eq(users.id, id))
+}
+
+export const claimOrResolveUser = async (
+  d1: AnyD1Database,
+  identity: Identity,
+  ownerEmails: readonly string[]
+): Promise<Editor | null> =>
+  (await resolveUser(d1, identity, ownerEmails)) ??
+  (ownerEmails.length === 0
+    ? await claimFirstOwner(d1, { ...identity, email: identity.email.trim().toLowerCase() })
+    : null)
+
 export const resolveUser = async (
   d1: AnyD1Database,
   identity: Identity,

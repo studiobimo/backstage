@@ -1,7 +1,14 @@
 import { API_ERROR, type ApiError } from '../errors.ts'
-import { AUTH, authModeSchema, type AuthMode } from '../auth.ts'
+import { AUTH, authModeSchema, type AuthMode, type SignOutKind } from '../auth.ts'
 import { logEvent } from '../observability.ts'
-import { ownerEmailsOf, resolveUser, type Editor, type Identity } from '../db/users.ts'
+import {
+  claimOrResolveUser,
+  ownerEmailsOf,
+  resolveUser,
+  setUserName,
+  type Editor,
+  type Identity
+} from '../db/users.ts'
 import { ROLE } from '../users.ts'
 import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
@@ -14,6 +21,8 @@ import { sessionEditor } from './session.ts'
 const ACCESS = {
   header: 'Cf-Access-Jwt-Assertion',
   certsPath: '/cdn-cgi/access/certs',
+  identityPath: '/cdn-cgi/access/get-identity',
+  cookie: 'CF_Authorization',
   algorithms: ['RS256'],
   certsCacheSeconds: 300,
   localHostnames: ['localhost', '127.0.0.1', '[::1]'],
@@ -65,7 +74,35 @@ const accessEditor = async (c: Context<AccessEnv>) => {
   const token = c.req.header(ACCESS.header)
   if (!token || !ACCESS_TEAM_DOMAIN || !ACCESS_AUD) return null
   const identity = await verifiedIdentity(token, ACCESS_TEAM_DOMAIN, ACCESS_AUD)
-  return identity && resolveUser(DB, identity, ownerEmailsOf(OWNER_EMAIL))
+  return identity && claimOrResolveUser(DB, identity, ownerEmailsOf(OWNER_EMAIL))
+}
+
+const accessIdentityName = async (teamDomain: string, token: string) => {
+  try {
+    const response = await fetch(`${trimTrailingSlashes(teamDomain)}${ACCESS.identityPath}`, {
+      headers: { cookie: `${ACCESS.cookie}=${token}` }
+    })
+    const body: { name?: unknown } = await response.json()
+    return typeof body.name === 'string' ? body.name.trim() : ''
+  } catch {
+    return ''
+  }
+}
+
+export const withAccessName = async (c: Context<AccessEnv>): Promise<Editor> => {
+  const editor = c.get('editor')
+  const token = c.req.header(ACCESS.header)
+  const { ACCESS_TEAM_DOMAIN, DB } = c.env
+  if (editor.name || !token || !ACCESS_TEAM_DOMAIN) return editor
+  const name = await accessIdentityName(ACCESS_TEAM_DOMAIN, token)
+  if (!name) return editor
+  await setUserName(DB, editor.id, name)
+  return { ...editor, name }
+}
+
+export const signOutKind = (c: Context<AccessEnv>, mode: AuthMode): SignOutKind => {
+  if (mode === AUTH.mode.magicLink) return AUTH.signOut.session
+  return c.env.DEV_AUTH === ACCESS.devAuthValue ? AUTH.signOut.none : AUTH.signOut.access
 }
 
 export const requireOwner = createMiddleware<AccessEnv>(async (c, next) =>

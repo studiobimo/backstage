@@ -11,11 +11,11 @@ import {
   recordAttempt,
   storeLoginToken
 } from '../db/auth.ts'
-import { findUserByEmail, ownerEmailsOf, resolveUser } from '../db/users.ts'
+import { claimOrResolveUser, findUserByEmail, hasNoUsers, ownerEmailsOf } from '../db/users.ts'
 import { API_ERROR } from '../errors.ts'
 import { reportError } from '../observability.ts'
 import { randomToken, sha256Hex } from './auth-tokens.ts'
-import { resolveAccess, resolveAuthMode, type AccessEnv } from './auth.ts'
+import { resolveAccess, resolveAuthMode, signOutKind, type AccessEnv } from './auth.ts'
 import type { LoginMailer } from './mailer.ts'
 import { readJsonBody, respondWithError, RESPONSE_STATUS } from './respond.ts'
 import { endSession, startSession } from './session.ts'
@@ -76,7 +76,11 @@ const sessionRoute = async (c: Context<AccessEnv>) => {
     return respondWithError(c, access.denied)
   }
   const mode = resolveAuthMode(c.env.AUTH_MODE) ?? AUTH.mode.access
-  const body: AuthSessionResponse = { mode, authenticated: 'editor' in access }
+  const body: AuthSessionResponse = {
+    mode,
+    authenticated: 'editor' in access,
+    signOut: signOutKind(c, mode)
+  }
   return c.json(body)
 }
 
@@ -93,8 +97,11 @@ export const authRoutes = (mailer: LoginMailer) =>
       if (!(await withinRateLimit(c.env.DB, email, clientIp(c), now))) {
         return respondWithError(c, API_ERROR.tooManyRequests)
       }
+      const ownerEmails = ownerEmailsOf(c.env.OWNER_EMAIL)
       const known =
-        ownerEmailsOf(c.env.OWNER_EMAIL).includes(email) || (await findUserByEmail(c.env.DB, email))
+        ownerEmails.includes(email) ||
+        (await findUserByEmail(c.env.DB, email)) ||
+        (ownerEmails.length === 0 && (await hasNoUsers(c.env.DB)))
       if (known) {
         await inBackground(c, issueLoginLink(c, mailer, email))
       }
@@ -106,7 +113,7 @@ export const authRoutes = (mailer: LoginMailer) =>
       const email = await consumeLoginToken(c.env.DB, await sha256Hex(body.data.token), Date.now())
       const user =
         email &&
-        (await resolveUser(c.env.DB, { email, name: '' }, ownerEmailsOf(c.env.OWNER_EMAIL)))
+        (await claimOrResolveUser(c.env.DB, { email, name: '' }, ownerEmailsOf(c.env.OWNER_EMAIL)))
       if (!user) return respondWithError(c, API_ERROR.invalidLoginLink)
       await startSession(c, c.env.DB, user.id)
       return c.body(null, RESPONSE_STATUS.noContent)
