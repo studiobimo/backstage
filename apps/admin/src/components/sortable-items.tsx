@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export interface SortableSlot {
   ref?: Ref<HTMLLIElement>
@@ -24,10 +25,11 @@ interface SortableItemsProps {
   keys: readonly string[]
   names: readonly string[]
   onMove: (from: number, to: number) => void
+  className?: string
   children: (key: string, index: number, slot: SortableSlot) => ReactNode
 }
 
-interface RowProps extends Omit<SortableItemsProps, 'keys' | 'onMove'> {
+interface RowProps extends Omit<SortableItemsProps, 'keys' | 'onMove' | 'className'> {
   id: string
   index: number
 }
@@ -62,7 +64,13 @@ function placeOf(source: Draggable | null) {
   return { item: data.data?.name ?? '', position, total: data.data?.total ?? 0 }
 }
 
-export default function SortableItems({ keys, names, onMove, children }: SortableItemsProps) {
+export default function SortableItems({
+  keys,
+  names,
+  onMove,
+  className,
+  children
+}: SortableItemsProps) {
   const { t } = useTranslation()
   return (
     <DragDropProvider
@@ -88,7 +96,7 @@ export default function SortableItems({ keys, names, onMove, children }: Sortabl
         if (source.initialIndex !== source.index) onMove(source.initialIndex, source.index)
       }}
     >
-      <ul className="flex flex-col gap-3">
+      <ul className={cn('flex flex-col gap-3', className)}>
         {keys.map((key, index) => (
           <SortableRow key={key} id={key} index={index} names={names}>
             {children}

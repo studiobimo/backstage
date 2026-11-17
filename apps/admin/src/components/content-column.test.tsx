@@ -14,7 +14,7 @@ describe('content column', () => {
 
   it('gives other screens a narrow column', async () => {
     await renderShell('/type')
-    expect(screen.getByRole('heading', { level: 1 }).closest('.max-w-3xl')).not.toBeNull()
+    expect(screen.getByRole('heading', { level: 1 }).closest('.max-w-4xl')).not.toBeNull()
   })
 
   it('starts the breadcrumb and the page title on the same edge', async () => {
@@ -22,7 +22,7 @@ describe('content column', () => {
     const breadcrumbColumn = screen
       .getByRole('navigation', { name: 'breadcrumb' })
       .closest('.max-w-6xl')
-    const titleColumn = screen.getByRole('heading', { level: 1 }).closest('.max-w-3xl')
+    const titleColumn = screen.getByRole('heading', { level: 1 }).closest('.max-w-4xl')
     const edge = (column: Element | null | undefined) =>
       column?.parentElement?.className.replace(' flex-1 pb-10', '')
     expect(edge(breadcrumbColumn)).toBe(edge(titleColumn))
