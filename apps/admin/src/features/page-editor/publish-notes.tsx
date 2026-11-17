@@ -3,6 +3,7 @@ import { CircleAlertIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { UserAvatar } from '@/components/user-avatar'
 import { ApiError } from '@/lib/api'
 import { useApiErrorMessage } from '@/lib/api-feedback'
 import { formatDateTime } from '@/lib/format'
@@ -98,11 +99,14 @@ function SavedBy({ page }: { page: PublishableRecord }) {
   const { t, i18n } = useTranslation('pageEditor')
   if (page.updatedAt === undefined) return null
   return (
-    <p className="text-muted-foreground text-sm">
-      {t('publish.savedBy', {
-        name: page.updatedBy ?? t('publish.someone'),
-        when: formatDateTime(i18n.language, page.updatedAt)
-      })}
+    <p className="flex items-center gap-2 text-muted-foreground text-sm">
+      {page.updatedBy && <UserAvatar name={page.updatedBy} className="size-5 text-[10px]" />}
+      <span>
+        {t('publish.savedBy', {
+          name: page.updatedBy ?? t('publish.someone'),
+          when: formatDateTime(i18n.language, page.updatedAt)
+        })}
+      </span>
     </p>
   )
 }
@@ -118,10 +122,13 @@ export function PublishNotes({
   dependents
 }: PublishNotesProps) {
   const { t } = useTranslation('pageEditor')
+  const hint = usePublishHint({ page, dirty, changed, context })
+  const showsPublisher = !dirty && page.publishedAt !== null && Boolean(page.publishedBy)
   return (
     <section aria-label={t('publish.label')} className="flex flex-col gap-3">
-      <p id={hintId} className="text-muted-foreground text-sm">
-        {[usePublishHint({ page, dirty, changed, context }), dependents].filter(Boolean).join(' ')}
+      <p id={hintId} className="flex items-center gap-2 text-muted-foreground text-sm">
+        {showsPublisher && <UserAvatar name={page.publishedBy} className="size-5 text-[10px]" />}
+        <span>{[hint, dependents].filter(Boolean).join(' ')}</span>
       </p>
       <SavedBy page={page} />
       <PublishNotice error={error} blocks={blocks} context={context} />

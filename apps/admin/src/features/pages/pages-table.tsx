@@ -7,6 +7,7 @@ import { PublishStateBadge } from '@/components/publish-state-badge'
 import { RowMenu } from '@/components/row-menu'
 import { Badge } from '@/components/ui/badge'
 import { TableCell, TableHead, TableRow } from '@/components/ui/table'
+import { UserAvatar } from '@/components/user-avatar'
 import { useLocaleConfig } from '@/features/config/queries'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -80,16 +81,18 @@ function TitleCell({ page, name }: { page: PageSummary; name: string }) {
           <Link
             to="/pages/$pageId"
             params={{ pageId: page.id }}
-            className="truncate rounded-sm font-medium outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
+            className="truncate rounded-sm py-0.5 font-medium outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
           >
             {name}
           </Link>
           {page.isHome && <Badge variant="secondary">{t('list.home')}</Badge>}
         </div>
         <LanguageBadges missing={page.missing} onlyMissing className="sm:hidden" />
-        <p className="flex gap-x-3 truncate font-mono text-muted-foreground text-xs">
+        <p className="flex flex-wrap gap-1.5">
           {pageAddresses(page, config).map((address) => (
-            <span key={address}>{address}</span>
+            <Badge key={address} variant="outline" size="sm" className="font-mono font-normal">
+              {address}
+            </Badge>
           ))}
         </p>
       </div>
@@ -136,7 +139,10 @@ function PageRow({
         <StatusBadge page={page} />
       </TableCell>
       <TableCell className={`${COLUMN.updated} text-muted-foreground`}>
-        {formatDateTime(i18n.language, page.updatedAt)}
+        <span className="flex items-center gap-2">
+          {page.updatedBy && <UserAvatar name={page.updatedBy} className="size-5 text-[10px]" />}
+          {formatDateTime(i18n.language, page.updatedAt)}
+        </span>
       </TableCell>
       <TableCell className="w-px">
         <PageActionsMenu page={page} onAction={onAction} />
