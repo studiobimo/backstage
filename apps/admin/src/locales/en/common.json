@@ -89,6 +89,9 @@
   "apiErrors": {
     "invalid": "Check the fields and try again.",
     "forbidden": "You do not have access to do that. Sign in again and retry.",
+    "unauthorized": "Your session ended. Sign in again to continue.",
+    "invalid_login_link": "This sign-in link is invalid or has expired. Request a new one.",
+    "too_many_requests": "Too many attempts. Wait a few minutes and try again.",
     "slug_taken": "Another page already uses that address in this language.",
     "home_taken": "The home page already exists.",
     "stale_version": "A newer version was saved. Reload the latest version and try again.",

@@ -17,6 +17,39 @@ export const users = sqliteTable('users', {
   createdAt: createdAt()
 })
 
+export const loginTokens = sqliteTable('login_tokens', {
+  tokenHash: text('token_hash').primaryKey(),
+  email: text('email').notNull(),
+  expiresAt: integer('expires_at').notNull(),
+  usedAt: integer('used_at'),
+  createdAt: createdAt()
+})
+
+export const sessions = sqliteTable(
+  'sessions',
+  {
+    idHash: text('id_hash').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: integer('expires_at').notNull(),
+    createdAt: createdAt()
+  },
+  (t) => [index('sessions_user').on(t.userId)]
+)
+
+export const authAttempts = sqliteTable(
+  'auth_attempts',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    bucket: text('bucket').notNull(),
+    createdAt: createdAt()
+  },
+  (t) => [index('auth_attempts_bucket').on(t.bucket, t.createdAt)]
+)
+
 export const media = sqliteTable('media', {
   id: text('id').primaryKey(),
   r2Key: text('r2_key').notNull().unique(),

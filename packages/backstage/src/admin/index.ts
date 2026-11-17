@@ -3,10 +3,13 @@ import { csrf } from 'hono/csrf'
 import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
 
+import { AUTH } from '../auth.ts'
 import { API_ERROR } from '../errors.ts'
 import { OBSERVABILITY, observe, reportError, respondHealthy } from '../observability.ts'
 import type { AdminRegistry } from '../collections.ts'
 import { requireAccess } from './auth.ts'
+import { authRoutes } from './auth-routes.ts'
+import { cloudflareMailer, type LoginMailer } from './mailer.ts'
 import { requireBindings, type AdminEnv } from './env.ts'
 import { respondWithError } from './respond.ts'
 import { serveSpa } from './spa.ts'
@@ -14,13 +17,21 @@ import { v1Routes } from './v1.ts'
 
 const API_PATH = '/api'
 
-export const createAdmin = (registry: AdminRegistry) => {
+export interface AdminOptions {
+  mailer?: LoginMailer
+}
+
+export const createAdmin = (
+  registry: AdminRegistry,
+  { mailer = cloudflareMailer }: AdminOptions = {}
+) => {
   const api = new Hono<{ Bindings: AdminEnv }>().basePath(API_PATH)
 
   api.use(...observe)
   api.use(secureHeaders())
   api.get(OBSERVABILITY.health.path, respondHealthy)
   api.use(requireBindings)
+  api.route(AUTH.paths.base, authRoutes(mailer))
   api.use(requireAccess)
   api.use(csrf())
 
@@ -47,6 +58,7 @@ export const createAdmin = (registry: AdminRegistry) => {
 }
 
 export type { AdminEnv } from './env.ts'
+export type { LoginLinkMessage, LoginMailer } from './mailer.ts'
 export { ensureUser } from '../db/users.ts'
 export { writeSiteSettings } from '../db/settings.ts'
 export { writeSiteBlock } from '../db/site-blocks.ts'

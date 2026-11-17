@@ -1,11 +1,14 @@
-import { API_ERROR } from '../errors.ts'
+import { API_ERROR, type ApiError } from '../errors.ts'
+import { AUTH, authModeSchema, type AuthMode } from '../auth.ts'
 import { logEvent } from '../observability.ts'
 import type { Editor } from '../db/users.ts'
 import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
+import type { Context } from 'hono'
 
 import { respondWithError } from './respond.ts'
 import type { AdminEnv } from './env.ts'
+import { sessionEditor } from './session.ts'
 
 const ACCESS = {
   header: 'Cf-Access-Jwt-Assertion',
@@ -50,24 +53,46 @@ const verifiedEditor = async (token: string, teamDomain: string, audience: strin
   }
 }
 
-export const requireAccess = createMiddleware<AccessEnv>(async (c, next) => {
-  const { DEV_AUTH, ACCESS_TEAM_DOMAIN, ACCESS_AUD } = c.env
+export const resolveAuthMode = (value: string | undefined): AuthMode | null => {
+  if (!value) return AUTH.mode.access
+  const parsed = authModeSchema.safeParse(value)
+  return parsed.success ? parsed.data : null
+}
 
-  if (DEV_AUTH === ACCESS.devAuthValue) {
-    if (!isLocalRequest(c.req.url)) {
-      logEvent('error', c, API_ERROR.devAuthOutsideLocal.message)
-      return respondWithError(c, API_ERROR.devAuthOutsideLocal)
-    }
-    c.set('editor', ACCESS.devEditor)
-    return next()
-  }
-
+const accessEditor = (c: Context<AccessEnv>) => {
+  const { ACCESS_TEAM_DOMAIN, ACCESS_AUD } = c.env
   const token = c.req.header(ACCESS.header)
-  const editor =
-    token && ACCESS_TEAM_DOMAIN && ACCESS_AUD
-      ? await verifiedEditor(token, ACCESS_TEAM_DOMAIN, ACCESS_AUD)
-      : null
-  if (!editor) return respondWithError(c, API_ERROR.forbidden)
-  c.set('editor', editor)
+  return token && ACCESS_TEAM_DOMAIN && ACCESS_AUD
+    ? verifiedEditor(token, ACCESS_TEAM_DOMAIN, ACCESS_AUD)
+    : null
+}
+
+export type Access = { editor: Editor } | { denied: ApiError }
+
+const denial = (c: Context<AccessEnv>, error: ApiError): Access => {
+  if (error === API_ERROR.devAuthOutsideLocal || error === API_ERROR.internal) {
+    logEvent('error', c, error.message)
+  }
+  return { denied: error }
+}
+
+export const resolveAccess = async (c: Context<AccessEnv>): Promise<Access> => {
+  if (c.env.DEV_AUTH === ACCESS.devAuthValue) {
+    return isLocalRequest(c.req.url)
+      ? { editor: ACCESS.devEditor }
+      : denial(c, API_ERROR.devAuthOutsideLocal)
+  }
+  const mode = resolveAuthMode(c.env.AUTH_MODE)
+  if (!mode) return denial(c, API_ERROR.internal)
+  const magicLink = mode === AUTH.mode.magicLink
+  const editor = await (magicLink ? sessionEditor(c, c.env.DB) : accessEditor(c))
+  if (editor) return { editor }
+  return { denied: magicLink ? API_ERROR.unauthorized : API_ERROR.forbidden }
+}
+
+export const requireAccess = createMiddleware<AccessEnv>(async (c, next) => {
+  const access = await resolveAccess(c)
+  if ('denied' in access) return respondWithError(c, access.denied)
+  c.set('editor', access.editor)
   return next()
 })
