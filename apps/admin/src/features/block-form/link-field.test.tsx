@@ -20,6 +20,7 @@ const page = (id: string, title: string, published: boolean) => ({
   version: 1,
   layout: 'default',
   updatedAt: 1,
+  updatedBy: null,
   publishedAt: published ? 2 : null,
   publishedVersion: published ? 1 : null,
   publishedBy: null,

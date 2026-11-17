@@ -28,15 +28,19 @@ export const pageInputSchema = (locales: readonly Locale[]) =>
   ])
 export type PageInput = z.infer<ReturnType<typeof pageInputSchema>>
 
-export const pageSchema = z.object({
+export const authorshipSchema = z.object({
+  updatedAt: z.number().int(),
+  updatedBy: z.string().nullable(),
+  publishedAt: z.number().int().nullable(),
+  publishedVersion: z.number().int().nullable(),
+  publishedBy: z.string().nullable()
+})
+
+export const pageSchema = authorshipSchema.extend({
   id: z.string(),
   isHome: z.boolean(),
   version: z.number().int(),
   layout: z.string(),
-  updatedAt: z.number().int(),
-  publishedAt: z.number().int().nullable(),
-  publishedVersion: z.number().int().nullable(),
-  publishedBy: z.string().nullable(),
   locales: z.array(z.object({ locale: z.string(), slug: z.string().nullable(), title: z.string() }))
 })
 export type Page = z.infer<typeof pageSchema>

@@ -98,6 +98,7 @@
     "notLive": "Not live. Visitors cannot see this page yet.",
     "since": "Live since {{when}}, published by {{name}}.",
     "changedSince": "Live since {{when}}, published by {{name}}. Saved changes are not live yet. Publish to update the page.",
+    "savedBy": "Last saved by {{name}} on {{when}}.",
     "someone": "someone",
     "saveFirst": "Save your changes to publish them.",
     "unpublishTitle": "Unpublish {{name}}?",

@@ -40,6 +40,7 @@ export const aboutPage: PageSummary = {
   version: 1,
   layout: 'default',
   updatedAt: 0,
+  updatedBy: null,
   publishedAt: null,
   publishedVersion: null,
   publishedBy: null,

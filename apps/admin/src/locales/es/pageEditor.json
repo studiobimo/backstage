@@ -98,6 +98,7 @@
     "notLive": "No está en línea. Los visitantes aún no ven esta página.",
     "since": "En línea desde {{when}}, publicada por {{name}}.",
     "changedSince": "En línea desde {{when}}, publicada por {{name}}. Los cambios guardados aún no están en línea. Publica para actualizar la página.",
+    "savedBy": "Guardado por última vez por {{name}} el {{when}}.",
     "someone": "alguien",
     "saveFirst": "Guarda tus cambios para publicarlos.",
     "unpublishTitle": "¿Despublicar {{name}}?",

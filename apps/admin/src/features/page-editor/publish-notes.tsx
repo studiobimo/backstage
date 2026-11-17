@@ -8,7 +8,8 @@ import { useApiErrorMessage } from '@/lib/api-feedback'
 import { formatDateTime } from '@/lib/format'
 import { publishProblemKey } from '@/lib/publish-problem-key'
 
-type PublishableRecord = Pick<PageSummary, 'publishedAt' | 'publishedBy'>
+type PublishableRecord = Pick<PageSummary, 'publishedAt' | 'publishedBy'> &
+  Partial<Pick<PageSummary, 'updatedAt' | 'updatedBy'>>
 
 interface PublishNotesProps {
   page: PublishableRecord
@@ -93,6 +94,19 @@ function usePublishHint({
   })
 }
 
+function SavedBy({ page }: { page: PublishableRecord }) {
+  const { t, i18n } = useTranslation('pageEditor')
+  if (page.updatedAt === undefined) return null
+  return (
+    <p className="text-muted-foreground text-sm">
+      {t('publish.savedBy', {
+        name: page.updatedBy ?? t('publish.someone'),
+        when: formatDateTime(i18n.language, page.updatedAt)
+      })}
+    </p>
+  )
+}
+
 export function PublishNotes({
   page,
   context,
@@ -109,6 +123,7 @@ export function PublishNotes({
       <p id={hintId} className="text-muted-foreground text-sm">
         {[usePublishHint({ page, dirty, changed, context }), dependents].filter(Boolean).join(' ')}
       </p>
+      <SavedBy page={page} />
       <PublishNotice error={error} blocks={blocks} context={context} />
     </section>
   )
