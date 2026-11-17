@@ -42,6 +42,9 @@ const emptySeo: PageSeo = {
 
 type MockOptions = { stale?: boolean; seo?: PageSeo; descriptions?: unknown[] }
 type SeoPut = { expectedVersion: number; [locale: string]: unknown }
+const layoutRadio = (group: HTMLElement, name: RegExp) =>
+  within(group).getAllByRole('radio', { name })[0]!
+
 type LayoutPut = { layout: string; expectedVersion: number }
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
@@ -125,6 +128,15 @@ afterEach(() => {
 const SUITE = { timeout: 15_000 }
 
 describe('PageEditor blocks and layout', SUITE, () => {
+  it('groups the page into Blocks, Search and social and Layout frames', async () => {
+    mockApi(saved)
+    renderEditor()
+    await rows()
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((node) => node.textContent)
+    expect(headings).toEqual(expect.arrayContaining(['Blocks', 'Search and social']))
+    expect(screen.getByRole('radiogroup', { name: 'Layout' })).toBeInTheDocument()
+  })
+
   it('shows an empty state and adds a block from the picker', async () => {
     mockApi([])
     const user = userEvent.setup()
@@ -254,10 +266,10 @@ describe('PageEditor arranging blocks and layout', SUITE, () => {
     const puts = mockApi(saved)
     const user = userEvent.setup()
     renderEditor()
-    const picker = await screen.findByRole('combobox', { name: 'Layout' })
-    expect(picker).toHaveTextContent('Default')
-    await user.click(picker)
-    await user.click(await screen.findByRole('option', { name: 'Minimal' }))
+    const group = await screen.findByRole('radiogroup', { name: 'Layout' })
+    expect(layoutRadio(group, /Default/)).toHaveAttribute('aria-checked', 'true')
+    await user.click(layoutRadio(group, /Minimal/))
+    expect(layoutRadio(group, /Minimal/)).toHaveAttribute('aria-checked', 'true')
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts.layouts).toEqual([{ layout: 'minimal', expectedVersion: 3 }]))
     expect(puts).toHaveLength(0)
@@ -269,8 +281,8 @@ describe('PageEditor saving and leaving', SUITE, () => {
     const puts = mockApi(saved)
     const user = userEvent.setup()
     renderEditor()
-    await user.click(await screen.findByRole('combobox', { name: 'Layout' }))
-    await user.click(await screen.findByRole('option', { name: 'Bare' }))
+    const group = await screen.findByRole('radiogroup', { name: 'Layout' })
+    await user.click(layoutRadio(group, /Bare/))
     await user.click(screen.getAllByRole('button', { name: 'Remove hero' })[0]!)
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(puts.layouts).toHaveLength(1))

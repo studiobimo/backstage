@@ -4,12 +4,14 @@ import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PageTitle } from '@/components/page-title'
+import { StickyHeader } from '@/components/sticky-header'
 import { Tabs, TabsList, TabsTab } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
 import { languageName, type LocaleStatus } from '../block-form/locale-status'
 
-export const EDITOR_BODY = 'flex w-full max-w-3xl flex-col gap-8'
+export const EDITOR_BODY = 'flex w-full flex-col gap-8'
 
 interface LocaleTabsProps {
   locales: readonly string[]
@@ -111,16 +113,16 @@ export function EditorHeader({
   actions
 }: EditorHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 -mt-4 border-b bg-background py-3">
+    <StickyHeader>
       <div className="flex items-center gap-2 sm:gap-3">
         <Button size="icon" variant="ghost" aria-label={back.label} render={back.link}>
           <ArrowLeftIcon aria-hidden />
         </Button>
-        <h1 className="min-w-0 flex-1 truncate text-xl sm:text-2xl">{title}</h1>
+        <PageTitle className="flex-1 truncate">{title}</PageTitle>
         <EditorStatus published={published} changed={changed} dirty={dirty} />
         <EditorLocaleTabs {...locale} />
         {actions}
       </div>
-    </header>
+    </StickyHeader>
   )
 }

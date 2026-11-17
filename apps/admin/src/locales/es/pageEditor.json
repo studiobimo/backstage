@@ -1,6 +1,10 @@
 {
   "title": "Página",
   "back": "Todas las páginas",
+  "blocks": {
+    "heading": "Bloques",
+    "description": "Añade, reordena y edita el contenido de esta página."
+  },
   "save": "Guardar",
   "empty": {
     "title": "Aún no hay bloques",
@@ -34,6 +38,11 @@
       "default": "Predeterminado",
       "minimal": "Mínimo",
       "bare": "Sin adornos"
+    },
+    "summaries": {
+      "default": "Cabecera del sitio, contenido de la página y pie.",
+      "minimal": "Una cabecera compacta y el contenido de la página.",
+      "bare": "Solo el contenido de la página."
     }
   },
   "stale": {
