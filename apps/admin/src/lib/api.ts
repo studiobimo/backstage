@@ -9,7 +9,7 @@ import {
 } from '@studiobimo/backstage/internal'
 import { z } from 'zod'
 
-const API_ROOT = '/api/v1'
+export const API_ROOT = { v1: '/api/v1', auth: '/api/auth' } as const
 
 export const SESSION_EXPIRED = { code: 'session_expired', message: 'The session ended' } as const
 
@@ -55,8 +55,8 @@ const requestHeaders = (init?: RequestInit) => {
   return headers
 }
 
-export const apiRequest = async (path: string, init?: RequestInit) => {
-  const response = await fetch(`${API_ROOT}${path}`, {
+export const apiRequest = async (path: string, init?: RequestInit, root: string = API_ROOT.v1) => {
+  const response = await fetch(`${root}${path}`, {
     ...init,
     redirect: 'manual',
     headers: requestHeaders(init)

@@ -1,3 +1,6 @@
+import { AUTH } from '@studiobimo/backstage/internal'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { Bell, ChevronsUpDown, LogOut, UserRound } from 'lucide-react'
 import { useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,6 +23,7 @@ import {
   SidebarMenuItem,
   useSidebar
 } from '@/components/ui/sidebar'
+import { authSessionQuery, signOutMutation } from '@/features/auth/queries'
 import { resources } from '@/i18n/config'
 import {
   getThemePreference,
@@ -76,8 +80,23 @@ function ThemeMenuGroup() {
   )
 }
 
+function useSignOut() {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const { data: session } = useQuery(authSessionQuery)
+  const mutation = useMutation({
+    ...signOutMutation,
+    onSuccess: async () => {
+      queryClient.clear()
+      await navigate({ to: AUTH.signInPath })
+    }
+  })
+  return { enabled: session?.mode === AUTH.mode.magicLink, run: () => mutation.mutate() }
+}
+
 export function NavUser() {
   const { t } = useTranslation()
+  const signOut = useSignOut()
   const { isMobile } = useSidebar()
   return (
     <SidebarMenu>
@@ -116,7 +135,7 @@ export function NavUser() {
               {t('user.notifications')}
             </MenuItem>
             <MenuSeparator />
-            <MenuItem disabled>
+            <MenuItem disabled={!signOut.enabled} onClick={signOut.run}>
               <LogOut />
               {t('user.signOut')}
             </MenuItem>

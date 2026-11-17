@@ -115,5 +115,8 @@
     "description": "You have unsaved changes on this page. If you leave now they are lost.",
     "stay": "Keep editing",
     "discard": "Leave and discard"
+  },
+  "signIn": {
+    "title": "Sign in"
   }
 }

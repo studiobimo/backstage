@@ -8,6 +8,7 @@ import { Route as BlocksRouteImport } from './routes/blocks'
 import { Route as MediaRouteImport } from './routes/media'
 import { Route as PagesRouteImport } from './routes/pages'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as TypeRouteImport } from './routes/type'
 import { Route as CollectionsNameRouteImport } from './routes/collections.$name'
 import { Route as PagesPageIdRouteImport } from './routes/pages_.$pageId'
@@ -37,6 +38,11 @@ const PagesRoute = PagesRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TypeRoute = TypeRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/media': typeof MediaRoute
   '/pages': typeof PagesRoute
   '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
   '/pages/$pageId': typeof PagesPageIdRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/media': typeof MediaRoute
   '/pages': typeof PagesRoute
   '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
   '/pages/$pageId': typeof PagesPageIdRoute
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/media': typeof MediaRoute
   '/pages': typeof PagesRoute
   '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
   '/pages_/$pageId': typeof PagesPageIdRoute
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/media'
     | '/pages'
     | '/settings'
+    | '/sign-in'
     | '/type'
     | '/collections/$name'
     | '/pages/$pageId'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/media'
     | '/pages'
     | '/settings'
+    | '/sign-in'
     | '/type'
     | '/collections/$name'
     | '/pages/$pageId'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/media'
     | '/pages'
     | '/settings'
+    | '/sign-in'
     | '/type'
     | '/collections/$name'
     | '/pages_/$pageId'
@@ -147,6 +159,7 @@ export interface RootRouteChildren {
   MediaRoute: typeof MediaRoute
   PagesRoute: typeof PagesRoute
   SettingsRoute: typeof SettingsRoute
+  SignInRoute: typeof SignInRoute
   TypeRoute: typeof TypeRoute
   CollectionsNameRoute: typeof CollectionsNameRoute
   PagesPageIdRoute: typeof PagesPageIdRoute
@@ -189,6 +202,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/type': {
@@ -235,6 +255,7 @@ const rootRouteChildren: RootRouteChildren = {
   MediaRoute: MediaRoute,
   PagesRoute: PagesRoute,
   SettingsRoute: SettingsRoute,
+  SignInRoute: SignInRoute,
   TypeRoute: TypeRoute,
   CollectionsNameRoute: CollectionsNameRoute,
   PagesPageIdRoute: PagesPageIdRoute,

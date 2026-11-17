@@ -115,5 +115,8 @@
     "description": "Tienes cambios sin guardar en esta página. Si sales ahora, se perderán.",
     "stay": "Seguir editando",
     "discard": "Salir y descartar"
+  },
+  "signIn": {
+    "title": "Iniciar sesión"
   }
 }
