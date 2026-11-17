@@ -1,6 +1,10 @@
 {
   "title": "Page",
   "back": "All pages",
+  "blocks": {
+    "heading": "Blocks",
+    "description": "Add, reorder and edit the content of this page."
+  },
   "save": "Save",
   "empty": {
     "title": "No blocks yet",
@@ -34,6 +38,11 @@
       "default": "Default",
       "minimal": "Minimal",
       "bare": "Bare"
+    },
+    "summaries": {
+      "default": "Site header, page content and footer.",
+      "minimal": "A slim header and the page content.",
+      "bare": "Only the page content."
     }
   },
   "stale": {
