@@ -16,7 +16,13 @@ import { renderHtml } from '../html.ts'
 import { localeName, switcherLabel } from '../locales.ts'
 import { previewPathOf } from '../../page-preview.ts'
 import { pathOf } from '../routing.ts'
-import { descriptionOf, documentTitleOf, entryDocumentTitleOf, socialImageOf } from './head.ts'
+import {
+  descriptionOf,
+  documentTitleOf,
+  entryDocumentTitleOf,
+  socialImageOf,
+  themeColorOf
+} from './head.ts'
 import { entryLinksOf, linksOf } from './origin.ts'
 
 export type SiteHead = (snapshot: Snapshot) => ReactNode
@@ -103,6 +109,7 @@ interface HeadProps {
   alternates: readonly AlternateLink[]
   socialImageUrl: string | null
   siteName: string | null
+  themeColor: string | null
   stylesheetPath: string
   favicon?: SiteFavicon
   preview: boolean
@@ -116,6 +123,7 @@ function Head({
   alternates,
   socialImageUrl,
   siteName,
+  themeColor,
   stylesheetPath,
   favicon,
   preview,
@@ -142,6 +150,12 @@ function Head({
       <meta property="og:title" content={title} />
       {siteName ? <meta property="og:site_name" content={siteName} /> : null}
       {socialImageUrl ? <meta property="og:image" content={socialImageUrl} /> : null}
+      {themeColor ? (
+        <>
+          <meta name="theme-color" content={themeColor} />
+          <meta name="msapplication-TileColor" content={themeColor} />
+        </>
+      ) : null}
       {extra}
     </head>
   )
@@ -166,6 +180,7 @@ const pageHeadOf = (props: PageProps): HeadProps => {
     description: descriptionOf(snapshot, site),
     socialImageUrl: socialImage ? `${siteOrigin}/${socialImage.key}` : null,
     siteName: site?.siteName ?? null,
+    themeColor: themeColorOf(site),
     stylesheetPath,
     favicon,
     preview: Boolean(preview),
@@ -306,6 +321,7 @@ const entryHeadOf = (props: EntryPageProps): HeadProps => {
     description: site?.seo.description ?? '',
     socialImageUrl: socialImage ? `${siteOrigin}/${socialImage.key}` : null,
     siteName: site?.siteName ?? null,
+    themeColor: themeColorOf(site),
     stylesheetPath,
     favicon,
     preview: false

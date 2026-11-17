@@ -77,6 +77,31 @@ describe('settings API', () => {
     expect(stale.status).toBe(409)
     expect((await read()).settings).toEqual(saved)
   })
+})
+
+describe('settings API validation', () => {
+  beforeEach(async () => {
+    await db.prepare('DELETE FROM site_settings').run()
+  })
+
+  it('saves the logo and the theme color, lowercasing the color', async () => {
+    const put = await save({ siteName: {}, logo: { id: 'l1', alt: '' }, themeColor: '#ABC' }, 0)
+    expect(put.status).toBe(200)
+    expect((await read()).settings).toEqual({
+      siteName: {},
+      logo: { id: 'l1', alt: '' },
+      themeColor: '#abc'
+    })
+  })
+
+  it('refuses a theme color that is not a hex color', async () => {
+    const bad = await save({ siteName: {}, themeColor: 'blue' }, 0)
+    expect(bad.status).toBe(400)
+    expect(await bad.json()).toMatchObject({
+      code: 'invalid',
+      issues: [{ path: ['themeColor'] }]
+    })
+  })
 
   it('refuses a save with no version', async () => {
     const response = await send('PUT', saved)

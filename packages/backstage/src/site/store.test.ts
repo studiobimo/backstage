@@ -9,6 +9,7 @@ import {
   snapshotKey,
   type Snapshot
 } from '../publishing.ts'
+import { NO_SITE_BRAND } from '../brand.ts'
 import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../site-publishing.ts'
 import { routeOf } from './routing.ts'
 import {
@@ -86,6 +87,7 @@ const siteEn: SiteSnapshot = {
   publishedAt: 1,
   siteName: 'Studio',
   seo: { description: '', socialImageId: null },
+  brand: NO_SITE_BRAND,
   slots: {},
   media: {}
 }

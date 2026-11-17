@@ -29,3 +29,5 @@ const mediaOf = (owner: SocialImageOwner | null): SnapshotMedia | null =>
 
 export const socialImageOf = (snapshot: Snapshot, site: SiteSnapshot | null) =>
   mediaOf(snapshot) ?? mediaOf(site)
+
+export const themeColorOf = (site: SiteSnapshot | null) => site?.brand.themeColor ?? null
