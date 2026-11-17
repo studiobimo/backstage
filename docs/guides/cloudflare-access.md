@@ -11,8 +11,8 @@ Until magic-link sign-in lands (M5), Cloudflare Access is the only thing between
 a client's admin. It does two jobs, and both are needed:
 
 1. **Access keeps people out.** It sits in front of the admin's hostname and lets in only the
-   people on its policy. This covers the SPA's files too, because the worker never sees them
-   (`run_worker_first` is `["/api/*"]`).
+   people on its policy. This covers the SPA's files too, because Access answers before the
+   request reaches the Worker or its static assets.
 2. **The worker checks that Access did.** Every `/api/*` request must carry a valid
    `Cf-Access-Jwt-Assertion` header, signed by the client's Access. Without the check, anything
    that reaches the worker around Access, such as the `workers.dev` address, is trusted.
@@ -51,11 +51,12 @@ provider works too, if the client uses one.
    Use the hostname, not the worker: this is what puts the SPA's files behind Access as well.
 4. Add a policy. An application with no policy denies everyone.
 
-   | Action | Rule | Selector | Value |
-   | --- | --- | --- | --- |
-   | Allow | Include | Emails | The client's editors, and the studio's own addresses |
+   | Action | Rule    | Selector | Value                                                |
+   | ------ | ------- | -------- | ---------------------------------------------------- |
+   | Allow  | Include | Emails   | The client's editors, and the studio's own addresses |
 
    Use **Emails ending in** instead if everyone at the client's domain should get in.
+
 5. Save.
 
 ### 4. Turn off the other ways in
@@ -80,7 +81,8 @@ Open the application again: **Zero Trust > Access controls > Applications**, **E
 the application is deleted and recreated.
 
 Neither value is secret, so they are plain `vars` in the consumer's `wrangler.jsonc`, per
-environment:
+environment (the README's bindings table lists them as variables too). The worker reads them from
+its environment, so a Wrangler secret would also work, but there is no reason to hide them:
 
 ```jsonc
 "vars": {

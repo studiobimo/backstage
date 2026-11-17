@@ -59,8 +59,8 @@ Admin Worker, typed as `AdminEnv` from `@studiobimo/backstage/admin`:
 | `SITE_ORIGIN`        | variable               | no         | the site's origin, so the page editor can frame its preview         |
 | `AUTH_MODE`          | variable               | no         | `access` (default) or `magic-link`                                  |
 | `OWNER_EMAIL`        | variable               | yes        | the address (or comma-separated addresses) that are always owners   |
-| `ACCESS_TEAM_DOMAIN` | secret                 | access     | Cloudflare Access team domain                                       |
-| `ACCESS_AUD`         | secret                 | access     | Cloudflare Access application audience                              |
+| `ACCESS_TEAM_DOMAIN` | variable               | access     | Cloudflare Access team domain                                       |
+| `ACCESS_AUD`         | variable               | access     | Cloudflare Access application audience                              |
 | `EMAIL`              | `send_email` binding   | magic-link | sends the sign-in link                                              |
 | `AUTH_EMAIL_FROM`    | variable               | magic-link | the sender address, on a domain you have onboarded to Email Service |
 | `DEV_AUTH`           | local `.dev.vars` only | no         | `true` skips Access on localhost; refused on a deployed host        |

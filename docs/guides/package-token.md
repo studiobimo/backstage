@@ -16,6 +16,11 @@ in each place the install runs, and how the token is rotated.
   person stops working when they leave.
 - **Named for the client** (`acme-read-packages`) and given an expiry of 90 days, so a leak ends
   by itself and each client can be revoked alone.
+- **Use `BACKSTAGE_PACKAGE_TOKEN`, not `GITHUB_TOKEN`, in a client project's CI.** The workflow's
+  `GITHUB_TOKEN` is scoped to the repository that runs it, so it cannot read a package owned by
+  another repository such as `@studiobimo/backstage`. It only works inside the backstage repository
+  itself, where the harness CI (`e2e.yml`) uses it. A client repository's workflow reads the
+  `BACKSTAGE_PACKAGE_TOKEN` secret.
 - **One environment variable**, `BACKSTAGE_PACKAGE_TOKEN`, in all three places. The name is the
   same everywhere, so `.npmrc` is the same everywhere.
 
@@ -44,6 +49,15 @@ this JSON from it in the same place it sets the variable.
 
 pnpm's cooldown (`minimumReleaseAge`) rejects a version younger than a week, and that includes this
 package's own release, so `pnpm-workspace.yaml` lists `@studiobimo/*` under `minimumReleaseAgeExclude`.
+
+`pnpm add` of a package inside the cooldown writes a version-specific entry
+(`'@studiobimo/backstage@0.6.0'`) to `minimumReleaseAgeExclude`, which stops matching at the next
+release. Replace it with the scope pattern, so every release installs:
+
+```yaml
+minimumReleaseAgeExclude:
+  - '@studiobimo/*'
+```
 
 ## Where the value comes from
 
