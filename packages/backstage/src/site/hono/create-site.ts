@@ -13,7 +13,7 @@ import { routeOf } from '../routing.ts'
 import { respondWithRobots, respondWithSitemap } from '../seo.ts'
 import { findPublished, findSiteSnapshot, findTranslations, readSiteVersion } from '../store.ts'
 import type { SiteEnv } from '../index.ts'
-import { renderPage, type DocumentContext, type SiteHead } from './document.tsx'
+import { renderPage, type DocumentContext, type SiteFavicon, type SiteHead } from './document.tsx'
 import { renderEntryRoute } from './entry-route.ts'
 import { atSiteOrigin, siteOriginOf } from './origin.ts'
 import { previewRoutes, type SitePreview } from './preview.ts'
@@ -29,6 +29,7 @@ export interface CreateSiteOptions {
   stylesheet: string
   preview?: SitePreview
   contentSecurityPolicy?: ContentSecurityPolicyAdditions
+  favicon?: SiteFavicon
   head?: SiteHead
   routes?: (app: SiteApp) => void
 }
@@ -36,12 +37,13 @@ export interface CreateSiteOptions {
 const CACHED = { 'Cache-Control': EDGE_CACHE.control } as const
 
 export const createSite = (options: CreateSiteOptions) => {
-  const { components, stylesheet, preview, contentSecurityPolicy, head, routes } = options
+  const { components, stylesheet, preview, contentSecurityPolicy, favicon, head, routes } = options
   const locales = resolveLocaleConfig(components.registry)
   const document: DocumentContext = {
     components,
     locales,
     stylesheetPath: stylesheetPathFor(stylesheet),
+    favicon,
     head
   }
   const entryRoutes = routesOf(collectionsOf(components.registry).values())
