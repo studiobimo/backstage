@@ -15,6 +15,8 @@ export const AUTH = {
     logout: '/logout'
   },
   signInPath: '/sign-in',
+  signOut: { session: 'session', access: 'access', none: 'none' },
+  accessLogoutPath: '/cdn-cgi/access/logout',
   tokenParam: 'token',
   token: {
     bytes: 32,
@@ -42,9 +44,13 @@ export const AUTH = {
 export const authModeSchema = z.enum([AUTH.mode.access, AUTH.mode.magicLink])
 export type AuthMode = z.infer<typeof authModeSchema>
 
+const signOutKindSchema = z.enum([AUTH.signOut.session, AUTH.signOut.access, AUTH.signOut.none])
+export type SignOutKind = z.infer<typeof signOutKindSchema>
+
 export const authSessionResponseSchema = z.object({
   mode: authModeSchema,
-  authenticated: z.boolean()
+  authenticated: z.boolean(),
+  signOut: signOutKindSchema
 })
 export type AuthSessionResponse = z.infer<typeof authSessionResponseSchema>
 

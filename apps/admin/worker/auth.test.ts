@@ -214,6 +214,59 @@ describe('users in Access mode', () => {
   })
 })
 
+describe('first sign-in in Access mode', () => {
+  const FIRST = 'first@studio.test'
+  const SECOND = 'second@studio.test'
+  const IDENTITY_NAME = 'Ada Lovelace'
+  const unowned = { ...deployedEnv, OWNER_EMAIL: undefined }
+
+  const asUser = async (email: string, path = '/api/v1/users/me') => {
+    const publicJwk = await crypto.subtle.exportKey('jwk', trusted.publicKey)
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) =>
+      String(input).endsWith('/cdn-cgi/access/get-identity')
+        ? Response.json({ name: IDENTITY_NAME })
+        : Response.json({ keys: [{ ...publicJwk, kid: KEY_ID, alg: 'RS256' }] })
+    )
+    const token = await signToken(trusted.privateKey, { email })
+    return app.request(
+      `https://admin.example.com${path}`,
+      { headers: { 'Cf-Access-Jwt-Assertion': token } },
+      unowned
+    )
+  }
+
+  beforeAll(async () => {
+    await db.prepare('DELETE FROM users').run()
+  })
+
+  it('makes the first person through Access the owner, once', async () => {
+    const first = await asUser(FIRST)
+    expect(await first.json()).toMatchObject({ email: FIRST, role: 'owner' })
+    expect((await asUser(SECOND)).status).toBe(403)
+  })
+
+  it('fills in the name from Access identity', async () => {
+    expect(await (await asUser(FIRST)).json()).toMatchObject({ name: IDENTITY_NAME })
+  })
+
+  it('does not claim ownership when OWNER_EMAIL names the owner', async () => {
+    await db.prepare('DELETE FROM users').run()
+    await serveCerts()
+    const token = await signToken(trusted.privateKey, { email: FIRST })
+    const response = await app.request(
+      'https://admin.example.com/api/v1/users/me',
+      { headers: { 'Cf-Access-Jwt-Assertion': token } },
+      deployedEnv
+    )
+    expect(response.status).toBe(403)
+  })
+
+  it('tells the page how to sign out', async () => {
+    const response = await asUser(FIRST, '/api/auth/session')
+    expect(await response.json()).toMatchObject({ mode: 'access', signOut: 'access' })
+  })
+})
+
 describe('DEV_AUTH', () => {
   const devEnv = testEnv.localDevelopment
 

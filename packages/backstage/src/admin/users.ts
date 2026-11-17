@@ -10,7 +10,7 @@ import {
 } from '../db/users.ts'
 import { API_ERROR } from '../errors.ts'
 import { changeRoleSchema, inviteUserSchema } from '../users.ts'
-import { requireOwner, type AccessEnv } from './auth.ts'
+import { requireOwner, withAccessName, type AccessEnv } from './auth.ts'
 import { readJsonBody, respondWithError, RESPONSE_STATUS } from './respond.ts'
 
 const USERS_PATH = { me: '/me', one: '/:id' } as const
@@ -20,7 +20,7 @@ const presentCurrentUser = ({ id, email, name, role }: Editor) => ({ id, email, 
 export const usersRoutes = () =>
   new Hono<AccessEnv>()
     .get('/', async (c) => c.json({ users: await listUsers(c.env.DB) }))
-    .get(USERS_PATH.me, (c) => c.json(presentCurrentUser(c.get('editor'))))
+    .get(USERS_PATH.me, async (c) => c.json(presentCurrentUser(await withAccessName(c))))
     .post('/', requireOwner, async (c) => {
       const body = await readJsonBody(c, inviteUserSchema)
       if (!body.ok) return body.response
