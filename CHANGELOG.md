@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.8.0](https://github.com/studiobimo/backstage/compare/v0.7.0...v0.8.0) (2026-11-17)
+
+
+### Features
+
+* **admin:** frame the users, media, entry and collection screens ([#451](https://github.com/studiobimo/backstage/issues/451)) ([6c20f72](https://github.com/studiobimo/backstage/commit/6c20f729c7c0ade13601f58f511a3f22217f298b))
+* **admin:** give the sidebar and favicon one dot-matrix clapperboard ([#447](https://github.com/studiobimo/backstage/issues/447)) ([44775ad](https://github.com/studiobimo/backstage/commit/44775adf11622ceb26f67b53dcb18246cb5b4186))
+* **admin:** group the page editor into frames and pick a layout with cards ([#450](https://github.com/studiobimo/backstage/issues/450)) ([e5f921a](https://github.com/studiobimo/backstage/commit/e5f921a3239d730c7c778dc71e6b53ca32cc8e97))
+* **admin:** save settings from one sticky header ([#452](https://github.com/studiobimo/backstage/issues/452)) ([9257d29](https://github.com/studiobimo/backstage/commit/9257d2900aa9c5c587ae64477cc00a6da0d8426e))
+* **admin:** share one frame and page title across routes ([#449](https://github.com/studiobimo/backstage/issues/449)) ([20eec79](https://github.com/studiobimo/backstage/commit/20eec79a0eefa2903c4faa817270711b363cbb63))
+* **admin:** show who is signed in and let them sign out ([#448](https://github.com/studiobimo/backstage/issues/448)) ([8e43322](https://github.com/studiobimo/backstage/commit/8e433224d3644038a70375b7c940f0128d649d37))
+* **core:** add a hexColor field kind and edit it with a swatch ([#445](https://github.com/studiobimo/backstage/issues/445)) ([733eda3](https://github.com/studiobimo/backstage/commit/733eda3c9449fa045375ac8951f78fd3c89aaada))
+* **core:** add a logo and a theme color to site settings ([#446](https://github.com/studiobimo/backstage/issues/446)) ([b55d1f1](https://github.com/studiobimo/backstage/commit/b55d1f109e689f9a54092b1d2bdc1c678f734d07))
+* **core:** let the first person through Access or a magic link claim ownership ([#434](https://github.com/studiobimo/backstage/issues/434)) ([6121319](https://github.com/studiobimo/backstage/commit/612131916337bd9af3c4f69cdfca1b1f1cca88cc))
+
+
+### Documentation
+
+* record brand settings in an ADR ([#453](https://github.com/studiobimo/backstage/issues/453)) ([fc42b1b](https://github.com/studiobimo/backstage/commit/fc42b1b6d811b39f7272f2046ef6810e43b0dce2))
+
 ## [0.7.0](https://github.com/studiobimo/backstage/compare/v0.6.0...v0.7.0) (2026-11-17)
 
 
