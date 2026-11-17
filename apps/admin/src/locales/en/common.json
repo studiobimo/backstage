@@ -19,7 +19,7 @@
     }
   },
   "brand": {
-    "tagline": "Admin"
+    "credit": "Powered by bimo.dev"
   },
   "nav": {
     "label": "Main",
@@ -56,9 +56,11 @@
       }
     }
   },
+  "userAvatar": {
+    "unknown": "Unknown user"
+  },
   "user": {
     "name": "Editor",
-    "notifications": "Notifications",
     "signOut": "Sign out"
   },
   "sort": {
