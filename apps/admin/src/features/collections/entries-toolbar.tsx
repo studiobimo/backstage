@@ -6,6 +6,7 @@ import { SearchField } from '@/components/search-field'
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { ENTRY_SORTS, type EntrySort, SORT_DIRECTION, type SortDirection } from './entry-filters'
+import { CONTROL_WIDTH } from '@/lib/content-width'
 
 interface EntriesToolbarProps {
   query: string
@@ -41,7 +42,7 @@ export function EntriesToolbar({
           value={sort}
           onValueChange={(next: string | null) => next !== null && onSortChange(next as EntrySort)}
         >
-          <SelectTrigger aria-label={t('list.sort.label')} className="w-44">
+          <SelectTrigger aria-label={t('list.sort.label')} className={CONTROL_WIDTH.compact}>
             <SelectValue />
           </SelectTrigger>
           <SelectPopup>

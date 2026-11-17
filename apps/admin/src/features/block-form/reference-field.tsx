@@ -17,6 +17,7 @@ import { ChosenEntries } from './reference-chosen.tsx'
 import type { ReferenceSpec } from './spec.ts'
 import { referenceOf } from './reference-value.ts'
 import { fieldName } from './value.ts'
+import { CONTROL_WIDTH } from '@/lib/content-width'
 
 const DEFAULT_LATEST_COUNT = 3
 
@@ -45,7 +46,7 @@ function LatestCount({
             count: next ?? REFERENCE.limits.minCount
           })
         }
-        className="max-w-48"
+        className={CONTROL_WIDTH.compact}
       >
         <NumberFieldGroup>
           <NumberFieldDecrement />
