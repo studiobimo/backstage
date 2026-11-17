@@ -20,7 +20,7 @@ interface LocaleTabsProps {
   onChange: (locale: string) => void
 }
 
-export function EditorLocaleTabs({ locales, active, gaps, onChange }: LocaleTabsProps) {
+function EditorLocaleTabs({ locales, active, gaps, onChange }: LocaleTabsProps) {
   const { t, i18n } = useTranslation('blockForm')
   if (locales.length < 2) return null
   return (
