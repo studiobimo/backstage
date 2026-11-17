@@ -15,6 +15,7 @@ export interface AdminEnv {
   ACCESS_AUD?: string
   DEV_AUTH?: string
   AUTH_MODE?: string
+  OWNER_EMAIL?: string
   AUTH_EMAIL_FROM?: string
   EMAIL?: EmailBinding
 }

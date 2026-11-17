@@ -1,7 +1,8 @@
 import { API_ERROR, type ApiError } from '../errors.ts'
 import { AUTH, authModeSchema, type AuthMode } from '../auth.ts'
 import { logEvent } from '../observability.ts'
-import type { Editor } from '../db/users.ts'
+import { ownerEmailsOf, resolveUser, type Editor, type Identity } from '../db/users.ts'
+import { ROLE } from '../users.ts'
 import { createMiddleware } from 'hono/factory'
 import { verifyWithJwks } from 'hono/jwt'
 import type { Context } from 'hono'
@@ -30,12 +31,12 @@ const trimTrailingSlashes = (value: string) => value.replace(/\/+$/, '')
 const isLocalRequest = (url: string) =>
   (ACCESS.localHostnames as readonly string[]).includes(new URL(url).hostname)
 
-const editorOf = (claims: Record<string, unknown>): Editor => ({
+const identityOf = (claims: Record<string, unknown>): Identity => ({
   email: String(claims.email ?? claims.common_name ?? claims.sub),
   name: typeof claims.name === 'string' ? claims.name : ''
 })
 
-const verifiedEditor = async (token: string, teamDomain: string, audience: string) => {
+const verifiedIdentity = async (token: string, teamDomain: string, audience: string) => {
   const issuer = trimTrailingSlashes(teamDomain)
   try {
     const claims = await verifyWithJwks(
@@ -47,7 +48,7 @@ const verifiedEditor = async (token: string, teamDomain: string, audience: strin
       },
       { cf: { cacheEverything: true, cacheTtl: ACCESS.certsCacheSeconds } }
     )
-    return editorOf(claims)
+    return identityOf(claims)
   } catch {
     return null
   }
@@ -59,13 +60,17 @@ export const resolveAuthMode = (value: string | undefined): AuthMode | null => {
   return parsed.success ? parsed.data : null
 }
 
-const accessEditor = (c: Context<AccessEnv>) => {
-  const { ACCESS_TEAM_DOMAIN, ACCESS_AUD } = c.env
+const accessEditor = async (c: Context<AccessEnv>) => {
+  const { ACCESS_TEAM_DOMAIN, ACCESS_AUD, DB, OWNER_EMAIL } = c.env
   const token = c.req.header(ACCESS.header)
-  return token && ACCESS_TEAM_DOMAIN && ACCESS_AUD
-    ? verifiedEditor(token, ACCESS_TEAM_DOMAIN, ACCESS_AUD)
-    : null
+  if (!token || !ACCESS_TEAM_DOMAIN || !ACCESS_AUD) return null
+  const identity = await verifiedIdentity(token, ACCESS_TEAM_DOMAIN, ACCESS_AUD)
+  return identity && resolveUser(DB, identity, ownerEmailsOf(OWNER_EMAIL))
 }
+
+export const requireOwner = createMiddleware<AccessEnv>(async (c, next) =>
+  c.get('editor').role === ROLE.owner ? next() : respondWithError(c, API_ERROR.forbidden)
+)
 
 export type Access = { editor: Editor } | { denied: ApiError }
 
@@ -76,11 +81,14 @@ const denial = (c: Context<AccessEnv>, error: ApiError): Access => {
   return { denied: error }
 }
 
+const devAccess = async (c: Context<AccessEnv>): Promise<Access> => {
+  const editor = await resolveUser(c.env.DB, ACCESS.devEditor, [ACCESS.devEditor.email])
+  return editor ? { editor } : denial(c, API_ERROR.internal)
+}
+
 export const resolveAccess = async (c: Context<AccessEnv>): Promise<Access> => {
   if (c.env.DEV_AUTH === ACCESS.devAuthValue) {
-    return isLocalRequest(c.req.url)
-      ? { editor: ACCESS.devEditor }
-      : denial(c, API_ERROR.devAuthOutsideLocal)
+    return isLocalRequest(c.req.url) ? devAccess(c) : denial(c, API_ERROR.devAuthOutsideLocal)
   }
   const mode = resolveAuthMode(c.env.AUTH_MODE)
   if (!mode) return denial(c, API_ERROR.internal)

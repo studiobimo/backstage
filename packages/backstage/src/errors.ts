@@ -15,6 +15,16 @@ export const API_ERROR = {
   },
   invalid: { code: 'invalid', status: 400, message: 'Invalid input' },
   slugTaken: { code: 'slug_taken', status: 409, message: 'That slug is already used' },
+  lastOwner: {
+    code: 'last_owner',
+    status: 409,
+    message: 'The site needs at least one owner'
+  },
+  userExists: {
+    code: 'user_exists',
+    status: 409,
+    message: 'That person already has access'
+  },
   homeTaken: { code: 'home_taken', status: 409, message: 'The home page already exists' },
   staleVersion: {
     code: 'stale_version',

@@ -103,6 +103,8 @@
     "internal": "Algo salió mal en el servidor. Inténtalo de nuevo en un momento.",
     "dev_auth_outside_local": "El servidor está mal configurado. Avisa a quien administra este sitio.",
     "session_expired": "Tu sesión terminó. Inicia sesión de nuevo y reintenta. Lo que escribiste se conserva.",
+    "last_owner": "El sitio necesita al menos un propietario. Nombra primero a otra persona como propietaria.",
+    "user_exists": "Esa persona ya tiene acceso.",
     "fallback": "Algo salió mal. Revisa tu conexión e inténtalo de nuevo."
   },
   "session": {

@@ -4,14 +4,6 @@ import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 import { authAttempts, loginTokens, sessions, users } from './schema.ts'
 import type { Editor } from './users.ts'
 
-export const findUserByEmail = async (d1: AnyD1Database, email: string) => {
-  const [user] = await drizzle(d1)
-    .select({ id: users.id, email: users.email })
-    .from(users)
-    .where(sql`lower(${users.email}) = ${email}`)
-  return user ?? null
-}
-
 export const storeLoginToken = (
   d1: AnyD1Database,
   token: { tokenHash: string; email: string; expiresAt: number }
@@ -43,7 +35,7 @@ export const findSessionEditor = async (
   now: number
 ): Promise<Editor | null> => {
   const [editor] = await drizzle(d1)
-    .select({ email: users.email, name: users.name })
+    .select({ id: users.id, email: users.email, name: users.name, role: users.role })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(and(eq(sessions.idHash, idHash), gt(sessions.expiresAt, now)))

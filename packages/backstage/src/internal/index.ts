@@ -33,6 +33,17 @@ export {
   resolveLocaleConfig
 } from '../locales.ts'
 export { PAGE_PREVIEW, previewResponseSchema } from '../page-preview.ts'
+export {
+  changeRoleSchema,
+  currentUserSchema,
+  inviteUserSchema,
+  ROLE,
+  ROLES,
+  roleSchema,
+  userSchema,
+  usersResponseSchema
+} from '../users.ts'
+export type { ChangeRoleInput, CurrentUser, InviteUserInput, Role, User } from '../users.ts'
 export { RICH_TEXT } from '../rich-text.ts'
 export {
   hasUnpublishedChanges,

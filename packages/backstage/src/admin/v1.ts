@@ -15,6 +15,7 @@ import { settingsRoutes } from './settings.ts'
 import { sitePublishRoutes } from './site-publish.ts'
 import { siteOriginRoutes } from './site-origin.ts'
 import { slotsRoutes } from './slots.ts'
+import { usersRoutes } from './users.ts'
 import type { AdminEnv } from './env.ts'
 
 export const v1Routes = (registry: AdminRegistry) =>
@@ -33,3 +34,4 @@ export const v1Routes = (registry: AdminRegistry) =>
     .route('/site-origin', siteOriginRoutes())
     .route('/site', sitePublishRoutes(registry))
     .route('/slots', slotsRoutes(registry))
+    .route('/users', usersRoutes())
