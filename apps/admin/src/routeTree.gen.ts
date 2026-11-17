@@ -12,6 +12,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as TypeRouteImport } from './routes/type'
 import { Route as CollectionsNameRouteImport } from './routes/collections.$name'
 import { Route as PagesPageIdRouteImport } from './routes/pages_.$pageId'
+import { Route as SettingsUsersRouteImport } from './routes/settings_.users'
 import { Route as CollectionsNameEntryIdRouteImport } from './routes/collections_.$name.$entryId'
 import { Route as CollectionsNameNewRouteImport } from './routes/collections_.$name.new'
 
@@ -60,6 +61,11 @@ const PagesPageIdRoute = PagesPageIdRouteImport.update({
   path: '/pages/$pageId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsUsersRoute = SettingsUsersRouteImport.update({
+  id: '/settings_/users',
+  path: '/settings/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CollectionsNameEntryIdRoute = CollectionsNameEntryIdRouteImport.update({
   id: '/collections_/$name/$entryId',
   path: '/collections/$name/$entryId',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
   '/pages/$pageId': typeof PagesPageIdRoute
+  '/settings/users': typeof SettingsUsersRoute
   '/collections/$name/$entryId': typeof CollectionsNameEntryIdRoute
   '/collections/$name/new': typeof CollectionsNameNewRoute
 }
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
   '/pages/$pageId': typeof PagesPageIdRoute
+  '/settings/users': typeof SettingsUsersRoute
   '/collections/$name/$entryId': typeof CollectionsNameEntryIdRoute
   '/collections/$name/new': typeof CollectionsNameNewRoute
 }
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
   '/pages_/$pageId': typeof PagesPageIdRoute
+  '/settings_/users': typeof SettingsUsersRoute
   '/collections_/$name/$entryId': typeof CollectionsNameEntryIdRoute
   '/collections_/$name/new': typeof CollectionsNameNewRoute
 }
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/type'
     | '/collections/$name'
     | '/pages/$pageId'
+    | '/settings/users'
     | '/collections/$name/$entryId'
     | '/collections/$name/new'
   fileRoutesByTo: FileRoutesByTo
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/type'
     | '/collections/$name'
     | '/pages/$pageId'
+    | '/settings/users'
     | '/collections/$name/$entryId'
     | '/collections/$name/new'
   id:
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/type'
     | '/collections/$name'
     | '/pages_/$pageId'
+    | '/settings_/users'
     | '/collections_/$name/$entryId'
     | '/collections_/$name/new'
   fileRoutesById: FileRoutesById
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   TypeRoute: typeof TypeRoute
   CollectionsNameRoute: typeof CollectionsNameRoute
   PagesPageIdRoute: typeof PagesPageIdRoute
+  SettingsUsersRoute: typeof SettingsUsersRoute
   CollectionsNameEntryIdRoute: typeof CollectionsNameEntryIdRoute
   CollectionsNameNewRoute: typeof CollectionsNameNewRoute
 }
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PagesPageIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings_/users': {
+      id: '/settings_/users'
+      path: '/settings/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof SettingsUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/collections_/$name/$entryId': {
       id: '/collections_/$name/$entryId'
       path: '/collections/$name/$entryId'
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   TypeRoute: TypeRoute,
   CollectionsNameRoute: CollectionsNameRoute,
   PagesPageIdRoute: PagesPageIdRoute,
+  SettingsUsersRoute: SettingsUsersRoute,
   CollectionsNameEntryIdRoute: CollectionsNameEntryIdRoute,
   CollectionsNameNewRoute: CollectionsNameNewRoute,
 }
