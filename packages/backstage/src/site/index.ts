@@ -17,7 +17,14 @@ export {
   upsertIntoIndex
 } from '../seo.ts'
 export type { AlternateLink } from '../seo.ts'
-export { routeKey, SNAPSHOT, snapshotKey, snapshotRecords, snapshotSchema } from '../publishing.ts'
+export {
+  routeKey,
+  SITE_VERSION,
+  SNAPSHOT,
+  snapshotKey,
+  snapshotRecords,
+  snapshotSchema
+} from '../publishing.ts'
 export type { Snapshot } from '../publishing.ts'
 export {
   ENTRY_SNAPSHOT,

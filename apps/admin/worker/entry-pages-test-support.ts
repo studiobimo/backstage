@@ -1,6 +1,11 @@
 import { createAdmin } from '@studiobimo/backstage/admin'
 import { defineBlock, defineCollection, defineRegistry, localized } from '@studiobimo/backstage'
-import { entrySnapshotKey, entrySnapshotSchema, SEO } from '@studiobimo/backstage/site'
+import {
+  entrySnapshotKey,
+  entrySnapshotSchema,
+  SEO,
+  SITE_VERSION
+} from '@studiobimo/backstage/site'
 import { z } from 'zod'
 
 import { kv, sendTo, useFreshPagesDb } from './pages-test-support'
@@ -53,6 +58,8 @@ export const newsSnapshot = async (id: string, locale: 'en' | 'es') =>
   entrySnapshotSchema.parse(JSON.parse((await kv.get(entrySnapshotKey('news', id, locale)))!))
 
 export const entryKeys = async () =>
-  (await kv.list()).keys.map(({ name }) => name).filter((name) => name !== SEO.indexKey)
+  (await kv.list()).keys
+    .map(({ name }) => name)
+    .filter((name) => name !== SEO.indexKey && name !== SITE_VERSION.key)
 
 export const resetDatabaseBeforeEach = useFreshPagesDb

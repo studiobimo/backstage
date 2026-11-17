@@ -20,32 +20,68 @@ function context() {
 
 const page = (status = 200) => new Response('page', { status })
 
+function countedProducer() {
+  let count = 0
+  return { produce: async () => (count++, page()), produced: () => count }
+}
+
 describe('withEdgeCache', () => {
   it('stores a page and answers the next request without producing it', async () => {
     const { cache } = memoryCache()
     const ctx = context()
-    let produced = 0
-    const produce = async () => (produced++, page())
-    await withEdgeCache(new Request(URL_OF_PAGE), ctx, produce, cache)
+    const counted = countedProducer()
+    await withEdgeCache(new Request(URL_OF_PAGE), ctx, counted.produce, cache)
     await Promise.all(ctx.pending)
-    const again = await withEdgeCache(new Request(URL_OF_PAGE), ctx, produce, cache)
-    expect(produced).toBe(1)
+    const again = await withEdgeCache(new Request(URL_OF_PAGE), ctx, counted.produce, cache)
+    expect(counted.produced()).toBe(1)
     expect(await again.text()).toBe('page')
   })
 
   it('ignores the query string, so random queries share one entry', async () => {
     const { cache, stored } = memoryCache()
     const ctx = context()
-    let produced = 0
-    const produce = async () => (produced++, page())
-    await withEdgeCache(new Request(`${URL_OF_PAGE}?x=1`), ctx, produce, cache)
+    const counted = countedProducer()
+    await withEdgeCache(new Request(`${URL_OF_PAGE}?x=1`), ctx, counted.produce, cache)
     await Promise.all(ctx.pending)
-    await withEdgeCache(new Request(`${URL_OF_PAGE}?x=2&y=3`), ctx, produce, cache)
-    await withEdgeCache(new Request(URL_OF_PAGE), ctx, produce, cache)
-    expect(produced).toBe(1)
+    await withEdgeCache(new Request(`${URL_OF_PAGE}?x=2&y=3`), ctx, counted.produce, cache)
+    await withEdgeCache(new Request(URL_OF_PAGE), ctx, counted.produce, cache)
+    expect(counted.produced()).toBe(1)
     expect([...stored.keys()]).toEqual([URL_OF_PAGE])
   })
 
+  it('keys the entry by the publish version, so a new version misses', async () => {
+    const { cache } = memoryCache()
+    const ctx = context()
+    const counted = countedProducer()
+    const get = (version: string) =>
+      withEdgeCache(new Request(URL_OF_PAGE), ctx, counted.produce, cache, version)
+    await get('one')
+    await Promise.all(ctx.pending)
+    await get('one')
+    await get('two')
+    expect(counted.produced()).toBe(2)
+  })
+
+  it('skips the cache on the bypass header or query', async () => {
+    const { cache, stored } = memoryCache()
+    const ctx = context()
+    const counted = countedProducer()
+    await withEdgeCache(new Request(URL_OF_PAGE), ctx, counted.produce, cache)
+    await Promise.all(ctx.pending)
+    const headers = { [EDGE_CACHE.bypass.header]: '1' }
+    await withEdgeCache(new Request(URL_OF_PAGE, { headers }), ctx, counted.produce, cache)
+    await withEdgeCache(
+      new Request(`${URL_OF_PAGE}?${EDGE_CACHE.bypass.query}`),
+      ctx,
+      counted.produce,
+      cache
+    )
+    expect(counted.produced()).toBe(3)
+    expect(stored.size).toBe(1)
+  })
+})
+
+describe('withEdgeCache responses', () => {
   it('stores a 404 and nothing else that failed', async () => {
     const { cache, stored } = memoryCache()
     const ctx = context()

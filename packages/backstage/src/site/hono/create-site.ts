@@ -7,11 +7,11 @@ import { routesOf } from '../../entry-pages.ts'
 import { resolveLocaleConfig } from '../../locales.ts'
 import { OBSERVABILITY, observe, reportError, respondHealthy } from '../../observability.ts'
 import { SEO } from '../../seo.ts'
-import { EDGE_CACHE, withEdgeCache } from '../cache.ts'
+import { defaultEdgeCache, EDGE_CACHE, withEdgeCache } from '../cache.ts'
 import { respondWithMedia } from '../media.ts'
 import { routeOf } from '../routing.ts'
 import { respondWithRobots, respondWithSitemap } from '../seo.ts'
-import { findPublished, findSiteSnapshot, findTranslations } from '../store.ts'
+import { findPublished, findSiteSnapshot, findTranslations, readSiteVersion } from '../store.ts'
 import type { SiteEnv } from '../index.ts'
 import { renderPage, type DocumentContext, type SiteHead } from './document.tsx'
 import { renderEntryRoute } from './entry-route.ts'
@@ -87,9 +87,13 @@ export const createSite = (options: CreateSiteOptions) => {
     )
   }
 
-  app.get('*', (c) =>
-    withEdgeCache(c.req.raw, { waitUntil: (work) => c.executionCtx.waitUntil(work) }, () =>
-      renderRoute(c)
+  app.get('*', async (c) =>
+    withEdgeCache(
+      c.req.raw,
+      { waitUntil: (work) => c.executionCtx.waitUntil(work) },
+      () => renderRoute(c),
+      defaultEdgeCache(),
+      await readSiteVersion(c.env.SITE)
     )
   )
 

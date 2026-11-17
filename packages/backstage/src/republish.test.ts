@@ -19,7 +19,7 @@ describe('republish sizing by locale', () => {
   it('counts a snapshot and a route write for each locale of a page', () => {
     expect(kvWritesPerPage(TWO)).toBe(4)
     expect(kvWritesPerPage(['fr'])).toBe(2)
-    expect(kvWritesToRepublish(3, FOUR)).toBe(3 * 8 + 1)
+    expect(kvWritesToRepublish(3, FOUR)).toBe(3 * 8 + 2)
     expect(kvWritesToRepublish(0, FOUR)).toBe(0)
   })
 })

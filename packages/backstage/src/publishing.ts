@@ -25,6 +25,8 @@ export const SNAPSHOT = {
   key: { prefix: 'page', separator: ':' }
 } as const
 
+export const SITE_VERSION = { key: 'site:version' } as const
+
 export const snapshotKey = (pageId: string, locale: Locale) =>
   [SNAPSHOT.key.prefix, pageId, locale].join(SNAPSHOT.key.separator)
 

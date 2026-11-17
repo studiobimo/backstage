@@ -1,5 +1,11 @@
 import { pagesResponseSchema } from '@studiobimo/backstage/internal'
-import { publishedIndexSchema, SEO, snapshotKey, snapshotSchema } from '@studiobimo/backstage/site'
+import {
+  publishedIndexSchema,
+  SEO,
+  SITE_VERSION,
+  snapshotKey,
+  snapshotSchema
+} from '@studiobimo/backstage/site'
 import { expect } from 'vitest'
 
 import { db, kv, send, versionOf } from './pages-test-support'
@@ -51,7 +57,9 @@ export const publishedPage = async (id: string) =>
     .pages.find((page) => page.id === id)!
 
 export const pageKeys = async () =>
-  (await kv.list()).keys.map(({ name }) => name).filter((name) => name !== SEO.indexKey)
+  (await kv.list()).keys
+    .map(({ name }) => name)
+    .filter((name) => name !== SEO.indexKey && name !== SITE_VERSION.key)
 
 export const publishedIndex = async () =>
   publishedIndexSchema.parse(await kv.get(SEO.indexKey, 'json'))

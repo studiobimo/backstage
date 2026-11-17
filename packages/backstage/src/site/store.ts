@@ -7,7 +7,13 @@ import {
 } from '../entry-publishing.ts'
 import { LOCALE, type Locale } from '../locales.ts'
 import { isPreviewExpired, isPreviewToken, pagePreviewSchema, previewKey } from '../page-preview.ts'
-import { readableSnapshotSchema, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
+import {
+  readableSnapshotSchema,
+  routeKey,
+  SITE_VERSION,
+  snapshotKey,
+  type Snapshot
+} from '../publishing.ts'
 import { siteSnapshotKey, siteSnapshotSchema } from '../site-publishing.ts'
 import type { EntryRoute, Route } from './routing.ts'
 
@@ -22,6 +28,8 @@ async function readSnapshot(kv: KvReader, pageId: string, locale: Locale) {
   )
   return parsed.success ? parsed.data : null
 }
+
+export const readSiteVersion = async (kv: KvReader) => (await kv.get(SITE_VERSION.key)) ?? undefined
 
 export async function findPublished(kv: KvReader, { locale, slug }: Route) {
   const pageId = await kv.get(routeKey(locale, slug))
