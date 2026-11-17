@@ -1,6 +1,12 @@
 {
   "title": "Site settings",
   "description": "What appears on every page of the site. Switch language to translate each text.",
+  "save": "Save",
+  "unsaved": "Unsaved changes",
+  "notSaved": {
+    "title": "Some sections were not saved",
+    "description": "Not saved: {{sections}}. Your changes are still here. Check each of those sections to see what to fix."
+  },
   "saved": {
     "title": "Settings saved",
     "description": "The changes are saved in the draft. Publish the site to put them live."
@@ -12,7 +18,7 @@
   "sections": {
     "general": {
       "title": "General",
-      "description": "The basics every page shares: the site's name and the image used when a link is shared."
+      "description": "The basics every page shares: the site's name, logo and theme color, and the image used when a link is shared."
     }
   },
   "fields": {
@@ -27,6 +33,14 @@
     "defaultDescription": {
       "title": "Default description",
       "description": "Used when a page has no description of its own."
+    },
+    "logo": {
+      "title": "Logo",
+      "description": "Shown in the header and footer of every page that has them."
+    },
+    "themeColor": {
+      "title": "Theme color",
+      "description": "A hex color such as #1a2b3c. Tints the mobile browser bar and the tile color on Windows. Leave empty for the browser default."
     }
   },
   "slots": {
