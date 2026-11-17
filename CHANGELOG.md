@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.7.0](https://github.com/studiobimo/backstage/compare/v0.6.0...v0.7.0) (2026-11-17)
+
+
+### Features
+
+* **admin:** add a sign-in page and sign-out for magic link ([#411](https://github.com/studiobimo/backstage/issues/411)) ([f5ca92b](https://github.com/studiobimo/backstage/commit/f5ca92b97d8a45a6712ae08a416762ccd3673817))
+* **admin:** add a users page for owners to invite and remove people ([#413](https://github.com/studiobimo/backstage/issues/413)) ([2eae020](https://github.com/studiobimo/backstage/commit/2eae020b4555ce5b037654b048138dbaea4a57f3))
+* **admin:** show who saved and published each page and entry ([#409](https://github.com/studiobimo/backstage/issues/409)) ([ebaccd7](https://github.com/studiobimo/backstage/commit/ebaccd737d58f12b5b3d3bdcc2bd97bbb113a2e8))
+* **core:** add owner and editor roles with user management ([#412](https://github.com/studiobimo/backstage/issues/412)) ([6c5c9f8](https://github.com/studiobimo/backstage/commit/6c5c9f8e4e337fbec3823fddad41cd13d6b8524c))
+* **core:** sign in with a magic link ([#410](https://github.com/studiobimo/backstage/issues/410)) ([79b0dab](https://github.com/studiobimo/backstage/commit/79b0dab53d2c3b00e0a310cad6cfc9e4288510da))
+* **site:** add a favicon option to createSite ([#428](https://github.com/studiobimo/backstage/issues/428)) ([a84fc57](https://github.com/studiobimo/backstage/commit/a84fc5786bae6d7b9905e0245aaea1d10b19069c))
+
+
+### Bug Fixes
+
+* **admin:** follow the admin language for block names in the page editor ([#425](https://github.com/studiobimo/backstage/issues/425)) ([c4f7821](https://github.com/studiobimo/backstage/commit/c4f782171d507379a339dc4baf036cfd8e548a90))
+* **site:** bust the edge cache when a page is published ([#427](https://github.com/studiobimo/backstage/issues/427)) ([530c2fa](https://github.com/studiobimo/backstage/commit/530c2fad6bcd9e2a9c5d56bd0a6bb641f56d4763))
+
+
+### Documentation
+
+* close the consumer setup gaps found building BackUp ([#426](https://github.com/studiobimo/backstage/issues/426)) ([e440180](https://github.com/studiobimo/backstage/commit/e44018086fd3127921233b4fb5f6e2186cb72c99))
+
 ## [0.6.0](https://github.com/studiobimo/backstage/compare/v0.5.2...v0.6.0) (2026-11-16)
 
 
