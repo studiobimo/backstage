@@ -6,7 +6,7 @@ MISE := mise
 # A hosted build image, such as Workers Builds, has no mise: tools run from its PATH there, and
 # a host's deploy target checks those are the versions mise.toml pins.
 HAS_MISE := $(shell command -v $(MISE) 2>/dev/null)
-MISE_EXEC := $(if $(HAS_MISE),$(MISE_EXEC))
+MISE_EXEC := $(if $(HAS_MISE),$(MISE) exec --)
 pinned-version = $(shell sed -n 's/^$(1) = "\(.*\)"/\1/p' $(ROOT)/mise.toml)
 LEFTHOOK := $(MISE_EXEC) lefthook
 
@@ -17,7 +17,7 @@ GLYPH_FAIL := ✖
 DEVTOOLS := make -C .devtools
 
 .DEFAULT_GOAL := help
-.PHONY: help setup lint duplication scan lock-tools sync drift github
+.PHONY: help setup lint duplication scan lock-tools sync drift github ci
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -30,6 +30,9 @@ lint: ## Run the pre-commit hook on all files
 	cd $(ROOT) && $(LEFTHOOK) run pre-commit --all-files
 
 check: duplication
+
+# What `ci / validate` runs. A profile adds what its tools need, the project its own.
+ci: duplication
 
 duplication: ## Fail on copy-pasted code, skipping what .jscpd.json ignores
 	cd $(ROOT) && $(MISE_EXEC) jscpd --exit-code 1 --no-colors .
