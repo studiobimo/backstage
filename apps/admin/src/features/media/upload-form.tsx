@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useAppForm } from '@/components/form/app-form'
 import { fieldErrorsOf } from '@/components/form/locale-errors'
+import { FrameSection } from '@/components/frame-section'
 import { LocaleTabs } from '@/components/form/locale-tabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -180,41 +181,46 @@ export function UploadForm() {
   const { selection, select, clear, pickerKey } = useSelection()
   const { form, failure } = useUploadForm(selection, clear)
   return (
-    <form
-      className="flex max-w-xl flex-col gap-6"
-      onSubmit={(event) => {
-        event.preventDefault()
-        void form.handleSubmit()
-      }}
-    >
-      <Picker key={pickerKey} onSelect={(file) => void select(file)} />
-      <SelectionStatus selection={selection} />
-      {selection.status === 'ready' && (
-        <>
-          <form.AppField name="decorative">
-            {(field) => (
-              <field.SwitchField label={t('decorative.label')} description={t('decorative.hint')} />
+    <FrameSection title={t('upload.heading')} description={t('upload.description')}>
+      <form
+        className="flex max-w-xl flex-col gap-6"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void form.handleSubmit()
+        }}
+      >
+        <Picker key={pickerKey} onSelect={(file) => void select(file)} />
+        <SelectionStatus selection={selection} />
+        {selection.status === 'ready' && (
+          <>
+            <form.AppField name="decorative">
+              {(field) => (
+                <field.SwitchField
+                  label={t('decorative.label')}
+                  description={t('decorative.hint')}
+                />
+              )}
+            </form.AppField>
+            <form.Subscribe selector={(state) => state.values.decorative}>
+              {(decorative) => !decorative && <AltTabs form={form} />}
+            </form.Subscribe>
+          </>
+        )}
+        {failure && (
+          <p role="alert" className="text-destructive-foreground text-sm">
+            {failure}
+          </p>
+        )}
+        <div>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(submitting) => (
+              <Button type="submit" disabled={selection.status !== 'ready' || submitting}>
+                {t('submit')}
+              </Button>
             )}
-          </form.AppField>
-          <form.Subscribe selector={(state) => state.values.decorative}>
-            {(decorative) => !decorative && <AltTabs form={form} />}
           </form.Subscribe>
-        </>
-      )}
-      {failure && (
-        <p role="alert" className="text-destructive-foreground text-sm">
-          {failure}
-        </p>
-      )}
-      <div>
-        <form.Subscribe selector={(state) => state.isSubmitting}>
-          {(submitting) => (
-            <Button type="submit" disabled={selection.status !== 'ready' || submitting}>
-              {t('submit')}
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
-    </form>
+        </div>
+      </form>
+    </FrameSection>
   )
 }

@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge'
 import { TableCell, TableHead, TableRow } from '@/components/ui/table'
 import { toastManager } from '@/components/ui/toast'
 import { useApiErrorMessage } from '@/lib/api-feedback'
+import { CONTROL_WIDTH } from '@/lib/content-width'
+import { cn } from '@/lib/utils'
 
 import { changeRoleMutation, removeUserMutation } from './queries'
 import { useRoleOptions } from './role-options'
@@ -25,7 +27,7 @@ interface UsersTableProps {
 function UserCell({ user, isSelf }: { user: User; isSelf: boolean }) {
   const { t } = useTranslation('users')
   return (
-    <TableCell className="w-full max-w-0 sm:w-auto sm:max-w-none">
+    <TableCell className="w-full max-w-0">
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="truncate font-medium">{user.email}</span>
         {(isSelf || user.name) && (
@@ -52,7 +54,7 @@ function RoleCell({ user, canManage }: { user: User; canManage: boolean }) {
         value={user.role}
         options={options}
         disabled={change.isPending}
-        className="min-w-28"
+        className={CONTROL_WIDTH.compact}
         onChange={(next) => {
           const role = roleSchema.safeParse(next)
           if (!role.success || role.data === user.role) return
@@ -78,7 +80,7 @@ function RemoveCell({ user }: { user: User }) {
   const [open, setOpen] = useState(false)
   const remove = useMutation(removeUserMutation(useQueryClient()))
   return (
-    <TableCell className="w-0 text-end">
+    <TableCell className={cn(CONTROL_WIDTH.rowAction, 'text-end')}>
       <IconButton
         variant="ghost"
         label={t('list.remove', { email: user.email })}
@@ -109,12 +111,14 @@ export function UsersTable({ users, currentUserId, canManage }: UsersTableProps)
   const { t } = useTranslation('users')
   return (
     <CardTable
+      title={t('list.heading')}
+      description={t('list.description')}
       head={
         <>
           <TableHead>{t('list.person')}</TableHead>
           <TableHead>{t('list.role')}</TableHead>
           {canManage && (
-            <TableHead className="w-0">
+            <TableHead className={CONTROL_WIDTH.rowAction}>
               <span className="sr-only">{t('list.actions')}</span>
             </TableHead>
           )}

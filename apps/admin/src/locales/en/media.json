@@ -29,6 +29,10 @@
     "hint": "Say what the image shows, as you would to someone who can't see it.",
     "needsAttention": "Fix"
   },
+  "upload": {
+    "heading": "New image",
+    "description": "Choose a file, then describe it for each language."
+  },
   "submit": "Upload image",
   "uploaded": {
     "title": "Image uploaded"

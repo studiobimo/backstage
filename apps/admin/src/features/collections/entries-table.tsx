@@ -97,7 +97,7 @@ function EntryRow({
         <Link
           to="/collections/$name/$entryId"
           params={{ name: collection, entryId: entry.id }}
-          className="block truncate rounded-sm font-medium outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
+          className="block truncate rounded-sm py-0.5 font-medium outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
         >
           {name}
         </Link>

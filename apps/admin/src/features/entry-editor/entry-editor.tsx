@@ -10,6 +10,7 @@ import { useId, useMemo, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
+import { FrameSection } from '@/components/frame-section'
 import { IconButton } from '@/components/icon-button'
 import { LeaveGuard } from '@/components/leave-guard'
 import { localeOfIssue } from '@/lib/api-feedback'
@@ -223,16 +224,19 @@ function RoutedSlug({
   collection: CollectionOption
   draft: ReturnType<typeof useEntryDraft>
 }) {
+  const { t } = useTranslation('entryEditor')
   const { defaultLocale } = useLocaleConfig()
   if (!collection.route) return null
   return (
-    <EntrySlugField
-      route={collection.route}
-      locale={draft.locale}
-      defaultLocale={defaultLocale}
-      value={draft.slug}
-      onChange={draft.setSlug}
-    />
+    <FrameSection title={t('address.heading')} description={t('address.description')}>
+      <EntrySlugField
+        route={collection.route}
+        locale={draft.locale}
+        defaultLocale={defaultLocale}
+        value={draft.slug}
+        onChange={draft.setSlug}
+      />
+    </FrameSection>
   )
 }
 
@@ -302,14 +306,15 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
           onReload={onReload}
         />
         <RoutedSlug collection={collection} draft={draft} />
-        <BlockForm
-          schema={collection.schema}
-          locales={locales}
-          value={content}
-          onChange={draft.setContent}
-          issues={save.issues}
-          className="max-w-none"
-        />
+        <FrameSection title={t('content.heading')} description={t('content.description')}>
+          <BlockForm
+            schema={collection.schema}
+            locales={locales}
+            value={content}
+            onChange={draft.setContent}
+            issues={save.issues}
+          />
+        </FrameSection>
       </div>
       <PendingRepublish publishing={publish} />
     </EditingLocaleContext.Provider>
