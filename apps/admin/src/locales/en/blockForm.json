@@ -33,6 +33,9 @@
     "invalid_other": "{{count}} errors",
     "copyFrom": "Copy {{language}}"
   },
+  "hexColor": {
+    "placeholder": "#1a2b3c"
+  },
   "richText": {
     "toolbar": "Formatting",
     "tools": {

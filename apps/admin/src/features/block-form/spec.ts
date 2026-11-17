@@ -50,6 +50,10 @@ interface RichTextSpec extends Common {
   kind: 'richText'
 }
 
+interface HexColorSpec extends Common {
+  kind: 'hexColor'
+}
+
 interface NumberSpec extends Common {
   kind: 'number'
   integer: boolean
@@ -94,6 +98,7 @@ export interface ReferenceSpec extends Common {
 export type FieldSpec =
   | TextSpec
   | RichTextSpec
+  | HexColorSpec
   | NumberSpec
   | BooleanSpec
   | SelectSpec
@@ -133,11 +138,32 @@ function parseChild(schema: JsonSchema | undefined, key: string, required: boole
 
 const NUMBER_SHAPES: readonly FieldShape[] = ['number', 'integer']
 
+function parseScalarField(
+  shape: FieldShape,
+  schema: JsonSchema,
+  common: Common
+): FieldSpec | undefined {
+  if (shape === 'select') return { ...common, kind: 'select', options: schema.enum ?? [] }
+  if (shape === 'string') return { ...common, kind: 'text', ...stringConstraints(schema) }
+  if (NUMBER_SHAPES.includes(shape)) {
+    return {
+      ...common,
+      kind: 'number',
+      integer: shape === 'integer',
+      minimum: schema.minimum,
+      maximum: schema.maximum
+    }
+  }
+  if (shape === 'boolean') return { ...common, kind: 'boolean' }
+  return undefined
+}
+
 function parseField(schema: JsonSchema, key: string, required: boolean): FieldSpec {
   const { title, description } = schema
   const common: Common = { key, title, description, required, defaultValue: schema.default }
   const shape = classifyField(schema)
   if (shape === 'richText') return { ...common, kind: 'richText' }
+  if (shape === 'hexColor') return { ...common, kind: 'hexColor' }
   if (shape === 'localized') {
     return {
       ...common,
@@ -167,18 +193,8 @@ function parseField(schema: JsonSchema, key: string, required: boolean): FieldSp
     }
   }
   if (shape === 'object') return { ...common, kind: 'group', fields: groupFields(schema) }
-  if (shape === 'select') return { ...common, kind: 'select', options: schema.enum ?? [] }
-  if (shape === 'string') return { ...common, kind: 'text', ...stringConstraints(schema) }
-  if (NUMBER_SHAPES.includes(shape)) {
-    return {
-      ...common,
-      kind: 'number',
-      integer: shape === 'integer',
-      minimum: schema.minimum,
-      maximum: schema.maximum
-    }
-  }
-  if (shape === 'boolean') return { ...common, kind: 'boolean' }
+  const scalar = parseScalarField(shape, schema, common)
+  if (scalar) return scalar
   throw new UnsupportedSchemaError(key)
 }
 
