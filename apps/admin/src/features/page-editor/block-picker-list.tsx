@@ -13,9 +13,9 @@ import {
 } from '@/components/ui/command'
 
 import { siteOriginQuery } from '../block-preview/queries'
-import { useEditingLocale } from '../block-form/locale-status'
 import type { BlockOption } from './draft'
 import { blockTitle, localizedText } from './localized-text'
+import { useBlockLanguage } from './use-block-language'
 
 interface PickerEntry {
   option: BlockOption
@@ -30,12 +30,12 @@ const entryText = (item: unknown) => {
 }
 
 function usePickerEntries(options: BlockOption[]): PickerEntry[] {
-  const { active, fallback } = useEditingLocale()
+  const { language, fallback } = useBlockLanguage()
   const { data: siteOrigin } = useQuery(siteOriginQuery)
   return options.map((option) => ({
     option,
-    title: blockTitle(options, option.name, active, fallback),
-    description: localizedText(option.description, active, fallback),
+    title: blockTitle(options, option.name, language, fallback),
+    description: localizedText(option.description, language, fallback),
     thumbnail: siteOrigin ? blockThumbnailUrl(siteOrigin, option.name) : undefined
   }))
 }

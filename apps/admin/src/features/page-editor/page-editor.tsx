@@ -31,6 +31,7 @@ import { PublishNotes } from './publish-notes'
 import { PreviewButton } from './preview-button'
 import { SavePublishGroup } from './save-publish-group'
 import { StaleAlert } from './stale-alert'
+import { useBlockLanguage } from './use-block-language'
 import { usePreview } from './use-preview'
 import { usePublish } from './use-publish'
 import type { LocaleStatus } from '../block-form/locale-status'
@@ -465,7 +466,10 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   )
   const { locales, defaultLocale } = useLocaleConfig()
   const [locale, setLocale] = useState<Locale>(defaultLocale)
-  const actions = useBlockActions(saved, (name) => blockTitle(options, name, locale, defaultLocale))
+  const blockLanguage = useBlockLanguage()
+  const actions = useBlockActions(saved, (name) =>
+    blockTitle(options, name, blockLanguage.language, blockLanguage.fallback)
+  )
   const { blocks } = actions
   const editing = useMemo(
     () => ({ locales, active: locale, fallback: defaultLocale }),

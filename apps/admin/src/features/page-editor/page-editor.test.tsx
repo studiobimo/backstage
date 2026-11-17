@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import i18n from '@/i18n/config'
 import { blocker } from '@/test/blocker'
 import { aboutPage } from '@/test/fixtures'
 import { testQueryClient } from '@/test/query-client'
@@ -180,6 +181,28 @@ describe('PageEditor blocks and layout', SUITE, () => {
     await screen.findByRole('option', { name: /hero/ })
     await user.keyboard('{Escape}')
     await waitFor(() => expect(add).toHaveFocus())
+  })
+})
+
+describe('PageEditor block names', SUITE, () => {
+  afterEach(() => i18n.changeLanguage('en'))
+
+  it('names blocks in the admin language, not the page content language', async () => {
+    mockApi([], {
+      descriptions: [
+        { ...hero, name: 'split-card', title: { en: 'Split card', es: 'Tarjeta con imagen' } },
+        { ...hero, name: 'quote', title: { en: 'Quote' } }
+      ]
+    })
+    const user = userEvent.setup()
+    renderEditor()
+    await screen.findByText('No blocks yet')
+    const add = screen.getByRole('button', { name: 'Add block' })
+    await i18n.changeLanguage('es')
+    await user.click(add)
+    expect(await screen.findByRole('option', { name: /Tarjeta con imagen/ })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /Split card/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /Quote/ })).toBeInTheDocument()
   })
 })
 
