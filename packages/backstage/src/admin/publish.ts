@@ -33,15 +33,13 @@ export const publishRoutes = (registry: AdminRegistry) =>
         return respondUnpublishable(c, plan.problems)
       }
       await writeSnapshots(c.env.SITE, plan.snapshots, resolveLocaleConfig(registry).locales)
-      await recordPublished(
-        c.env.DB,
-        id,
-        await ensureUser(c.env.DB, c.get('editor')),
+      await recordPublished(c.env.DB, id, {
+        editorId: await ensureUser(c.env.DB, c.get('editor')),
         publishedAt,
-        body.data.expectedVersion,
-        plan.refs,
-        plan.linkedPageIds
-      )
+        publishedVersion: body.data.expectedVersion,
+        refs: plan.refs,
+        linkedPageIds: plan.linkedPageIds
+      })
       return respondChanged(c, registry, id)
     })
     .delete('/:id/publish', async (c) => {

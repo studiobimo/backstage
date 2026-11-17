@@ -83,6 +83,10 @@ describe('the link field', () => {
     setup({ kind: 'page', pageId: 'gone', label: '' })
     expect(await screen.findByRole('button', { name: /Page not found/ })).toBeInTheDocument()
   })
+})
+
+describe('the link field in a form', () => {
+  useStubbedListing(listing)
 
   it('tells the editor to choose a page when saving a page link with none', async () => {
     const user = userEvent.setup({ delay: null })

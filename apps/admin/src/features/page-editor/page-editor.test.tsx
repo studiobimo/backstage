@@ -39,60 +39,62 @@ const emptySeo: PageSeo = {
   es: { title: '', description: '', socialImageId: null }
 }
 
-const mockApi = (
-  initial: PageBlock[],
-  options: { stale?: boolean; seo?: PageSeo; descriptions?: unknown[] } = {}
+type MockOptions = { stale?: boolean; seo?: PageSeo; descriptions?: unknown[] }
+type SeoPut = { expectedVersion: number; [locale: string]: unknown }
+type LayoutPut = { layout: string; expectedVersion: number }
+
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
+
+const bodyOf = <T,>(init: RequestInit) => JSON.parse(init.body as string) as T
+
+const seoResponse = (init: RequestInit | undefined, options: MockOptions, seoPuts: SeoPut[]) => {
+  if (init?.method !== 'PUT') return json({ seo: options.seo ?? emptySeo, version: 3 })
+  const { expectedVersion, ...seo } = bodyOf<SeoPut>(init)
+  seoPuts.push({ ...seo, expectedVersion })
+  return json({ seo, version: expectedVersion + 1 })
+}
+
+const layoutPutResponse = (init: RequestInit, layoutPuts: LayoutPut[]) => {
+  const body = bodyOf<LayoutPut>(init)
+  layoutPuts.push(body)
+  return json({ page: { ...about, layout: body.layout, version: body.expectedVersion + 1 } })
+}
+
+const blocksPutResponse = (
+  init: RequestInit,
+  puts: { blocks: PageBlock[]; expectedVersion: number }[]
 ) => {
+  const body = bodyOf<{ blocks: PageBlock[]; expectedVersion: number }>(init)
+  puts.push(body)
+  return json({ ...body, version: body.expectedVersion + 1, layout: 'default' })
+}
+
+const readResponse = (url: string, initial: PageBlock[], options: MockOptions) => {
+  if (url.endsWith('/site-origin')) return json({ origin: SITE_ORIGIN })
+  if (url.endsWith('/layouts')) return json({ layouts: ['default', 'minimal', 'bare'] })
+  if (url.endsWith('/blocks') && url.includes('/pages/')) {
+    return json({ blocks: initial, version: 3, layout: 'default' })
+  }
+  if (url.endsWith('/blocks')) return json({ blocks: options.descriptions ?? [hero] })
+  return json({ pages: [about] })
+}
+
+const mockApi = (initial: PageBlock[], options: MockOptions = {}) => {
   const puts: { blocks: PageBlock[]; expectedVersion: number }[] = []
-  const layoutPuts: { layout: string; expectedVersion: number }[] = []
-  const seoPuts: { expectedVersion: number; [locale: string]: unknown }[] = []
+  const layoutPuts: LayoutPut[] = []
+  const seoPuts: SeoPut[] = []
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
-      if (init?.method === 'PUT' && options.stale) {
-        return new Response(JSON.stringify(STALE_BODY), { status: 409 })
-      }
-      if (url.endsWith('/seo')) {
-        if (init?.method !== 'PUT')
-          return new Response(JSON.stringify({ seo: options.seo ?? emptySeo, version: 3 }))
-        const { expectedVersion, ...seo } = JSON.parse(init.body as string) as {
-          expectedVersion: number
-          [locale: string]: unknown
-        }
-        seoPuts.push({ ...seo, expectedVersion })
-        return new Response(JSON.stringify({ seo, version: expectedVersion + 1 }))
-      }
+      const isPut = init?.method === 'PUT'
+      if (isPut && options.stale) return json(STALE_BODY, 409)
+      if (url.endsWith('/seo')) return seoResponse(init, options, seoPuts)
       if (url.endsWith('/settings')) {
-        return new Response(
-          JSON.stringify({ settings: { siteName: { en: 'Studio' } }, version: 1 })
-        )
+        return json({ settings: { siteName: { en: 'Studio' } }, version: 1 })
       }
-      if (init?.method === 'PUT' && url.endsWith('/layout')) {
-        const body = JSON.parse(init.body as string) as { layout: string; expectedVersion: number }
-        layoutPuts.push(body)
-        const page = { ...about, layout: body.layout, version: body.expectedVersion + 1 }
-        return new Response(JSON.stringify({ page }))
-      }
-      if (init?.method === 'PUT') {
-        const body = JSON.parse(init.body as string) as {
-          blocks: PageBlock[]
-          expectedVersion: number
-        }
-        puts.push(body)
-        return new Response(
-          JSON.stringify({ ...body, version: body.expectedVersion + 1, layout: 'default' })
-        )
-      }
-      if (url.endsWith('/site-origin')) return new Response(JSON.stringify({ origin: SITE_ORIGIN }))
-      if (url.endsWith('/layouts')) {
-        return new Response(JSON.stringify({ layouts: ['default', 'minimal', 'bare'] }))
-      }
-      if (url.endsWith('/blocks') && url.includes('/pages/')) {
-        return new Response(JSON.stringify({ blocks: initial, version: 3, layout: 'default' }))
-      }
-      if (url.endsWith('/blocks'))
-        return new Response(JSON.stringify({ blocks: options.descriptions ?? [hero] }))
-      return new Response(JSON.stringify({ pages: [about] }))
+      if (isPut && url.endsWith('/layout')) return layoutPutResponse(init, layoutPuts)
+      if (isPut) return blocksPutResponse(init, puts)
+      return readResponse(url, initial, options)
     })
   )
   return Object.assign(puts, { layouts: layoutPuts, seo: seoPuts })
@@ -179,7 +181,9 @@ describe('PageEditor blocks and layout', SUITE, () => {
     await user.keyboard('{Escape}')
     await waitFor(() => expect(add).toHaveFocus())
   })
+})
 
+describe('PageEditor arranging blocks and layout', SUITE, () => {
   it('duplicates and removes blocks, then saves the arrangement', async () => {
     const puts = mockApi(saved)
     const user = userEvent.setup()

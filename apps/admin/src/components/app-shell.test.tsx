@@ -38,6 +38,10 @@ describe('app shell navigation', () => {
     expect(screen.queryByRole('link', { name: 'Type specimen' })).not.toBeInTheDocument()
     vi.unstubAllEnvs()
   })
+})
+
+describe('app shell breadcrumb and document title', () => {
+  afterEach(resetShell)
 
   it('names the current page in the breadcrumb', async () => {
     await renderShell('/type')

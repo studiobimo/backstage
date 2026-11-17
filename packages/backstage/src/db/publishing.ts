@@ -170,14 +170,18 @@ export const planPreview = async (
   return draft ? planDraft(d1, registry, draft, now) : { status: PUBLISH_PLAN.notFound }
 }
 
+export interface PublishRecord {
+  editorId: string
+  publishedAt: number
+  publishedVersion: number
+  refs: readonly PageEntryRef[]
+  linkedPageIds: readonly string[]
+}
+
 export const recordPublished = async (
   d1: AnyD1Database,
   id: string,
-  editorId: string,
-  publishedAt: number,
-  publishedVersion: number,
-  refs: readonly PageEntryRef[],
-  linkedPageIds: readonly string[]
+  { editorId, publishedAt, publishedVersion, refs, linkedPageIds }: PublishRecord
 ) => {
   const db = drizzle(d1)
   await db

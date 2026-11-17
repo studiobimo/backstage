@@ -81,7 +81,9 @@ describe('rendering published pages', () => {
       expect(page).not.toContain(host)
     }
   })
+})
 
+describe('the head of a published page', () => {
   it('declares the same alternates in the head and the sitemap', async () => {
     await publishAbout()
     await kv.put(
@@ -110,7 +112,9 @@ describe('rendering published pages', () => {
     expect(page).toContain('<title>About us</title>')
     expect(page).toContain('<meta name="description" content="Who we are"/>')
   })
+})
 
+describe('the body of a published page', () => {
   it('renders rich text on the server', async () => {
     await publishAbout({ en: richParagraph('Rich words') })
     expect(await html('/about')).toContain('<p>Rich words</p>')
