@@ -25,11 +25,17 @@ has no Vite build and no copy step.
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./node_modules/@studiobimo/backstage/dist/client",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/*", "!/assets/*", "!/block-thumbnails/*", "!/favicon.svg"]
   }
 }
 ```
+
+This is the config a client uses now, the same as `apps/admin/wrangler.jsonc` in this repository.
+The experiment below ran with `"run_worker_first": ["/api/*"]` and no `binding`; see
+[the update](#update-the-worker-now-serves-the-html) for why that changed. Use the `binding` and
+the `run_worker_first` list above, not `["/api/*"]`.
 
 ```ts
 // apps/admin/worker/index.ts
@@ -62,8 +68,8 @@ and a pnpm workspace where `apps/admin` depends on the package, as the template'
 
 ## Two things that follow
 
-1. **The security headers ship with the package.** `run_worker_first` is `["/api/*"]`, so the
-   worker never sees the HTML and cannot add headers to it. The Content-Security-Policy for the
+1. **The security headers ship with the package.** In the experiment `run_worker_first` was
+   `["/api/*"]` (superseded, see the update below), so the worker never saw the HTML and cannot add headers to it. The Content-Security-Policy for the
    SPA ([M0 exit criteria](../ROADMAP.md)) has to be a `_headers` file in `dist/client`. It works
    from the package, and the client cannot loosen it without editing `node_modules`. The worker
    sets its own headers on `/api/*`, as `secureHeaders()` does now. `_headers` does not apply to

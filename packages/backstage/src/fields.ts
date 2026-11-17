@@ -14,12 +14,12 @@ export const richText = () => marked(richTextDoc, 'richText')
 
 export const LINK = { kind: { page: 'page' } } as const
 
-interface ResolvedLink {
+export interface ResolvedLink {
   href: string
   label: string
 }
 
-interface LinkInput {
+export interface LinkInput {
   href?: string
   kind?: typeof LINK.kind.page
   pageId?: string
