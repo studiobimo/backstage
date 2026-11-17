@@ -177,7 +177,7 @@ function SupportedBlockForm({
       <ShownIssuesContext.Provider value={attempted || embedded ? issuePaths : noIssues}>
         <Form
           noValidate
-          className={cn('flex w-full max-w-2xl flex-col gap-6', className)}
+          className={cn('flex w-full flex-col gap-6', className)}
           onSubmit={(event) => {
             event.preventDefault()
             submit()

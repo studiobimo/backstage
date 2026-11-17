@@ -107,7 +107,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset className="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
-            <div className="scroll-fade scroll-fade-10 flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-gutter:stable]">
+            <div className="scroll-fade scroll-fade-10 [--scroll-fade-t-size:0px] flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-gutter:stable]">
+              <div
+                aria-hidden
+                className="pointer-events-none sticky top-0 z-10 -mb-10 h-10 shrink-0 bg-gradient-to-b from-background to-transparent"
+              />
               <ContentColumn width="wide">
                 <header className="flex h-16 shrink-0 items-center gap-2">
                   <SidebarToggle />

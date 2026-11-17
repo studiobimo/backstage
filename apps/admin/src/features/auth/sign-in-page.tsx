@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useAppForm } from '@/components/form/app-form'
 import { fieldErrorsOf } from '@/components/form/locale-errors'
+import { PageTitle } from '@/components/page-title'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Form } from '@/components/ui/form'
@@ -17,7 +18,7 @@ import { requestLinkMutation, verifyLinkMutation } from './queries'
 function Heading({ title, description }: { title: string; description: string }) {
   return (
     <header className="flex flex-col gap-1">
-      <h1 className="text-3xl">{title}</h1>
+      <PageTitle>{title}</PageTitle>
       <p className="text-muted-foreground">{description}</p>
     </header>
   )

@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 
 import { useFieldContext } from './contexts.ts'
 import { useFieldError } from './field-error.ts'
+import { CONTROL_WIDTH } from '@/lib/content-width'
 
 export interface FieldChromeProps {
   label: string
@@ -31,21 +32,13 @@ export function FieldHeading({
   optional,
   badge,
   legend,
-  section,
   labelId
-}: FieldChromeProps & { legend?: boolean; section?: boolean; labelId?: string }) {
+}: FieldChromeProps & { legend?: boolean; labelId?: string }) {
   const { t } = useTranslation('form')
   return (
     <span className="flex w-full flex-wrap items-center gap-2">
       {legend ? (
-        <span
-          className={cn(
-            'font-medium text-base/4.5 sm:text-sm/4',
-            section && 'font-pixel font-normal text-lg/6 sm:text-lg/6'
-          )}
-        >
-          {label}
-        </span>
+        <span className="font-medium text-base/4.5 sm:text-sm/4">{label}</span>
       ) : (
         <FieldLabel id={labelId}>{label}</FieldLabel>
       )}
@@ -172,7 +165,7 @@ export function NumberField({ min, max, integer, ...chrome }: NumberFieldProps) 
         max={max}
         step={integer ? 1 : undefined}
         onValueChange={(value) => field.handleChange(value ?? undefined)}
-        className="max-w-48"
+        className={CONTROL_WIDTH.compact}
       >
         <NumberFieldGroup>
           <NumberFieldDecrement />
