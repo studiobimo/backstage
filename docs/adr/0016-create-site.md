@@ -36,8 +36,15 @@ Hono-free helpers stay in `./site`, so a site that moves to TanStack Start keeps
 | `stylesheet`            | yes      | the CSS, served under a content-hashed path and linked from every document                    |
 | `preview`               | no       | samples, media, thumbnails and assets for the block preview; none, no route                   |
 | `contentSecurityPolicy` | no       | sources added to `style-src`, `img-src`, `font-src`, `media-src`, `connect-src`, `script-src` |
+| `favicon`               | no       | a URL, or `{ href, type }`, rendered as `<link rel="icon">` in every page and entry document  |
 | `head`                  | no       | extra elements in a page's `<head>`                                                           |
 | `routes`                | no       | extra routes, registered before the page route                                                |
+
+**Adding a script.** `default-src 'none'` blocks every script, so a same-origin script needs two
+things: allow it with `contentSecurityPolicy: { scriptSrc: ["'self'"] }`, and load it from `head`,
+for example `head: () => <script src="/assets/app.js" defer />`, served by the site's own assets or
+a route added with `routes`. Inline scripts stay blocked. The favicon needs no policy change: it
+loads under `img-src 'self'`, so a cross-origin one needs its origin in `imgSrc`.
 
 **A site cannot** relax `default-src`, `base-uri`, `form-action` or `frame-ancestors`, change the
 cache policy, or replace the document shell. A change like that is a change to the package, so every

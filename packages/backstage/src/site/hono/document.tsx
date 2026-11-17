@@ -21,10 +21,13 @@ import { entryLinksOf, linksOf } from './origin.ts'
 
 export type SiteHead = (snapshot: Snapshot) => ReactNode
 
+export type SiteFavicon = string | { href: string; type?: string }
+
 export interface DocumentContext {
   components: ComponentMap
   locales: LocaleConfig
   stylesheetPath: string
+  favicon?: SiteFavicon
   head?: SiteHead
 }
 
@@ -90,6 +93,9 @@ function LanguageSwitcher({
   )
 }
 
+const faviconLinkOf = (favicon: SiteFavicon) =>
+  typeof favicon === 'string' ? { href: favicon } : favicon
+
 interface HeadProps {
   title: string
   description: string
@@ -98,6 +104,7 @@ interface HeadProps {
   socialImageUrl: string | null
   siteName: string | null
   stylesheetPath: string
+  favicon?: SiteFavicon
   preview: boolean
   extra?: ReactNode
 }
@@ -110,6 +117,7 @@ function Head({
   socialImageUrl,
   siteName,
   stylesheetPath,
+  favicon,
   preview,
   extra
 }: HeadProps) {
@@ -119,6 +127,7 @@ function Head({
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title}</title>
       <link rel="stylesheet" href={stylesheetPath} />
+      {favicon ? <link rel="icon" {...faviconLinkOf(favicon)} /> : null}
       {description ? <meta name="description" content={description} /> : null}
       {preview ? (
         <meta name="robots" content="noindex, nofollow" />
@@ -139,7 +148,17 @@ function Head({
 }
 
 const pageHeadOf = (props: PageProps): HeadProps => {
-  const { snapshot, translations, siteOrigin, site, stylesheetPath, head, locales, preview } = props
+  const {
+    snapshot,
+    translations,
+    siteOrigin,
+    site,
+    stylesheetPath,
+    favicon,
+    head,
+    locales,
+    preview
+  } = props
   const socialImage = socialImageOf(snapshot, site)
   return {
     ...linksOf(siteOrigin, snapshot, translations, locales),
@@ -148,6 +167,7 @@ const pageHeadOf = (props: PageProps): HeadProps => {
     socialImageUrl: socialImage ? `${siteOrigin}/${socialImage.key}` : null,
     siteName: site?.siteName ?? null,
     stylesheetPath,
+    favicon,
     preview: Boolean(preview),
     extra: head?.(snapshot)
   }
@@ -277,7 +297,8 @@ function EntryContent({ components, snapshot }: Pick<EntryPageProps, 'components
 }
 
 const entryHeadOf = (props: EntryPageProps): HeadProps => {
-  const { snapshot, translations, siteOrigin, site, stylesheetPath, locales, route } = props
+  const { snapshot, translations, siteOrigin, site, stylesheetPath, favicon, locales, route } =
+    props
   const socialImage = site?.seo.socialImageId ? site.media[site.seo.socialImageId] : null
   return {
     ...entryLinksOf(siteOrigin, snapshot, translations, locales, route),
@@ -286,6 +307,7 @@ const entryHeadOf = (props: EntryPageProps): HeadProps => {
     socialImageUrl: socialImage ? `${siteOrigin}/${socialImage.key}` : null,
     siteName: site?.siteName ?? null,
     stylesheetPath,
+    favicon,
     preview: false
   }
 }

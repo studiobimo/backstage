@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { BLOCK_PREVIEW } from '../../blocks.ts'
 import { OBSERVABILITY } from '../../observability.ts'
 import { SEO } from '../../seo.ts'
-import { createSite } from './create-site.ts'
+import { createSite, type CreateSiteOptions } from './create-site.ts'
 import {
   envWith,
   FIXTURE,
@@ -279,5 +279,45 @@ describe('createSite routes', () => {
     expect(await (await request('/about', undefined, options)).text()).toContain(
       '<meta name="x-page" content="about"/>'
     )
+  })
+})
+
+describe('createSite favicon', () => {
+  const withFavicon = async (favicon: CreateSiteOptions['favicon']) =>
+    (await request('/about', envWith({}, publishedKv()), { ...fixtureOptions(), favicon })).text()
+
+  it('links no icon when none is given', async () => {
+    expect(await headOf({})).not.toContain('rel="icon"')
+  })
+
+  it('links a favicon given as a url', async () => {
+    expect(await withFavicon('/favicon.svg')).toContain('<link rel="icon" href="/favicon.svg"/>')
+  })
+
+  it('links a favicon with its type', async () => {
+    const html = await withFavicon({ href: '/favicon.svg', type: 'image/svg+xml' })
+    expect(html).toContain('rel="icon"')
+    expect(html).toContain('href="/favicon.svg"')
+    expect(html).toContain('type="image/svg+xml"')
+  })
+
+  it('keeps the head option next to the favicon', async () => {
+    const options = {
+      ...fixtureOptions(),
+      favicon: '/favicon.svg',
+      head: () => <script src="/assets/app.js" defer />
+    }
+    const html = await (await request('/about', envWith({}, publishedKv()), options)).text()
+    expect(html).toContain('rel="icon"')
+    expect(html).toContain('<script src="/assets/app.js" defer=""></script>')
+  })
+
+  it('allows a same-origin script only when script-src names self', async () => {
+    const allowed = await request('/about', envWith({}, publishedKv()), {
+      ...fixtureOptions(),
+      contentSecurityPolicy: { scriptSrc: ["'self'"] }
+    })
+    expect(directives(allowed).get('script-src')).toEqual(["'self'"])
+    expect(directives(await request('/about')).has('script-src')).toBe(false)
   })
 })
