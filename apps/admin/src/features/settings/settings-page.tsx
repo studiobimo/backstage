@@ -1,25 +1,30 @@
 import { siteSettingsJsonSchema, siteSettingsSchema } from '@studiobimo/backstage/internal'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { GlobeIcon } from 'lucide-react'
-import { useMemo } from 'react'
+import { CircleAlertIcon } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { LeaveGuard } from '@/components/leave-guard'
-import { PageHeader } from '@/components/page-header'
+import { PoweredBy } from '@/components/powered-by'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { toastManager } from '@/components/ui/toast'
 import { BlockForm } from '@/features/block-form/block-form.tsx'
-import { SectionFrame } from '@/features/block-form/section-frame.tsx'
+import { EditingLocaleContext } from '@/features/block-form/locale-status'
 import type { JsonSchema } from '@/features/block-form/spec.ts'
-import { blockValue, type BlockValue } from '@/features/block-form/value.ts'
+import { blockValue } from '@/features/block-form/value.ts'
 import { useLocaleConfig } from '@/features/config/queries'
+import { useShortcut } from '@/lib/shortcuts'
 
 import { PublishSiteSection } from './publish-site-section'
 import { saveSettingsMutation, settingsQuery, slotsQuery } from './queries'
 import { SaveFailedAlert } from './save-failed-alert'
+import { SettingsHeader } from './settings-header'
+import { SAVE_OUTCOME, SettingsHostContext, useSettingsSections } from './settings-host'
 import { SlotSection } from './slot-section'
 import { StaleAlert } from '../page-editor/stale-alert'
-import { useDirtySections, useSectionDirty, type ReportDirty } from './use-dirty-sections'
-import { useReloadLatest, useSaveFeedback } from './use-save-feedback'
 import { type CopyOf, translateSchema } from './translate-schema'
+import { SettingsSection } from './settings-section'
+import { useSection } from './use-section'
 
 const SETTINGS_SCHEMA = siteSettingsJsonSchema() as JsonSchema
 
@@ -36,59 +41,90 @@ function useTranslatedSchema() {
   }, [t, i18n])
 }
 
-function useSaveSettings(expectedVersion: number) {
-  const save = useMutation(saveSettingsMutation(useQueryClient()))
-  return useSaveFeedback((value: BlockValue) =>
-    save.mutateAsync({ settings: siteSettingsSchema.parse(value), expectedVersion })
-  )
-}
-
-function GeneralSection({ reportDirty }: { reportDirty: ReportDirty }) {
+function GeneralSection() {
   const { t } = useTranslation('settings')
   const { data } = useSuspenseQuery(settingsQuery)
-  const { locales } = useLocaleConfig()
   const schema = useTranslatedSchema()
-  const { submit, failed, stale, issues, clearStale } = useSaveSettings(data.version)
-  const { generation, reload } = useReloadLatest(settingsQuery.queryKey, clearStale)
-  const onDirtyChange = useSectionDirty('general', reportDirty)
+  const save = useMutation(saveSettingsMutation(useQueryClient()))
+  const saved = useMemo(() => blockValue.parse(data.settings), [data.settings])
+  const { form, failed, stale, reload, generation } = useSection({
+    id: 'general',
+    title: t('sections.general.title'),
+    schema,
+    saved,
+    queryKey: settingsQuery.queryKey,
+    persist: (value) =>
+      save.mutateAsync({ settings: siteSettingsSchema.parse(value), expectedVersion: data.version })
+  })
   return (
-    <SectionFrame
-      id="general"
+    <SettingsSection
       title={t('sections.general.title')}
       description={t('sections.general.description')}
-      icon={<GlobeIcon />}
     >
       {failed && <SaveFailedAlert />}
       {stale && <StaleAlert scope="settings" current={stale.current} onReload={reload} />}
-      <BlockForm
-        key={generation}
-        schema={schema}
-        locales={locales}
-        value={blockValue.parse(data.settings)}
-        onSubmit={submit}
-        onDirtyChange={onDirtyChange}
-        issues={issues}
-        className="max-w-none gap-8"
-      />
-    </SectionFrame>
+      <BlockForm key={generation} schema={schema} className="max-w-none gap-8" {...form} />
+    </SettingsSection>
+  )
+}
+
+function NotSavedAlert({ sections }: { sections: string[] }) {
+  const { t } = useTranslation('settings')
+  if (sections.length === 0) return null
+  return (
+    <Alert variant="error" role="alert">
+      <CircleAlertIcon />
+      <AlertTitle>{t('notSaved.title')}</AlertTitle>
+      <AlertDescription>
+        {t('notSaved.description', { sections: sections.join(', ') })}
+      </AlertDescription>
+    </Alert>
   )
 }
 
 export function SettingsPage() {
   const { t } = useTranslation('settings')
   const { data: slots } = useSuspenseQuery(slotsQuery)
-  const { dirty, report } = useDirtySections()
+  const { locales, defaultLocale } = useLocaleConfig()
+  const [active, setActive] = useState<string>(defaultLocale)
+  const sections = useSettingsSections(locales, setActive)
+  const editing = useMemo(
+    () => ({ locales, active, fallback: defaultLocale }),
+    [locales, active, defaultLocale]
+  )
+  const onSave = async () => {
+    const outcomes = await sections.saveAll()
+    if (outcomes.length > 0 && outcomes.every((outcome) => outcome === SAVE_OUTCOME.saved)) {
+      toastManager.add({
+        type: 'success',
+        title: t('saved.title'),
+        description: t('saved.description')
+      })
+    }
+  }
+  useShortcut('save', sections.dirty && !sections.saving, () => void onSave())
   return (
-    <>
-      <LeaveGuard dirty={dirty} />
-      <PageHeader title={t('title')} description={t('description')} />
-      <div className="flex flex-col gap-10">
-        <PublishSiteSection />
-        <GeneralSection reportDirty={report} />
-        {slots.map((slot) => (
-          <SlotSection key={slot.name} slot={slot} reportDirty={report} />
-        ))}
-      </div>
-    </>
+    <SettingsHostContext.Provider value={sections.host}>
+      <EditingLocaleContext.Provider value={editing}>
+        <LeaveGuard dirty={sections.dirty} />
+        <SettingsHeader
+          title={t('title')}
+          dirty={sections.dirty}
+          saving={sections.saving}
+          locale={{ locales, active, gaps: sections.gaps, onChange: setActive }}
+          onSave={() => void onSave()}
+        />
+        <p className="text-muted-foreground">{t('description')}</p>
+        <NotSavedAlert sections={sections.notSaved} />
+        <div className="flex flex-col gap-10">
+          <PublishSiteSection />
+          <GeneralSection />
+          {slots.map((slot) => (
+            <SlotSection key={slot.name} slot={slot} />
+          ))}
+        </div>
+        <PoweredBy className="self-center" />
+      </EditingLocaleContext.Provider>
+    </SettingsHostContext.Provider>
   )
 }

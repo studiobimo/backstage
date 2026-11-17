@@ -161,7 +161,7 @@ function ListItem({ name, initiallyOpen, onRemove, sortable, ...props }: ListIte
 function ListEmpty({ label, action }: { label: string; action: ReactNode }) {
   const { t } = useTranslation('blockForm')
   return (
-    <Empty className="w-full gap-4 rounded-lg border border-dashed p-5 md:p-5">
+    <Empty className="w-full gap-4 p-5 md:p-5">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <ListPlusIcon />

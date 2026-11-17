@@ -81,6 +81,8 @@ const mockApi = (
   return puts
 }
 
+const pageSave = (label = 'Save') => screen.getByRole('button', { name: new RegExp(`^${label}`) })
+
 const renderPage = () =>
   render(
     <QueryClientProvider client={testQueryClient()}>
@@ -117,13 +119,22 @@ describe('SettingsPage saving', { timeout: 15_000 }, () => {
     const name = await screen.findByLabelText('Site name')
     await user.clear(name)
     await user.type(name, 'Bimo')
-    await user.click(
-      within(screen.getByRole('region', { name: 'General' })).getByRole('button', { name: 'Save' })
-    )
+    await user.click(pageSave())
     expect(await screen.findByText('Settings saved')).toBeInTheDocument()
     expect(puts).toHaveLength(1)
     expect(puts[0]!.url).toMatch(/\/settings$/)
     expect(puts[0]!.body).toMatchObject({ siteName: { en: 'Bimo' }, expectedVersion: 4 })
+  })
+
+  it('offers the logo and theme color, and saves the theme color in lowercase', async () => {
+    const puts = mockApi()
+    renderPage()
+    const user = userEvent.setup()
+    expect(await screen.findByRole('button', { name: 'Choose Logo' })).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Theme color'), '#1A2B3C')
+    await user.click(pageSave())
+    expect(await screen.findByText('Settings saved')).toBeInTheDocument()
+    expect(puts[0]!.body).toMatchObject({ themeColor: '#1a2b3c' })
   })
 
   it('saves a slot as its block, with the block version', async () => {
@@ -133,9 +144,7 @@ describe('SettingsPage saving', { timeout: 15_000 }, () => {
     const tagline = await screen.findByLabelText('Tagline')
     await user.clear(tagline)
     await user.type(tagline, 'Still by hand')
-    await user.click(
-      within(screen.getByRole('region', { name: 'Footer' })).getByRole('button', { name: 'Save' })
-    )
+    await user.click(pageSave())
     await waitFor(() => expect(puts).toHaveLength(1))
     expect(puts[0]!.url).toMatch(/\/slots\/footer$/)
     expect(puts[0]!.body).toEqual({
@@ -144,6 +153,68 @@ describe('SettingsPage saving', { timeout: 15_000 }, () => {
       content: { tagline: 'Still by hand' },
       expectedVersion: 3
     })
+  })
+})
+
+describe('SettingsPage saving sections', { timeout: 15_000 }, () => {
+  it('saves every changed section from the one Save and leaves the others alone', async () => {
+    const puts = mockApi((method, url) => {
+      if (method === 'PUT' && url.endsWith('/settings')) {
+        return reply(200, { settings: { ...saved, siteName: { en: 'Studio!' } }, version: 5 })
+      }
+      return method === 'PUT' && url.endsWith('/slots/footer')
+        ? reply(200, {
+            slot: {
+              ...slots[1],
+              version: 4,
+              current: {
+                block: 'site-footer',
+                schemaVersion: 1,
+                content: { tagline: 'Made by hand!' }
+              }
+            }
+          })
+        : undefined
+    })
+    renderPage()
+    const user = userEvent.setup()
+    expect(await screen.findByRole('button', { name: /^Save/ })).toBeDisabled()
+    await user.type(await screen.findByLabelText('Site name'), '!')
+    await user.type(screen.getByLabelText('Tagline'), '!')
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
+    await user.click(pageSave())
+    expect(await screen.findByText('Settings saved')).toBeInTheDocument()
+    expect(puts.map(({ url }) => url.replace(/^.*\/v1/, '')).sort()).toEqual([
+      '/settings',
+      '/slots/footer'
+    ])
+    expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument()
+  })
+
+  it('has one language control and one Save for the whole page', async () => {
+    mockApi()
+    renderPage()
+    await screen.findByLabelText('Site name')
+    expect(screen.getAllByRole('tablist')).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: /^Save/ })).toHaveLength(1)
+    expect(screen.queryByText('Editing language')).not.toBeInTheDocument()
+  })
+
+  it('says which section could not be saved, and still saves the others', async () => {
+    const puts = mockApi((method, url) =>
+      method === 'PUT' && url.endsWith('/slots/footer')
+        ? reply(500, { error: 'x', code: 'internal' })
+        : undefined
+    )
+    renderPage()
+    const user = userEvent.setup()
+    await user.type(await screen.findByLabelText('Site name'), '!')
+    await user.type(screen.getByLabelText('Tagline'), '!')
+    await user.click(pageSave())
+    expect(await screen.findByText('Some sections were not saved')).toBeInTheDocument()
+    expect(screen.getByText(/Not saved: Footer\./)).toBeInTheDocument()
+    expect(puts).toHaveLength(2)
+    expect(screen.queryByText('Settings saved')).not.toBeInTheDocument()
   })
 
   it('offers a choice only for a slot with more than one block', async () => {
@@ -170,12 +241,9 @@ const refusing = (path: string[]) => (method: string) =>
     : undefined
 
 const saveGeneral = async (nameLabel: string, saveLabel: string) => {
-  await screen.findByLabelText(nameLabel)
-  await userEvent.setup().click(
-    within(screen.getByRole('region', { name: 'General' })).getByRole('button', {
-      name: saveLabel
-    })
-  )
+  const user = userEvent.setup()
+  await user.type(await screen.findByLabelText(nameLabel), '!')
+  await user.click(pageSave(saveLabel))
 }
 
 describe('SettingsPage guards', { timeout: 15_000 }, () => {
@@ -213,14 +281,14 @@ describe('SettingsPage guards', { timeout: 15_000 }, () => {
     await user.click(footer.getByRole('combobox', { name: 'Design' }))
     await user.click(await screen.findByRole('option', { name: 'site-footer-wide' }))
     await user.type(await screen.findByLabelText('Motto'), 'Loud')
-    await user.click(footer.getByRole('button', { name: 'Save' }))
+    await user.click(pageSave())
     expect(await screen.findByText('Replace the saved design?')).toBeInTheDocument()
     expect(puts).toHaveLength(0)
 
     await user.click(screen.getByRole('button', { name: 'Keep the saved design' }))
     expect(puts).toHaveLength(0)
 
-    await user.click(footer.getByRole('button', { name: 'Save' }))
+    await user.click(pageSave())
     await user.click(await screen.findByRole('button', { name: 'Replace it' }))
     await waitFor(() => expect(puts).toHaveLength(1))
     expect(puts[0]!.body).toMatchObject({ block: 'site-footer-wide', content: { motto: 'Loud' } })
@@ -231,7 +299,9 @@ describe('SettingsPage guards', { timeout: 15_000 }, () => {
     renderPage()
     const user = userEvent.setup()
     const header = within(await screen.findByRole('region', { name: 'Header' }))
-    await user.click(header.getByRole('button', { name: 'Save' }))
+    await user.type(await header.findByLabelText('Address'), '/hello')
+    await user.type(header.getByLabelText('Label'), 'Hello')
+    await user.click(pageSave())
     await waitFor(() => expect(puts).toHaveLength(1))
     expect(screen.queryByText('Replace the saved design?')).not.toBeInTheDocument()
   })
@@ -252,9 +322,7 @@ describe('SettingsPage newer saves', { timeout: 15_000 }, () => {
     const name = await screen.findByLabelText('Site name')
     await user.clear(name)
     await user.type(name, 'Mine')
-    await user.click(
-      within(screen.getByRole('region', { name: 'General' })).getByRole('button', { name: 'Save' })
-    )
+    await user.click(pageSave())
     const alert = await screen.findByText('A newer version was saved')
     expect(alert).toBeInTheDocument()
     expect(screen.getByText(/Ana saved this on/)).toBeInTheDocument()
@@ -271,7 +339,7 @@ describe('SettingsPage newer saves', { timeout: 15_000 }, () => {
     const tagline = await screen.findByLabelText('Tagline')
     await user.type(tagline, '!')
     const footer = within(screen.getByRole('region', { name: 'Footer' }))
-    await user.click(footer.getByRole('button', { name: 'Save' }))
+    await user.click(pageSave())
     expect(await footer.findByText('A newer version was saved')).toBeInTheDocument()
     const general = within(screen.getByRole('region', { name: 'General' }))
     expect(general.queryByText('A newer version was saved')).not.toBeInTheDocument()
@@ -290,9 +358,7 @@ describe('SettingsPage newer saves', { timeout: 15_000 }, () => {
     const user = userEvent.setup()
     const name = await screen.findByLabelText('Site name')
     await user.type(name, '!')
-    await user.click(
-      within(screen.getByRole('region', { name: 'General' })).getByRole('button', { name: 'Save' })
-    )
+    await user.click(pageSave())
     await user.click(await screen.findByRole('button', { name: 'Reload latest version' }))
     expect(await screen.findByText('Reload and discard your changes?')).toBeInTheDocument()
     latest = true
@@ -309,12 +375,10 @@ describe('SettingsPage editing', { timeout: 15_000 }, () => {
     )
     renderPage()
     const user = userEvent.setup()
-    await screen.findByLabelText('Site name')
-    await user.click(
-      within(screen.getByRole('region', { name: 'General' })).getByRole('button', { name: 'Save' })
-    )
+    await user.type(await screen.findByLabelText('Site name'), '!')
+    await user.click(pageSave())
     expect(await screen.findByText('Could not save the settings')).toBeInTheDocument()
-    expect(screen.getByLabelText('Site name')).toHaveValue('Studio')
+    expect(screen.getByLabelText('Site name')).toHaveValue('Studio!')
   })
 
   it('shows the refused issue on its field, in the language that has it', async () => {
@@ -341,7 +405,7 @@ describe('SettingsPage editing', { timeout: 15_000 }, () => {
     const name = await screen.findByLabelText('Site name')
     await user.clear(name)
     await user.type(name, '   ')
-    await saveGeneral('Site name', 'Save')
+    await user.click(pageSave())
     expect(await screen.findByText('This field is required.')).toBeInTheDocument()
     expect(puts).toHaveLength(0)
     expect(screen.queryByText('Could not save the settings')).not.toBeInTheDocument()
@@ -352,9 +416,9 @@ describe('SettingsPage editing', { timeout: 15_000 }, () => {
     renderPage()
     const user = userEvent.setup()
     await screen.findByLabelText('Site name')
-    const [spanish] = screen.getAllByRole('button', { name: /Spanish/ })
+    const spanish = screen.getByRole('tab', { name: /Spanish/ })
     expect(spanish).toHaveTextContent('missing')
-    await user.click(spanish!)
+    await user.click(spanish)
     await waitFor(() => expect(screen.getByLabelText('Site name')).toHaveValue(''))
   })
 

@@ -3,7 +3,6 @@ import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-q
 import { CircleAlertIcon, RocketIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { SectionFrame } from '@/features/block-form/section-frame.tsx'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,6 +13,7 @@ import { formatDateTime } from '@/lib/format'
 import { publishProblemKey } from '@/lib/publish-problem-key'
 
 import { publishSiteMutation, sitePublicationQuery } from './queries'
+import { SettingsSection } from './settings-section'
 
 const PUBLICATION_STATE = {
   never: { key: 'never', badge: 'warning' },
@@ -95,12 +95,7 @@ export function PublishSiteSection() {
   const state = stateOf(publication)
   const hint = useHint(publication, state.key)
   return (
-    <SectionFrame
-      id="publish"
-      title={t('publish.title')}
-      description={t('publish.description')}
-      icon={<RocketIcon />}
-    >
+    <SettingsSection title={t('publish.title')} description={t('publish.description')}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Badge variant={state.badge} size="lg">
           {t(`publish.status.${state.key}`)}
@@ -120,6 +115,6 @@ export function PublishSiteSection() {
         <RocketIcon aria-hidden />
         {t('publish.action')}
       </Button>
-    </SectionFrame>
+    </SettingsSection>
   )
 }
