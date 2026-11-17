@@ -148,7 +148,7 @@ The site Worker in one call, and its Hono middleware.
 ### `@studiobimo/backstage/render`
 
 Renders blocks and slots with React: `Blocks`, `renderSlots`, `RichText`, `RenderProvider`,
-`useDefaultLocale`, `useImage`, `useLocale`, `useLocalized`, and the `RenderContext` and
+`useBrand`, `useDefaultLocale`, `useImage`, `useLocale`, `useLocalized`, `useLogo`, and the `RenderContext` and
 `RenderedImage` types.
 
 ## Internal entry

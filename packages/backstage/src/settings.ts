@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { image, localized } from './fields.ts'
+import { hexColor, image, localized } from './fields.ts'
 import { PAGE } from './pages.ts'
 
 const SETTINGS = {
@@ -13,7 +13,9 @@ export const siteSettingsSchema = z.object({
   defaultDescription: localized(
     z.string().trim().max(SETTINGS.defaultDescription.maxLength)
   ).optional(),
-  defaultSocialImage: image().optional()
+  defaultSocialImage: image().optional(),
+  logo: image().optional(),
+  themeColor: hexColor().optional()
 })
 export type SiteSettings = z.infer<typeof siteSettingsSchema>
 

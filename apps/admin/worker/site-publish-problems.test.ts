@@ -61,4 +61,9 @@ describe('refusing to publish the site', () => {
     })
     expect(await problemsOfPublishing()).toEqual([{ reason: 'unknown_media', blockId: null }])
   })
+
+  it('names a logo that left the media library', async () => {
+    await saveSettings({ siteName: { en: 'Studio' }, logo: { id: 'gone', alt: '' } })
+    expect(await problemsOfPublishing()).toEqual([{ reason: 'unknown_media', blockId: null }])
+  })
 })

@@ -172,12 +172,25 @@ describe('createSite head', () => {
     expect(html).not.toContain('Site words')
   })
 
+  it('emits the theme color of the site settings', async () => {
+    const html = await headOf({}, [siteSnapshot({ brand: { logo: null, themeColor: '#1a2b3c' } })])
+    expect(html).toContain('<meta name="theme-color" content="#1a2b3c"/>')
+    expect(html).toContain('<meta name="msapplication-TileColor" content="#1a2b3c"/>')
+  })
+
+  it('emits no theme color when the site has none', async () => {
+    const html = await headOf({})
+    expect(html).not.toContain('theme-color')
+    expect(html).not.toContain('msapplication-TileColor')
+  })
+
   it('renders a page of a site that was never published as it is', async () => {
     const html = await headOf({}, [])
     expect(html).toContain('<title>About</title>')
     expect(html).not.toContain('og:site_name')
     expect(html).not.toContain('name="description"')
     expect(html).not.toContain('og:image')
+    expect(html).not.toContain('theme-color')
   })
 })
 

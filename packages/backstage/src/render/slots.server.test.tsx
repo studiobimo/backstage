@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
+import { NO_SITE_BRAND } from '../brand.ts'
 import { SITE_SNAPSHOT, type SiteSnapshot } from '../site-publishing.ts'
 import { components, loggedErrors } from './blocks-fixture.tsx'
 import { renderSlots } from './slots.tsx'
@@ -11,6 +12,7 @@ const siteWith = (slots: SiteSnapshot['slots']): SiteSnapshot => ({
   publishedAt: 1,
   siteName: 'Studio',
   seo: { description: '', socialImageId: null },
+  brand: NO_SITE_BRAND,
   slots,
   media: {}
 })

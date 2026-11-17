@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { NO_SITE_BRAND, siteBrandSchema, type SiteBrand } from './brand.ts'
 import { validateBlockContent, type Registry } from './blocks.ts'
 import { resolveLocaleConfig, type Locale } from './locales.ts'
 import {
@@ -36,6 +37,7 @@ export const siteSnapshotSchema = z.object({
     description: z.string(),
     socialImageId: z.string().nullable()
   }),
+  brand: siteBrandSchema.default(NO_SITE_BRAND),
   slots: z.record(z.string(), siteBlockSchema),
   media: z.record(z.string(), snapshotMediaSchema)
 })
@@ -85,6 +87,11 @@ const checkSlotBlock = (registry: Registry, slot: string, stored: SiteBlock): Ch
     }
   }
 }
+
+const brandOf = ({ logo, themeColor }: SiteSettings): SiteBrand => ({
+  logo: logo ? { id: logo.id, alt: logo.alt } : null,
+  themeColor: themeColor ?? null
+})
 
 const slotsToPublish = (registry: Registry, draft: SiteDraft) =>
   [...registry.slots.keys()].flatMap((slot) => {
@@ -185,6 +192,7 @@ export const buildSiteSnapshots = (
         description: defaultDescription?.[locale] ?? '',
         socialImageId: defaultSocialImage?.id ?? null
       },
+      brand: brandOf(draft.settings),
       slots: slotsFor(registry, published, locale, addresses),
       media: mediaFor(mediaIds, media, locale)
     }))

@@ -1,6 +1,12 @@
 {
   "title": "Ajustes del sitio",
   "description": "Lo que aparece en todas las páginas del sitio. Cambia de idioma para traducir cada texto.",
+  "save": "Guardar",
+  "unsaved": "Cambios sin guardar",
+  "notSaved": {
+    "title": "No se guardaron algunas secciones",
+    "description": "Sin guardar: {{sections}}. Tus cambios siguen aquí. Revisa cada una de esas secciones para ver qué corregir."
+  },
   "saved": {
     "title": "Ajustes guardados",
     "description": "Los cambios están guardados en el borrador. Publica el sitio para ponerlos en línea."
@@ -12,7 +18,7 @@
   "sections": {
     "general": {
       "title": "General",
-      "description": "Lo básico que comparten todas las páginas: el nombre del sitio y la imagen que se usa al compartir un enlace."
+      "description": "Lo básico que comparten todas las páginas: el nombre del sitio, el logotipo y el color del tema, y la imagen que se usa al compartir un enlace."
     }
   },
   "fields": {
@@ -27,6 +33,14 @@
     "defaultDescription": {
       "title": "Descripción por defecto",
       "description": "Se usa cuando una página no tiene descripción propia."
+    },
+    "logo": {
+      "title": "Logotipo",
+      "description": "Se muestra en la cabecera y el pie de página de cada página que los tiene."
+    },
+    "themeColor": {
+      "title": "Color del tema",
+      "description": "Un color hexadecimal como #1a2b3c. Tiñe la barra del navegador móvil y el color del mosaico en Windows. Déjalo vacío para usar el del navegador."
     }
   },
   "slots": {
