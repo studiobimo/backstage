@@ -1,3 +1,4 @@
+import { API_ERROR } from '@studiobimo/backstage'
 import { pagesResponseSchema } from '@studiobimo/backstage/internal'
 import {
   publishedIndexSchema,
@@ -44,8 +45,8 @@ export const publish = async (id: string, expectedVersion?: number, bindings: Pa
 
 export const expectPublishRefused = async (id: string, problems: object[]) => {
   const response = await publish(id)
-  expect(response.status).toBe(422)
-  expect(await response.json()).toMatchObject({ code: 'unpublishable', problems })
+  expect(response.status).toBe(API_ERROR.unpublishable.status)
+  expect(await response.json()).toMatchObject({ code: API_ERROR.unpublishable.code, problems })
 }
 
 export const snapshotOf = async (id: string, locale: 'en' | 'es') =>
