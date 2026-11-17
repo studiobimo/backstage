@@ -39,7 +39,7 @@ describe('republishing the pages that show an entry', () => {
     expect(republish.batch.done).toBe(true)
     expect(titlesIn(await snapshotOf(page.id))).toEqual(['Alpha v2'])
     expect(titlesIn(await snapshotOf(page.id, 'es'))).toEqual(['Alpha v2 ES'])
-    expect(writes).toHaveLength(2)
+    expect(writes).toHaveLength(3)
     expect(writes).not.toContain(SEO.indexKey)
   })
 
@@ -76,7 +76,7 @@ describe('republishing the pages that show an entry', () => {
       { expectedVersion: 1 },
       bindings
     )
-    expect(writes).toHaveLength(2)
+    expect(writes).toHaveLength(3)
   })
 
   it('drops the entry from pages when it is unpublished or deleted', async () => {

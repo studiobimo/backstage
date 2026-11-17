@@ -1,5 +1,12 @@
+import { API_ERROR } from '@studiobimo/backstage'
 import { pagesResponseSchema } from '@studiobimo/backstage/internal'
-import { publishedIndexSchema, SEO, snapshotKey, snapshotSchema } from '@studiobimo/backstage/site'
+import {
+  publishedIndexSchema,
+  SEO,
+  SITE_VERSION,
+  snapshotKey,
+  snapshotSchema
+} from '@studiobimo/backstage/site'
 import { expect } from 'vitest'
 
 import { db, kv, send, versionOf } from './pages-test-support'
@@ -38,8 +45,8 @@ export const publish = async (id: string, expectedVersion?: number, bindings: Pa
 
 export const expectPublishRefused = async (id: string, problems: object[]) => {
   const response = await publish(id)
-  expect(response.status).toBe(422)
-  expect(await response.json()).toMatchObject({ code: 'unpublishable', problems })
+  expect(response.status).toBe(API_ERROR.unpublishable.status)
+  expect(await response.json()).toMatchObject({ code: API_ERROR.unpublishable.code, problems })
 }
 
 export const snapshotOf = async (id: string, locale: 'en' | 'es') =>
@@ -51,7 +58,9 @@ export const publishedPage = async (id: string) =>
     .pages.find((page) => page.id === id)!
 
 export const pageKeys = async () =>
-  (await kv.list()).keys.map(({ name }) => name).filter((name) => name !== SEO.indexKey)
+  (await kv.list()).keys
+    .map(({ name }) => name)
+    .filter((name) => name !== SEO.indexKey && name !== SITE_VERSION.key)
 
 export const publishedIndex = async () =>
   publishedIndexSchema.parse(await kv.get(SEO.indexKey, 'json'))

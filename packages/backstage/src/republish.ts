@@ -11,7 +11,7 @@ export const KV_LIMITS = {
 
 const SUBREQUESTS = { perPagePerLocale: 7.5, perBatchOverhead: 8 } as const
 
-export const REPUBLISH = { writes: { perIndexRebuild: 1 } } as const
+export const REPUBLISH = { writes: { perIndexRebuild: 1, perVersionBump: 1 } } as const
 
 export const republishBatchSize = (locales: readonly Locale[]) =>
   Math.max(
@@ -26,10 +26,14 @@ export const kvWritesPerPage = (locales: readonly Locale[]) =>
   locales.length * SNAPSHOT_RECORDS_PER_LOCALE
 
 export const kvWritesToRepublish = (pageCount: number, locales: readonly Locale[]) =>
-  pageCount === 0 ? 0 : pageCount * kvWritesPerPage(locales) + REPUBLISH.writes.perIndexRebuild
+  pageCount === 0
+    ? 0
+    : pageCount * kvWritesPerPage(locales) +
+      REPUBLISH.writes.perIndexRebuild +
+      REPUBLISH.writes.perVersionBump
 
 export const kvWritesToRefresh = (pageCount: number, locales: readonly Locale[]) =>
-  pageCount * locales.length
+  pageCount === 0 ? 0 : pageCount * locales.length + REPUBLISH.writes.perVersionBump
 
 const republishEntrySchema = z.object({
   collection: z.string().min(1),

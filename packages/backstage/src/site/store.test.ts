@@ -1,10 +1,23 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { NO_REFERENCES } from '../references.ts'
-import { SNAPSHOT, SNAPSHOT_UPGRADES, routeKey, snapshotKey, type Snapshot } from '../publishing.ts'
+import {
+  SITE_VERSION,
+  SNAPSHOT,
+  SNAPSHOT_UPGRADES,
+  routeKey,
+  snapshotKey,
+  type Snapshot
+} from '../publishing.ts'
 import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../site-publishing.ts'
 import { routeOf } from './routing.ts'
-import { findPublished, findSiteSnapshot, findTranslations, type KvReader } from './store.ts'
+import {
+  findPublished,
+  findSiteSnapshot,
+  findTranslations,
+  readSiteVersion,
+  type KvReader
+} from './store.ts'
 
 const snapshotOf = (locale: 'en' | 'es', slug: string | null): Snapshot => ({
   format: SNAPSHOT.format,
@@ -107,5 +120,14 @@ describe('reading a page published in the previous snapshot format', () => {
 
   it('answers not found for a format that has no upgrade', async () => {
     expect(await findPublished(kv, { locale: 'en', slug: 'about' })).toBeNull()
+  })
+})
+
+describe('reading the publish version', () => {
+  it('returns the stored version, or undefined before any publish', async () => {
+    const kvWith = (records: Record<string, string>) =>
+      ({ get: async (key: string) => records[key] ?? null }) as KvReader
+    expect(await readSiteVersion(kvWith({ [SITE_VERSION.key]: 'abc' }))).toBe('abc')
+    expect(await readSiteVersion(kvWith({}))).toBeUndefined()
   })
 })

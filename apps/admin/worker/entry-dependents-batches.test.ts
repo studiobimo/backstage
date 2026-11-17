@@ -25,17 +25,17 @@ describe('republishing dependents beyond one batch', () => {
       pages.push(await publishedPageWith(slug, chosen(id)))
     await editEntry(id, 'Alpha v2', 1)
     const republish = await publishEntryAgain(id, 2)
-    expect(republish).toMatchObject({ pages: 5, writes: 10, pending: true, batch: null })
+    expect(republish).toMatchObject({ pages: 5, writes: 11, pending: true, batch: null })
     const status = await send('GET', `/republish?collection=post&entryId=${id}`)
-    expect(await status.json()).toMatchObject({ status: { remaining: 5, writes: 10 } })
+    expect(await status.json()).toMatchObject({ status: { remaining: 5, writes: 11 } })
     const { bindings, writes } = countingBindings()
     const batches = await drive({ collection: 'post', entryId: id }, bindings)
     expect(batches.length).toBeGreaterThan(1)
     expect(batches.flatMap(({ republished }) => republished).sort()).toEqual(
       pages.map(({ id: pageId }) => pageId).sort()
     )
-    expect(writes).toHaveLength(10)
-    expect(batches.reduce((sum, { writes: count }) => sum + count, 0)).toBe(10)
+    expect(writes).toHaveLength(11)
+    expect(batches.reduce((sum, { writes: count }) => sum + count, 0)).toBe(11)
     for (const { id: pageId } of pages) {
       expect(titlesIn(await snapshotOf(pageId))).toEqual(['Alpha v2'])
     }

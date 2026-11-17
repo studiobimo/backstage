@@ -16,10 +16,12 @@ import { sitePublishRoutes } from './site-publish.ts'
 import { siteOriginRoutes } from './site-origin.ts'
 import { slotsRoutes } from './slots.ts'
 import { usersRoutes } from './users.ts'
+import { bumpSiteVersionOnPublish } from './site-version.ts'
 import type { AdminEnv } from './env.ts'
 
 export const v1Routes = (registry: AdminRegistry) =>
   new Hono<{ Bindings: AdminEnv }>()
+    .use(bumpSiteVersionOnPublish)
     .route('/blocks', blocksRoutes(registry))
     .route('/collections', collectionsRoutes(registry))
     .route('/collections', entryPublishRoutes(registry))

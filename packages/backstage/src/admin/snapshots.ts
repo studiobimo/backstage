@@ -15,6 +15,7 @@ import { readPublishedIndex } from '../db/publishing.ts'
 import { SEO } from '../seo.ts'
 import {
   routeKeysOf,
+  SITE_VERSION,
   snapshotKey,
   snapshotKeysOf,
   snapshotRecords,
@@ -66,6 +67,8 @@ const readFamily = async <S>(
     const parsed = family.parse(stored)
     return parsed === null ? [] : [parsed]
   })
+
+export const bumpSiteVersion = (kv: KVNamespace) => kv.put(SITE_VERSION.key, crypto.randomUUID())
 
 const deleteRoutesOwnedBy = (kv: KVNamespace, ownerId: string, routes: readonly string[]) =>
   Promise.all(

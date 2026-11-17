@@ -30,6 +30,7 @@ import type { AccessEnv } from './auth.ts'
 import { readJsonBody } from './respond.ts'
 import {
   readSnapshots,
+  bumpSiteVersion,
   rebuildPublishedIndex,
   rewriteSnapshots,
   writeSnapshots
@@ -194,6 +195,11 @@ export const republishRoutes = (registry: AdminRegistry) => {
     .post('/', async (c) => {
       const body = await readJsonBody(c, republishScopeSchema)
       if (!body.ok) return body.response
-      return c.json(await runRepublishBatch(c, registry, body.data))
+      const batch = await runRepublishBatch(c, registry, body.data)
+      const bumps = batch.done && (batch.writes > 0 || body.data.cursor !== null)
+      if (bumps) await bumpSiteVersion(c.env.SITE)
+      return c.json(
+        bumps ? { ...batch, writes: batch.writes + REPUBLISH.writes.perVersionBump } : batch
+      )
     })
 }
