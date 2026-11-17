@@ -102,7 +102,7 @@ What a site author writes. It reaches no database and no Hono.
 
 - Blocks and layouts: `defineBlock`, `defineLayout`, `defineRegistry`, `defineComponents`, `LAYOUT`, `SLOT`
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
-- Fields: `entries`, `image`, `link`, `localized`, `richText`, `isBlank`
+- Fields: `entries`, `hexColor`, `image`, `link`, `localized`, `richText`, `isBlank`
 - Shared constants: `API_ERROR`, `MEDIA`
 - Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionComponents`,
   `CollectionDefinition`, `CollectionDescription`, `CollectionRoute`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
@@ -148,7 +148,7 @@ The site Worker in one call, and its Hono middleware.
 ### `@studiobimo/backstage/render`
 
 Renders blocks and slots with React: `Blocks`, `renderSlots`, `RichText`, `RenderProvider`,
-`useDefaultLocale`, `useImage`, `useLocale`, `useLocalized`, and the `RenderContext` and
+`useBrand`, `useDefaultLocale`, `useImage`, `useLocale`, `useLocalized`, `useLogo`, and the `RenderContext` and
 `RenderedImage` types.
 
 ## Internal entry
