@@ -1,0 +1,12 @@
+{
+  "recent": {
+    "title": "Where you left off",
+    "unsaved": "Unsaved",
+    "editLabel": "Edit blocks",
+    "edit": "Edit blocks: {{name}}"
+  },
+  "empty": {
+    "title": "Start with your first page",
+    "description": "Create the home page, then add the pages around it."
+  }
+}

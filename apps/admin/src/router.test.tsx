@@ -1,14 +1,18 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import i18n from './i18n/config'
 import { createAppRouter } from './router'
 import { testQueryClient } from './test/query-client'
+import { stubApi } from './test/shell'
+
+afterEach(() => vi.unstubAllGlobals())
 
 describe('router', () => {
   it('renders the home page at /', async () => {
+    stubApi()
     const queryClient = testQueryClient()
     const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: ['/'] }))
     render(

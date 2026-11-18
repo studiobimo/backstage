@@ -1,0 +1,12 @@
+{
+  "recent": {
+    "title": "Donde lo dejaste",
+    "unsaved": "Sin guardar",
+    "editLabel": "Editar bloques",
+    "edit": "Editar bloques: {{name}}"
+  },
+  "empty": {
+    "title": "Empieza con tu primera página",
+    "description": "Crea la página de inicio y después las páginas que la rodean."
+  }
+}
