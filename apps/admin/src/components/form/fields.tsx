@@ -177,10 +177,13 @@ export function NumberField({ min, max, integer, ...chrome }: NumberFieldProps) 
   )
 }
 
-export function SwitchField(chrome: FieldChromeProps) {
+const SWITCH_CARD =
+  'rounded-lg border p-3 hover:bg-accent/50 has-data-checked:border-primary/48 has-data-checked:bg-accent/50'
+
+export function SwitchField({ card, ...chrome }: FieldChromeProps & { card?: boolean }) {
   const field = useFieldContext<SwitchFieldValue>()
   return (
-    <FieldFrame {...chrome} inline>
+    <FieldFrame {...chrome} inline className={card ? SWITCH_CARD : undefined}>
       <Switch
         checked={field.state.value === true}
         onCheckedChange={(checked) => field.handleChange(checked)}
