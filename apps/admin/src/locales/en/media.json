@@ -1,6 +1,7 @@
 {
-  "title": "Upload images",
-  "description": "Add photos to reuse on your pages. Each one needs a description for every language, unless it is only decoration.",
+  "title": "Media",
+  "description": "Browse, search and reuse the images on your site. Every image needs a description in each language, unless it is only decoration.",
+  "details": "{{width}} × {{height}} px · {{size}}",
   "locales": {
     "en": "English",
     "es": "Español"
@@ -17,8 +18,14 @@
     "too_large": "The image is too large, even after resizing. Try a smaller one.",
     "unreadable": "Your browser could not read this image. It may be damaged."
   },
-  "preview": {
-    "details": "{{name}} · {{width}} × {{height}} px · {{size}} KB"
+  "altStatus": {
+    "described": "Described",
+    "missing": "Needs description",
+    "decorative": "Decorative"
+  },
+  "storage": {
+    "label": "Storage used",
+    "value": "{{used}} of {{budget}}"
   },
   "decorative": {
     "label": "Decorative image",
@@ -31,13 +38,33 @@
   },
   "upload": {
     "heading": "New image",
-    "description": "Choose a file, then describe it for each language."
+    "description": "Choose a file, then describe it for each language.",
+    "progress": "Uploading"
   },
   "submit": "Upload image",
   "uploaded": {
     "title": "Image uploaded"
   },
+  "delete": {
+    "title": "Delete {{name}}?",
+    "description": "The image is removed from the library for good. Images that are in use cannot be deleted.",
+    "cancel": "Cancel",
+    "confirm": "Delete image"
+  },
+  "usage": {
+    "page": "A page",
+    "entry": "A collection entry",
+    "site": "The site settings and layout"
+  },
   "library": {
+    "heading": "Library",
+    "count_one": "1 image",
+    "count_other": "{{count}} images",
+    "searchLabel": "Search images",
+    "searchPlaceholder": "Search images",
+    "noMatchTitle": "No images match",
+    "noMatchDescription": "Try another file name or a word from the description.",
+    "delete": "Delete {{name}}",
     "title": "Choose an image",
     "description": "Pick one of the images you uploaded.",
     "label": "Uploaded images",

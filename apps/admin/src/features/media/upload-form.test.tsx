@@ -5,6 +5,8 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ToastProvider } from '@/components/ui/toast'
+import { ApiError } from '@/lib/api'
+import { uploadRequest } from '@/lib/upload-request'
 import { testQueryClient } from '@/test/query-client'
 
 import { IMAGE_REJECTION, ImageRejected, processImage } from './process-image'
@@ -14,6 +16,8 @@ vi.mock('./process-image', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./process-image')>()),
   processImage: vi.fn()
 }))
+
+vi.mock('@/lib/upload-request', () => ({ uploadRequest: vi.fn() }))
 
 const processed = {
   width: 800,
@@ -44,11 +48,11 @@ const stubUrls = () => {
   URL.revokeObjectURL = vi.fn()
 }
 
-const renderForm = (client = testQueryClient()) =>
+const renderForm = (client = testQueryClient(), onUploaded = vi.fn()) =>
   render(
     <QueryClientProvider client={client}>
       <ToastProvider>
-        <UploadForm />
+        <UploadForm onUploaded={onUploaded} />
       </ToastProvider>
     </QueryClientProvider>
   )
@@ -96,8 +100,6 @@ describe('UploadForm picker', () => {
   })
 
   it('requires alt text for each locale and marks the one that is missing', async () => {
-    const fetchMock = vi.fn()
-    vi.stubGlobal('fetch', fetchMock)
     renderForm()
     await pick()
     await userEvent.type(
@@ -106,15 +108,15 @@ describe('UploadForm picker', () => {
     )
     await userEvent.click(uploadButton())
     expect(await screen.findByText('Fix')).toBeInTheDocument()
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(uploadRequest).not.toHaveBeenCalled()
   })
 })
 
 describe('UploadForm upload', () => {
   it('uploads the processed file with a description per locale', async () => {
-    const fetchMock = vi.fn(async () => created(false))
-    vi.stubGlobal('fetch', fetchMock)
-    renderForm()
+    vi.mocked(uploadRequest).mockResolvedValue(created(false))
+    const onUploaded = vi.fn()
+    renderForm(testQueryClient(), onUploaded)
     await pick()
     await userEvent.type(
       (await screen.findAllByLabelText('Description of the image'))[0]!,
@@ -124,36 +126,45 @@ describe('UploadForm upload', () => {
     await userEvent.type(screen.getAllByLabelText('Description of the image')[1]!, 'Una silla')
     await userEvent.click(uploadButton())
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('/api/v1/media')
-    const body = init.body as FormData
+    await waitFor(() => expect(uploadRequest).toHaveBeenCalledOnce())
+    const [path, body] = vi.mocked(uploadRequest).mock.calls[0]!
+    expect(path).toBe('/media')
     expect((body.get(MEDIA.upload.fileField) as File).name).toBe('chair.jpg')
     expect(JSON.parse(body.get(MEDIA.upload.metadataField) as string)).toEqual({
       decorative: false,
       alt: { en: 'A chair', es: 'Una silla' }
     })
     expect(await screen.findByText('Image uploaded')).toBeInTheDocument()
+    expect(onUploaded).toHaveBeenCalledOnce()
   })
 
   it('needs no description for a decorative image', async () => {
-    const fetchMock = vi.fn(async () => created(true))
-    vi.stubGlobal('fetch', fetchMock)
+    vi.mocked(uploadRequest).mockResolvedValue(created(true))
     renderForm()
     await pick()
     await userEvent.click(await screen.findByRole('switch', { name: /Decorative image/ }))
     expect(screen.queryByLabelText('Description of the image')).not.toBeInTheDocument()
     await userEvent.click(uploadButton())
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    await waitFor(() => expect(uploadRequest).toHaveBeenCalledOnce())
+  })
+
+  it('shows how much of the image has been sent while it uploads', async () => {
+    vi.mocked(uploadRequest).mockImplementation((_path, _body, onProgress) => {
+      onProgress(0.5)
+      return new Promise(() => {})
+    })
+    renderForm()
+    await pick()
+    await userEvent.click(await screen.findByRole('switch', { name: /Decorative image/ }))
+    await userEvent.click(uploadButton())
+    const progress = await screen.findByRole('progressbar')
+    expect(progress).toHaveAttribute('aria-valuenow', '50')
+    expect(progress).toHaveAccessibleName('Uploading')
+    expect(uploadButton()).toBeDisabled()
   })
 
   it('shows the server refusal and keeps the image', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(
-        async () => new Response(JSON.stringify({ error: 'x', code: 'too_large' }), { status: 413 })
-      )
-    )
+    vi.mocked(uploadRequest).mockRejectedValue(new ApiError('too_large', 'x'))
     renderForm()
     await pick()
     await userEvent.click(await screen.findByRole('switch', { name: /Decorative image/ }))
@@ -165,7 +176,6 @@ describe('UploadForm upload', () => {
 
 describe('UploadForm on a site with one locale', () => {
   it('asks for a single description and shows no language tabs', async () => {
-    vi.stubGlobal('fetch', vi.fn())
     renderForm(testQueryClient({ locales: ['fr'], defaultLocale: 'fr' }))
     await pick()
     expect(await screen.findAllByLabelText('Description of the image')).toHaveLength(1)
