@@ -11,6 +11,7 @@ import { blocker } from '@/test/blocker'
 import { aboutPage } from '@/test/fixtures'
 import { testQueryClient } from '@/test/query-client'
 import { PageEditor } from './page-editor'
+import { readDraft, writeDraft } from './unsaved-pages'
 
 vi.mock('@tanstack/react-router', async () => ({
   ...(await import('@/test/blocker')).blockerRouterMock,
@@ -121,6 +122,7 @@ const removeFirstAndSave = async (user: ReturnType<typeof userEvent.setup>) => {
 const rows = async () => within(await screen.findByRole('list')).getAllByRole('listitem')
 
 afterEach(() => {
+  localStorage.clear()
   vi.unstubAllGlobals()
   blocker.state = { status: 'idle' }
 })
@@ -444,5 +446,68 @@ describe('PageEditor languages', SUITE, () => {
     })
     renderEditor()
     expect(await screen.findByRole('tab', { name: /Spanish/ })).toHaveTextContent('1 missing')
+  })
+})
+
+describe('PageEditor drafts', SUITE, () => {
+  const storedDraft = { blocks: [saved[0]!], layout: 'default', seo: emptySeo }
+
+  it('restores a stored draft as unsaved edits and lets the user discard it', async () => {
+    mockApi(saved)
+    writeDraft('p1', storedDraft)
+    const user = userEvent.setup()
+    renderEditor()
+    expect(await rows()).toHaveLength(1)
+    expect(screen.getByText('Restored your unsaved draft')).toBeInTheDocument()
+    expect(blocker.options?.shouldBlockFn()).toBe(true)
+    await user.click(screen.getByRole('button', { name: 'Discard draft' }))
+    await waitFor(() => expect(screen.queryByText('Restored your unsaved draft')).toBeNull())
+    expect(await rows()).toHaveLength(2)
+    expect(readDraft('p1', 0)).toBeNull()
+  })
+
+  it('ignores a stored draft older than the page', async () => {
+    mockApi(saved)
+    writeDraft('p1', storedDraft, -1)
+    renderEditor()
+    expect(await rows()).toHaveLength(2)
+    expect(screen.queryByText('Restored your unsaved draft')).toBeNull()
+  })
+
+  it('keeps the edits as a draft when leaving with Leave and keep draft', async () => {
+    mockApi(saved)
+    const user = userEvent.setup()
+    renderEditor()
+    await user.click((await screen.findAllByRole('button', { name: 'Remove hero' }))[0]!)
+    const proceed = vi.fn()
+    blocker.state = { status: 'blocked', proceed, reset: vi.fn() }
+    await user.click(screen.getByRole('button', { name: 'Remove hero' }))
+    await user.click(await screen.findByRole('button', { name: 'Leave and keep draft' }))
+    expect(proceed).toHaveBeenCalled()
+    expect(readDraft('p1', 0)?.blocks).toHaveLength(0)
+  })
+
+  it('drops the stored draft when leaving with discard', async () => {
+    mockApi(saved)
+    writeDraft('p1', storedDraft)
+    const user = userEvent.setup()
+    renderEditor()
+    await rows()
+    const proceed = vi.fn()
+    blocker.state = { status: 'blocked', proceed, reset: vi.fn() }
+    await user.click(screen.getByRole('button', { name: 'Remove hero' }))
+    await user.click(await screen.findByRole('button', { name: 'Leave and discard' }))
+    expect(proceed).toHaveBeenCalled()
+    expect(readDraft('p1', 0)).toBeNull()
+  })
+
+  it('clears the stored draft after a successful save', async () => {
+    mockApi(saved)
+    writeDraft('p1', storedDraft)
+    const user = userEvent.setup()
+    renderEditor()
+    await rows()
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(readDraft('p1', 0)).toBeNull())
   })
 })

@@ -65,6 +65,8 @@ import {
   savePageSeoMutation
 } from './queries'
 import { type SeoDefaults, SeoSection } from './seo-section'
+import { RestoredDraftNotice } from './restored-draft-notice'
+import { clearDraft, readDraft, useDraftPersistence } from './unsaved-pages'
 
 const BLOCK_LIST_CLASS = 'gap-0 divide-y'
 
@@ -217,9 +219,9 @@ function useRowFeedback(blocks: PageBlock[]) {
   }
 }
 
-function useBlockActions(saved: PageBlock[], titleOf: (blockName: string) => string) {
+function useBlockActions(initial: PageBlock[], titleOf: (blockName: string) => string) {
   const { t } = useTranslation('pageEditor')
-  const [blocks, setBlocks] = useState(saved)
+  const [blocks, setBlocks] = useState(initial)
   const feedback = useRowFeedback(blocks)
   const names = blocks.map((block) => titleOf(block.block))
 
@@ -371,6 +373,7 @@ function EmptyBlocks() {
 interface PageEditorBodyProps {
   pageId: string
   onReload: () => void
+  onDiscardDraft: () => void
 }
 
 function BlockList({
@@ -454,7 +457,7 @@ function useSeoDefaults(titles: Record<string, string>): SeoDefaults {
   }
 }
 
-function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
+function PageEditorBody({ pageId, onReload, onDiscardDraft }: PageEditorBodyProps) {
   const { t, i18n } = useTranslation('pageEditor')
   const { data: savedPage } = useSuspenseQuery(pageBlocksQuery(pageId))
   const saved = savedPage.blocks
@@ -465,15 +468,16 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   const { data: savedSeoPage } = useSuspenseQuery(pageSeoQuery(pageId))
   const savedSeo = savedSeoPage.seo
   const savedLayout = savedPage.layout
-  const [layout, setLayout] = useState(savedLayout)
-  const [seo, setSeo] = useState(savedSeo)
+  const [restored] = useState(() => readDraft(pageId, page?.updatedAt ?? 0))
+  const [layout, setLayout] = useState(restored?.layout ?? savedLayout)
+  const [seo, setSeo] = useState(restored?.seo ?? savedSeo)
   const defaults = useSeoDefaults(
     Object.fromEntries((page?.locales ?? []).map(({ locale, title }) => [locale, title]))
   )
   const { locales, defaultLocale } = useLocaleConfig()
   const [locale, setLocale] = useState<Locale>(defaultLocale)
   const blockLanguage = useBlockLanguage()
-  const actions = useBlockActions(saved, (name) =>
+  const actions = useBlockActions(restored?.blocks ?? saved, (name) =>
     blockTitle(options, name, blockLanguage.language, blockLanguage.fallback)
   )
   const { blocks } = actions
@@ -483,6 +487,7 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
   )
   const dirty = !sameBlocks(blocks, saved) || layout !== savedLayout || !sameJson(seo, savedSeo)
   const draft = { blocks, layout, seo }
+  const persistence = useDraftPersistence(pageId, draft, dirty)
   const savedDraft = { blocks: saved, layout: savedLayout, seo: savedSeo }
   const save = useSave(pageId, draft, { ...savedDraft, version: savedPage.version })
   const changes = describeChanges(savedDraft, draft)
@@ -510,8 +515,9 @@ function PageEditorBody({ pageId, onReload }: PageEditorBodyProps) {
       ) : (
         <p role="alert">{t('apiErrors.not_found', { ns: 'common' })}</p>
       )}
-      <LeaveGuard dirty={dirty} />
+      <LeaveGuard dirty={dirty} draft={persistence} />
       <div className={EDITOR_BODY}>
+        {restored && dirty && <RestoredDraftNotice onDiscard={onDiscardDraft} />}
         <BlocksFrame actions={actions} options={options} />
         <SeoSection value={seo} defaults={defaults} onChange={setSeo} />
         <LayoutPicker layouts={layouts} value={layout} onChange={setLayout} />
@@ -527,6 +533,7 @@ export function PageEditor({ pageId }: { pageId: string }) {
   const queryClient = useQueryClient()
   const [generation, setGeneration] = useState(0)
   const reload = async () => {
+    clearDraft(pageId)
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: pageBlocksKey(pageId) }),
       queryClient.invalidateQueries({ queryKey: pageSeoKey(pageId) }),
@@ -534,5 +541,16 @@ export function PageEditor({ pageId }: { pageId: string }) {
     ])
     setGeneration((current) => current + 1)
   }
-  return <PageEditorBody key={generation} pageId={pageId} onReload={() => void reload()} />
+  const discardDraft = () => {
+    clearDraft(pageId)
+    setGeneration((current) => current + 1)
+  }
+  return (
+    <PageEditorBody
+      key={generation}
+      pageId={pageId}
+      onReload={() => void reload()}
+      onDiscardDraft={discardDraft}
+    />
+  )
 }

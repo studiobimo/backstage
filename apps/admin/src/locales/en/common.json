@@ -118,7 +118,9 @@
   "leave": {
     "title": "Leave without saving?",
     "description": "You have unsaved changes on this page. If you leave now they are lost.",
+    "descriptionDraft": "You have unsaved changes on this page. Keep them as a draft on this device, or discard them.",
     "stay": "Keep editing",
+    "keepDraft": "Leave and keep draft",
     "discard": "Leave and discard"
   },
   "signIn": {

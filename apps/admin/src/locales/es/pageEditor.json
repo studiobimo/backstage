@@ -153,5 +153,10 @@
     "notLive_entry": "No está en línea. Esta entrada aún no está publicada.",
     "changedSince_entry": "En línea desde el {{when}}, publicada por {{name}}. Los cambios guardados aún no están en línea. Publica para actualizar la entrada.",
     "unpublishDescription_entry": "La entrada deja de estar publicada. Tu borrador sigue aquí y puedes publicarlo de nuevo."
+  },
+  "draft": {
+    "title": "Recuperamos tu borrador sin guardar",
+    "description": "Esta página tenía ediciones que no guardaste. Han vuelto aquí y siguen solo en este dispositivo.",
+    "discard": "Descartar borrador"
   }
 }
