@@ -27,6 +27,7 @@ interface ImageCardProps extends Omit<ComponentProps<'div'>, 'children'> {
   detail?: string
   altStatus?: AltStatus
   actions?: ReactNode
+  footer?: ReactNode
 }
 
 export function ImageCard({
@@ -35,6 +36,7 @@ export function ImageCard({
   detail,
   altStatus,
   actions,
+  footer,
   className,
   ...props
 }: ImageCardProps) {
@@ -50,12 +52,17 @@ export function ImageCard({
           loading="lazy"
           className="aspect-square w-full rounded-md bg-muted object-cover ring-1 ring-border"
         />
-        {actions && <div className="absolute end-1.5 top-1.5">{actions}</div>}
+        {actions && (
+          <div className="absolute end-1.5 top-1.5 rounded-md bg-background/90 text-foreground shadow-sm ring-1 ring-border backdrop-blur-sm">
+            {actions}
+          </div>
+        )}
       </div>
       <div className="flex min-w-0 flex-col gap-1 px-0.5">
         <span className="truncate font-medium text-sm">{name}</span>
         {detail && <span className="truncate text-muted-foreground text-xs">{detail}</span>}
         {altStatus && <AltStatusBadge status={altStatus} />}
+        {footer}
       </div>
     </div>
   )
