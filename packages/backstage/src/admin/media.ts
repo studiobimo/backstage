@@ -1,6 +1,7 @@
-import { API_ERROR, type ApiError } from '../errors.ts'
+import { API_ERROR, errorBody, type ApiError } from '../errors.ts'
 import { ensureUser } from '../db/users.ts'
-import { findMediaFileKey, insertMedia, listMedia } from '../db/media.ts'
+import { deleteMedia, findMediaFileKey, insertMedia, listMedia } from '../db/media.ts'
+import { findMediaUsage } from '../db/media-usage.ts'
 import { MEDIA, mediaKeyOf, mediaAltSchema, sniffImageType } from '../media.ts'
 import { readImageSize } from '../image-size.ts'
 import { resolveLocaleConfig } from '../locales.ts'
@@ -96,4 +97,25 @@ export const mediaRoutes = (registry: Registry) =>
         throw error
       }
       return c.json({ media: saved }, RESPONSE_STATUS.created)
+    })
+    .delete('/:id', async (c) => {
+      const usedBy = await findMediaUsage(c.env.DB, c.req.param('id'))
+      if (usedBy.length > 0) {
+        return c.json({ ...errorBody(API_ERROR.mediaInUse), usedBy }, API_ERROR.mediaInUse.status)
+      }
+      const r2Key = await deleteMedia(c.env.DB, c.req.param('id'))
+      if (!r2Key) return respondWithError(c, API_ERROR.notFound)
+      await c.env.MEDIA.delete(r2Key)
+      return c.body(null, RESPONSE_STATUS.noContent)
+    })
+    .delete('/:id', async (c) => {
+      const id = c.req.param('id')
+      const usedBy = await findMediaUsage(c.env.DB, id)
+      if (usedBy.length > 0) {
+        return c.json({ ...errorBody(API_ERROR.mediaInUse), usedBy }, API_ERROR.mediaInUse.status)
+      }
+      const r2Key = await deleteMedia(c.env.DB, id)
+      if (!r2Key) return respondWithError(c, API_ERROR.notFound)
+      await c.env.MEDIA.delete(r2Key)
+      return c.body(null, RESPONSE_STATUS.noContent)
     })

@@ -17,7 +17,9 @@ export const MEDIA = {
   sniffBytes: 32,
   metadataSlackBytes: 64 * 1024,
   upload: { fileField: 'file', metadataField: 'metadata' },
-  cacheControl: 'public, max-age=31536000, immutable'
+  cacheControl: 'public, max-age=31536000, immutable',
+  storage: { freeTierBytes: 10 * 1024 * 1024 * 1024 },
+  usage: { kinds: ['page', 'entry', 'site'] }
 } as const
 
 export type MediaType = keyof typeof MEDIA.types
@@ -95,3 +97,12 @@ export type Media = z.infer<typeof mediaSchema>
 export const mediaResponseSchema = z.object({ media: mediaSchema })
 
 export const mediaListResponseSchema = z.object({ media: z.array(mediaSchema) })
+
+const mediaUsageSchema = z.object({
+  kind: z.enum(MEDIA.usage.kinds),
+  id: z.string(),
+  label: z.record(z.string(), z.string())
+})
+export type MediaUsage = z.infer<typeof mediaUsageSchema>
+
+export const mediaInUseResponseSchema = z.object({ usedBy: z.array(mediaUsageSchema) })

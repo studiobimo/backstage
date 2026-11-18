@@ -47,6 +47,11 @@ export const API_ERROR = {
     status: 415,
     message: 'Send the request body as application/json'
   },
+  mediaInUse: {
+    code: 'media_in_use',
+    status: 409,
+    message: 'This image is used and cannot be deleted'
+  },
   notFound: { code: 'not_found', status: 404, message: 'Not found' },
   internal: { code: 'internal', status: 500, message: 'Internal error' },
   devAuthOutsideLocal: {
