@@ -22,7 +22,7 @@ each time. The available options all fall short:
   Paid.
 - **Hardcoding the copy**, as the studio does today, makes every typo a deploy.
 
-BackUp Coffee Shop and Brasa Brava are waiting for a site they can edit.
+The studio's clients are waiting for a site they can edit.
 
 ## 3. Users
 

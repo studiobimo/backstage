@@ -8,7 +8,7 @@ itself and its status live in issues**, not in this file; see
 A milestone closes when every one of its exit criteria is met. Milestones are not tied to version
 numbers: release-please sets the versions from the commits.
 
-Client sites such as BackUp Coffee Shop and Brasa Brava are separate projects with their own
+Client sites are separate projects with their own
 roadmaps, and so is bimo.dev. This roadmap covers only Backstage itself.
 
 ## bimo.dev, in its own repository
