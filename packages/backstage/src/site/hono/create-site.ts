@@ -22,7 +22,16 @@ import { respondWithError } from './respond.ts'
 import { securityHeaders, type ContentSecurityPolicyAdditions } from './security.ts'
 import { stylesheetPathFor, stylesheetRoutes } from './stylesheet.ts'
 
-export type SiteApp = Hono<{ Bindings: SiteEnv }>
+interface SiteVariables {
+  siteDocument: DocumentContext
+}
+
+export interface SiteEnvironment {
+  Bindings: SiteEnv
+  Variables: SiteVariables
+}
+
+export type SiteApp = Hono<SiteEnvironment>
 
 export interface CreateSiteOptions {
   components: ComponentMap
@@ -57,9 +66,13 @@ export const createSite = (options: CreateSiteOptions) => {
     head
   }
   const entryRoutes = routesOf(collectionsOf(components.registry).values())
-  const app: SiteApp = new Hono<{ Bindings: SiteEnv }>()
+  const app: SiteApp = new Hono<SiteEnvironment>()
 
   app.use(...observe)
+  app.use(async (c, next) => {
+    c.set('siteDocument', document)
+    await next()
+  })
   app.use(securityHeaders(contentSecurityPolicy, { turnstile }))
 
   app.get(OBSERVABILITY.health.path, respondHealthy)
@@ -83,7 +96,7 @@ export const createSite = (options: CreateSiteOptions) => {
 
   routes?.(app)
 
-  const renderRoute = async (c: Context<{ Bindings: SiteEnv }>) => {
+  const renderRoute = async (c: Context<SiteEnvironment>) => {
     const entryPage = await renderEntryRoute(c, document, entryRoutes, CACHED)
     if (entryPage) return entryPage
     const route = routeOf(c.req.raw, locales)

@@ -69,6 +69,48 @@ applies only the ones the database has not seen.
 `packages/backstage/test/pack.test.ts` runs exactly this against the packed tarball, so the steps
 above are checked on every pull request.
 
+## Mount a client app on a route
+
+A route that needs a client app, such as a seat picker on `/reserve`, renders inside the site
+document with `renderInShell`. It takes the header and footer slots, the stylesheet, the head
+(title, description, canonical, hreflang, theme color) and the language switcher from the published
+site snapshot of its locale, exactly as a content page does, and the security headers stay as they
+are.
+
+```tsx
+import { createSite, renderInShell } from '@studiobimo/backstage/site/hono'
+
+export default createSite({
+  components,
+  stylesheet,
+  contentSecurityPolicy: { scriptSrc: ["'self'"], connectSrc: ["'self'"] },
+  routes: (app) => {
+    app.get('/reserve', (c) =>
+      renderInShell(c, {
+        locale: 'en',
+        title: 'Reserve a seat',
+        description: 'Pick your seat on the floor plan.',
+        body: <div id="reserve-root" data-venue="main-hall" />,
+        scripts: ['/reserve/app.js'],
+        translations: { es: '/es/reserve' }
+      })
+    )
+  }
+})
+```
+
+- **`body`** is any React node. Pass the client's configuration through `data-*` attributes on a
+  mount element, because inline scripts stay blocked.
+- **`scripts`** are same-origin paths, served from the site's `ASSETS` binding and loaded as
+  `<script type="module">`. A full URL or a protocol-relative one throws.
+- **CSP additions.** `scriptSrc: ["'self'"]` lets the bundle run. Add `connectSrc: ["'self'"]` (or
+  the API origin) when the client calls `fetch`. Nothing allows inline scripts, so the bundle cannot
+  rely on them.
+- **`translations`** maps other locales to the path of the same route. It adds the `hreflang`
+  alternates and the switcher links; leave it out for a route that exists in one locale.
+- Register the route in `routes`, which runs before the catch-all page route, and serve the bundle
+  from your own route or static assets.
+
 ## Things a consumer runs into
 
 - **Admin assets config.** Use `"binding": "ASSETS"` and

@@ -145,6 +145,8 @@ The site Worker in one call, and its Hono middleware.
   stylesheet, the sitemap and robots, and the 404 and error responses
   ([ADR-0016](docs/adr/0016-create-site.md)), with the `CreateSiteOptions`, `SiteApp`, `SiteHead`,
   `SitePreview` and `ContentSecurityPolicyAdditions` types
+- `renderInShell`, which renders a consumer route inside the site document (slots, head,
+  stylesheet and language switcher from the published snapshot), with the `ShellOptions` type
 - `observe`, `reportError`, `respondHealthy`, `OBSERVABILITY`
 
 ### `@studiobimo/backstage/render`
