@@ -61,14 +61,16 @@ Admin Worker, typed as `AdminEnv` from `@studiobimo/backstage/admin`:
 | `OWNER_EMAIL`        | variable               | yes        | the address (or comma-separated addresses) that are always owners   |
 | `ACCESS_TEAM_DOMAIN` | variable               | access     | Cloudflare Access team domain                                       |
 | `ACCESS_AUD`         | variable               | access     | Cloudflare Access application audience                              |
-| `EMAIL`              | `send_email` binding   | magic-link | sends the sign-in link                                              |
+| `EMAIL`              | `send_email` binding   | magic-link | sends the sign-in link and form notifications                       |
 | `AUTH_EMAIL_FROM`    | variable               | magic-link | the sender address, on a domain you have onboarded to Email Service |
+| `TURNSTILE_SECRET`   | secret                 | forms      | verifies the Turnstile token of a public form submission            |
 | `DEV_AUTH`           | local `.dev.vars` only | no         | `true` skips Access on localhost; refused on a deployed host        |
 
 Magic link (`AUTH_MODE=magic-link`) signs in people already in the `users` table. The link
 works once and expires in 15 minutes. The session lives in D1 and in a `__Host-` cookie, and
 requests are rate limited per email and per IP. Pass `createAdmin(registry, { mailer })` to send
-the link through something other than the `EMAIL` binding.
+the link through something other than the `EMAIL` binding. A `Mailer` has one method,
+`send({ to, subject, text }, env)`; the entrypoint takes the same option for form notifications.
 
 Roles and who may sign in work the same in both modes. A person is an `owner` or an `editor`.
 Owners invite and remove people and change roles on the Users page (`/api/v1/users`); editors edit
@@ -116,17 +118,25 @@ The client's admin Worker. The only entry that reaches D1.
 
 - `createAdmin`, and the `AdminEnv` type of its bindings
 - `ensureUser`, `writeSiteBlock`, `writeSiteSettings`, which seed a database
+- Submissions: `setSubmissionStatus`, `findSubmission`, `listSubmissions`, and the `Submission` and
+  `StatusChange` types
 - Mail: `cloudflareMailer`, and the `Mailer` and `MailMessage` types
 
 ### `@studiobimo/backstage/admin/entrypoint`
 
 The admin Worker's RPC entrypoint, for the site to call through a service binding
 ([ADR-0019](docs/adr/0019-admin-rpc-entrypoint.md)). It imports `cloudflare:workers`, so it loads
-only in workerd. Re-export it from the admin Worker beside `createAdmin`:
-`export { AdminEntrypoint } from '@studiobimo/backstage/admin/entrypoint'`.
+only in workerd. It needs the registry to know the forms, so build the class from it and export it
+beside `createAdmin`:
+`export const AdminEntrypoint = createAdminEntrypoint(registry)`.
 
-- `AdminEntrypoint`, whose methods act as an anonymous visitor. `ping(context)` answers with the
-  validated request context.
+- `createAdminEntrypoint(registry, { mailer })`, which returns the class the Worker exports as
+  `AdminEntrypoint`. Its methods act as an anonymous visitor:
+  - `ping(context)` answers with the validated request context.
+  - `submit(context, form, payload, turnstileToken)` verifies Turnstile, validates the payload
+    against the form's schema, stores it and answers `{ ok: true, id, token }`, or
+    `{ ok: false, code, issues }`.
+  - `status(context, token)` answers the status and the form's public fields.
 
 ### `@studiobimo/backstage/site`
 
@@ -150,7 +160,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Turnstile: `verifyTurnstile`, `TURNSTILE`, and the `TurnstileCheck`, `TurnstileFailure` and
   `TurnstileResult` types
 - Calling the admin entrypoint, as `adminRpc(env.ADMIN).ping(requestContextOf(request))`: `adminRpc`,
-  `requestContextOf`, `RPC`, and the `PingResult`, `RequestContext` and `VisitorRpc` types
+  `requestContextOf`, `RPC`, `SUBMISSION`, and the `PingResult`, `RequestContext`, `StatusResult`,
+  `SubmitResult` and `VisitorRpc` types; the same client has `submit` and `status`
 - `BLOCK_PREVIEW`, and the `SiteEnv` type of the Worker's bindings
 
 ### `@studiobimo/backstage/site/hono`
