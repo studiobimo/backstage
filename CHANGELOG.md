@@ -51,7 +51,7 @@
 
 ### Documentation
 
-* close the consumer setup gaps found building BackUp ([#426](https://github.com/studiobimo/backstage/issues/426)) ([e440180](https://github.com/studiobimo/backstage/commit/e44018086fd3127921233b4fb5f6e2186cb72c99))
+* close the consumer setup gaps found building a client site ([#426](https://github.com/studiobimo/backstage/issues/426)) ([e440180](https://github.com/studiobimo/backstage/commit/e44018086fd3127921233b4fb5f6e2186cb72c99))
 
 ## [0.6.0](https://github.com/studiobimo/backstage/compare/v0.5.2...v0.6.0) (2026-11-16)
 
