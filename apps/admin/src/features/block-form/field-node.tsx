@@ -7,6 +7,7 @@ import { type FieldChromeProps, FieldHeading } from '@/components/form/fields'
 import { Fieldset, FieldsetLegend } from '@/components/ui/fieldset'
 import { cn } from '@/lib/utils'
 
+import { humanize } from './humanize.ts'
 import { HexColorField } from './hex-color-field.tsx'
 import { ImageField } from './image-field.tsx'
 import { LinkField } from './link-field.tsx'
@@ -28,15 +29,6 @@ export interface NodeProps<S extends FieldSpec = FieldSpec> {
   chrome?: Partial<FieldChromeProps>
   translated?: boolean
   icon?: ReactNode
-}
-
-function humanize(key: string): string {
-  const words = key
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .replace(/[-_]+/g, ' ')
-    .trim()
-    .toLowerCase()
-  return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
 function fieldLabel(t: TFunction<'blockForm'>, spec: FieldSpec, parent?: GroupSpec): string {

@@ -144,3 +144,36 @@ export const unpublishEntryMutation = (queryClient: QueryClient, collection: str
       readPublishOutcome(await apiRequest(publishPath(collection, id), { method: 'DELETE' })),
     onSuccess: ({ entry }) => keepEntry(queryClient, entry)
   })
+
+export interface ToggleChange {
+  id: string
+  field: string
+  value: boolean
+  expectedVersion: number
+}
+
+const toggleOutcomeSchema = publishOutcomeSchema.extend({ writes: z.number().int() })
+
+const toggled =
+  ({ id, field, value }: ToggleChange) =>
+  (entries: EntrySummary[] | undefined) =>
+    entries?.map((entry) =>
+      entry.id === id ? { ...entry, toggles: { ...entry.toggles, [field]: value } } : entry
+    )
+
+export const toggleEntryMutation = (queryClient: QueryClient, collection: string) =>
+  mutationOptions({
+    mutationFn: async ({ id, ...change }: ToggleChange) =>
+      toggleOutcomeSchema.parse(
+        await (
+          await apiRequest(`${entriesPath(collection, id)}/toggle`, {
+            method: 'PUT',
+            body: JSON.stringify(change)
+          })
+        ).json()
+      ),
+    onMutate: (change) => {
+      queryClient.setQueryData(entriesKey(collection), toggled(change))
+    },
+    onSettled: () => refreshEntries(queryClient, collection)
+  })

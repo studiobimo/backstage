@@ -47,5 +47,25 @@
   "missing": {
     "title": "Collection not found",
     "description": "This collection is not defined on this site."
+  },
+  "toggle": {
+    "switchLabel": "{{field}}: {{name}}",
+    "publishedOn_one": "{{field}} is on for {{name}} and live. It used {{count}} KV write.",
+    "publishedOn_other": "{{field}} is on for {{name}} and live. It used {{count}} KV writes.",
+    "publishedOff_one": "{{field}} is off for {{name}} and live. It used {{count}} KV write.",
+    "publishedOff_other": "{{field}} is off for {{name}} and live. It used {{count}} KV writes.",
+    "draftOn": "{{field}} is on for {{name}}. The entry is a draft, so nothing went live.",
+    "draftOff": "{{field}} is off for {{name}}. The entry is a draft, so nothing went live.",
+    "failed": "The switch could not be saved. The list has been refreshed.",
+    "confirm": {
+      "title": "Publish with each switch?",
+      "description": "Flipping a switch saves the entry and publishes only that change right away. Other unpublished edits stay unpublished.",
+      "cost_one": "{{count}} published page shows this entry and will update, using {{writes}} KV writes.",
+      "cost_other": "{{count}} published pages show this entry and will update, using {{writes}} KV writes.",
+      "noPages": "No published page shows this entry.",
+      "limit": "The free plan allows {{limit}} KV writes a day, and each switch uses some.",
+      "cancel": "Cancel",
+      "confirm": "Publish with switches"
+    }
   }
 }
