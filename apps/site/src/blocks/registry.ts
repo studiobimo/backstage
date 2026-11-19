@@ -1,12 +1,15 @@
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '@studiobimo/backstage'
 
 import { postsCollection } from '../collections/posts/collection.ts'
+import { contactForm } from '../forms/contact/form.ts'
+import { siteSettingsSchema } from '../settings/schema.ts'
 import { SITE_LOCALES } from './locales.ts'
 import { BLOCK_VERSION, migrateColumnCtas, migrateCta } from './migrations.ts'
 import { oneColumnSectionSchema } from './one-column-section/schema.ts'
 import { oneColumnTextSchema } from './one-column-text/schema.ts'
 import { overlayHeroSchema } from './overlay-hero/schema.ts'
 import { postListSchema } from './post-list/schema.ts'
+import { contactFormSchema } from './contact-form/schema.ts'
 import { siteFooterSchema } from './site-footer/schema.ts'
 import { siteHeaderSchema } from './site-header/schema.ts'
 import { splitHeroSchema } from './split-hero/schema.ts'
@@ -91,6 +94,16 @@ const postList = defineBlock({
   }
 })
 
+const contactFormBlock = defineBlock({
+  name: 'contact-form',
+  schema: contactFormSchema,
+  title: { en: 'Contact Form', es: 'Formulario de contacto' },
+  description: {
+    en: 'A contact form that sends each message to the admin inbox.',
+    es: 'Un formulario de contacto que envía cada mensaje a la bandeja del administrador.'
+  }
+})
+
 const siteHeader = defineBlock({
   name: 'site-header',
   schema: siteHeaderSchema
@@ -109,6 +122,7 @@ export const registry = defineRegistry(
     twoColumnSection,
     twoColumnText,
     postList,
+    contactFormBlock,
     siteHeader,
     siteFooter
   ],
@@ -120,6 +134,8 @@ export const registry = defineRegistry(
       defineLayout({ name: 'minimal' }),
       defineLayout({ name: 'bare' })
     ],
-    collections: [postsCollection]
+    collections: [postsCollection],
+    forms: [contactForm],
+    settings: siteSettingsSchema
   }
 )
