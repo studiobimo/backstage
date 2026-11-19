@@ -1,8 +1,7 @@
-import type { LoginLinkMessage } from '@studiobimo/backstage/admin'
 import { AUTH } from '@studiobimo/backstage/internal'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
-import { app, mail, sent } from './magic-link-test-support'
+import { app, mail, sent, type SentLink } from './magic-link-test-support'
 import { openTestEnv } from './test-env'
 
 const { dispose, db, env: testEnv } = await openTestEnv()
@@ -46,8 +45,7 @@ const requestLink = (email: string, options?: PostOptions) =>
 
 const verify = (token: string, options?: PostOptions) => post(AUTH.paths.verify, { token }, options)
 
-const tokenOf = (message: LoginLinkMessage) =>
-  new URL(message.link).searchParams.get(AUTH.tokenParam)!
+const tokenOf = (message: SentLink) => new URL(message.link).searchParams.get(AUTH.tokenParam)!
 
 const issueToken = async (email = KNOWN_EMAIL) => {
   await requestLink(email)

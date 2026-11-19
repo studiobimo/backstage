@@ -16,7 +16,7 @@ import { API_ERROR } from '../errors.ts'
 import { reportError } from '../observability.ts'
 import { randomToken, sha256Hex } from './auth-tokens.ts'
 import { resolveAccess, resolveAuthMode, signOutKind, type AccessEnv } from './auth.ts'
-import type { LoginMailer } from './mailer.ts'
+import type { Mailer } from './mailer.ts'
 import { readJsonBody, respondWithError, RESPONSE_STATUS } from './respond.ts'
 import { endSession, startSession } from './session.ts'
 
@@ -43,7 +43,13 @@ const loginLink = (c: Context, token: string) => {
   return url.toString()
 }
 
-const issueLoginLink = async (c: Context<AccessEnv>, mailer: LoginMailer, email: string) => {
+const loginLinkMessage = (to: string, link: string) => ({
+  to,
+  subject: AUTH.email.subject,
+  text: [AUTH.email.intro, link, AUTH.email.ignore].join('\n\n')
+})
+
+const issueLoginLink = async (c: Context<AccessEnv>, mailer: Mailer, email: string) => {
   try {
     const token = randomToken(AUTH.token.bytes)
     await storeLoginToken(c.env.DB, {
@@ -51,7 +57,7 @@ const issueLoginLink = async (c: Context<AccessEnv>, mailer: LoginMailer, email:
       email,
       expiresAt: Date.now() + AUTH.token.ttlMs
     })
-    await mailer.sendLoginLink({ to: email, link: loginLink(c, token) }, c.env)
+    await mailer.send(loginLinkMessage(email, loginLink(c, token)), c.env)
   } catch (error) {
     reportError(c, error)
   }
@@ -84,7 +90,7 @@ const sessionRoute = async (c: Context<AccessEnv>) => {
   return c.json(body)
 }
 
-export const authRoutes = (mailer: LoginMailer) =>
+export const authRoutes = (mailer: Mailer) =>
   new Hono<AccessEnv>()
     .use(csrf())
     .get(AUTH.paths.session, sessionRoute)
