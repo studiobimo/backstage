@@ -23,7 +23,7 @@ function SubmissionRow({ form, submission }: { form: FormOption; submission: Inb
   const summary = summaryOf(form.schema, submission.payload, i18n.language) || t('detail.none')
   return (
     <TableRow>
-      <TableCell className="w-full max-w-0 sm:w-auto sm:max-w-none">
+      <TableCell className="w-full max-w-0">
         <Link
           to="/forms/$name/$submissionId"
           params={{ name: form.name, submissionId: submission.id }}

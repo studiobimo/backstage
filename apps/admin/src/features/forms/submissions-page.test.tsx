@@ -33,6 +33,15 @@ describe('SubmissionsPage', () => {
     expect(within(table).getByText('New')).toBeInTheDocument()
   })
 
+  it('truncates a long summary at every width so the status and date stay visible', async () => {
+    api([reservation])
+    renderInbox(<SubmissionsPage name="reservation" filter={{}} onFilterChange={vi.fn()} />)
+    const link = within(await screen.findByRole('table')).getByRole('link')
+    expect(link).toHaveClass('truncate')
+    expect(link.closest('td')).toHaveClass('w-full', 'max-w-0')
+    expect(link.closest('td')?.className).not.toMatch(/\bsm:/)
+  })
+
   it('asks the api for the filter it is given', async () => {
     const calls = api([])
     renderInbox(
