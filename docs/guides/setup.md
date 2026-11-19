@@ -69,6 +69,48 @@ applies only the ones the database has not seen.
 `packages/backstage/test/pack.test.ts` runs exactly this against the packed tarball, so the steps
 above are checked on every pull request.
 
+## Mount a client app on a route
+
+A route that needs a client app, such as a seat picker on `/reserve`, renders inside the site
+document with `renderInShell`. It takes the header and footer slots, the stylesheet, the head
+(title, description, canonical, hreflang, theme color) and the language switcher from the published
+site snapshot of its locale, exactly as a content page does, and the security headers stay as they
+are.
+
+```tsx
+import { createSite, renderInShell } from '@studiobimo/backstage/site/hono'
+
+export default createSite({
+  components,
+  stylesheet,
+  contentSecurityPolicy: { scriptSrc: ["'self'"], connectSrc: ["'self'"] },
+  routes: (app) => {
+    app.get('/reserve', (c) =>
+      renderInShell(c, {
+        locale: 'en',
+        title: 'Reserve a seat',
+        description: 'Pick your seat on the floor plan.',
+        body: <div id="reserve-root" data-venue="main-hall" />,
+        scripts: ['/reserve/app.js'],
+        translations: { es: '/es/reserve' }
+      })
+    )
+  }
+})
+```
+
+- **`body`** is any React node. Pass the client's configuration through `data-*` attributes on a
+  mount element, because inline scripts stay blocked.
+- **`scripts`** are same-origin paths, served from the site's `ASSETS` binding and loaded as
+  `<script type="module">`. A full URL or a protocol-relative one throws.
+- **CSP additions.** `scriptSrc: ["'self'"]` lets the bundle run. Add `connectSrc: ["'self'"]` (or
+  the API origin) when the client calls `fetch`. Nothing allows inline scripts, so the bundle cannot
+  rely on them.
+- **`translations`** maps other locales to the path of the same route. It adds the `hreflang`
+  alternates and the switcher links; leave it out for a route that exists in one locale.
+- Register the route in `routes`, which runs before the catch-all page route, and serve the bundle
+  from your own route or static assets.
+
 ## Things a consumer runs into
 
 - **Admin assets config.** Use `"binding": "ASSETS"` and
@@ -93,3 +135,36 @@ above are checked on every pull request.
   block preview, renders an `<h1>` of the page title before the blocks. Neither is in a slot, so
   style the nav from your stylesheet, and leave the page title out of your blocks' own headings if
   you do not want two `h1`s. There is no option to turn either off yet.
+
+## Protect a public form with Turnstile
+
+1. Create a Turnstile widget in the Cloudflare dashboard and note its site key and secret key.
+2. Store the secret on the site Worker, never in the repository:
+   `pnpm exec wrangler secret put TURNSTILE_SECRET` (add `--env <env>` for a deployed environment).
+   The site key is public and can sit in `vars` or in your block's markup.
+3. Pass `turnstile: true` to `createSite`. It adds `https://challenges.cloudflare.com` to
+   `script-src` and `frame-src` and nothing else, so the widget script loads and its iframe
+   renders under the package's policy. The rest of the policy is unchanged, and
+   `contentSecurityPolicy` still takes the other additions.
+
+   ```ts
+   export default createSite({ components, stylesheet, turnstile: true })
+   ```
+
+4. Render the widget in your form: load `https://challenges.cloudflare.com/turnstile/v0/api.js`
+   and add `<div class="cf-turnstile" data-sitekey="...">`. The widget adds a
+   `cf-turnstile-response` field to the form.
+5. Verify on the server before acting on the submission. `verifyTurnstile` is exported from
+   `@studiobimo/backstage/site` and does not depend on Hono:
+
+   ```ts
+   const result = await verifyTurnstile({
+     token: form.get('cf-turnstile-response')?.toString(),
+     secret: c.env.TURNSTILE_SECRET,
+     ip: c.req.header('CF-Connecting-IP')
+   })
+   if (!result.success) return respondWithError(c, API_ERROR.forbidden)
+   ```
+
+   `result.reason` is `missing-token`, `rejected` or `unavailable` (siteverify could not be reached
+   or answered something unexpected). Treat all three as a refusal.

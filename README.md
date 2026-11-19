@@ -133,6 +133,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Responses: `renderHtml`, `respondWithMedia`, `defaultEdgeCache`, `EDGE_CACHE`, `withEdgeCache`, and the
   `Deferrable`, `EdgeCache`, `MediaObject` and `MediaReader` types
 - Locales: `localeName`, `LOCALE_NAME`, `switcherLabel`, `SWITCHER_LABEL`
+- Turnstile: `verifyTurnstile`, `TURNSTILE`, and the `TurnstileCheck`, `TurnstileFailure` and
+  `TurnstileResult` types
 - `BLOCK_PREVIEW`, and the `SiteEnv` type of the Worker's bindings
 
 ### `@studiobimo/backstage/site/hono`
@@ -143,6 +145,8 @@ The site Worker in one call, and its Hono middleware.
   stylesheet, the sitemap and robots, and the 404 and error responses
   ([ADR-0016](docs/adr/0016-create-site.md)), with the `CreateSiteOptions`, `SiteApp`, `SiteHead`,
   `SitePreview` and `ContentSecurityPolicyAdditions` types
+- `renderInShell`, which renders a consumer route inside the site document (slots, head,
+  stylesheet and language switcher from the published snapshot), with the `ShellOptions` type
 - `observe`, `reportError`, `respondHealthy`, `OBSERVABILITY`
 
 ### `@studiobimo/backstage/render`

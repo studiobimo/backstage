@@ -3,12 +3,12 @@ import type { Context } from 'hono'
 import type { CollectionRoute } from '../../entry-pages.ts'
 import { parseEntryRoute } from '../routing.ts'
 import { findEntryTranslations, findPublishedEntry, findSiteSnapshot } from '../store.ts'
-import type { SiteEnv } from '../index.ts'
+import type { SiteEnvironment } from './create-site.ts'
 import { renderEntryPage, type DocumentContext } from './document.tsx'
 import { siteOriginOf } from './origin.ts'
 
 export const renderEntryRoute = async (
-  c: Context<{ Bindings: SiteEnv }>,
+  c: Context<SiteEnvironment>,
   document: DocumentContext,
   entryRoutes: Readonly<Record<string, CollectionRoute>>,
   headers: HeadersInit

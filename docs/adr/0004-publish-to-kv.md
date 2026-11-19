@@ -24,9 +24,12 @@ options:
   (`renderToReadableStream`), through Hono. The starter ships no client JavaScript, and there are
   **no islands** in this repository: a custom client build, manifest and props serialization would
   be thrown away when a site moves to a full framework.
-- A site that needs interactivity uses **TanStack Start in its own repository**, and the starter is
-  revisited once two consumers are on Start. A consumer that hydrates may need a looser
-  Content-Security-Policy, which is that consumer's decision ([risk 11](../RISKS.md)).
+- A site that needs interactivity takes one of two paths, and the starter decides neither for it:
+  a **client app mounted on the Hono site**, which renders its document through the planned
+  `renderInShell` helper ([#467](https://github.com/studiobimo/backstage/issues/467)), or a **separate
+  site in its own repository** that uses the Hono-free `./site` units, and may use TanStack Start
+  ([risk 11](../RISKS.md)). A consumer that hydrates sets its own Content-Security-Policy
+  ([risk 12](../RISKS.md)).
 - Publishing also writes one **route key** per locale, `route:<locale>:<slug>` (the home page's slug
   is empty), whose value is the page id. The site reads the route, then the snapshot, and answers
   404 when the snapshot's slug no longer matches, so a renamed slug never serves the old page.
@@ -43,4 +46,4 @@ options:
   is promised within two minutes.
 - Server-side React counts against the Worker's size and CPU budget, so a spike in M0 measures it.
 - The block components must render on the server in the starter. Anything that needs the browser
-  is a site's own concern, in its own repository.
+  is a site's own concern: a client app mounted on the Hono site, or a separate site in its own repository.

@@ -22,13 +22,23 @@ import { respondWithError } from './respond.ts'
 import { securityHeaders, type ContentSecurityPolicyAdditions } from './security.ts'
 import { stylesheetPathFor, stylesheetRoutes } from './stylesheet.ts'
 
-export type SiteApp = Hono<{ Bindings: SiteEnv }>
+interface SiteVariables {
+  siteDocument: DocumentContext
+}
+
+export interface SiteEnvironment {
+  Bindings: SiteEnv
+  Variables: SiteVariables
+}
+
+export type SiteApp = Hono<SiteEnvironment>
 
 export interface CreateSiteOptions {
   components: ComponentMap
   stylesheet: string
   preview?: SitePreview
   contentSecurityPolicy?: ContentSecurityPolicyAdditions
+  turnstile?: boolean
   favicon?: SiteFavicon
   head?: SiteHead
   routes?: (app: SiteApp) => void
@@ -36,8 +46,35 @@ export interface CreateSiteOptions {
 
 const CACHED = { 'Cache-Control': EDGE_CACHE.control } as const
 
+const contentRendererOf =
+  (document: DocumentContext, entryRoutes: ReturnType<typeof routesOf>) =>
+  async (c: Context<SiteEnvironment>) => {
+    const entryPage = await renderEntryRoute(c, document, entryRoutes, CACHED)
+    if (entryPage) return entryPage
+    const route = routeOf(c.req.raw, document.locales)
+    const snapshot = route && (await findPublished(c.env.SITE, route))
+    if (!snapshot) return respondWithError(c, API_ERROR.notFound, CACHED)
+    const [translations, site] = await Promise.all([
+      findTranslations(c.env.SITE, snapshot, document.locales.locales),
+      findSiteSnapshot(c.env.SITE, snapshot.locale)
+    ])
+    return renderPage(
+      { ...document, snapshot, translations, site, siteOrigin: siteOriginOf(c.env) },
+      CACHED
+    )
+  }
+
 export const createSite = (options: CreateSiteOptions) => {
-  const { components, stylesheet, preview, contentSecurityPolicy, favicon, head, routes } = options
+  const {
+    components,
+    stylesheet,
+    preview,
+    contentSecurityPolicy,
+    turnstile,
+    favicon,
+    head,
+    routes
+  } = options
   const locales = resolveLocaleConfig(components.registry)
   const document: DocumentContext = {
     components,
@@ -47,10 +84,14 @@ export const createSite = (options: CreateSiteOptions) => {
     head
   }
   const entryRoutes = routesOf(collectionsOf(components.registry).values())
-  const app: SiteApp = new Hono<{ Bindings: SiteEnv }>()
+  const app: SiteApp = new Hono<SiteEnvironment>()
 
   app.use(...observe)
-  app.use(securityHeaders(contentSecurityPolicy))
+  app.use(async (c, next) => {
+    c.set('siteDocument', document)
+    await next()
+  })
+  app.use(securityHeaders(contentSecurityPolicy, { turnstile }))
 
   app.get(OBSERVABILITY.health.path, respondHealthy)
   app.get(SEO.sitemapPath, (c) =>
@@ -73,21 +114,7 @@ export const createSite = (options: CreateSiteOptions) => {
 
   routes?.(app)
 
-  const renderRoute = async (c: Context<{ Bindings: SiteEnv }>) => {
-    const entryPage = await renderEntryRoute(c, document, entryRoutes, CACHED)
-    if (entryPage) return entryPage
-    const route = routeOf(c.req.raw, locales)
-    const snapshot = route && (await findPublished(c.env.SITE, route))
-    if (!snapshot) return respondWithError(c, API_ERROR.notFound, CACHED)
-    const [translations, site] = await Promise.all([
-      findTranslations(c.env.SITE, snapshot, locales.locales),
-      findSiteSnapshot(c.env.SITE, snapshot.locale)
-    ])
-    return renderPage(
-      { ...document, snapshot, translations, site, siteOrigin: siteOriginOf(c.env) },
-      CACHED
-    )
-  }
+  const renderRoute = contentRendererOf(document, entryRoutes)
 
   app.get('*', async (c) =>
     withEdgeCache(

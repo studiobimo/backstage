@@ -348,3 +348,59 @@ function EntryDocument(props: EntryPageProps) {
 
 export const renderEntryPage = (props: EntryPageProps, headers: HeadersInit) =>
   renderHtml(createElement(EntryDocument, props), headers)
+
+export interface ShellProps extends DocumentContext {
+  locale: Locale
+  title: string
+  description: string
+  body: ReactNode
+  scripts: readonly string[]
+  site: SiteSnapshot | null
+  siteOrigin: string
+  path: string
+  translations: Readonly<Record<Locale, string>>
+}
+
+const absoluteUrlOf = (siteOrigin: string, path: string) => new URL(path, siteOrigin).href
+
+const shellHeadOf = (props: ShellProps): HeadProps => {
+  const { siteOrigin, site, path, translations, title, description, locale } = props
+  const paths = { ...translations, [locale]: path }
+  return {
+    canonical: absoluteUrlOf(siteOrigin, path),
+    alternates: Object.keys(translations).length
+      ? Object.entries(paths).map(([hreflang, href]) => ({
+          hreflang,
+          href: absoluteUrlOf(siteOrigin, href)
+        }))
+      : [],
+    title: entryDocumentTitleOf({ title }, site),
+    description: description || site?.seo.description || '',
+    socialImageUrl: null,
+    siteName: site?.siteName ?? null,
+    themeColor: themeColorOf(site),
+    stylesheetPath: props.stylesheetPath,
+    favicon: props.favicon,
+    preview: false,
+    extra: props.scripts.map((src) => <script key={src} type="module" src={src} />)
+  }
+}
+
+function ShellDocument(props: ShellProps) {
+  const { locale, translations, path } = props
+  const links = Object.entries({ ...translations, [locale]: path }).map(([code, href]) => ({
+    locale: code,
+    href
+  }))
+  return (
+    <html lang={locale}>
+      <Head {...shellHeadOf(props)} />
+      <DocumentBody {...props} snapshot={{ locale, media: {} }} links={links}>
+        {props.body}
+      </DocumentBody>
+    </html>
+  )
+}
+
+export const renderShell = (props: ShellProps, headers: HeadersInit) =>
+  renderHtml(createElement(ShellDocument, props), headers)

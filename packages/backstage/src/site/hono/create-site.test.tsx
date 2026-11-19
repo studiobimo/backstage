@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { BLOCK_PREVIEW } from '../../blocks.ts'
 import { OBSERVABILITY } from '../../observability.ts'
 import { SEO } from '../../seo.ts'
+import { TURNSTILE } from '../turnstile.ts'
 import { createSite, type CreateSiteOptions } from './create-site.ts'
 import {
   envWith,
@@ -212,6 +213,30 @@ describe('createSite security and preview', () => {
     expect(extended.get('img-src')).toEqual(["'self'", 'https://img.example.com'])
     expect(extended.get('script-src')).toEqual(["'self'"])
     expect(extended.get('frame-ancestors')).toEqual(["'none'"])
+  })
+
+  it('lets a site load turnstile through script-src and frame-src only when asked', async () => {
+    const withTurnstile = directives(
+      await request(
+        '/about',
+        envWith({}, publishedKv()),
+        fixtureOptions({
+          turnstile: true,
+          contentSecurityPolicy: { scriptSrc: ["'self'"] }
+        })
+      )
+    )
+    expect(withTurnstile.get('script-src')).toEqual(["'self'", TURNSTILE.origin])
+    expect(withTurnstile.get('frame-src')).toEqual([TURNSTILE.origin])
+    const without = directives(await request('/about'))
+    expect(without.has('frame-src')).toBe(false)
+    expect(without.has('script-src')).toBe(false)
+    const base = directives(
+      await request('/about', envWith({}, publishedKv()), fixtureOptions({ turnstile: true }))
+    )
+    for (const name of ['default-src', 'connect-src', 'form-action', 'frame-ancestors']) {
+      expect(base.get(name)).toEqual(without.get(name))
+    }
   })
 
   it('lets only the admin origin frame the block preview', async () => {

@@ -71,8 +71,9 @@ the package's API: `defineBlock` loses its component and the `./example` entry g
 
 The design and its decisions are in
 [#199](https://github.com/studiobimo/backstage/issues/199#issuecomment-6776022613). The starter
-stays on Hono with no client JavaScript; a site that hydrates uses TanStack Start in its own
-repository.
+stays on Hono with no client JavaScript. A site that hydrates either mounts a client app on the Hono
+site through `renderInShell` ([#467](https://github.com/studiobimo/backstage/issues/467)), or is a
+separate site in its own repository that uses the Hono-free `./site` units.
 
 **Stories:** BLK-1, BLK-6, PUB-3 to PUB-6; groundwork for PRV-1.
 
