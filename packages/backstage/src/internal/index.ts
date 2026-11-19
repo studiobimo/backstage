@@ -10,8 +10,10 @@ export {
   saveEntrySchema
 } from '../entries.ts'
 export type { Entry, EntrySummary } from '../entries.ts'
-export { classifyField } from '../field-shapes.ts'
+export { classifyField, isWeeklyHours, WEEKDAYS } from '../field-shapes.ts'
 export type { FieldShape } from '../field-shapes.ts'
+export { labelsFor } from '../labels.ts'
+export type { LabelledNode } from '../labels.ts'
 export { HEX_COLOR, LINK, linkValueSchema } from '../fields.ts'
 export type { FieldKind, LinkValue } from '../fields.ts'
 export { REFERENCE } from '../references.ts'

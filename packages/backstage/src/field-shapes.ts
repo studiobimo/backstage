@@ -84,3 +84,28 @@ export function referencePlacesIn(node: SchemaNode, path = ''): ReferencePlace[]
   if (OPAQUE_SHAPES.includes(shape)) return []
   return childrenOf(node, path).flatMap(([child, childPath]) => referencePlacesIn(child, childPath))
 }
+
+export const WEEKDAYS = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday'
+] as const
+
+const DAY_FIELD_TYPES = { closed: 'boolean', opens: 'string', closes: 'string' } as const
+
+const isDayHours = (node: TranslatedNode | undefined) =>
+  typeof node === 'object' &&
+  classifyField(node) === 'object' &&
+  Object.entries(DAY_FIELD_TYPES).every(([key, type]) => {
+    const field = node.properties?.[key]
+    return typeof field === 'object' && field.type === type
+  })
+
+export const isWeeklyHours = (node: SchemaNode) =>
+  classifyField(node) === 'object' &&
+  Object.keys(node.properties ?? {}).length === WEEKDAYS.length &&
+  WEEKDAYS.every((day) => isDayHours(node.properties?.[day]))
