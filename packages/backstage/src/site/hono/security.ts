@@ -23,6 +23,7 @@ export type ContentSecurityPolicyAdditions = Omit<PolicyAdditions, 'frameSrc'>
 
 export interface SecurityOptions {
   turnstile?: boolean
+  clientScripts?: boolean
 }
 
 const SELF = ["'self'"]
@@ -67,13 +68,21 @@ const withTurnstile = (additions: ContentSecurityPolicyAdditions): PolicyAdditio
   frameSrc: [TURNSTILE.origin]
 })
 
+const withSelfScripts = (additions: PolicyAdditions): PolicyAdditions => ({
+  ...additions,
+  scriptSrc: [...new Set([...SELF, ...(additions.scriptSrc ?? [])])]
+})
+
 export const securityHeaders = (
   contentSecurityPolicy: ContentSecurityPolicyAdditions = {},
-  { turnstile = false }: SecurityOptions = {}
+  { turnstile = false, clientScripts = false }: SecurityOptions = {}
 ) => {
-  const additions: PolicyAdditions = turnstile
-    ? withTurnstile(contentSecurityPolicy)
+  const withClientScripts = clientScripts
+    ? withSelfScripts(contentSecurityPolicy)
     : contentSecurityPolicy
+  const additions: PolicyAdditions = turnstile
+    ? withTurnstile(withClientScripts)
+    : withClientScripts
   const denyFraming = headersFor(additions, NONE, 'DENY')
   return createMiddleware<{ Bindings: SiteEnv }>((c, next) => {
     const adminOrigin = c.env.ADMIN_ORIGIN

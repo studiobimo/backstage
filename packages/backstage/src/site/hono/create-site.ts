@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono'
 
+import { assertSameOriginPaths } from '../../client-scripts.ts'
 import { API_ERROR } from '../../errors.ts'
 import type { ComponentMap } from '../../components.ts'
 import { collectionsOf } from '../../collections.ts'
@@ -19,6 +20,7 @@ import { atSiteOrigin, siteOriginOf } from './origin.ts'
 import { previewRoutes, type SitePreview } from './preview.ts'
 import { pagePreviewRoutes } from './page-preview.ts'
 import { respondWithError } from './respond.ts'
+import { hasClientScripts } from './client-scripts.ts'
 import { securityHeaders, type ContentSecurityPolicyAdditions } from './security.ts'
 import { stylesheetPathFor, stylesheetRoutes } from './stylesheet.ts'
 
@@ -37,12 +39,15 @@ export interface CreateSiteOptions {
   components: ComponentMap
   stylesheet: string
   preview?: SitePreview
+  scripts?: readonly string[]
   contentSecurityPolicy?: ContentSecurityPolicyAdditions
   turnstile?: boolean
   favicon?: SiteFavicon
   head?: SiteHead
   routes?: (app: SiteApp) => void
 }
+
+const SITE_SCRIPTS_OWNER = 'createSite scripts'
 
 const CACHED = { 'Cache-Control': EDGE_CACHE.control } as const
 
@@ -69,17 +74,20 @@ export const createSite = (options: CreateSiteOptions) => {
     components,
     stylesheet,
     preview,
+    scripts = [],
     contentSecurityPolicy,
     turnstile,
     favicon,
     head,
     routes
   } = options
+  assertSameOriginPaths(SITE_SCRIPTS_OWNER, scripts)
   const locales = resolveLocaleConfig(components.registry)
   const document: DocumentContext = {
     components,
     locales,
     stylesheetPath: stylesheetPathFor(stylesheet),
+    siteScripts: scripts,
     favicon,
     head
   }
@@ -91,7 +99,12 @@ export const createSite = (options: CreateSiteOptions) => {
     c.set('siteDocument', document)
     await next()
   })
-  app.use(securityHeaders(contentSecurityPolicy, { turnstile }))
+  app.use(
+    securityHeaders(contentSecurityPolicy, {
+      turnstile,
+      clientScripts: hasClientScripts(components, scripts)
+    })
+  )
 
   app.get(OBSERVABILITY.health.path, respondHealthy)
   app.get(SEO.sitemapPath, (c) =>

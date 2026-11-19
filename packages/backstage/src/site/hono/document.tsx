@@ -23,6 +23,7 @@ import {
   socialImageOf,
   themeColorOf
 } from './head.ts'
+import { clientScriptsOf, slotBlockNamesOf } from './client-scripts.ts'
 import { entryLinksOf, linksOf } from './origin.ts'
 
 export type SiteHead = (snapshot: Snapshot) => ReactNode
@@ -33,6 +34,7 @@ export interface DocumentContext {
   components: ComponentMap
   locales: LocaleConfig
   stylesheetPath: string
+  siteScripts: readonly string[]
   favicon?: SiteFavicon
   head?: SiteHead
 }
@@ -45,7 +47,10 @@ export interface PageProps extends DocumentContext {
   preview?: { token: string }
 }
 
-export type PreviewProps = Pick<PageProps, 'components' | 'locales' | 'snapshot' | 'stylesheetPath'>
+export type PreviewProps = Pick<
+  PageProps,
+  'components' | 'locales' | 'snapshot' | 'stylesheetPath' | 'siteScripts'
+>
 
 function FallbackLayout({ children }: LayoutProps) {
   return <main>{children}</main>
@@ -111,6 +116,7 @@ interface HeadProps {
   siteName: string | null
   themeColor: string | null
   stylesheetPath: string
+  scripts: readonly string[]
   favicon?: SiteFavicon
   preview: boolean
   extra?: ReactNode
@@ -125,6 +131,7 @@ function Head({
   siteName,
   themeColor,
   stylesheetPath,
+  scripts,
   favicon,
   preview,
   extra
@@ -156,6 +163,9 @@ function Head({
           <meta name="msapplication-TileColor" content={themeColor} />
         </>
       ) : null}
+      {scripts.map((src) => (
+        <script key={src} type="module" src={src} />
+      ))}
       {extra}
     </head>
   )
@@ -171,7 +181,8 @@ const pageHeadOf = (props: PageProps): HeadProps => {
     favicon,
     head,
     locales,
-    preview
+    preview,
+    components
   } = props
   const socialImage = socialImageOf(snapshot, site)
   return {
@@ -182,6 +193,10 @@ const pageHeadOf = (props: PageProps): HeadProps => {
     siteName: site?.siteName ?? null,
     themeColor: themeColorOf(site),
     stylesheetPath,
+    scripts: clientScriptsOf(components, props.siteScripts, [
+      ...snapshot.blocks.map(({ block }) => block),
+      ...slotBlockNamesOf(site)
+    ]),
     favicon,
     preview: Boolean(preview),
     extra: head?.(snapshot)
@@ -213,6 +228,13 @@ function SnapshotProvider({
   )
 }
 
+const previewScriptsOf = ({ components, siteScripts, snapshot }: PreviewProps) =>
+  clientScriptsOf(
+    components,
+    siteScripts,
+    snapshot.blocks.map(({ block }) => block)
+  )
+
 function PreviewDocument(props: PreviewProps) {
   const { snapshot, stylesheetPath } = props
   return (
@@ -223,6 +245,9 @@ function PreviewDocument(props: PreviewProps) {
         <meta name="robots" content="noindex, nofollow" />
         <title>{snapshot.title}</title>
         <link rel="stylesheet" href={stylesheetPath} />
+        {previewScriptsOf(props).map((src) => (
+          <script key={src} type="module" src={src} />
+        ))}
       </head>
       <body>
         <SnapshotProvider snapshot={snapshot} locales={props.locales}>
@@ -326,6 +351,7 @@ const entryHeadOf = (props: EntryPageProps): HeadProps => {
     siteName: site?.siteName ?? null,
     themeColor: themeColorOf(site),
     stylesheetPath,
+    scripts: clientScriptsOf(props.components, props.siteScripts, slotBlockNamesOf(site)),
     favicon,
     preview: false
   }
@@ -383,9 +409,13 @@ const shellHeadOf = (props: ShellProps): HeadProps => {
     siteName: site?.siteName ?? null,
     themeColor: themeColorOf(site),
     stylesheetPath: props.stylesheetPath,
+    scripts: clientScriptsOf(
+      props.components,
+      [...props.siteScripts, ...props.scripts],
+      slotBlockNamesOf(site)
+    ),
     favicon: props.favicon,
-    preview: false,
-    extra: props.scripts.map((src) => <script key={src} type="module" src={src} />)
+    preview: false
   }
 }
 
