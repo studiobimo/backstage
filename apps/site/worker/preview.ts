@@ -4,6 +4,7 @@ import oneColumnSection from '../src/blocks/one-column-section/thumbnail.svg?raw
 import oneColumnText from '../src/blocks/one-column-text/thumbnail.svg?raw'
 import overlayHero from '../src/blocks/overlay-hero/thumbnail.svg?raw'
 import postList from '../src/blocks/post-list/thumbnail.svg?raw'
+import contactForm from '../src/blocks/contact-form/thumbnail.svg?raw'
 import photo from '../src/blocks/preview-photo.svg?raw'
 import splitHero from '../src/blocks/split-hero/thumbnail.svg?raw'
 import twoColumnSection from '../src/blocks/two-column-section/thumbnail.svg?raw'
@@ -19,6 +20,7 @@ export const preview: SitePreview = {
     'one-column-text': oneColumnText,
     'overlay-hero': overlayHero,
     'post-list': postList,
+    'contact-form': contactForm,
     'split-hero': splitHero,
     'two-column-section': twoColumnSection,
     'two-column-text': twoColumnText

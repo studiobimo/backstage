@@ -6,6 +6,7 @@ import { OneColumnSection } from './one-column-section/component.tsx'
 import { OneColumnText } from './one-column-text/component.tsx'
 import { OverlayHero } from './overlay-hero/component.tsx'
 import { PostList } from './post-list/component.tsx'
+import { ContactForm } from './contact-form/component.tsx'
 import { SiteFooter } from './site-footer/component.tsx'
 import { SiteHeader } from './site-header/component.tsx'
 import { SplitHero } from './split-hero/component.tsx'
@@ -22,6 +23,7 @@ export const components = defineComponents(registry, {
     'two-column-section': TwoColumnSection,
     'two-column-text': TwoColumnText,
     'post-list': PostList,
+    'contact-form': ContactForm,
     'site-header': SiteHeader,
     'site-footer': SiteFooter
   },

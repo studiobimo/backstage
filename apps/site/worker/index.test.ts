@@ -1,4 +1,4 @@
-import { publishedIndexSchema, SEO } from '@studiobimo/backstage/site'
+import { publishedIndexSchema, SEO, TURNSTILE } from '@studiobimo/backstage/site'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { clearKv, get, heroBlock, platform, publishSnapshots, snapshotOf } from './test-support'
@@ -41,7 +41,8 @@ describe('site worker', () => {
     for (const path of ['/', '/nothing-here']) {
       const policy = directives(await get(path))
       expect(policy.get('default-src')).toEqual(["'none'"])
-      expect(policy.has('script-src')).toBe(false)
+      expect(policy.get('script-src')).toEqual([TURNSTILE.origin])
+      expect(policy.get('frame-src')).toEqual([TURNSTILE.origin])
       expect(policy.get('base-uri')).toEqual(["'none'"])
       expect(policy.get('frame-ancestors')).toEqual(["'none'"])
       for (const sources of policy.values()) {
