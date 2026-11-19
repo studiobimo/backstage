@@ -18,6 +18,7 @@ export interface AdminEnv {
   OWNER_EMAIL?: string
   AUTH_EMAIL_FROM?: string
   EMAIL?: EmailBinding
+  TURNSTILE_SECRET?: string
 }
 
 const BINDINGS = {

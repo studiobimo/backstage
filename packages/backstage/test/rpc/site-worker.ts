@@ -1,9 +1,9 @@
-import type { AdminEntrypoint } from '../../src/admin/entrypoint.ts'
+import type { AdminEntrypointClass } from '../../src/admin/entrypoint.ts'
 import { adminRpc, requestContextOf } from '../../src/site/rpc.ts'
 import { PATH } from './paths.ts'
 
 interface Env {
-  ADMIN: Service<AdminEntrypoint>
+  ADMIN: Service<InstanceType<AdminEntrypointClass>>
 }
 
 const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error))
