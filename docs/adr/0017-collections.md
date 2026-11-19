@@ -139,6 +139,22 @@ This ADR records the decisions they share, so that the later ones do not reopen 
 - The admin shows the page count and the KV writes before publishing or unpublishing an entry (the
   status request above, before the action) and progress while a pending run is driven.
 
+### Quick toggle from the entries list
+
+- A collection lists yes/no fields in `quickToggle: ['soldOut']`. `defineRegistry` refuses a name
+  that is not a top-level boolean field. The list shows each one as a switch.
+- `PUT /api/v1/collections/:name/entries/:id/toggle` takes `{ field, value, expectedVersion }`,
+  refuses a field that is not a quick toggle, and writes the draft as a normal save.
+- **It publishes only that field.** An entry that is published gets the field set in its published
+  copy and nothing else, so other unpublished edits, including a renamed slug, stay unpublished.
+  The snapshots are rebuilt from the published copy and the published slugs, never from the draft,
+  and the dependents are refreshed as in COL-5. If the draft was clean it stays clean; if it had
+  other edits it keeps showing "unpublished changes". An entry that was never published only has
+  its draft saved, so a switch never makes an entry go live.
+- **Cost.** The admin asks once per browser, before the first toggle, with the KV writes the
+  entry's dependents need and the free daily limit. After each toggle the toast shows the writes
+  used: the entry's own pages and index when its collection has a route, plus its dependents.
+
 ## Consequences
 
 - One admin build still serves every client: the entry form is built from the collection's JSON

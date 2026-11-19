@@ -10,6 +10,7 @@ import {
 import { ENTRY_WRITE, findEntrySlugs, type EntryWrite } from '../db/entries.ts'
 import {
   clearPublishedSlugs,
+  readPublishedEntrySlugs,
   recordPublishedSlugs,
   resolveEntrySlugs,
   slugsClash,
@@ -103,6 +104,26 @@ export const planEntryPages = async (
     : { problems: built.problems, snapshots: [], slugs }
 }
 
+export const planPublishedEntryPages = async (
+  c: Context<AccessEnv>,
+  registry: AdminRegistry,
+  collection: Collection,
+  entry: Entry,
+  published: { content: unknown; media: ReadonlyMap<string, PublishMediaRow> },
+  publishedAt: number
+) => {
+  if (!isRouted(collection)) return NO_ENTRY_PAGES
+  const slugs = await readPublishedEntrySlugs(c.env.DB, collection.name, [entry.id])
+  return planEntryPages(
+    c,
+    registry,
+    collection,
+    { ...entry, slugs: slugs.get(entry.id) ?? {} },
+    published,
+    publishedAt
+  )
+}
+
 export const writeEntryPages = async (
   c: Context<AccessEnv>,
   registry: AdminRegistry,
@@ -113,6 +134,17 @@ export const writeEntryPages = async (
   if (!isRouted(collection) || !plan.slugs) return
   await writeEntrySlugs(c.env.DB, collection.name, entryId, plan.slugs)
   await recordPublishedSlugs(c.env.DB, entryId)
+  await writeEntrySnapshots(c, registry, collection, entryId, plan)
+}
+
+export const writeEntrySnapshots = async (
+  c: Context<AccessEnv>,
+  registry: AdminRegistry,
+  collection: Collection,
+  entryId: string,
+  plan: EntryPagePlan
+) => {
+  if (!isRouted(collection)) return
   await writeSnapshotFamily(
     c.env.SITE,
     entrySnapshotsOf(collection.name, collection.route),

@@ -33,13 +33,13 @@ import {
 } from './entry-pages.ts'
 import { readJsonBody, respondUnpublishable, respondWithError } from './respond.ts'
 
-interface PublishCheck {
+export interface PublishCheck {
   problems: PublishProblem[]
   content?: unknown
   media: ReadonlyMap<string, PublishMediaRow>
 }
 
-const checkEntry = async (
+export const checkEntry = async (
   c: { env: AccessEnv['Bindings'] },
   registry: AdminRegistry,
   collection: Collection,

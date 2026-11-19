@@ -17,6 +17,14 @@ type LabelKey<S extends z.ZodType> = z.ZodType extends S
   ? string
   : Extract<keyof z.input<S>, string>
 
+type BooleanKey<S extends z.ZodType> = z.ZodType extends S
+  ? string
+  : {
+      [K in Extract<keyof z.input<S>, string>]-?: NonNullable<z.input<S>[K]> extends boolean
+        ? K
+        : never
+    }[Extract<keyof z.input<S>, string>]
+
 export interface CollectionDefinition<
   S extends z.ZodType = z.ZodType,
   N extends string = string,
@@ -25,6 +33,7 @@ export interface CollectionDefinition<
   name: N
   route?: R
   label: LabelKey<S>
+  quickToggle?: readonly BooleanKey<S>[]
   version?: number
   schema: S
   migrate?: (content: unknown, fromVersion: number) => unknown
@@ -35,8 +44,9 @@ export interface CollectionDefinition<
 export interface Collection<
   S extends z.ZodType = z.ZodType,
   N extends string = string
-> extends Omit<CollectionDefinition<S, N>, 'label'> {
+> extends Omit<CollectionDefinition<S, N>, 'label' | 'quickToggle'> {
   label: string
+  quickToggle?: readonly string[]
   version: number
 }
 
@@ -73,6 +83,11 @@ const isTextLabel = (node: MaybeNode) =>
   typeof node === 'object' &&
   (isTextNode(node) || (node.backstage === 'localized' && isTextNode(node.additionalProperties)))
 
+const isBooleanNode = (node: MaybeNode) => typeof node === 'object' && node.type === 'boolean'
+
+export const quickToggleOf = (collection: Pick<Collection, 'quickToggle'>): readonly string[] =>
+  collection.quickToggle ?? []
+
 export function assertCollection(collection: Collection) {
   const schema = assertRenderable(collection, 'Collection')
   if (!isTextLabel(schema.properties?.[collection.label])) {
@@ -80,7 +95,19 @@ export function assertCollection(collection: Collection) {
       `Collection "${collection.name}" label "${collection.label}" must name a text or localized text field`
     )
   }
+  for (const field of quickToggleOf(collection)) {
+    if (!isBooleanNode(schema.properties?.[field])) {
+      throw new Error(
+        `Collection "${collection.name}" quick toggle "${field}" must name a yes/no field`
+      )
+    }
+  }
 }
+
+export const togglesOf = (collection: Collection, content: unknown): Record<string, boolean> =>
+  Object.fromEntries(
+    quickToggleOf(collection).map((field) => [field, isRecord(content) && content[field] === true])
+  )
 
 export type EntryLabels = Record<string, string>
 
@@ -107,6 +134,7 @@ export interface CollectionDescription {
   version: number
   label: string
   route?: CollectionRoute
+  quickToggle?: readonly string[]
   schema: Readonly<Record<string, unknown>>
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
@@ -124,11 +152,12 @@ export const describeCollections = (
   registry: Partial<CollectionRegistry>
 ): CollectionDescription[] =>
   [...collectionsOf(registry).values()].map(
-    ({ name, version, label, route, schema, title, description }) => ({
+    ({ name, version, label, route, quickToggle, schema, title, description }) => ({
       name,
       version,
       label,
       route,
+      quickToggle,
       schema: schemaNodeOf(schema),
       title,
       description
