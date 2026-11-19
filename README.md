@@ -107,7 +107,9 @@ What a site author writes. It reaches no database and no Hono.
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
 - Forms ([ADR-0020](docs/adr/0020-forms-and-submissions.md)): `defineForm`, `FORM`, passed to `defineRegistry(blocks, { forms })`
 - Field labels per locale: `labeled`, which gives a schema field a title and description in each admin language
-- Fields: `entries`, `hexColor`, `image`, `link`, `localized`, `richText`, `isBlank`
+- Fields: `entries`, `hexColor`, `image`, `link`, `localized`, `richText`, `weeklyHours`, `isBlank`
+- Opening hours, which also run in the browser: `isOpenAt`, `nextOpening`, `slotsFor`, and the `WeeklyHours`,
+  `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types
 - Shared constants: `API_ERROR`, `MEDIA`
 - Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionComponents`,
   `CollectionDefinition`, `CollectionDescription`, `CollectionRoute`, `Form`, `FormDefinition`, `FormNotify`, `FormPublic`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
@@ -146,6 +148,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
 - Reading published entries: `findPublishedEntry`, `findEntryTranslations`
 - Reading the registry's own settings: `findRegistrySettings`
+- Opening hours in the business's time zone: `isOpenAt`, `nextOpening`, `slotsFor`, `WEEKLY_HOURS`, and the
+  `WeeklyHours`, `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types
 - Reading a form's public projection, such as the confirmed seats: `findFormProjection`, `formProjectionKey`,
   `FORM_PROJECTION`, and the `FormProjection` and `FormProjectionRead` types
 - Routing: `parseRoute`, `parseEntryRoute`, `pathOf`, `entryPathOf`, `routeOf`, and the `Route`, `EntryRoute` and
