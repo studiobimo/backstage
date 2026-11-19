@@ -102,6 +102,7 @@
     "too_large": "La imagen es demasiado grande. Prueba con una más pequeña.",
     "unsupported_media": "Solo se aceptan imágenes JPEG, PNG, WebP y AVIF.",
     "unsupported_content_type": "No se entendió la solicitud. Recarga la página e inténtalo de nuevo.",
+    "media_in_use": "Esta imagen sigue en uso. Quítala primero de los lugares siguientes.",
     "not_found": "Este elemento ya no existe.",
     "internal": "Algo salió mal en el servidor. Inténtalo de nuevo en un momento.",
     "dev_auth_outside_local": "El servidor está mal configurado. Avisa a quien administra este sitio.",

@@ -20,12 +20,13 @@ export { fieldIssueSchema, fieldIssuesOf } from '../errors.ts'
 export type { FieldIssue } from '../errors.ts'
 export {
   mediaAltSchema,
+  mediaInUseResponseSchema,
   mediaListResponseSchema,
   mediaResponseSchema,
   mediaTypes,
   sniffImageType
 } from '../media.ts'
-export type { Media, MediaAlt, MediaType } from '../media.ts'
+export type { Media, MediaAlt, MediaType, MediaUsage } from '../media.ts'
 export {
   hasMultipleLocales,
   localeConfigSchema,

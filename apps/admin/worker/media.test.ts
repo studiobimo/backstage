@@ -197,3 +197,105 @@ describe('media upload API refusals', () => {
     expect((await upload(form(pngBytes()), env.deployed)).status).toBe(403)
   })
 })
+
+const removeMedia = (id: string, bindings = env.localDevelopment) =>
+  app.request(
+    `/api/v1/media/${id}`,
+    { method: 'DELETE', headers: { origin: SAME_ORIGIN } },
+    bindings
+  )
+
+const uploadImage = async () =>
+  ((await (await upload(form(pngBytes()))).json()) as { media: { id: string } }).media.id
+
+const insertPage = async (
+  pageId: string,
+  titles: Record<string, string>,
+  socialImageId?: string
+) => {
+  const now = Date.now()
+  await db
+    .prepare(
+      'INSERT INTO pages (id, is_home, layout, version, created_at, updated_at) VALUES (?, 0, ?, 1, ?, ?)'
+    )
+    .bind(pageId, 'default', now, now)
+    .run()
+  for (const [locale, title] of Object.entries(titles)) {
+    await db
+      .prepare(
+        'INSERT INTO page_locales (page_id, locale, slug, title, social_image_id) VALUES (?, ?, ?, ?, ?)'
+      )
+      .bind(pageId, locale, `${pageId}-${locale}`, title, socialImageId ?? null)
+      .run()
+  }
+}
+
+const insertBlock = (pageId: string, content: unknown) =>
+  db
+    .prepare(
+      'INSERT INTO page_blocks (id, page_id, position, block, content) VALUES (?, ?, 0, ?, ?)'
+    )
+    .bind(crypto.randomUUID(), pageId, 'hero', JSON.stringify(content))
+    .run()
+
+const insertEntry = (id: string, content: unknown, label: Record<string, string>) =>
+  db
+    .prepare(
+      'INSERT INTO entries (id, collection, version, schema_version, content, label, created_at, updated_at) VALUES (?, ?, 1, 1, ?, ?, 1, 1)'
+    )
+    .bind(id, 'team', JSON.stringify(content), JSON.stringify(label))
+    .run()
+
+describe('media delete API', () => {
+  it('removes an unused image from the library and from R2', async () => {
+    const id = await uploadImage()
+    expect((await removeMedia(id)).status).toBe(204)
+    expect(await rows()).not.toContainEqual(expect.objectContaining({ id }))
+    expect(await env.localDevelopment.MEDIA!.get(`media/${id}.png`)).toBeNull()
+  })
+
+  it('answers not found for an image that does not exist', async () => {
+    const response = await removeMedia('nope')
+    expect(response.status).toBe(404)
+    expect(await response.json()).toMatchObject({ code: 'not_found' })
+  })
+
+  it('refuses an image used in a page block and names the page', async () => {
+    const id = await uploadImage()
+    await insertPage('in-block', { en: 'About us', es: 'Sobre nosotros' })
+    await insertBlock('in-block', { heading: 'Hi', image: { id, alt: '' } })
+    const response = await removeMedia(id)
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      code: 'media_in_use',
+      usedBy: [{ kind: 'page', id: 'in-block', label: { en: 'About us', es: 'Sobre nosotros' } }]
+    })
+    expect(await rows()).toContainEqual(expect.objectContaining({ id }))
+    expect(await env.localDevelopment.MEDIA!.get(`media/${id}.png`)).not.toBeNull()
+  })
+
+  it('refuses an image used as a page social image', async () => {
+    const id = await uploadImage()
+    await insertPage('social', { en: 'Contact' }, id)
+    const response = await removeMedia(id)
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      usedBy: [{ kind: 'page', id: 'social', label: { en: 'Contact' } }]
+    })
+  })
+
+  it('refuses an image used by a collection entry', async () => {
+    const id = await uploadImage()
+    await insertEntry('e1', { photo: { id, alt: '' } }, { en: 'Ana' })
+    const response = await removeMedia(id)
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      usedBy: [{ kind: 'entry', id: 'e1', label: { en: 'Ana' } }]
+    })
+  })
+
+  it('refuses a deployed request without Access', async () => {
+    const id = await uploadImage()
+    expect((await removeMedia(id, env.deployed)).status).toBe(403)
+  })
+})

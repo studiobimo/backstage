@@ -31,3 +31,11 @@ export const findMediaFileKey = async (d1: AnyD1Database, id: string) => {
   const [row] = await drizzle(d1).select({ r2Key: media.r2Key }).from(media).where(eq(media.id, id))
   return row?.r2Key ?? null
 }
+
+export const deleteMedia = async (d1: AnyD1Database, id: string) => {
+  const [row] = await drizzle(d1)
+    .delete(media)
+    .where(eq(media.id, id))
+    .returning({ r2Key: media.r2Key })
+  return row?.r2Key ?? null
+}
