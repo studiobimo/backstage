@@ -1,2 +1,5 @@
+import { createAdminEntrypoint } from '@studiobimo/backstage/admin/entrypoint'
+import { registry } from 'backstage-site/registry'
+
 export { default } from './index.ts'
-export { AdminEntrypoint } from '@studiobimo/backstage/admin/entrypoint'
+export const AdminEntrypoint = createAdminEntrypoint(registry)

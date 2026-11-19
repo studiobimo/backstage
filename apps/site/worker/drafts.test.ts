@@ -76,8 +76,8 @@ describe('site worker cannot see drafts', () => {
     expect(bindingsOutsideTheEntrypoint(other, admin)).toEqual(['OTHER'])
   })
 
-  it('has the admin Worker export the entrypoint the site binds to', () => {
-    expect(read('../../admin/worker/entry.ts')).toContain(`export { ${ADMIN_ENTRYPOINT} }`)
+  it('has the admin Worker export the entrypoint the site binds to, built from the registry', () => {
+    expect(read('../../admin/worker/entry.ts')).toContain(`export const ${ADMIN_ENTRYPOINT} = `)
   })
 
   it('allows any other binding', () => {
