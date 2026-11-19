@@ -15,6 +15,7 @@ import { LocalizedField } from './localized-field.tsx'
 import { ReferenceField } from './reference-field.tsx'
 import { RichTextField } from './rich-text-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
+import { WeeklyHoursField } from './weekly-hours-field.tsx'
 import type { BlockFormApi } from './validation.ts'
 import { fieldName, type Path } from './value.ts'
 
@@ -103,7 +104,14 @@ interface GroupFieldsProps extends NodeProps<GroupSpec> {
 export function GroupFields({ form, spec, path, translated, className }: GroupFieldsProps) {
   const { t } = useTranslation('blockForm')
   return (
-    <div className={cn('grid gap-5', spec.variant && 'gap-3 sm:grid-cols-2', className)}>
+    <div
+      className={cn(
+        'grid gap-5',
+        path.length === 0 && 'gap-8',
+        spec.variant && 'gap-3 sm:grid-cols-2',
+        className
+      )}
+    >
       {spec.fields.map((field, index) => (
         <FieldNode
           key={field.key}
@@ -135,6 +143,12 @@ function GroupLegend({
   )
 }
 
+const COMPACT_KINDS: readonly FieldSpec['kind'][] = ['number', 'select', 'boolean']
+const COMPACT_GRID = 'grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-4'
+
+const isCompact = (spec: GroupSpec) =>
+  spec.fields.length > 1 && spec.fields.every((field) => COMPACT_KINDS.includes(field.kind))
+
 function GroupNode(props: NodeProps<GroupSpec>) {
   const { spec, label, chrome } = props
   return (
@@ -147,7 +161,7 @@ function GroupNode(props: NodeProps<GroupSpec>) {
       {spec.description && (
         <p className="-mt-2.5 text-muted-foreground text-xs">{spec.description}</p>
       )}
-      <GroupFields {...props} className="border-s ps-4" />
+      <GroupFields {...props} className={isCompact(spec) ? COMPACT_GRID : undefined} />
       {chrome?.footer}
     </Fieldset>
   )
@@ -160,6 +174,8 @@ export function FieldNode(props: NodeProps) {
       if (spec.variant === 'image') return <ImageField {...props} spec={spec} />
       if (spec.variant === 'link' && spec.acceptsPage) return <LinkField {...props} spec={spec} />
       return <GroupNode {...props} spec={spec} />
+    case 'weeklyHours':
+      return <WeeklyHoursField {...props} spec={spec} />
     case 'list':
       return <ListField {...props} spec={spec} />
     case 'localized':
