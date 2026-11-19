@@ -136,6 +136,65 @@ export default createSite({
   style the nav from your stylesheet, and leave the page title out of your blocks' own headings if
   you do not want two `h1`s. There is no option to turn either off yet.
 
+## Take public submissions in a form
+
+A form is declared in the registry ([ADR-0020](../adr/0020-forms-and-submissions.md)). The site
+sends it to the admin through the entrypoint, and the owner reads it in the admin's D1.
+
+1. Declare the form, and pass it to `defineRegistry` with `forms: [reservationForm]`:
+
+   ```ts
+   export const reservationForm = defineForm('reservation', {
+     schema: z.object({
+       seats: z.number().int().min(1),
+       date: z.iso.date(),
+       name: z.string().min(1)
+     }),
+     notify: { subject: 'New reservation request' },
+     public: { statuses: ['confirmed'], fields: ['seats', 'date'] }
+   })
+   ```
+
+2. Export the entrypoint from the admin Worker, built from the same registry:
+   `export const AdminEntrypoint = createAdminEntrypoint(registry)`.
+3. Set `TURNSTILE_SECRET` on the admin Worker (`pnpm exec wrangler secret put TURNSTILE_SECRET`),
+   and follow the Turnstile section below for the widget on the site. For the owner notification,
+   bind `EMAIL` and set `AUTH_EMAIL_FROM` and `OWNER_EMAIL` on the admin Worker.
+4. Run `make migrate`: the package adds the `submissions` table.
+5. Call it from the site Worker with the visitor's context, and keep the `token` it returns:
+
+   ```ts
+   const rpc = adminRpc(env.ADMIN)
+   const sent = await rpc.submit(requestContextOf(request), 'reservation', payload, turnstileToken)
+   if (!sent.ok) {
+     const error = Object.values(API_ERROR).find(({ code }) => code === sent.code)!
+     return c.json({ code: error.code, error: error.message, issues: sent.issues }, error.status)
+   }
+   const followed = await rpc.status(requestContextOf(request), sent.token)
+   ```
+
+   `status` returns the status and only the fields the form lists under `public.fields`.
+
+### Rate limit a public write
+
+Turnstile stops bots, not a person sending many requests. Put the Workers rate limiting binding in
+front of the write, on the site Worker. Declare it in `wrangler.jsonc`, with a unique
+`namespace_id` and a `period` of 10 or 60 seconds:
+
+```jsonc
+"ratelimits": [{ "name": "FORM_LIMITER", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }]
+```
+
+and call it before `rpc.submit`, keyed by the visitor's address:
+
+```ts
+const { success } = await env.FORM_LIMITER.limit({ key: requestContextOf(request).ip ?? 'unknown' })
+if (!success) return respondWithError(c, API_ERROR.tooManyRequests)
+```
+
+The limit is per Cloudflare location and eventually consistent, so it slows abuse and does not
+count exactly. The package does not do this itself yet.
+
 ## Protect a public form with Turnstile
 
 1. Create a Turnstile widget in the Cloudflare dashboard and note its site key and secret key.

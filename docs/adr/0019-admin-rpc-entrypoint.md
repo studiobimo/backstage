@@ -21,9 +21,10 @@ Options considered:
 
 ## Decision
 
-- **The admin Worker exports an `AdminEntrypoint`** (a `WorkerEntrypoint<AdminEnv>`) from
-  `@studiobimo/backstage/admin/entrypoint`, the package's seventh entry. The consumer re-exports it
-  beside `export default createAdmin(registry)`. It is a separate entry because it imports
+- **The admin Worker exports an `AdminEntrypoint`** (a `WorkerEntrypoint<AdminEnv>`), built by
+  `createAdminEntrypoint(registry)` from `@studiobimo/backstage/admin/entrypoint`, the package's
+  seventh entry. The consumer exports `export const AdminEntrypoint = createAdminEntrypoint(registry)`
+  beside `export default createAdmin(registry)`, because the form methods need the registry. It is a separate entry because it imports
   `cloudflare:workers`, which Node cannot load: `./admin` stays loadable in tests and tooling.
   It is public and under SemVer, like the other `./admin` and `./site` names.
 - **Its methods are few, validated and anonymous.** Every argument is parsed with zod inside the

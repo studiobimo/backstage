@@ -105,7 +105,7 @@ What a site author writes. It reaches no database and no Hono.
 
 - Blocks and layouts: `defineBlock`, `defineLayout`, `defineRegistry`, `defineComponents`, `LAYOUT`, `SLOT`
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
-- Forms: `defineForm`, `FORM`, passed to `defineRegistry(blocks, { forms })`
+- Forms ([ADR-0020](docs/adr/0020-forms-and-submissions.md)): `defineForm`, `FORM`, passed to `defineRegistry(blocks, { forms })`
 - Fields: `entries`, `hexColor`, `image`, `link`, `localized`, `richText`, `isBlank`
 - Shared constants: `API_ERROR`, `MEDIA`
 - Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionComponents`,
