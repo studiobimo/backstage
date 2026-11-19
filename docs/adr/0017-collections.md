@@ -56,6 +56,25 @@ This ADR records the decisions they share, so that the later ones do not reopen 
   so publishing it later can refresh the page. The rows are replaced on each publish and removed
   on unpublish and with the page.
 
+### A reference can be a query (COL-3)
+
+- `{ mode: 'query', where?, orderBy?, groupBy?, limit }` lists a collection's published entries.
+  `where` holds scalar equalities on content fields. `orderBy` names a content field and a
+  direction, or `ENTRY_QUERY.positionKey` (`$position`) for the manual order of the entries. An
+  entry with no value for the field sorts last in either direction, and ties keep the manual
+  order. `limit` is required and capped by `max`, and applies before grouping.
+- The pool reads every published entry of the collection in manual order, opens it through the
+  collection's migration and filters, sorts and limits in code, so a query sees the same content
+  a chosen entry does and never runs SQL over raw JSON.
+- `groupBy` names an enum field. The snapshot keeps `references[block][path]` as the flat ids in
+  group order and adds `groups[block][path]`, a list of `{ group, ids }` in the enum's declared
+  order. Empty groups and entries whose value is not in the enum are left out. `Blocks` hands the
+  component `[{ group, entries }]` for such a field, and the flat list otherwise. The field's type
+  stays `ResolvedEntry[]`; a block that groups types its prop with `EntryGroup`.
+- A query depends on the whole collection, so it records `entry_id IS NULL` in `page_entry_refs`,
+  like `latest`. Publishing, unpublishing, deleting or reordering any entry of the collection
+  already refreshes the pages with a null reference, so no new dependency or write path exists.
+
 ### Entries can have pages (COL-4)
 
 - `route: { path: '/blog/:slug' }` on a collection declares the entry URL. The path starts with a

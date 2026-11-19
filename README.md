@@ -107,7 +107,7 @@ What a site author writes. It reaches no database and no Hono.
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
 - Forms ([ADR-0020](docs/adr/0020-forms-and-submissions.md)): `defineForm`, `FORM`, passed to `defineRegistry(blocks, { forms })`
 - Field labels per locale: `labeled`, which gives a schema field a title and description in each admin language
-- Fields: `entries`, `hexColor`, `image`, `link`, `localized`, `richText`, `weeklyHours`, `isBlank`
+- Fields: `entries`, `ENTRY_QUERY`, `hexColor`, `image`, `link`, `localized`, `richText`, `weeklyHours`, `isBlank`
 - Opening hours, which also run in the browser: `isOpenAt`, `nextOpening`, `slotsFor`, and the `WeeklyHours`,
   `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types
 - Shared constants: `API_ERROR`, `MEDIA`

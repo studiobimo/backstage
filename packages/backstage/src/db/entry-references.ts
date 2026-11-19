@@ -1,7 +1,7 @@
-import { and, desc, eq, getTableColumns, inArray, isNotNull } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, inArray, isNotNull } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
-import { validateBlockContent } from '../blocks.ts'
+import { schemaNodeOf, validateBlockContent } from '../blocks.ts'
 import { collectionsOf, type AdminRegistry, type Collection } from '../collections.ts'
 import {
   referenceNeedsOf,
@@ -11,6 +11,7 @@ import {
   type ReferenceField,
   type ReferenceNeeds
 } from '../references.ts'
+import type { SchemaNode } from '../field-shapes.ts'
 import { D1_LIMITS, inChunks } from './chunks.ts'
 import { readPublishedEntrySlugs } from './entry-slugs.ts'
 import { entries, pageEntryRefs } from './schema.ts'
@@ -71,6 +72,27 @@ const readLatest = async (d1: AnyD1Database, collection: Collection, count: numb
           .limit(count)
       ).flatMap((row) => openRow(collection, row))
 
+const readAllPublished = async (d1: AnyD1Database, collection: Collection) =>
+  (
+    await drizzle(d1)
+      .select(publishedColumns)
+      .from(entries)
+      .where(publishedIn(collection))
+      .orderBy(asc(entries.position), asc(entries.createdAt), asc(entries.id))
+  ).flatMap((row) => openRow(collection, row))
+
+const enumOrdersOf = (collection: Collection): Record<string, string[]> =>
+  Object.fromEntries(
+    Object.entries((schemaNodeOf(collection.schema) as SchemaNode).properties ?? {}).flatMap(
+      ([field, node]) => {
+        const options = typeof node === 'object' ? node.enum : undefined
+        return Array.isArray(options)
+          ? [[field, options.filter((option): option is string => typeof option === 'string')]]
+          : []
+      }
+    )
+  )
+
 const readSlugsOf = async (d1: AnyD1Database, collection: string, ids: string[]) =>
   new Map(
     (
@@ -90,13 +112,14 @@ const publishedSlugsOf = (slugs: Record<string, string | null> | undefined) =>
 const readPool = async (
   d1: AnyD1Database,
   collection: Collection,
-  { ids, latest }: ReferenceNeeds
+  { ids, latest, query }: ReferenceNeeds
 ) => {
-  const [chosen, newest] = await Promise.all([
+  const [chosen, newest, queried] = await Promise.all([
     readChosen(d1, collection, ids),
-    readLatest(d1, collection, latest)
+    readLatest(d1, collection, latest),
+    query ? readAllPublished(d1, collection) : Promise.resolve([])
   ])
-  const everyone = [...chosen, ...newest]
+  const everyone = [...chosen, ...newest, ...queried]
   const slugs = collection.route
     ? await readSlugsOf(d1, collection.name, [...new Set(everyone.map(({ id }) => id))])
     : new Map<string, Record<string, string | null>>()
@@ -106,7 +129,8 @@ const readPool = async (
   }
   return {
     byId: new Map(everyone.map((entry) => [entry.id, withSlugs(entry)])),
-    latest: newest.map(withSlugs)
+    latest: newest.map(withSlugs),
+    query: { entries: queried.map(withSlugs), groupOrders: query ? enumOrdersOf(collection) : {} }
   }
 }
 

@@ -95,6 +95,8 @@ export const snapshotMediaSchema = z.object({
 })
 export type SnapshotMedia = z.infer<typeof snapshotMediaSchema>
 
+const entryGroupSchema = z.object({ group: z.string(), ids: z.array(z.string()) })
+
 const snapshotEntrySchema = z.object({
   id: z.string(),
   schemaVersion: z.number().int(),
@@ -122,6 +124,7 @@ export const snapshotSchema = z.object({
   blocks: z.array(pageBlockSchema),
   entries: z.record(z.string(), z.record(z.string(), snapshotEntrySchema)),
   references: z.record(z.string(), z.record(z.string(), z.array(z.string()))),
+  groups: z.record(z.string(), z.record(z.string(), z.array(entryGroupSchema))).optional(),
   media: z.record(z.string(), snapshotMediaSchema)
 })
 export type Snapshot = z.infer<typeof snapshotSchema>
@@ -409,6 +412,7 @@ export const buildSnapshots = (
         publishedAt,
         {
           references: resolved.references,
+          groups: resolved.groups,
           entries: entriesForLocale(registry, resolved, locale, defaultLocale)
         }
       )
@@ -459,7 +463,7 @@ const snapshotOf = (
   mediaIds: readonly string[],
   media: ReadonlyMap<string, PublishMediaRow>,
   publishedAt: number,
-  references: Pick<Snapshot, 'entries' | 'references'>
+  references: Pick<Snapshot, 'entries' | 'references' | 'groups'>
 ): Snapshot => {
   const row = draft.locales.find((candidate) => candidate.locale === locale)
   const ids = [...mediaIds, ...(row?.socialImageId ? [row.socialImageId] : [])]

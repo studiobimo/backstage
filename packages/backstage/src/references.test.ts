@@ -38,7 +38,8 @@ const pool = (ids: string[], latest: string[]): PublishedEntries =>
       'post',
       {
         byId: new Map([...ids, ...latest].map((id) => [id, published(id)])),
-        latest: latest.map(published)
+        latest: latest.map(published),
+        query: { entries: [], groupOrders: {} }
       }
     ]
   ])
@@ -116,6 +117,12 @@ describe('resolving references', () => {
     ])
   })
 
+  it('records the whole collection for a query', () => {
+    expect(entryRefsOf(fieldsOf({ mode: 'query', limit: 2 }))).toEqual([
+      { collection: 'post', entryId: null }
+    ])
+  })
+
   it('ignores a value that is not a reference', () => {
     expect(fieldsOf({ mode: 'other' })).toEqual([])
   })
@@ -166,7 +173,8 @@ const routedRegistry = defineRegistry([list, storyList], { collections: [post, s
 
 const resolvedWith = (collection: string, slugs?: Record<string, string>) => ({
   entries: { [collection]: { e1: { ...published('e1'), content: { title: {} }, slugs } } },
-  references: {}
+  references: {},
+  groups: {}
 })
 
 describe('the address of a resolved entry', () => {
@@ -219,5 +227,70 @@ describe('the address of a resolved entry', () => {
   it('is typed on the resolved entry of a routed collection only', () => {
     expectTypeOf<ResolvedEntry<typeof story>>().toHaveProperty('href')
     expectTypeOf<ResolvedEntry<typeof post>>().not.toHaveProperty('href')
+  })
+})
+
+describe('resolving a query', () => {
+  const dish = (id: string, content: Record<string, unknown>): PublishedEntry => ({
+    id,
+    schemaVersion: 1,
+    content
+  })
+  const menu: PublishedEntries = new Map([
+    [
+      'post',
+      {
+        byId: new Map(),
+        latest: [],
+        query: {
+          entries: [
+            dish('a', { course: 'main', price: 12, live: true }),
+            dish('b', { course: 'starter', price: 5, live: true }),
+            dish('c', { course: 'main', price: 8, live: false }),
+            dish('d', { course: 'starter', live: true })
+          ],
+          groupOrders: { course: ['starter', 'main', 'dessert'] }
+        }
+      }
+    ]
+  ])
+  const idsFor = (query: object) =>
+    resolveReferences(fieldsOf({ mode: 'query', limit: 10, ...query }), menu).references.b1?.posts
+
+  it('keeps the manual order with no orderBy and reverses it when descending', () => {
+    expect(idsFor({})).toEqual(['a', 'b', 'c', 'd'])
+    expect(idsFor({ orderBy: { field: '$position', direction: 'desc' } })).toEqual([
+      'd',
+      'c',
+      'b',
+      'a'
+    ])
+  })
+
+  it('filters by scalar equality, sorts by a field with missing values last, then limits', () => {
+    expect(idsFor({ where: { live: true } })).toEqual(['a', 'b', 'd'])
+    expect(idsFor({ orderBy: { field: 'price', direction: 'asc' } })).toEqual(['b', 'c', 'a', 'd'])
+    expect(idsFor({ orderBy: { field: 'price', direction: 'desc' }, limit: 2 })).toEqual(['a', 'c'])
+  })
+
+  it('groups in the declared order, skips empty groups and flattens the ids', () => {
+    const resolved = resolveReferences(
+      fieldsOf({ mode: 'query', limit: 10, groupBy: 'course' }),
+      menu
+    )
+    expect(resolved.groups).toEqual({
+      b1: {
+        posts: [
+          { group: 'starter', ids: ['b', 'd'] },
+          { group: 'main', ids: ['a', 'c'] }
+        ]
+      }
+    })
+    expect(resolved.references.b1?.posts).toEqual(['b', 'd', 'a', 'c'])
+  })
+
+  it('rejects a query without a positive limit', () => {
+    expect(fieldsOf({ mode: 'query', limit: 0 })).toEqual([])
+    expect(fieldsOf({ mode: 'query' })).toEqual([])
   })
 })
