@@ -4,7 +4,6 @@ import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { CardTable } from '@/components/card-table'
-import { PublishStateBadge } from '@/components/publish-state-badge'
 import type { RowAction } from '@/components/row-action'
 import { RowMenu } from '@/components/row-menu'
 import { TableCell, TableHead, TableRow } from '@/components/ui/table'
@@ -12,7 +11,7 @@ import { useLocaleConfig } from '@/features/config/queries'
 import { formatDateTime } from '@/lib/format'
 
 import { entryLabelText } from './collection-text'
-import { ENTRY_STATE, entryState } from './entry-filters'
+import { StateBadge } from './entry-state-badge'
 
 const UPDATED_COLUMN = 'hidden md:table-cell'
 
@@ -26,22 +25,6 @@ function useEntryName(entry: EntrySummary) {
   const { t, i18n } = useTranslation('collections')
   const { defaultLocale } = useLocaleConfig()
   return entryLabelText(entry.label, i18n.language, defaultLocale) || t('list.untitled')
-}
-
-function StateBadge({ entry }: { entry: EntrySummary }) {
-  const { t } = useTranslation('collections')
-  const state = entryState(entry)
-  return (
-    <PublishStateBadge
-      published={state !== ENTRY_STATE.draft}
-      changed={state === ENTRY_STATE.changed}
-      labels={{
-        published: t('list.published'),
-        changed: t('list.changed'),
-        draft: t('list.draft')
-      }}
-    />
-  )
 }
 
 function EntryActions({

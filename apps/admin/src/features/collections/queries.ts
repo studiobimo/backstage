@@ -3,7 +3,8 @@ import {
   entriesResponseSchema,
   entryDependentsResponseSchema,
   entryResponseSchema,
-  type Entry
+  type Entry,
+  type EntrySummary
 } from '@studiobimo/backstage/internal'
 import { mutationOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -101,6 +102,26 @@ export const deleteEntryMutation = (queryClient: QueryClient, collection: string
         await (await apiRequest(entriesPath(collection, id), { method: 'DELETE' })).json()
       ).republish,
     onSuccess: () => refreshEntries(queryClient, collection)
+  })
+
+const positionedBy = (ids: readonly string[]) => (entries: EntrySummary[] | undefined) =>
+  entries?.map((entry) => ({ ...entry, position: ids.indexOf(entry.id) }))
+
+export const reorderEntriesMutation = (queryClient: QueryClient, collection: string) =>
+  mutationOptions({
+    mutationFn: async (ids: string[]) =>
+      entryDependentsResponseSchema.parse(
+        await (
+          await apiRequest(`/collections/${collection}/order`, {
+            method: 'PUT',
+            body: JSON.stringify({ ids })
+          })
+        ).json()
+      ).republish,
+    onMutate: (ids) => {
+      queryClient.setQueryData(entriesKey(collection), positionedBy(ids))
+    },
+    onSettled: () => refreshEntries(queryClient, collection)
   })
 
 const publishPath = (collection: string, id: string) => `${entriesPath(collection, id)}/publish`

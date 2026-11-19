@@ -2,7 +2,12 @@ import { hasUnpublishedChanges, type EntrySummary } from '@studiobimo/backstage/
 
 import { entryLabelText } from './collection-text'
 
-export const ENTRY_SORT = { label: 'label', updated: 'updated', published: 'published' } as const
+export const ENTRY_SORT = {
+  label: 'label',
+  updated: 'updated',
+  published: 'published',
+  manual: 'manual'
+} as const
 
 export type EntrySort = (typeof ENTRY_SORT)[keyof typeof ENTRY_SORT]
 
@@ -61,6 +66,8 @@ const compareBy = (sort: EntrySort, language: string, fallbackLocale: string) =>
         STATE_RANK[entryState(a)] - STATE_RANK[entryState(b)]
     case ENTRY_SORT.updated:
       return (a: EntrySummary, b: EntrySummary) => a.updatedAt - b.updatedAt
+    case ENTRY_SORT.manual:
+      return (a: EntrySummary, b: EntrySummary) => a.position - b.position
   }
 }
 
@@ -68,7 +75,7 @@ const sortEntries = (
   entries: EntrySummary[],
   { sort, direction, language, fallbackLocale }: Ordering
 ) => {
-  const sign = direction === SORT_DIRECTION.ascending ? 1 : -1
+  const sign = direction === SORT_DIRECTION.ascending || sort === ENTRY_SORT.manual ? 1 : -1
   const compare = compareBy(sort, language, fallbackLocale)
   return [...entries].sort((a, b) => sign * compare(a, b) || byUpdatedNewestFirst(a, b))
 }
