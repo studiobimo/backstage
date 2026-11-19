@@ -159,6 +159,7 @@ export const entries = sqliteTable(
     schemaVersion: integer('schema_version').notNull().default(1),
     content: text('content', { mode: 'json' }).$type<unknown>().notNull(),
     label: text('label', { mode: 'json' }).$type<Record<string, string>>().notNull().default({}),
+    position: integer('position').notNull().default(0),
     ...publication(),
     publishedContent: text('published_content', { mode: 'json' }).$type<unknown>(),
     publishedSchemaVersion: integer('published_schema_version'),
@@ -167,7 +168,10 @@ export const entries = sqliteTable(
     updatedAt: integer('updated_at').notNull().$defaultFn(now),
     updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
   },
-  (t) => [index('entries_collection').on(t.collection, t.updatedAt)]
+  (t) => [
+    index('entries_collection').on(t.collection, t.updatedAt),
+    index('entries_collection_position').on(t.collection, t.position)
+  ]
 )
 
 export const entryLocales = sqliteTable(

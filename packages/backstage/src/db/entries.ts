@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
@@ -52,6 +52,7 @@ const toEntry = (
     version: entry.version,
     schemaVersion: opened.schemaVersion,
     label: entry.label,
+    position: entry.position,
     slugs,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
@@ -105,6 +106,9 @@ export interface EntryContent {
   slugs?: EntrySlugs | null
 }
 
+const nextPosition = (collection: Collection) =>
+  sql<number>`(SELECT COALESCE(MAX(${entries.position}) + 1, 0) FROM ${entries} WHERE ${entries.collection} = ${collection.name})`
+
 export const createEntry = async (
   d1: AnyD1Database,
   collection: Collection,
@@ -120,6 +124,7 @@ export const createEntry = async (
       schemaVersion: collection.version,
       content,
       label: labels,
+      position: nextPosition(collection),
       createdBy: editorId,
       updatedBy: editorId
     }),
@@ -173,6 +178,35 @@ export const deleteEntry = async (d1: AnyD1Database, collection: Collection, id:
     .where(entryMatches(collection, id))
     .returning({ id: entries.id })
   return removed.length > 0 ? ENTRY_WRITE.ok : ENTRY_WRITE.notFound
+}
+
+export const REORDER = { ok: 'ok', unknownEntry: 'unknown_entry' } as const
+
+export type ReorderOutcome = (typeof REORDER)[keyof typeof REORDER]
+
+export const reorderEntries = async (
+  d1: AnyD1Database,
+  collection: Collection,
+  ids: readonly string[]
+): Promise<ReorderOutcome> => {
+  const db = drizzle(d1)
+  const existing = (
+    await db
+      .select({ id: entries.id })
+      .from(entries)
+      .where(eq(entries.collection, collection.name))
+      .orderBy(asc(entries.position), asc(entries.createdAt), asc(entries.id))
+  ).map(({ id }) => id)
+  const known = new Set(existing)
+  const requested = [...new Set(ids)]
+  if (!requested.every((id) => known.has(id))) return REORDER.unknownEntry
+  const placed = new Set(requested)
+  const ordered = [...requested, ...existing.filter((id) => !placed.has(id))]
+  const [first, ...rest] = ordered.map((id, position) =>
+    db.update(entries).set({ position }).where(entryMatches(collection, id))
+  )
+  if (first) await db.batch([first, ...rest])
+  return REORDER.ok
 }
 
 export interface EntryPublication {

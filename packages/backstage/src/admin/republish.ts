@@ -170,10 +170,9 @@ export const republishRoutes = (registry: AdminRegistry) => {
   return new Hono<AccessEnv>()
     .get('/', async (c) => {
       const query = scopeQuerySchema.parse(c.req.query())
-      const entry =
-        query.collection && query.entryId
-          ? { collection: query.collection, entryId: query.entryId }
-          : undefined
+      const entry = query.collection
+        ? { collection: query.collection, entryId: query.entryId }
+        : undefined
       const scope: RepublishScope = {
         since: query.since ?? Date.now(),
         cursor: query.cursor ?? null,

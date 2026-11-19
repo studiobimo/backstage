@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 
 import { blocksRoutes } from './blocks.ts'
 import { collectionsRoutes } from './collections.ts'
+import { entryOrderRoutes } from './entry-order.ts'
 import { configRoutes } from './config.ts'
 import { formsRoutes } from './forms.ts'
 import { entryPublishRoutes } from './entry-publish.ts'
@@ -25,6 +26,7 @@ export const v1Routes = (registry: AdminRegistry) =>
     .use(bumpSiteVersionOnPublish)
     .route('/blocks', blocksRoutes(registry))
     .route('/collections', collectionsRoutes(registry))
+    .route('/collections', entryOrderRoutes(registry))
     .route('/collections', entryPublishRoutes(registry))
     .route('/config', configRoutes(registry))
     .route('/forms', formsRoutes(registry))

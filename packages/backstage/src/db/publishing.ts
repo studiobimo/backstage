@@ -277,8 +277,11 @@ export const readPublishedIndex = async (d1: AnyD1Database): Promise<PublishedIn
   entries: await readPublishedEntryPages(d1)
 })
 
+const entryRefMatch = (entryId: string | undefined) =>
+  entryId === undefined ? sql`` : sql` AND (entry_id = ${entryId} OR entry_id IS NULL)`
+
 const dependsOnEntry = ({ collection, entryId }: RepublishEntry) =>
-  sql`${pages.id} IN (SELECT page_id FROM page_entry_refs WHERE collection = ${collection} AND (entry_id = ${entryId} OR entry_id IS NULL))`
+  sql`${pages.id} IN (SELECT page_id FROM page_entry_refs WHERE collection = ${collection}${entryRefMatch(entryId)})`
 
 const dependsOnPage = (targetPageId: string) =>
   inArray(

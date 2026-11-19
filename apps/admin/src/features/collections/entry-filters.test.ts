@@ -16,6 +16,7 @@ const entry = (id: string, overrides: Partial<EntrySummary>): EntrySummary => ({
   version: 1,
   schemaVersion: 1,
   label: { en: id },
+  position: 0,
   slugs: {},
   createdAt: 0,
   updatedAt: 0,
@@ -29,9 +30,19 @@ const entry = (id: string, overrides: Partial<EntrySummary>): EntrySummary => ({
 const ordering = { language: 'en', fallbackLocale: 'en' }
 const idsOf = (entries: EntrySummary[]) => entries.map(({ id }) => id)
 
-const apple = entry('apple', { updatedAt: 10, publishedAt: 5, publishedVersion: 1 })
-const banana = entry('banana', { label: { en: 'Banana', es: 'Plátano' }, updatedAt: 30 })
-const cherry = entry('cherry', { updatedAt: 20, version: 2, publishedAt: 5, publishedVersion: 1 })
+const apple = entry('apple', { position: 2, updatedAt: 10, publishedAt: 5, publishedVersion: 1 })
+const banana = entry('banana', {
+  position: 1,
+  label: { en: 'Banana', es: 'Plátano' },
+  updatedAt: 30
+})
+const cherry = entry('cherry', {
+  position: 0,
+  updatedAt: 20,
+  version: 2,
+  publishedAt: 5,
+  publishedVersion: 1
+})
 const all = [apple, banana, cherry]
 
 describe('entryState', () => {

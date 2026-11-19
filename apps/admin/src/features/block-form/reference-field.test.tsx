@@ -25,6 +25,7 @@ const summary = (id: string, title: string, published: boolean) => ({
   version: 1,
   schemaVersion: 1,
   label: { en: title },
+  position: 0,
   createdAt: 1,
   updatedAt: 1,
   updatedBy: null,
