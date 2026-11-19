@@ -45,7 +45,6 @@
     "title": "Estado",
     "current": "Estado actual",
     "markAs": "Marcar como {{status}}",
-    "changed": "Marcada como {{status}}",
     "failed": "No se pudo cambiar el estado",
     "updatedBy": "Último cambio de {{name}} el {{date}}"
   }

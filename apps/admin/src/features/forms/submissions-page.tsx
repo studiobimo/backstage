@@ -1,6 +1,7 @@
 import type { InboxSubmission } from '@studiobimo/backstage/internal'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { InboxIcon, SearchXIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { CardTable } from '@/components/card-table'
@@ -11,32 +12,48 @@ import { formatDateTime } from '@/lib/format'
 
 import { localizedText } from '../page-editor/localized-text'
 import { useLocaleConfig } from '../config/queries'
-import { formTitle, summaryOf } from './form-text'
+import { cellText, columnsOf, fieldLabel, formTitle } from './form-text'
 import { formsQuery, submissionsQuery, type FormOption, type SubmissionFilter } from './queries'
 import { StatusBadge } from './status-badge'
 import { SubmissionsFilters } from './submissions-filters'
+import { useLocalizedForm } from './use-localized-form'
 
-const SECONDARY_COLUMN = 'hidden md:table-cell'
+const COLUMN_VISIBILITY = ['', '', 'hidden sm:table-cell', 'hidden md:table-cell'] as const
+const RECEIVED_VISIBILITY = 'hidden lg:table-cell'
+
+const visibilityOf = (index: number) => COLUMN_VISIBILITY[index] ?? ''
 
 function SubmissionRow({ form, submission }: { form: FormOption; submission: InboxSubmission }) {
   const { t, i18n } = useTranslation('forms')
-  const summary = summaryOf(form.schema, submission.payload, i18n.language) || t('detail.none')
+  const columns = columnsOf(form.schema)
   return (
     <TableRow>
-      <TableCell className="w-full max-w-0">
-        <Link
-          to="/forms/$name/$submissionId"
-          params={{ name: form.name, submissionId: submission.id }}
-          className="block truncate rounded-sm py-0.5 font-medium outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
-        >
-          {summary}
-        </Link>
+      {columns.map(([key, node], index) => {
+        const text = cellText(node, submission.payload[key], i18n.language)
+        return (
+          <TableCell
+            key={key}
+            className={`${visibilityOf(index)} ${index === 0 ? 'font-medium' : 'text-muted-foreground'}`}
+          >
+            {index === 0 ? (
+              <Link
+                to="/forms/$name/$submissionId"
+                params={{ name: form.name, submissionId: submission.id }}
+                className="rounded-sm py-0.5 outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
+              >
+                {text || t('detail.none')}
+              </Link>
+            ) : (
+              text
+            )}
+          </TableCell>
+        )
+      })}
+      <TableCell className={`${RECEIVED_VISIBILITY} text-muted-foreground`}>
+        {formatDateTime(i18n.language, submission.createdAt)}
       </TableCell>
       <TableCell>
         <StatusBadge status={submission.status} />
-      </TableCell>
-      <TableCell className={`${SECONDARY_COLUMN} text-muted-foreground`}>
-        {formatDateTime(i18n.language, submission.createdAt)}
       </TableCell>
     </TableRow>
   )
@@ -54,9 +71,13 @@ function SubmissionsTable({
     <CardTable
       head={
         <>
-          <TableHead>{t('list.columns.details')}</TableHead>
+          {columnsOf(form.schema).map(([key, node], index) => (
+            <TableHead key={key} className={visibilityOf(index)}>
+              {fieldLabel(key, node)}
+            </TableHead>
+          ))}
+          <TableHead className={RECEIVED_VISIBILITY}>{t('list.columns.received')}</TableHead>
           <TableHead>{t('list.columns.status')}</TableHead>
-          <TableHead className={SECONDARY_COLUMN}>{t('list.columns.received')}</TableHead>
         </>
       }
     >
@@ -78,7 +99,7 @@ export function SubmissionsPage({ name, filter, onFilterChange }: SubmissionsPag
   const { defaultLocale } = useLocaleConfig()
   const { data: forms } = useSuspenseQuery(formsQuery)
   const { data: submissions, isPending } = useQuery(submissionsQuery(name, filter))
-  const form = forms.find((candidate) => candidate.name === name)
+  const form = useLocalizedForm(forms.find((candidate) => candidate.name === name))
   if (!form) return <ListNotice title={t('missing.title')} description={t('missing.description')} />
   const filtered = Boolean(filter.status || filter.from || filter.to)
   return (
@@ -91,9 +112,17 @@ export function SubmissionsPage({ name, filter, onFilterChange }: SubmissionsPag
       {isPending ? null : submissions?.length ? (
         <SubmissionsTable form={form} submissions={submissions} />
       ) : filtered ? (
-        <ListNotice title={t('list.noMatchTitle')} description={t('list.noMatchDescription')} />
+        <ListNotice
+          icon={<SearchXIcon />}
+          title={t('list.noMatchTitle')}
+          description={t('list.noMatchDescription')}
+        />
       ) : (
-        <ListNotice title={t('list.emptyTitle')} description={t('list.emptyDescription')} />
+        <ListNotice
+          icon={<InboxIcon />}
+          title={t('list.emptyTitle')}
+          description={t('list.emptyDescription')}
+        />
       )}
     </>
   )

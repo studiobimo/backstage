@@ -15,10 +15,17 @@ export const reservationForm = {
   schema: {
     type: 'object',
     properties: {
-      seats: { type: 'integer' },
-      date: { type: 'string', format: 'date' },
+      date: {
+        type: 'string',
+        format: 'date',
+        labels: { en: { title: 'Date' }, es: { title: 'Fecha' } }
+      },
+      name: { type: 'string', labels: { en: { title: 'Name' }, es: { title: 'Nombre' } } },
       time: { type: 'string' },
-      name: { type: 'string' },
+      seats: {
+        type: 'integer',
+        labels: { en: { title: 'Seats' }, es: { title: 'Comensales' } }
+      },
       preorder: {
         type: 'array',
         items: {

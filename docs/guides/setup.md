@@ -179,6 +179,52 @@ sends it to the admin through the entrypoint, and the owner reads it in the admi
 
    `status` returns the status and only the fields the form lists under `public.fields`.
 
+### Label fields in each language
+
+The admin shows each field's title and description from the schema. Without more, the title is the
+humanised key (`slotMinutes` reads "Slot minutes") in every language. Declare labels per locale,
+one or more, and the admin picks the one for its own language, then the one for the site's default
+locale, then the plain `title`, then the humanised key. It applies to the registry settings schema
+and to a form's schema, and to the title of an object, which is a group's heading.
+
+```ts
+import { labeled, localized } from '@studiobimo/backstage'
+
+const settings = z.object({
+  reservations: labeled(
+    z.object({
+      slotMinutes: labeled(z.number().int(), {
+        en: { title: 'Slot length (minutes)', description: 'How often a table can start.' },
+        es: { title: 'Intervalo (minutos)', description: 'Cada cuánto puede empezar una mesa.' }
+      })
+    }),
+    { en: { title: 'Reservations' }, es: { title: 'Reservas' } }
+  )
+})
+```
+
+`labeled(schema, labels)` is `schema.meta({ ...schema.meta(), labels })`, so it keeps what a field
+such as `localized()` already declares. A release of the package that has no `labeled` still works
+with plain metadata, because the admin reads the `labels` key from the JSON schema:
+`schema.meta({ ...schema.meta(), labels: { en: { title: '...' } } })`. A column of the form inbox
+takes its heading from the same title.
+
+### Weekly opening hours
+
+A settings object renders as a weekly editor, one row per day with a switch and labelled From and
+To times, when it is keyed by exactly the seven weekday names (`monday` to `sunday`, lowercase) and
+each day is an object with a boolean `closed` and string `opens` and `closes`:
+
+```ts
+const openingDay = () => z.object({ closed: z.boolean(), opens: timeOfDay(), closes: timeOfDay() })
+const hours = z.object({ monday: openingDay(), tuesday: openingDay(), sunday: openingDay() })
+```
+
+The example shortens the week; declare all seven days.
+
+Any other object renders as a plain group of labelled fields. The times are `HH:mm` strings, so
+validate them in the schema as you would any string. A closed day keeps its times.
+
 ### Rate limit a public write
 
 Turnstile stops bots, not a person sending many requests. Put the Workers rate limiting binding in

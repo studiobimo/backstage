@@ -49,8 +49,12 @@ export function SubmissionsFilters({ form, filter, onChange }: SubmissionsFilter
     : ''
   const active = Boolean(filter.status || filter.from || filter.to)
   return (
-    <div role="group" aria-label={t('filters.label')} className="flex flex-wrap items-end gap-3">
-      <Field className="sm:w-44">
+    <div
+      role="group"
+      aria-label={t('filters.label')}
+      className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end"
+    >
+      <Field className="col-span-2 sm:w-44">
         <FieldLabel>{t('filters.status')}</FieldLabel>
         <OptionSelect
           label={t('filters.status')}
@@ -75,7 +79,7 @@ export function SubmissionsFilters({ form, filter, onChange }: SubmissionsFilter
         </>
       )}
       {active && (
-        <Button variant="ghost" onClick={() => onChange({})}>
+        <Button variant="ghost" className="col-span-2 sm:col-span-1" onClick={() => onChange({})}>
           {t('filters.clear')}
         </Button>
       )}
