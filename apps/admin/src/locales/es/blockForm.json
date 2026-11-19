@@ -16,6 +16,18 @@
     "to": "Hasta",
     "closed": "Cerrado"
   },
+  "schedule": {
+    "timeZone": "Zona horaria",
+    "exceptions": "Excepciones",
+    "exceptionsHint": "Festivos y aperturas especiales. Una fecha sin horario permanece cerrada todo el día.",
+    "addException": "Añadir excepción",
+    "exceptionName": "Excepción {{number}}",
+    "date": "{{name}}, fecha",
+    "removeException": "Quitar {{name}}",
+    "addRange": "Añadir horario para {{day}}",
+    "removeRange": "Quitar horario {{number}} de {{day}}",
+    "rangeOf": "{{day}}, horario {{number}}"
+  },
   "list": {
     "add": "Añadir elemento",
     "item": "Elemento {{number}}",
