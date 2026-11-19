@@ -46,6 +46,9 @@ export {
   siteSnapshotSchema
 } from '../site-publishing.ts'
 export type { SiteSnapshot } from '../site-publishing.ts'
+export { adminRpc, requestContextOf } from './rpc.ts'
+export { RPC } from '../rpc.ts'
+export type { PingResult, RequestContext, VisitorRpc } from '../rpc.ts'
 export { TURNSTILE, verifyTurnstile } from './turnstile.ts'
 export type { TurnstileCheck, TurnstileFailure, TurnstileResult } from './turnstile.ts'
 export {

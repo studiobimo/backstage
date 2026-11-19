@@ -27,6 +27,7 @@ const CONSUMER = {
   timeoutMs: 120_000,
   entries: {
     public: ['', '/admin', '/render', '/site', '/site/hono'],
+    workerdOnly: ['/admin/entrypoint'],
     internal: ['/internal']
   },
   tsconfig: {
@@ -82,10 +83,11 @@ const installPackage = (consumer: string) => {
   return installed
 }
 
-const allEntries = () => [...CONSUMER.entries.public, ...CONSUMER.entries.internal]
+const loadableEntries = () => [...CONSUMER.entries.public, ...CONSUMER.entries.internal]
+const allEntries = () => [...loadableEntries(), ...CONSUMER.entries.workerdOnly]
 
 const loadEntries = () => `const names = {}
-${allEntries()
+${loadableEntries()
   .map((entry) => `names['${entry}'] = Object.keys(await import('@studiobimo/backstage${entry}'))`)
   .join('\n')}
 console.log(JSON.stringify(names))`
@@ -148,6 +150,7 @@ describe('the packed package', () => {
       linkDependencies(join(packageDir, 'node_modules'), join(consumer, 'node_modules'))
       const imports = [
         ...CONSUMER.entries.public.map((entry, index) => [`entry${index}`, entry] as const),
+        ...CONSUMER.entries.workerdOnly.map((entry, index) => [`workerd${index}`, entry] as const),
         ...CONSUMER.entries.internal.map((entry, index) => [`internal${index}`, entry] as const)
       ]
       const source = imports.map(
@@ -190,6 +193,12 @@ describe('the README', () => {
       const listed = readmeSection(README.heading(entry))
       const unlisted = namesByEntry[entry]!.filter((name) => !listed.includes(`\`${name}\``))
       expect(unlisted, `${entry} exports missing from the README`).toEqual([])
+    }
+  })
+
+  it('lists the class of each workerd-only entry in the README', () => {
+    for (const entry of CONSUMER.entries.workerdOnly) {
+      expect(readmeSection(README.heading(entry))).toContain('`AdminEntrypoint`')
     }
   })
 

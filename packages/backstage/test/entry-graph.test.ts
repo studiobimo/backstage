@@ -13,15 +13,17 @@ const MANIFEST = JSON.parse(readFileSync(join(PACKAGE_DIR, 'package.json'), 'utf
 
 const KIND = {
   d1: /^db\/|^drizzle-orm(\/|$)/,
-  hono: /^hono(\/|$)/
+  hono: /^hono(\/|$)/,
+  workerd: /^cloudflare:/
 } as const
 
 const FORBIDDEN_BY_ENTRY = {
-  '.': [KIND.d1, KIND.hono],
-  './internal': [KIND.d1, KIND.hono],
-  './site': [KIND.d1, KIND.hono],
-  './render': [KIND.d1, KIND.hono],
-  './site/hono': [KIND.d1]
+  '.': [KIND.d1, KIND.hono, KIND.workerd],
+  './internal': [KIND.d1, KIND.hono, KIND.workerd],
+  './site': [KIND.d1, KIND.hono, KIND.workerd],
+  './render': [KIND.d1, KIND.hono, KIND.workerd],
+  './site/hono': [KIND.d1, KIND.workerd],
+  './admin': [KIND.workerd]
 } as const
 
 const specifiersOf = (file: string) =>

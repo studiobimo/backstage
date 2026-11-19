@@ -1,6 +1,7 @@
 # ADR-0001: Two Workers per site, an admin and a site
 
-- **Status:** Accepted
+- **Status:** Accepted. Amended by [ADR-0019](0019-admin-rpc-entrypoint.md): the site may bind to the
+  admin's RPC entrypoint, and to nothing else.
 - **Date:** 2026-11-07
 
 ## Context

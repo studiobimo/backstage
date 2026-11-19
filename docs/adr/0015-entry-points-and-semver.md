@@ -1,6 +1,7 @@
 # ADR-0015: The package has six entries, and SemVer covers only the public ones
 
-- **Status:** Accepted
+- **Status:** Accepted. Amended by [ADR-0019](0019-admin-rpc-entrypoint.md), which adds the
+  `./admin/entrypoint` entry.
 - **Date:** 2026-11-12
 
 ## Context
