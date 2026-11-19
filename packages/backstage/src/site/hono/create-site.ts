@@ -46,6 +46,24 @@ export interface CreateSiteOptions {
 
 const CACHED = { 'Cache-Control': EDGE_CACHE.control } as const
 
+const contentRendererOf =
+  (document: DocumentContext, entryRoutes: ReturnType<typeof routesOf>) =>
+  async (c: Context<SiteEnvironment>) => {
+    const entryPage = await renderEntryRoute(c, document, entryRoutes, CACHED)
+    if (entryPage) return entryPage
+    const route = routeOf(c.req.raw, document.locales)
+    const snapshot = route && (await findPublished(c.env.SITE, route))
+    if (!snapshot) return respondWithError(c, API_ERROR.notFound, CACHED)
+    const [translations, site] = await Promise.all([
+      findTranslations(c.env.SITE, snapshot, document.locales.locales),
+      findSiteSnapshot(c.env.SITE, snapshot.locale)
+    ])
+    return renderPage(
+      { ...document, snapshot, translations, site, siteOrigin: siteOriginOf(c.env) },
+      CACHED
+    )
+  }
+
 export const createSite = (options: CreateSiteOptions) => {
   const {
     components,
@@ -96,21 +114,7 @@ export const createSite = (options: CreateSiteOptions) => {
 
   routes?.(app)
 
-  const renderRoute = async (c: Context<SiteEnvironment>) => {
-    const entryPage = await renderEntryRoute(c, document, entryRoutes, CACHED)
-    if (entryPage) return entryPage
-    const route = routeOf(c.req.raw, locales)
-    const snapshot = route && (await findPublished(c.env.SITE, route))
-    if (!snapshot) return respondWithError(c, API_ERROR.notFound, CACHED)
-    const [translations, site] = await Promise.all([
-      findTranslations(c.env.SITE, snapshot, locales.locales),
-      findSiteSnapshot(c.env.SITE, snapshot.locale)
-    ])
-    return renderPage(
-      { ...document, snapshot, translations, site, siteOrigin: siteOriginOf(c.env) },
-      CACHED
-    )
-  }
+  const renderRoute = contentRendererOf(document, entryRoutes)
 
   app.get('*', async (c) =>
     withEdgeCache(
