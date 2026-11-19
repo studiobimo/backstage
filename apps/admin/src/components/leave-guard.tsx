@@ -12,7 +12,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 
-export function LeaveGuard({ dirty }: { dirty: boolean }) {
+interface LeaveGuardProps {
+  dirty: boolean
+  draft?: { keep: () => void; discard: () => void }
+}
+
+export function LeaveGuard({ dirty, draft }: LeaveGuardProps) {
   const { t } = useTranslation('common')
   const blocker = useBlocker({
     shouldBlockFn: () => dirty,
@@ -27,13 +32,32 @@ export function LeaveGuard({ dirty }: { dirty: boolean }) {
       <AlertDialogPopup>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('leave.title')}</AlertDialogTitle>
-          <AlertDialogDescription>{t('leave.description')}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {t(draft ? 'leave.descriptionDraft' : 'leave.description')}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogClose render={<Button variant="outline" />}>
             {t('leave.stay')}
           </AlertDialogClose>
-          <Button variant="destructive" onClick={() => blocker.proceed?.()}>
+          {draft && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                draft.keep()
+                blocker.proceed?.()
+              }}
+            >
+              {t('leave.keepDraft')}
+            </Button>
+          )}
+          <Button
+            variant="destructive"
+            onClick={() => {
+              draft?.discard()
+              blocker.proceed?.()
+            }}
+          >
             {t('leave.discard')}
           </Button>
         </AlertDialogFooter>

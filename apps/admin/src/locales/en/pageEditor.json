@@ -153,5 +153,10 @@
     "notLive_entry": "Not live. This entry is not published yet.",
     "changedSince_entry": "Live since {{when}}, published by {{name}}. Saved changes are not live yet. Publish to update the entry.",
     "unpublishDescription_entry": "The entry stops being published. Your draft stays here and you can publish it again."
+  },
+  "draft": {
+    "title": "Restored your unsaved draft",
+    "description": "This page had edits you did not save. They are back here, and still only on this device.",
+    "discard": "Discard draft"
   }
 }
