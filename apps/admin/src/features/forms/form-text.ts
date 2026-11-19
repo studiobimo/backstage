@@ -32,14 +32,17 @@ const parseDay = (value: string) => new Date(`${value}T00:00:00Z`)
 export const formatDay = (language: string, value: string, dateStyle: 'full' | 'medium' = 'full') =>
   new Intl.DateTimeFormat(language, { dateStyle, timeZone: 'UTC' }).format(parseDay(value))
 
-const SUMMARY_SEPARATOR = ' · '
 const SCALAR_SHAPES = ['string', 'number', 'integer', 'select']
 
-export const summaryOf = (schema: JsonSchema, payload: Record<string, unknown>, language: string) =>
+const FORM_COLUMNS = { max: 4 } as const
+
+export const columnsOf = (schema: JsonSchema) =>
   fieldEntries(schema)
-    .filter(([key, node]) => SCALAR_SHAPES.includes(classifyField(node)) && payload[key] != null)
-    .map(([key, node]) => {
-      const value = String(payload[key])
-      return node.format === INBOX.dateFormat ? formatDay(language, value, 'medium') : value
-    })
-    .join(SUMMARY_SEPARATOR)
+    .filter(([, node]) => SCALAR_SHAPES.includes(classifyField(node)))
+    .slice(0, FORM_COLUMNS.max)
+
+export const cellText = (node: JsonSchema, value: unknown, language: string) => {
+  if (value === undefined || value === null || value === '') return ''
+  const text = String(value)
+  return node.format === INBOX.dateFormat ? formatDay(language, text, 'medium') : text
+}

@@ -45,7 +45,6 @@
     "title": "Status",
     "current": "Current status",
     "markAs": "Mark as {{status}}",
-    "changed": "Marked as {{status}}",
     "failed": "Could not change the status",
     "updatedBy": "Last changed by {{name}} on {{date}}"
   }

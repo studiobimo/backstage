@@ -17,6 +17,7 @@ import { FieldValue } from './field-value'
 import { fieldEntries, fieldLabel, formTitle, statusLabel } from './form-text'
 import { changeStatusMutation, formsQuery, submissionQuery, type FormOption } from './queries'
 import { StatusBadge } from './status-badge'
+import { useLocalizedForm } from './use-localized-form'
 
 function StatusControl({ form, submission }: { form: FormOption; submission: InboxSubmission }) {
   const { t, i18n } = useTranslation('forms')
@@ -28,7 +29,7 @@ function StatusControl({ form, submission }: { form: FormOption; submission: Inb
       onSuccess: () =>
         toastManager.add({
           type: 'success',
-          title: t('change.changed', { status: statusLabel(i18n, t, status) })
+          title: statusLabel(i18n, t, status)
         }),
       onError: (error) =>
         toastManager.add({
@@ -58,7 +59,9 @@ function StatusControl({ form, submission }: { form: FormOption; submission: Inb
             disabled={change.isPending}
             onClick={() => request(status)}
           >
-            {t('change.markAs', { status: statusLabel(i18n, t, status) })}
+            {t('change.markAs', {
+              status: statusLabel(i18n, t, status).toLocaleLowerCase(i18n.language)
+            })}
           </Button>
         ))}
       </div>
@@ -76,7 +79,7 @@ export function SubmissionPage({ name, submissionId }: SubmissionPageProps) {
   const { defaultLocale } = useLocaleConfig()
   const { data: forms } = useSuspenseQuery(formsQuery)
   const { data } = useSuspenseQuery(submissionQuery(name, submissionId))
-  const form = forms.find((candidate) => candidate.name === name)
+  const form = useLocalizedForm(forms.find((candidate) => candidate.name === name))
   if (!form) {
     return <ListNotice title={t('missing.title')} description={t('missing.description')} />
   }
@@ -99,9 +102,12 @@ export function SubmissionPage({ name, submissionId }: SubmissionPageProps) {
         })}
       />
       <FrameSection title={t('detail.details')}>
-        <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-[minmax(8rem,12rem)_1fr]">
+        <dl className="flex flex-col divide-y">
           {fieldEntries(form.schema).map(([key, node]) => (
-            <div key={key} className="contents">
+            <div
+              key={key}
+              className="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(8rem,12rem)_1fr] sm:gap-6"
+            >
               <dt className="text-muted-foreground">{fieldLabel(key, node)}</dt>
               <dd className="min-w-0 break-words">
                 <FieldValue node={node} value={submission.payload[key]} entries={entries} />
