@@ -38,13 +38,19 @@ Hono-free helpers stay in `./site`, so a site that moves to TanStack Start keeps
 | `contentSecurityPolicy` | no       | sources added to `style-src`, `img-src`, `font-src`, `media-src`, `connect-src`, `script-src` |
 | `favicon`               | no       | a URL, or `{ href, type }`, rendered as `<link rel="icon">` in every page and entry document  |
 | `head`                  | no       | extra elements in a page's `<head>`                                                           |
+| `scripts`               | no       | same-origin module scripts added to every document; adds `script-src 'self'`                  |
 | `routes`                | no       | extra routes, registered before the page route                                                |
 
-**Adding a script.** `default-src 'none'` blocks every script, so a same-origin script needs two
-things: allow it with `contentSecurityPolicy: { scriptSrc: ["'self'"] }`, and load it from `head`,
-for example `head: () => <script src="/assets/app.js" defer />`, served by the site's own assets or
-a route added with `routes`. Inline scripts stay blocked. The favicon needs no policy change: it
-loads under `img-src 'self'`, so a cross-origin one needs its origin in `imgSrc`.
+**Adding a script.** `default-src 'none'` blocks every script, so a same-origin script needs a
+policy entry and a tag. Declare it instead of wiring both by hand: `scripts: ['/cart.js']` adds
+`<script type="module" src>` to every document (pages, entry pages, the block preview and
+`renderInShell` routes), and a block's `clientScript: '/cart.js'` adds it only to documents that
+render that block, once whatever the number of instances. Either one adds `'self'` to `script-src`
+and changes nothing else in the policy. Inline scripts stay blocked, so a script reads its
+configuration from `data-*` attributes. Paths must be same-origin (a full URL or `//host/x` throws),
+and the site serves the file from its own assets or a route added with `routes`. `head` still works
+for a script that needs other attributes, but it receives page snapshots only. The favicon needs no
+policy change: it loads under `img-src 'self'`, so a cross-origin one needs its origin in `imgSrc`.
 
 **A site cannot** relax `default-src`, `base-uri`, `form-action` or `frame-ancestors`, change the
 cache policy, or replace the document shell. A change like that is a change to the package, so every

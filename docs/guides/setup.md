@@ -111,6 +111,44 @@ export default createSite({
 - Register the route in `routes`, which runs before the catch-all page route, and serve the bundle
   from your own route or static assets.
 
+## Enhance server-rendered blocks with a script
+
+For a small interactive piece, such as an order cart on a menu page or an image carousel, keep the
+server-rendered HTML as the source of truth and let a module script enhance it. The block renders
+its data into `data-*` attributes, because inline scripts and inline JSON stay blocked, and the
+script finds them and attaches behaviour.
+
+```tsx
+const menu = defineBlock({ name: 'menu', schema, clientScript: '/cart.js' })
+
+const Menu = ({ items }) => (
+  <ul data-cart>
+    {items.map((item) => (
+      <li key={item.id} data-sku={item.sku} data-price={item.price}>
+        {item.name}
+      </li>
+    ))}
+  </ul>
+)
+```
+
+```ts
+document.querySelectorAll('[data-cart]').forEach(enhanceCart)
+```
+
+- **`clientScript`** on a block loads the script, as `<script type="module">`, only on documents
+  where the block appears, once however many instances there are. The block in a header or footer
+  slot counts.
+- **`createSite({ scripts: ['/analytics.js'] })`** loads a script on every document: pages, entry
+  pages, the block preview and `renderInShell` routes. It is deduplicated against block scripts.
+- **Paths** are same-origin (`/cart.js`); a full URL or a protocol-relative one throws when the site
+  or block is defined. Serve the file from the site's `ASSETS` binding.
+- **CSP.** Declaring either one adds `'self'` to `script-src`. Nothing else in the policy changes,
+  so add `connectSrc` yourself if the script calls `fetch`.
+- **When to use which.** A script that enhances markup the server already rendered belongs here. A
+  route that is an application, such as a seat picker, with its own mount element and bundle, uses
+  `renderInShell` as in the section above.
+
 ## Things a consumer runs into
 
 - **Admin assets config.** Use `"binding": "ASSETS"` and

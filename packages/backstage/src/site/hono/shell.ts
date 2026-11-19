@@ -2,14 +2,13 @@ import type { Context } from 'hono'
 import type { ReactNode } from 'react'
 
 import type { Locale } from '../../locales.ts'
+import { assertSameOriginPaths } from '../../client-scripts.ts'
 import { findSiteSnapshot } from '../store.ts'
 import type { SiteEnvironment } from './create-site.ts'
 import { renderShell } from './document.tsx'
 import { siteOriginOf } from './origin.ts'
 
-const SCRIPT_PATH = { prefix: '/', protocolRelativePrefix: '//' } as const
-
-const INVALID_SCRIPT_MESSAGE = 'renderInShell scripts must be same-origin paths such as /app.js'
+const SHELL_SCRIPTS_OWNER = 'renderInShell scripts'
 
 export interface ShellOptions {
   locale: Locale
@@ -20,12 +19,9 @@ export interface ShellOptions {
   translations?: Readonly<Record<Locale, string>>
 }
 
-const isSameOriginPath = (script: string) =>
-  script.startsWith(SCRIPT_PATH.prefix) && !script.startsWith(SCRIPT_PATH.protocolRelativePrefix)
-
 export const renderInShell = async (c: Context<SiteEnvironment>, options: ShellOptions) => {
   const { locale, title, description = '', body, scripts = [], translations = {} } = options
-  if (!scripts.every(isSameOriginPath)) throw new Error(INVALID_SCRIPT_MESSAGE)
+  assertSameOriginPaths(SHELL_SCRIPTS_OWNER, scripts)
   return renderShell(
     {
       ...c.get('siteDocument'),

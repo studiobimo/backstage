@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { fieldIssuesOf, type FieldIssue } from './errors.ts'
 import { referencePlacesIn, unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
+import { assertSameOriginPaths } from './client-scripts.ts'
 import { assertCollection, type Collection } from './collections.ts'
 import { assertRoutesAvailable } from './entry-pages.ts'
 import type { Form } from './forms.ts'
@@ -27,6 +28,7 @@ export interface BlockDefinition<S extends z.ZodType = z.ZodType, N extends stri
   version?: number
   schema: S
   migrate?: (content: unknown, fromVersion: number) => unknown
+  clientScript?: string
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
 }
@@ -43,6 +45,9 @@ export function defineBlock<S extends z.ZodType, const N extends string>(
 ): Block<S, N> {
   if (!NAME_PATTERN.test(definition.name)) {
     throw new Error(`Block name "${definition.name}" must be lowercase letters, digits and hyphens`)
+  }
+  if (definition.clientScript !== undefined) {
+    assertSameOriginPaths(`Block "${definition.name}" clientScript`, [definition.clientScript])
   }
   return { ...definition, version: definition.version ?? 1 }
 }
