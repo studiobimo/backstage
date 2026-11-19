@@ -1,25 +1,35 @@
 import { MEDIA } from '@studiobimo/backstage'
 import { mediaAltSchema, mediaTypes, perLocaleKeys } from '@studiobimo/backstage/internal'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { CircleAlertIcon, LoaderCircleIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useAppForm } from '@/components/form/app-form'
 import { fieldErrorsOf } from '@/components/form/locale-errors'
-import { FrameSection } from '@/components/frame-section'
 import { LocaleTabs } from '@/components/form/locale-tabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import {
+  Progress,
+  ProgressLabel,
+  ProgressTrack,
+  ProgressIndicator,
+  ProgressValue
+} from '@/components/ui/progress'
 import { toastManager } from '@/components/ui/toast'
 import { useLocaleConfig } from '@/features/config/queries'
 import { useApiErrorMessage } from '@/lib/api-feedback'
 
 import { languageName } from '../block-form/locale-status'
+import { ImageCard } from './image-card'
+import { imageDetailOf } from './media-details'
 import { ImageRejected, processImage, type ProcessedImage } from './process-image'
 import { uploadMediaMutation } from './queries'
+
+const PERCENT = 100
 
 const emptyValuesOf = (locales: readonly string[]) => ({
   decorative: false,
@@ -62,7 +72,8 @@ function useUploadForm(selection: Selection, onUploaded: () => void) {
   const { t } = useTranslation('media')
   const messageOf = useApiErrorMessage()
   const [failure, setFailure] = useState<string>()
-  const upload = useMutation(uploadMediaMutation)
+  const upload = useMutation(uploadMediaMutation(useQueryClient()))
+  const [progress, setProgress] = useState(0)
   const { locales } = useLocaleConfig()
   const form = useAppForm({
     defaultValues: emptyValuesOf(locales),
@@ -72,9 +83,11 @@ function useUploadForm(selection: Selection, onUploaded: () => void) {
     onSubmit: async ({ value }) => {
       if (selection.status !== 'ready') return
       setFailure(undefined)
+      setProgress(0)
       try {
         await upload.mutateAsync({
           image: selection.image,
+          onProgress: setProgress,
           ...mediaAltSchema(locales).parse(value)
         })
         toastManager.add({ type: 'success', title: t('uploaded.title') })
@@ -85,31 +98,20 @@ function useUploadForm(selection: Selection, onUploaded: () => void) {
       }
     }
   })
-  return { form, failure }
+  return { form, failure, progress }
 }
 
 type UploadFormApi = ReturnType<typeof useUploadForm>['form']
 
 function Preview({ image, url }: { image: ProcessedImage; url: string }) {
-  const { t } = useTranslation('media')
+  const { t, i18n } = useTranslation('media')
   return (
-    <figure className="flex items-center gap-4">
-      <img
-        src={url}
-        alt=""
-        width={image.width}
-        height={image.height}
-        className="size-24 rounded-lg border object-cover"
-      />
-      <figcaption className="text-muted-foreground text-sm">
-        {t('preview.details', {
-          name: image.file.name,
-          width: image.width,
-          height: image.height,
-          size: Math.ceil(image.file.size / 1024)
-        })}
-      </figcaption>
-    </figure>
+    <ImageCard
+      className="w-40"
+      src={url}
+      name={image.file.name}
+      detail={imageDetailOf({ ...image, size: image.file.size }, i18n.language, t)}
+    />
   )
 }
 
@@ -176,51 +178,71 @@ function AltTabs({ form }: { form: UploadFormApi }) {
   )
 }
 
-export function UploadForm() {
+function UploadProgress({ fraction }: { fraction: number }) {
+  const { t } = useTranslation('media')
+  return (
+    <Progress value={Math.round(fraction * PERCENT)}>
+      <div className="flex items-center justify-between gap-2">
+        <ProgressLabel>{t('upload.progress')}</ProgressLabel>
+        <ProgressValue />
+      </div>
+      <ProgressTrack>
+        <ProgressIndicator />
+      </ProgressTrack>
+    </Progress>
+  )
+}
+
+export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
   const { t } = useTranslation('media')
   const { selection, select, clear, pickerKey } = useSelection()
-  const { form, failure } = useUploadForm(selection, clear)
+  const { form, failure, progress } = useUploadForm(selection, () => {
+    clear()
+    onUploaded()
+  })
   return (
-    <FrameSection title={t('upload.heading')} description={t('upload.description')}>
-      <form
-        className="flex max-w-xl flex-col gap-6"
-        onSubmit={(event) => {
-          event.preventDefault()
-          void form.handleSubmit()
-        }}
-      >
-        <Picker key={pickerKey} onSelect={(file) => void select(file)} />
-        <SelectionStatus selection={selection} />
-        {selection.status === 'ready' && (
+    <form
+      className="flex flex-col gap-6"
+      onSubmit={(event) => {
+        event.preventDefault()
+        void form.handleSubmit()
+      }}
+    >
+      <Picker key={pickerKey} onSelect={(file) => void select(file)} />
+      <SelectionStatus selection={selection} />
+      {selection.status === 'ready' && (
+        <>
+          <form.AppField name="decorative">
+            {(field) => (
+              <field.SwitchField
+                card
+                label={t('decorative.label')}
+                description={t('decorative.hint')}
+              />
+            )}
+          </form.AppField>
+          <form.Subscribe selector={(state) => state.values.decorative}>
+            {(decorative) => !decorative && <AltTabs form={form} />}
+          </form.Subscribe>
+        </>
+      )}
+      {failure && (
+        <p role="alert" className="text-destructive-foreground text-sm">
+          {failure}
+        </p>
+      )}
+      <form.Subscribe selector={(state) => state.isSubmitting}>
+        {(submitting) => (
           <>
-            <form.AppField name="decorative">
-              {(field) => (
-                <field.SwitchField
-                  label={t('decorative.label')}
-                  description={t('decorative.hint')}
-                />
-              )}
-            </form.AppField>
-            <form.Subscribe selector={(state) => state.values.decorative}>
-              {(decorative) => !decorative && <AltTabs form={form} />}
-            </form.Subscribe>
-          </>
-        )}
-        {failure && (
-          <p role="alert" className="text-destructive-foreground text-sm">
-            {failure}
-          </p>
-        )}
-        <div>
-          <form.Subscribe selector={(state) => state.isSubmitting}>
-            {(submitting) => (
+            {submitting && <UploadProgress fraction={progress} />}
+            <div>
               <Button type="submit" disabled={selection.status !== 'ready' || submitting}>
                 {t('submit')}
               </Button>
-            )}
-          </form.Subscribe>
-        </div>
-      </form>
-    </FrameSection>
+            </div>
+          </>
+        )}
+      </form.Subscribe>
+    </form>
   )
 }

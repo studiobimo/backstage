@@ -1,6 +1,7 @@
 {
-  "title": "Subir imágenes",
-  "description": "Añade fotos para reutilizarlas en tus páginas. Cada una necesita una descripción en cada idioma, salvo que sea solo decorativa.",
+  "title": "Medios",
+  "description": "Explora, busca y reutiliza las imágenes de tu sitio. Cada imagen necesita una descripción en cada idioma, salvo que sea solo decorativa.",
+  "details": "{{width}} × {{height}} px · {{size}}",
   "locales": {
     "en": "English",
     "es": "Español"
@@ -17,8 +18,14 @@
     "too_large": "La imagen es demasiado grande, incluso reducida. Prueba con una más pequeña.",
     "unreadable": "Tu navegador no pudo leer esta imagen. Puede estar dañada."
   },
-  "preview": {
-    "details": "{{name}} · {{width}} × {{height}} px · {{size}} KB"
+  "altStatus": {
+    "described": "Con descripción",
+    "missing": "Falta descripción",
+    "decorative": "Decorativa"
+  },
+  "storage": {
+    "label": "Almacenamiento usado",
+    "value": "{{used}} de {{budget}}"
   },
   "decorative": {
     "label": "Imagen decorativa",
@@ -31,13 +38,33 @@
   },
   "upload": {
     "heading": "Nueva imagen",
-    "description": "Elige un archivo y descríbelo en cada idioma."
+    "description": "Elige un archivo y descríbelo en cada idioma.",
+    "progress": "Subiendo"
   },
   "submit": "Subir imagen",
   "uploaded": {
     "title": "Imagen subida"
   },
+  "delete": {
+    "title": "¿Eliminar {{name}}?",
+    "description": "La imagen se quita de la biblioteca para siempre. Las imágenes en uso no se pueden eliminar.",
+    "cancel": "Cancelar",
+    "confirm": "Eliminar imagen"
+  },
+  "usage": {
+    "page": "Una página",
+    "entry": "Una entrada de colección",
+    "site": "Los ajustes y el diseño del sitio"
+  },
   "library": {
+    "heading": "Biblioteca",
+    "count_one": "1 imagen",
+    "count_other": "{{count}} imágenes",
+    "searchLabel": "Buscar imágenes",
+    "searchPlaceholder": "Buscar imágenes",
+    "noMatchTitle": "Ninguna imagen coincide",
+    "noMatchDescription": "Prueba con otro nombre de archivo o una palabra de la descripción.",
+    "delete": "Eliminar {{name}}",
     "title": "Elige una imagen",
     "description": "Elige una de las imágenes que subiste.",
     "label": "Imágenes subidas",
