@@ -93,3 +93,36 @@ above are checked on every pull request.
   block preview, renders an `<h1>` of the page title before the blocks. Neither is in a slot, so
   style the nav from your stylesheet, and leave the page title out of your blocks' own headings if
   you do not want two `h1`s. There is no option to turn either off yet.
+
+## Protect a public form with Turnstile
+
+1. Create a Turnstile widget in the Cloudflare dashboard and note its site key and secret key.
+2. Store the secret on the site Worker, never in the repository:
+   `pnpm exec wrangler secret put TURNSTILE_SECRET` (add `--env <env>` for a deployed environment).
+   The site key is public and can sit in `vars` or in your block's markup.
+3. Pass `turnstile: true` to `createSite`. It adds `https://challenges.cloudflare.com` to
+   `script-src` and `frame-src` and nothing else, so the widget script loads and its iframe
+   renders under the package's policy. The rest of the policy is unchanged, and
+   `contentSecurityPolicy` still takes the other additions.
+
+   ```ts
+   export default createSite({ components, stylesheet, turnstile: true })
+   ```
+
+4. Render the widget in your form: load `https://challenges.cloudflare.com/turnstile/v0/api.js`
+   and add `<div class="cf-turnstile" data-sitekey="...">`. The widget adds a
+   `cf-turnstile-response` field to the form.
+5. Verify on the server before acting on the submission. `verifyTurnstile` is exported from
+   `@studiobimo/backstage/site` and does not depend on Hono:
+
+   ```ts
+   const result = await verifyTurnstile({
+     token: form.get('cf-turnstile-response')?.toString(),
+     secret: c.env.TURNSTILE_SECRET,
+     ip: c.req.header('CF-Connecting-IP')
+   })
+   if (!result.success) return respondWithError(c, API_ERROR.forbidden)
+   ```
+
+   `result.reason` is `missing-token`, `rejected` or `unavailable` (siteverify could not be reached
+   or answered something unexpected). Treat all three as a refusal.

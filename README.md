@@ -133,6 +133,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Responses: `renderHtml`, `respondWithMedia`, `defaultEdgeCache`, `EDGE_CACHE`, `withEdgeCache`, and the
   `Deferrable`, `EdgeCache`, `MediaObject` and `MediaReader` types
 - Locales: `localeName`, `LOCALE_NAME`, `switcherLabel`, `SWITCHER_LABEL`
+- Turnstile: `verifyTurnstile`, `TURNSTILE`, and the `TurnstileCheck`, `TurnstileFailure` and
+  `TurnstileResult` types
 - `BLOCK_PREVIEW`, and the `SiteEnv` type of the Worker's bindings
 
 ### `@studiobimo/backstage/site/hono`

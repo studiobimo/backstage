@@ -3,6 +3,7 @@ import { secureHeaders } from 'hono/secure-headers'
 
 import { BLOCK_PREVIEW } from '../../blocks.ts'
 import type { SiteEnv } from '../index.ts'
+import { TURNSTILE } from '../turnstile.ts'
 
 const ADDITION_KEYS = [
   'styleSrc',
@@ -10,18 +11,25 @@ const ADDITION_KEYS = [
   'fontSrc',
   'mediaSrc',
   'connectSrc',
-  'scriptSrc'
+  'scriptSrc',
+  'frameSrc'
 ] as const
 
 type AdditionKey = (typeof ADDITION_KEYS)[number]
 
-export type ContentSecurityPolicyAdditions = Partial<Record<AdditionKey, readonly string[]>>
+type PolicyAdditions = Partial<Record<AdditionKey, readonly string[]>>
+
+export type ContentSecurityPolicyAdditions = Omit<PolicyAdditions, 'frameSrc'>
+
+export interface SecurityOptions {
+  turnstile?: boolean
+}
 
 const SELF = ["'self'"]
 const NONE = ["'none'"]
 const SELF_BY_DEFAULT: readonly AdditionKey[] = ['styleSrc', 'imgSrc', 'fontSrc']
 
-const sourcesFor = (additions: ContentSecurityPolicyAdditions) =>
+const sourcesFor = (additions: PolicyAdditions) =>
   Object.fromEntries(
     ADDITION_KEYS.map((key) => [
       key,
@@ -30,7 +38,7 @@ const sourcesFor = (additions: ContentSecurityPolicyAdditions) =>
   )
 
 const headersFor = (
-  additions: ContentSecurityPolicyAdditions,
+  additions: PolicyAdditions,
   frameAncestors: string[],
   xFrameOptions: 'DENY' | false,
   resourcePolicy: 'same-origin' | 'cross-origin' = 'same-origin'
@@ -53,7 +61,19 @@ const isPreviewPath = (path: string) => path.startsWith(`${BLOCK_PREVIEW.path}/`
 const isThumbnailPath = (path: string) =>
   isPreviewPath(path) && path.endsWith(`/${BLOCK_PREVIEW.thumbnailFile}`)
 
-export const securityHeaders = (additions: ContentSecurityPolicyAdditions = {}) => {
+const withTurnstile = (additions: ContentSecurityPolicyAdditions): PolicyAdditions => ({
+  ...additions,
+  scriptSrc: [...(additions.scriptSrc ?? []), TURNSTILE.origin],
+  frameSrc: [TURNSTILE.origin]
+})
+
+export const securityHeaders = (
+  contentSecurityPolicy: ContentSecurityPolicyAdditions = {},
+  { turnstile = false }: SecurityOptions = {}
+) => {
+  const additions: PolicyAdditions = turnstile
+    ? withTurnstile(contentSecurityPolicy)
+    : contentSecurityPolicy
   const denyFraming = headersFor(additions, NONE, 'DENY')
   return createMiddleware<{ Bindings: SiteEnv }>((c, next) => {
     const adminOrigin = c.env.ADMIN_ORIGIN

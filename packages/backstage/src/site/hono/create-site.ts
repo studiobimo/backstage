@@ -29,6 +29,7 @@ export interface CreateSiteOptions {
   stylesheet: string
   preview?: SitePreview
   contentSecurityPolicy?: ContentSecurityPolicyAdditions
+  turnstile?: boolean
   favicon?: SiteFavicon
   head?: SiteHead
   routes?: (app: SiteApp) => void
@@ -37,7 +38,16 @@ export interface CreateSiteOptions {
 const CACHED = { 'Cache-Control': EDGE_CACHE.control } as const
 
 export const createSite = (options: CreateSiteOptions) => {
-  const { components, stylesheet, preview, contentSecurityPolicy, favicon, head, routes } = options
+  const {
+    components,
+    stylesheet,
+    preview,
+    contentSecurityPolicy,
+    turnstile,
+    favicon,
+    head,
+    routes
+  } = options
   const locales = resolveLocaleConfig(components.registry)
   const document: DocumentContext = {
     components,
@@ -50,7 +60,7 @@ export const createSite = (options: CreateSiteOptions) => {
   const app: SiteApp = new Hono<{ Bindings: SiteEnv }>()
 
   app.use(...observe)
-  app.use(securityHeaders(contentSecurityPolicy))
+  app.use(securityHeaders(contentSecurityPolicy, { turnstile }))
 
   app.get(OBSERVABILITY.health.path, respondHealthy)
   app.get(SEO.sitemapPath, (c) =>
