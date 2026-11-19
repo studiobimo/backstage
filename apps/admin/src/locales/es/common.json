@@ -29,7 +29,8 @@
     "toggle": "Mostrar u ocultar la barra lateral",
     "groups": {
       "workspace": "Espacio de trabajo",
-      "collections": "Colecciones"
+      "collections": "Colecciones",
+      "forms": "Formularios"
     },
     "sections": {
       "pages": {
@@ -53,6 +54,9 @@
       },
       "collections": {
         "title": "Colecciones"
+      },
+      "forms": {
+        "title": "Formularios"
       }
     }
   },

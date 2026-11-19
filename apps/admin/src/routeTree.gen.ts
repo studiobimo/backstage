@@ -11,10 +11,12 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as TypeRouteImport } from './routes/type'
 import { Route as CollectionsNameRouteImport } from './routes/collections.$name'
+import { Route as FormsNameRouteImport } from './routes/forms.$name'
 import { Route as PagesPageIdRouteImport } from './routes/pages_.$pageId'
 import { Route as SettingsUsersRouteImport } from './routes/settings_.users'
 import { Route as CollectionsNameEntryIdRouteImport } from './routes/collections_.$name.$entryId'
 import { Route as CollectionsNameNewRouteImport } from './routes/collections_.$name.new'
+import { Route as FormsNameSubmissionIdRouteImport } from './routes/forms_.$name.$submissionId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -56,6 +58,11 @@ const CollectionsNameRoute = CollectionsNameRouteImport.update({
   path: '/collections/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FormsNameRoute = FormsNameRouteImport.update({
+  id: '/forms/$name',
+  path: '/forms/$name',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PagesPageIdRoute = PagesPageIdRouteImport.update({
   id: '/pages_/$pageId',
   path: '/pages/$pageId',
@@ -76,6 +83,11 @@ const CollectionsNameNewRoute = CollectionsNameNewRouteImport.update({
   path: '/collections/$name/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FormsNameSubmissionIdRoute = FormsNameSubmissionIdRouteImport.update({
+  id: '/forms_/$name/$submissionId',
+  path: '/forms/$name/$submissionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,10 +98,12 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
+  '/forms/$name': typeof FormsNameRoute
   '/pages/$pageId': typeof PagesPageIdRoute
   '/settings/users': typeof SettingsUsersRoute
   '/collections/$name/$entryId': typeof CollectionsNameEntryIdRoute
   '/collections/$name/new': typeof CollectionsNameNewRoute
+  '/forms/$name/$submissionId': typeof FormsNameSubmissionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,10 +114,12 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
+  '/forms/$name': typeof FormsNameRoute
   '/pages/$pageId': typeof PagesPageIdRoute
   '/settings/users': typeof SettingsUsersRoute
   '/collections/$name/$entryId': typeof CollectionsNameEntryIdRoute
   '/collections/$name/new': typeof CollectionsNameNewRoute
+  '/forms/$name/$submissionId': typeof FormsNameSubmissionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,10 +131,12 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/type': typeof TypeRoute
   '/collections/$name': typeof CollectionsNameRoute
+  '/forms/$name': typeof FormsNameRoute
   '/pages_/$pageId': typeof PagesPageIdRoute
   '/settings_/users': typeof SettingsUsersRoute
   '/collections_/$name/$entryId': typeof CollectionsNameEntryIdRoute
   '/collections_/$name/new': typeof CollectionsNameNewRoute
+  '/forms_/$name/$submissionId': typeof FormsNameSubmissionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,10 +149,12 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/type'
     | '/collections/$name'
+    | '/forms/$name'
     | '/pages/$pageId'
     | '/settings/users'
     | '/collections/$name/$entryId'
     | '/collections/$name/new'
+    | '/forms/$name/$submissionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -145,10 +165,12 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/type'
     | '/collections/$name'
+    | '/forms/$name'
     | '/pages/$pageId'
     | '/settings/users'
     | '/collections/$name/$entryId'
     | '/collections/$name/new'
+    | '/forms/$name/$submissionId'
   id:
     | '__root__'
     | '/'
@@ -159,10 +181,12 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/type'
     | '/collections/$name'
+    | '/forms/$name'
     | '/pages_/$pageId'
     | '/settings_/users'
     | '/collections_/$name/$entryId'
     | '/collections_/$name/new'
+    | '/forms_/$name/$submissionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -174,10 +198,12 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   TypeRoute: typeof TypeRoute
   CollectionsNameRoute: typeof CollectionsNameRoute
+  FormsNameRoute: typeof FormsNameRoute
   PagesPageIdRoute: typeof PagesPageIdRoute
   SettingsUsersRoute: typeof SettingsUsersRoute
   CollectionsNameEntryIdRoute: typeof CollectionsNameEntryIdRoute
   CollectionsNameNewRoute: typeof CollectionsNameNewRoute
+  FormsNameSubmissionIdRoute: typeof FormsNameSubmissionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -238,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forms/$name': {
+      id: '/forms/$name'
+      path: '/forms/$name'
+      fullPath: '/forms/$name'
+      preLoaderRoute: typeof FormsNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pages_/$pageId': {
       id: '/pages_/$pageId'
       path: '/pages/$pageId'
@@ -266,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsNameNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forms_/$name/$submissionId': {
+      id: '/forms_/$name/$submissionId'
+      path: '/forms/$name/$submissionId'
+      fullPath: '/forms/$name/$submissionId'
+      preLoaderRoute: typeof FormsNameSubmissionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -278,10 +318,12 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   TypeRoute: TypeRoute,
   CollectionsNameRoute: CollectionsNameRoute,
+  FormsNameRoute: FormsNameRoute,
   PagesPageIdRoute: PagesPageIdRoute,
   SettingsUsersRoute: SettingsUsersRoute,
   CollectionsNameEntryIdRoute: CollectionsNameEntryIdRoute,
   CollectionsNameNewRoute: CollectionsNameNewRoute,
+  FormsNameSubmissionIdRoute: FormsNameSubmissionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

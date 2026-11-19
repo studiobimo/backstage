@@ -121,6 +121,7 @@ export {
   formDescriptionSchema,
   formsResponseSchema,
   INBOX,
+  inboxFilterSchema,
   submissionResponseSchema,
   submissionSchema,
   submissionsResponseSchema,
