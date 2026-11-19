@@ -9,6 +9,7 @@ import {
 import { type JsonSchema, parseBlockSchema } from '../block-form/spec'
 import type { LocaleStatus } from '../block-form/locale-status'
 import { initialGroup } from '../block-form/value'
+import { moveItem } from '@/lib/move-item'
 
 export interface PageDraft {
   blocks: PageBlock[]
@@ -47,11 +48,7 @@ export const duplicateAt = (blocks: PageBlock[], index: number): PageBlock[] => 
 export const removeAt = (blocks: PageBlock[], index: number): PageBlock[] =>
   blocks.filter((_, position) => position !== index)
 
-export const moveBlock = (blocks: PageBlock[], from: number, to: number): PageBlock[] => {
-  const next = [...blocks]
-  next.splice(to, 0, ...next.splice(from, 1))
-  return next
-}
+export const moveBlock = moveItem<PageBlock>
 
 export const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 

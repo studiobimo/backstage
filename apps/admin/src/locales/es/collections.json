@@ -18,7 +18,8 @@
       "options": {
         "label": "Título",
         "updated": "Último guardado",
-        "published": "Estado de publicación"
+        "published": "Estado de publicación",
+        "manual": "Orden manual"
       }
     },
     "columns": {
@@ -38,6 +39,10 @@
     "description": "Se elimina la entrada y, si estaba en línea, se despublica. No se puede deshacer.",
     "cancel": "Cancelar",
     "confirm": "Eliminar entrada"
+  },
+  "reorder": {
+    "hint": "Arrastra el asa junto a una entrada, o enfócala y pulsa Espacio, para fijar el orden. Se republican las páginas que muestran estas entradas.",
+    "failed": "No se pudo guardar el orden. Se ha restaurado."
   },
   "missing": {
     "title": "Colección no encontrada",

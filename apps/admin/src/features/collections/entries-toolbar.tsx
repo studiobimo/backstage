@@ -5,7 +5,13 @@ import { IconButton } from '@/components/icon-button'
 import { SearchField } from '@/components/search-field'
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { ENTRY_SORTS, type EntrySort, SORT_DIRECTION, type SortDirection } from './entry-filters'
+import {
+  ENTRY_SORT,
+  ENTRY_SORTS,
+  type EntrySort,
+  SORT_DIRECTION,
+  type SortDirection
+} from './entry-filters'
 import { CONTROL_WIDTH } from '@/lib/content-width'
 
 interface EntriesToolbarProps {
@@ -53,15 +59,17 @@ export function EntriesToolbar({
             ))}
           </SelectPopup>
         </Select>
-        <IconButton
-          variant="outline"
-          label={t(ascending ? 'list.sort.ascending' : 'list.sort.descending')}
-          onClick={() =>
-            onDirectionChange(ascending ? SORT_DIRECTION.descending : SORT_DIRECTION.ascending)
-          }
-        >
-          {ascending ? <ArrowUpIcon aria-hidden /> : <ArrowDownIcon aria-hidden />}
-        </IconButton>
+        {sort !== ENTRY_SORT.manual && (
+          <IconButton
+            variant="outline"
+            label={t(ascending ? 'list.sort.ascending' : 'list.sort.descending')}
+            onClick={() =>
+              onDirectionChange(ascending ? SORT_DIRECTION.descending : SORT_DIRECTION.ascending)
+            }
+          >
+            {ascending ? <ArrowUpIcon aria-hidden /> : <ArrowDownIcon aria-hidden />}
+          </IconButton>
+        )}
       </div>
     </div>
   )

@@ -82,6 +82,11 @@ describe('visibleEntries', () => {
     expect(sorted(ENTRY_SORT.updated)).toEqual(['apple', 'cherry', 'banana'])
   })
 
+  it('follows the manual position and ignores the direction', () => {
+    expect(sorted(ENTRY_SORT.manual)).toEqual(['cherry', 'banana', 'apple'])
+    expect(sorted(ENTRY_SORT.manual, true)).toEqual(['cherry', 'banana', 'apple'])
+  })
+
   it('sorts published entries before changed ones before drafts', () => {
     expect(sorted(ENTRY_SORT.published)).toEqual(['apple', 'cherry', 'banana'])
     expect(sorted(ENTRY_SORT.published, true)).toEqual(['banana', 'cherry', 'apple'])

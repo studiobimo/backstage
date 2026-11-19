@@ -18,7 +18,8 @@
       "options": {
         "label": "Title",
         "updated": "Last saved",
-        "published": "Published state"
+        "published": "Published state",
+        "manual": "Manual order"
       }
     },
     "columns": {
@@ -38,6 +39,10 @@
     "description": "The entry is removed, and unpublished if it was live. This cannot be undone.",
     "cancel": "Cancel",
     "confirm": "Delete entry"
+  },
+  "reorder": {
+    "hint": "Drag the handle beside an entry, or focus it and press Space, to set the order. Lists that show these entries are republished.",
+    "failed": "The order could not be saved. It has been restored."
   },
   "missing": {
     "title": "Collection not found",
