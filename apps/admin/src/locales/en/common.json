@@ -103,6 +103,7 @@
     "unsupported_media": "Only JPEG, PNG, WebP and AVIF images are accepted.",
     "unsupported_content_type": "The request was not understood. Reload the page and try again.",
     "media_in_use": "This image is still in use. Remove it from the places below first.",
+    "turnstile_failed": "The verification failed. Try again.",
     "not_found": "This item no longer exists.",
     "internal": "Something went wrong on the server. Try again in a moment.",
     "dev_auth_outside_local": "The server is misconfigured. Tell whoever runs this site.",

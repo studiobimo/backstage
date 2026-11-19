@@ -4,6 +4,7 @@ import { fieldIssuesOf, type FieldIssue } from './errors.ts'
 import { referencePlacesIn, unrenderableFieldIn, type SchemaNode } from './field-shapes.ts'
 import { assertCollection, type Collection } from './collections.ts'
 import { assertRoutesAvailable } from './entry-pages.ts'
+import type { Form } from './forms.ts'
 import { resolveLocaleConfig, type LocaleConfig } from './locales.ts'
 
 export const NAME_PATTERN = /^[a-z][a-z0-9-]*$/
@@ -67,8 +68,10 @@ export function defineLayout<const N extends string>(
 export interface RegistryOptions<
   L extends readonly LayoutDefinition[] = readonly LayoutDefinition[],
   C extends readonly Collection[] = readonly Collection[],
-  S extends z.ZodType | undefined = z.ZodType | undefined
+  S extends z.ZodType | undefined = z.ZodType | undefined,
+  F extends readonly Form[] = readonly Form[]
 > extends Partial<LocaleConfig> {
+  forms?: F
   slots?: Readonly<Record<string, readonly string[]>>
   layouts?: L
   collections?: C
@@ -99,6 +102,12 @@ export interface CollectionRegistry<C extends readonly Collection[] = readonly C
   readonly collections: ReadonlyMap<string, Collection>
   getCollection(name: string): Collection | undefined
   collectionJsonSchema(name: string): z.core.JSONSchema.BaseSchema
+}
+
+export interface FormRegistry<F extends readonly Form[] = readonly Form[]> {
+  readonly __forms?: F
+  readonly forms: ReadonlyMap<string, Form>
+  getForm(name: string): Form | undefined
 }
 
 function indexByName<T extends { name: string }>(items: readonly T[], kind: string) {
@@ -164,15 +173,18 @@ function assertSettings(settings: z.ZodType | undefined) {
 
 function assertReferences(
   blocks: ReadonlyMap<string, Block>,
-  collections: ReadonlyMap<string, Collection>
+  collections: ReadonlyMap<string, Collection>,
+  forms: ReadonlyMap<string, Form>
 ) {
-  for (const block of blocks.values()) {
-    for (const { path, collection } of referencePlacesIn(
-      schemaNodeOf(block.schema) as SchemaNode
-    )) {
+  const referrers = [
+    ...[...blocks.values()].map((block) => ({ kind: 'Block', ...block })),
+    ...[...forms.values()].map((form) => ({ kind: 'Form', ...form }))
+  ]
+  for (const { kind, name, schema } of referrers) {
+    for (const { path, collection } of referencePlacesIn(schemaNodeOf(schema) as SchemaNode)) {
       if (!collections.has(collection)) {
         throw new Error(
-          `Block "${block.name}" field "${path || '(root)'}" refers to the unknown collection "${collection}"`
+          `${kind} "${name}" field "${path || '(root)'}" refers to the unknown collection "${collection}"`
         )
       }
     }
@@ -191,13 +203,15 @@ export function defineRegistry<
   const B extends readonly Block[],
   const L extends readonly LayoutDefinition[] = readonly [],
   const C extends readonly Collection[] = readonly [],
-  const S extends z.ZodType | undefined = undefined
+  const S extends z.ZodType | undefined = undefined,
+  const F extends readonly Form[] = readonly []
 >(
   blocks: B,
-  options: RegistryOptions<L, C, S> = {}
-): Registry<B, L> & CollectionRegistry<C> & SettingsRegistry<S> {
+  options: RegistryOptions<L, C, S, F> = {}
+): Registry<B, L> & CollectionRegistry<C> & SettingsRegistry<S> & FormRegistry<F> {
   const {
     slots = {},
+    forms = [] as unknown as F,
     layouts = [] as unknown as L,
     collections = [] as unknown as C,
     settings,
@@ -212,7 +226,8 @@ export function defineRegistry<
   const collectionsByName = indexByName(collections, 'Collection')
   collectionsByName.forEach(assertCollection)
   assertRoutesAvailable(collectionsByName.values(), locales)
-  assertReferences(byName, collectionsByName)
+  const formsByName = indexByName(forms, 'Form')
+  assertReferences(byName, collectionsByName, formsByName)
   assertSettings(settings)
   return {
     settings: settings as S,
@@ -222,6 +237,8 @@ export function defineRegistry<
     slots: bySlot,
     layouts: layoutsByName,
     collections: collectionsByName,
+    forms: formsByName,
+    getForm: (name) => formsByName.get(name),
     get: (name) => byName.get(name),
     getCollection: (name) => collectionsByName.get(name),
     isSlotBlock: (name) => slotBlocks.has(name),

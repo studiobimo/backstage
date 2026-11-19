@@ -52,6 +52,11 @@ export const API_ERROR = {
     status: 409,
     message: 'This image is used and cannot be deleted'
   },
+  turnstileFailed: {
+    code: 'turnstile_failed',
+    status: 403,
+    message: 'The verification failed. Try again'
+  },
   notFound: { code: 'not_found', status: 404, message: 'Not found' },
   internal: { code: 'internal', status: 500, message: 'Internal error' },
   devAuthOutsideLocal: {

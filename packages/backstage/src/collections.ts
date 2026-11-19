@@ -5,6 +5,7 @@ import {
   NAME_PATTERN,
   schemaNodeOf,
   type CollectionRegistry,
+  type FormRegistry,
   type SettingsRegistry,
   type Registry
 } from './blocks.ts'
@@ -111,7 +112,10 @@ export interface CollectionDescription {
   description?: Readonly<Record<string, string>>
 }
 
-export type AdminRegistry = Registry & Partial<CollectionRegistry> & Partial<SettingsRegistry>
+export type AdminRegistry = Registry &
+  Partial<CollectionRegistry> &
+  Partial<SettingsRegistry> &
+  Partial<FormRegistry>
 
 export const collectionsOf = ({ collections }: Partial<CollectionRegistry>) =>
   collections ?? new Map<string, Collection>()

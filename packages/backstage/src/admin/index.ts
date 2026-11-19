@@ -9,7 +9,7 @@ import { OBSERVABILITY, observe, reportError, respondHealthy } from '../observab
 import type { AdminRegistry } from '../collections.ts'
 import { requireAccess } from './auth.ts'
 import { authRoutes } from './auth-routes.ts'
-import { cloudflareMailer, type LoginMailer } from './mailer.ts'
+import { cloudflareMailer, type Mailer } from './mailer.ts'
 import { requireBindings, type AdminEnv } from './env.ts'
 import { respondWithError } from './respond.ts'
 import { serveSpa } from './spa.ts'
@@ -18,7 +18,7 @@ import { v1Routes } from './v1.ts'
 const API_PATH = '/api'
 
 export interface AdminOptions {
-  mailer?: LoginMailer
+  mailer?: Mailer
 }
 
 export const createAdmin = (
@@ -58,7 +58,8 @@ export const createAdmin = (
 }
 
 export type { AdminEnv } from './env.ts'
-export type { LoginLinkMessage, LoginMailer } from './mailer.ts'
+export { cloudflareMailer } from './mailer.ts'
+export type { MailMessage, Mailer } from './mailer.ts'
 export { ensureUser } from '../db/users.ts'
 export { writeSiteSettings } from '../db/settings.ts'
 export { writeSiteBlock } from '../db/site-blocks.ts'
