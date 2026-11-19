@@ -3,7 +3,7 @@ import { createAdminEntrypoint } from '@studiobimo/backstage/admin/entrypoint'
 import { testRegistry } from './test-registry'
 import { vi } from 'vitest'
 
-import { db, sendTo } from './pages-test-support'
+import { db, kv, sendTo } from './pages-test-support'
 
 vi.mock('cloudflare:workers', () => ({
   WorkerEntrypoint: class {
@@ -35,6 +35,7 @@ export const email = { send: vi.fn(async () => undefined) }
 const entrypointEnv = (overrides: Partial<AdminEnv> = {}) =>
   ({
     DB: db,
+    SITE: kv,
     TURNSTILE_SECRET: 'secret',
     OWNER_EMAIL: OWNER,
     AUTH_EMAIL_FROM: SENDER,
