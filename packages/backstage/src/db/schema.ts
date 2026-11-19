@@ -213,3 +213,17 @@ export const pageLinkRefs = sqliteTable(
     index('page_link_refs_target').on(t.targetPageId)
   ]
 )
+
+export const submissions = sqliteTable(
+  'submissions',
+  {
+    id: text('id').primaryKey(),
+    form: text('form').notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    payload: text('payload', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    status: text('status').notNull(),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull()
+  },
+  (t) => [index('submissions_form_status').on(t.form, t.status, t.createdAt)]
+)
