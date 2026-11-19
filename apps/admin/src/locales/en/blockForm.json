@@ -16,6 +16,18 @@
     "to": "To",
     "closed": "Closed"
   },
+  "schedule": {
+    "timeZone": "Time zone",
+    "exceptions": "Exceptions",
+    "exceptionsHint": "Holidays and special openings. A date with no hours is closed all day.",
+    "addException": "Add exception",
+    "exceptionName": "Exception {{number}}",
+    "date": "{{name}}, date",
+    "removeException": "Remove {{name}}",
+    "addRange": "Add hours for {{day}}",
+    "removeRange": "Remove hours {{number}} for {{day}}",
+    "rangeOf": "{{day}}, hours {{number}}"
+  },
   "list": {
     "add": "Add item",
     "item": "Item {{number}}",

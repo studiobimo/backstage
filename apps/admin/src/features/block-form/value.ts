@@ -17,6 +17,7 @@ export interface ValueByKind {
   select: string | number
   group: BlockValue
   weeklyHours: BlockValue
+  schedule: BlockValue
   list: FieldValue[]
   localized: BlockValue
   reference: BlockValue
@@ -57,6 +58,12 @@ const isRichText = (value: FieldValue | undefined): value is BlockValue =>
 const emptyWeek = (days: readonly string[]): BlockValue =>
   Object.fromEntries(days.map((day) => [day, { closed: false, opens: '', closes: '' }]))
 
+const emptySchedule = (days: readonly string[]): BlockValue => ({
+  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  week: Object.fromEntries(days.map((day) => [day, []])),
+  exceptions: []
+})
+
 export function initialValue(spec: FieldSpec): FieldValue | undefined {
   if (spec.defaultValue !== undefined) return spec.defaultValue
   switch (spec.kind) {
@@ -68,6 +75,8 @@ export function initialValue(spec: FieldSpec): FieldValue | undefined {
       return spec.required ? initialGroup(spec) : undefined
     case 'weeklyHours':
       return spec.required ? emptyWeek(spec.days) : undefined
+    case 'schedule':
+      return emptySchedule(spec.days)
     case 'list':
       return []
     case 'localized':

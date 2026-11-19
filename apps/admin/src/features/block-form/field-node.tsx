@@ -13,6 +13,7 @@ import { LinkField } from './link-field.tsx'
 import { ListField } from './list-field.tsx'
 import { LocalizedField } from './localized-field.tsx'
 import { ReferenceField } from './reference-field.tsx'
+import { ScheduleField } from './schedule-field.tsx'
 import { RichTextField } from './rich-text-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
 import { WeeklyHoursField } from './weekly-hours-field.tsx'
@@ -176,6 +177,8 @@ export function FieldNode(props: NodeProps) {
       return <GroupNode {...props} spec={spec} />
     case 'weeklyHours':
       return <WeeklyHoursField {...props} spec={spec} />
+    case 'schedule':
+      return <ScheduleField {...props} spec={spec} />
     case 'list':
       return <ListField {...props} spec={spec} />
     case 'localized':

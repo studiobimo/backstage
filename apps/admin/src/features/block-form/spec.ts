@@ -90,6 +90,11 @@ export interface WeeklyHoursSpec extends Common {
   days: readonly (typeof WEEKDAYS)[number][]
 }
 
+export interface ScheduleSpec extends Common {
+  kind: 'schedule'
+  days: readonly (typeof WEEKDAYS)[number][]
+}
+
 export interface ListSpec extends Common {
   kind: 'list'
   item: FieldSpec
@@ -117,6 +122,7 @@ export type FieldSpec =
   | SelectSpec
   | GroupSpec
   | WeeklyHoursSpec
+  | ScheduleSpec
   | ListSpec
   | LocalizedSpec
   | ReferenceSpec
@@ -178,6 +184,7 @@ function parseField(schema: JsonSchema, key: string, required: boolean): FieldSp
   const shape = classifyField(schema)
   if (shape === 'richText') return { ...common, kind: 'richText' }
   if (shape === 'hexColor') return { ...common, kind: 'hexColor' }
+  if (shape === 'weeklyHours') return { ...common, kind: 'schedule', days: WEEKDAYS }
   if (shape === 'localized') {
     return {
       ...common,
