@@ -118,8 +118,8 @@ The client's admin Worker. The only entry that reaches D1.
 
 - `createAdmin`, and the `AdminEnv` type of its bindings
 - `ensureUser`, `writeSiteBlock`, `writeSiteSettings`, which seed a database
-- Submissions: `setSubmissionStatus`, which takes `(d1, kv, registry, id, status)` and also republishes the form's
-  public projection to KV, `findSubmission`, `listSubmissions`, and the `Submission` and `StatusChange` types
+- Submissions: `setSubmissionStatus`, which takes `(d1, kv, registry, id, status, options?)`, where `options` holds `now` and `editorId`, and also republishes the form's
+  public projection to KV, `findSubmission`, `listSubmissions`, and the `Submission`, `StatusChange` and `StatusChangeOptions` types
 - Mail: `cloudflareMailer`, and the `Mailer` and `MailMessage` types
 
 ### `@studiobimo/backstage/admin/entrypoint`

@@ -223,7 +223,8 @@ export const submissions = sqliteTable(
     payload: text('payload', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
     status: text('status').notNull(),
     createdAt: integer('created_at').notNull(),
-    updatedAt: integer('updated_at').notNull()
+    updatedAt: integer('updated_at').notNull(),
+    updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' })
   },
   (t) => [index('submissions_form_status').on(t.form, t.status, t.createdAt)]
 )

@@ -117,3 +117,13 @@ export {
   verifyLinkSchema
 } from '../auth.ts'
 export type { AuthMode, AuthSessionResponse, RequestLinkInput } from '../auth.ts'
+export {
+  formDescriptionSchema,
+  formsResponseSchema,
+  INBOX,
+  submissionResponseSchema,
+  submissionSchema,
+  submissionsResponseSchema,
+  submissionStatusChangeSchema
+} from '../form-inbox.ts'
+export type { FormDescription, InboxSubmission, ReferencedEntries } from '../form-inbox.ts'
