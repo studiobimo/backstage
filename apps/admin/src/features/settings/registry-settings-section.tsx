@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { JsonSchema } from '@/features/block-form/spec.ts'
+import { useLocalizedSchema } from '@/features/block-form/use-localized-schema.ts'
 import { blockValue } from '@/features/block-form/value.ts'
 
 import { registrySettingsQuery, saveRegistrySettingsMutation } from './queries'
@@ -13,7 +14,7 @@ export function RegistrySettingsSection() {
   const { t } = useTranslation('settings')
   const { data } = useSuspenseQuery(registrySettingsQuery)
   const save = useMutation(saveRegistrySettingsMutation(useQueryClient()))
-  const schema = data.schema as JsonSchema
+  const schema = useLocalizedSchema(data.schema as JsonSchema)
   const saved = useMemo(() => blockValue.parse(data.settings), [data.settings])
   const section = useSection({
     id: 'registry',

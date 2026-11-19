@@ -1,4 +1,11 @@
-import { classifyField, type FieldKind, type FieldShape } from '@studiobimo/backstage/internal'
+import type { FieldLabels } from '@studiobimo/backstage'
+import {
+  classifyField,
+  type FieldKind,
+  type FieldShape,
+  isWeeklyHours,
+  WEEKDAYS
+} from '@studiobimo/backstage/internal'
 import type { z } from 'zod'
 
 import type { FieldValue } from './value.ts'
@@ -23,6 +30,7 @@ export type JsonSchema = {
   maxItems?: number
   anyOf?: JsonSchema[]
   backstage?: FieldKind
+  labels?: FieldLabels
   collection?: string
   max?: number
 }
@@ -77,6 +85,11 @@ export interface GroupSpec extends Common {
   fields: readonly FieldSpec[]
 }
 
+export interface WeeklyHoursSpec extends Common {
+  kind: 'weeklyHours'
+  days: readonly (typeof WEEKDAYS)[number][]
+}
+
 export interface ListSpec extends Common {
   kind: 'list'
   item: FieldSpec
@@ -103,6 +116,7 @@ export type FieldSpec =
   | BooleanSpec
   | SelectSpec
   | GroupSpec
+  | WeeklyHoursSpec
   | ListSpec
   | LocalizedSpec
   | ReferenceSpec
@@ -191,6 +205,9 @@ function parseField(schema: JsonSchema, key: string, required: boolean): FieldSp
       minItems: schema.minItems,
       maxItems: schema.maxItems
     }
+  }
+  if (shape === 'object' && isWeeklyHours(schema)) {
+    return { ...common, kind: 'weeklyHours', days: WEEKDAYS }
   }
   if (shape === 'object') return { ...common, kind: 'group', fields: groupFields(schema) }
   const scalar = parseScalarField(shape, schema, common)

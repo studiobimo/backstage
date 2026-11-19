@@ -11,6 +11,11 @@
       "label": "Texto"
     }
   },
+  "weekly": {
+    "from": "Desde",
+    "to": "Hasta",
+    "closed": "Cerrado"
+  },
   "list": {
     "add": "Añadir elemento",
     "item": "Elemento {{number}}",

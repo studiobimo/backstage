@@ -1,11 +1,13 @@
+import { labelsFor } from '@studiobimo/backstage/internal'
+
 import type { JsonSchema } from '@/features/block-form/spec.ts'
 
 interface FieldCopy {
-  title: string
+  title?: string
   description?: string
 }
 
-export type CopyOf = (path: string) => FieldCopy
+export type CopyOf = (path: string, node: JsonSchema) => FieldCopy
 
 const hasFixedFields = (schema: JsonSchema) =>
   schema.backstage === 'image' || schema.backstage === 'link'
@@ -18,7 +20,10 @@ const translateProperties = (
   Object.fromEntries(
     Object.entries(properties).map(([key, child]) => {
       const childPath = [...path, key]
-      return [key, { ...translateSchema(child, copyOf, childPath), ...copyOf(childPath.join('.')) }]
+      return [
+        key,
+        { ...translateSchema(child, copyOf, childPath), ...copyOf(childPath.join('.'), child) }
+      ]
     })
   )
 
@@ -39,3 +44,6 @@ export function translateSchema(
     })
   }
 }
+
+export const localizeSchema = (schema: JsonSchema, language: string, defaultLocale: string) =>
+  translateSchema(schema, (_path, node) => labelsFor(node, language, defaultLocale))

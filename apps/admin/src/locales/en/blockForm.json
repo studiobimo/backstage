@@ -11,6 +11,11 @@
       "label": "Label"
     }
   },
+  "weekly": {
+    "from": "From",
+    "to": "To",
+    "closed": "Closed"
+  },
   "list": {
     "add": "Add item",
     "item": "Item {{number}}",
