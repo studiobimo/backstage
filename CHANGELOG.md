@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.0](https://github.com/studiobimo/backstage/compare/v0.8.0...v0.9.0) (2026-11-19)
+
+
+### Features
+
+* **admin:** send uploads with progress and read in-use refusals ([#458](https://github.com/studiobimo/backstage/issues/458)) ([f2f25f0](https://github.com/studiobimo/backstage/commit/f2f25f0b9e8e23f1fc42809bcfb4b07170a5b912))
+* **admin:** turn media into a library with upload in a drawer ([#459](https://github.com/studiobimo/backstage/issues/459)) ([6be5778](https://github.com/studiobimo/backstage/commit/6be57789c03b40e14a9b2c131bb23e58e87d5a1d))
+* **admin:** upload by drop or one click, in the library and in the picker ([#464](https://github.com/studiobimo/backstage/issues/464)) ([f1a9d49](https://github.com/studiobimo/backstage/commit/f1a9d49d08c49b95fbda3944c39bc47b60ebedda))
+* **core:** refuse deleting an image that is in use ([#457](https://github.com/studiobimo/backstage/issues/457)) ([d44f8af](https://github.com/studiobimo/backstage/commit/d44f8af2b4afb7a53931d7eecfc28691da91eaff))
+
 ## [0.8.0](https://github.com/studiobimo/backstage/compare/v0.7.0...v0.8.0) (2026-11-17)
 
 
