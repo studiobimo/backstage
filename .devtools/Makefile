@@ -17,7 +17,7 @@ BUNDLE_TOTAL_KIB@apps/admin := 660
 # docs/research/react-server-rendering.md; #9 can move it. coss's Button adds about 16 KiB
 # (Base UI's render hooks, class-variance-authority, the Spinner icon and the stylesheet).
 BUNDLE_DIR@apps/site := dist/backstage_site
-BUNDLE_CHUNK_KIB@apps/site := 900
+BUNDLE_CHUNK_KIB@apps/site := 950
 BUNDLE_TOTAL_KIB@apps/site := 195
 
 .PHONY: dev

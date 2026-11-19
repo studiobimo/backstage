@@ -83,6 +83,7 @@ export const siteSnapshotOf = (
   format: SITE_SNAPSHOT.format,
   publishedAt: 1,
   siteName: 'Studio',
+  brand: { logo: null, themeColor: null },
   seo: { description: '', socialImageId: null },
   slots: {},
   media: {},
