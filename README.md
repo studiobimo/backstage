@@ -82,16 +82,17 @@ is an owner and nobody can be invited. Under `DEV_AUTH` the local developer is a
 
 Site Worker, typed as `SiteEnv` from `@studiobimo/backstage/site`:
 
-| Name           | Kind         | Required | Purpose                                                |
-| -------------- | ------------ | -------- | ------------------------------------------------------ |
-| `SITE`         | KV namespace | yes      | published snapshots, written by the admin Worker       |
-| `MEDIA`        | R2 bucket    | yes      | uploaded images, served under `/media`                 |
-| `SITE_URL`     | variable     | yes      | the site's canonical URL, for canonical links, sitemap |
-| `ADMIN_ORIGIN` | variable     | no       | the admin's origin, so it may frame the block previews |
+| Name           | Kind         | Required | Purpose                                                  |
+| -------------- | ------------ | -------- | -------------------------------------------------------- |
+| `SITE`         | KV namespace | yes      | published snapshots, written by the admin Worker         |
+| `MEDIA`        | R2 bucket    | yes      | uploaded images, served under `/media`                   |
+| `SITE_URL`     | variable     | yes      | the site's canonical URL, for canonical links, sitemap   |
+| `ADMIN_ORIGIN` | variable     | no       | the admin's origin, so it may frame the block previews   |
+| `ADMIN`        | service      | no       | the admin's `AdminEntrypoint`, never its default `fetch` |
 
 ## Public API
 
-`@studiobimo/backstage` has five public entries. Their names, types and behaviour follow
+`@studiobimo/backstage` has six public entries. Their names, types and behaviour follow
 [SemVer](https://semver.org), and a breaking change ships with a migration note
 ([ADR-0015](docs/adr/0015-entry-points-and-semver.md)). Anything not listed here is not covered, even
 if it is reachable.
@@ -115,6 +116,16 @@ The client's admin Worker. The only entry that reaches D1.
 - `createAdmin`, and the `AdminEnv` type of its bindings
 - `ensureUser`, `writeSiteBlock`, `writeSiteSettings`, which seed a database
 
+### `@studiobimo/backstage/admin/entrypoint`
+
+The admin Worker's RPC entrypoint, for the site to call through a service binding
+([ADR-0019](docs/adr/0019-admin-rpc-entrypoint.md)). It imports `cloudflare:workers`, so it loads
+only in workerd. Re-export it from the admin Worker beside `createAdmin`:
+`export { AdminEntrypoint } from '@studiobimo/backstage/admin/entrypoint'`.
+
+- `AdminEntrypoint`, whose methods act as an anonymous visitor. `ping(context)` answers with the
+  validated request context.
+
 ### `@studiobimo/backstage/site`
 
 The client's site Worker, which reads what the admin publishes. It reaches no database and no Hono.
@@ -136,6 +147,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Locales: `localeName`, `LOCALE_NAME`, `switcherLabel`, `SWITCHER_LABEL`
 - Turnstile: `verifyTurnstile`, `TURNSTILE`, and the `TurnstileCheck`, `TurnstileFailure` and
   `TurnstileResult` types
+- Calling the admin entrypoint, as `adminRpc(env.ADMIN).ping(requestContextOf(request))`: `adminRpc`,
+  `requestContextOf`, `RPC`, and the `PingResult`, `RequestContext` and `VisitorRpc` types
 - `BLOCK_PREVIEW`, and the `SiteEnv` type of the Worker's bindings
 
 ### `@studiobimo/backstage/site/hono`

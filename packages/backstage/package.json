@@ -19,6 +19,10 @@
         "types": "./dist/lib/admin/index.d.ts",
         "default": "./dist/lib/admin/index.js"
       },
+      "./admin/entrypoint": {
+        "types": "./dist/lib/admin/entrypoint.d.ts",
+        "default": "./dist/lib/admin/entrypoint.js"
+      },
       "./internal": {
         "types": "./dist/lib/internal/index.d.ts",
         "default": "./dist/lib/internal/index.js"
@@ -42,6 +46,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./admin": "./src/admin/index.ts",
+    "./admin/entrypoint": "./src/admin/entrypoint.ts",
     "./internal": "./src/internal/index.ts",
     "./render": "./src/render/index.ts",
     "./site": "./src/site/index.ts",
