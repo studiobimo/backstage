@@ -6,6 +6,8 @@ export type {
   Registry,
   RegistryOptions
 } from './blocks.ts'
+export { defineForm, FORM } from './forms.ts'
+export type { Form, FormDefinition, FormNotify, FormPublic } from './forms.ts'
 export { defineCollection, describeCollections } from './collections.ts'
 export type {
   Collection,
