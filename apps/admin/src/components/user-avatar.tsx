@@ -25,7 +25,7 @@ export function UserAvatar({ name, email, decorative = false, className }: UserA
       aria-label={decorative ? undefined : label}
       role={decorative ? undefined : AVATAR_ROLE}
     >
-      <AvatarFallback className="rounded-lg">
+      <AvatarFallback className="rounded-lg text-foreground">
         {initials || <UserRound aria-hidden className="size-[60%]" />}
       </AvatarFallback>
     </Avatar>

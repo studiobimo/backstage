@@ -9,6 +9,7 @@ const BASE_36 = 36
 const RANDOM_SUFFIX_LENGTH = 4
 
 export const IMAGE_FILE = 'pixel.png'
+const MEDIA_UPLOAD_PATH = '/api/v1/media'
 
 export function newPageUnderTest() {
   const run = `${Date.now().toString(BASE_36)}${Math.random()
@@ -30,8 +31,14 @@ export async function uploadDecorativeImage(page: Page) {
     buffer: solidPng(IMAGE_SIZE_PX, IMAGE_COLOR)
   })
   await page.getByRole('switch', { name: /Decorative image/ }).click()
+  const uploaded = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === MEDIA_UPLOAD_PATH &&
+      response.ok()
+  )
   await page.getByRole('button', { name: 'Upload image' }).click()
-  await expect(page.getByText('Image uploaded')).toBeVisible()
+  await uploaded
 }
 
 export async function createPage(page: Page, under: PageUnderTest) {
