@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.10.0](https://github.com/studiobimo/backstage/compare/v0.9.0...v0.10.0) (2026-11-19)
+
+
+### Features
+
+* **admin:** add a home screen that continues where you left off ([#462](https://github.com/studiobimo/backstage/issues/462)) ([b10b55a](https://github.com/studiobimo/backstage/commit/b10b55a5346851d9058623780c6976be21483008))
+* **admin:** add a nav item and routes for each form ([#494](https://github.com/studiobimo/backstage/issues/494)) ([2b47dd2](https://github.com/studiobimo/backstage/commit/2b47dd2d54688e13107777c05c836d876fb57c36))
+* **admin:** keep unsaved page edits as a draft ([#461](https://github.com/studiobimo/backstage/issues/461)) ([39a0d9b](https://github.com/studiobimo/backstage/commit/39a0d9bd87c60cc8a96899685306c61b0b112f1d))
+* **admin:** list form submissions and show one with its status control ([#493](https://github.com/studiobimo/backstage/issues/493)) ([d2b0199](https://github.com/studiobimo/backstage/commit/d2b0199c10e9ed0575537f052bdacf1df328b207))
+* **admin:** list form submissions in a table with labelled columns ([#499](https://github.com/studiobimo/backstage/issues/499)) ([c8a29f2](https://github.com/studiobimo/backstage/commit/c8a29f2eecbab4ee33d9b73a1b3323b644f2a68c))
+* **admin:** show field labels in the admin language and edit weekly hours by day ([#498](https://github.com/studiobimo/backstage/issues/498)) ([99566d9](https://github.com/studiobimo/backstage/commit/99566d9c9fe1394c9cb1097a3f280e1f2fc1ee9d))
+* **admin:** show the registry's settings fields in Settings ([#485](https://github.com/studiobimo/backstage/issues/485)) ([ce18ebb](https://github.com/studiobimo/backstage/commit/ce18ebb4b27965c2d01435db437edcaf4c6923d4))
+* **core:** declare forms in the registry with defineForm ([#488](https://github.com/studiobimo/backstage/issues/488)) ([b23838d](https://github.com/studiobimo/backstage/commit/b23838d034079896090fe561f85e6eefb6b0c327))
+* **core:** export an admin rpc entrypoint and a typed site client ([#486](https://github.com/studiobimo/backstage/issues/486)) ([9554243](https://github.com/studiobimo/backstage/commit/9554243cec6420f2e85979e7e97946708f86ea7f))
+* **core:** let a registry declare its own site settings fields ([#484](https://github.com/studiobimo/backstage/issues/484)) ([397fcf5](https://github.com/studiobimo/backstage/commit/397fcf5d83487d8ddbd2dc4eeb595f1505f08e1e))
+* **core:** list forms and submissions and change a status from the admin api ([#492](https://github.com/studiobimo/backstage/issues/492)) ([0686466](https://github.com/studiobimo/backstage/commit/06864663b8fb6da1c0e4ed30ee179fbe069f9525))
+* **core:** publish a public projection of approved submissions for the site ([#491](https://github.com/studiobimo/backstage/issues/491)) ([9538599](https://github.com/studiobimo/backstage/commit/95385990d106dceb330d651be824a189023d93a9))
+* **core:** read registry settings while a block renders ([#495](https://github.com/studiobimo/backstage/issues/495)) ([8984601](https://github.com/studiobimo/backstage/commit/89846011c248f30b03069624a91a01e189ac997a))
+* **core:** store public form submissions and answer their status over rpc ([#489](https://github.com/studiobimo/backstage/issues/489)) ([2eea8d6](https://github.com/studiobimo/backstage/commit/2eea8d6baf0664588ffddcb5ea106dca5892ec49))
+* **site:** bind the template site to the admin rpc entrypoint ([#487](https://github.com/studiobimo/backstage/issues/487)) ([dcf1a60](https://github.com/studiobimo/backstage/commit/dcf1a6093bd3b23671dada15948a8b95d908984c))
+* **site:** let a site load turnstile and render a route in the site shell ([#483](https://github.com/studiobimo/backstage/issues/483)) ([8d86b18](https://github.com/studiobimo/backstage/commit/8d86b18a9aed325d073318902227274fd257cb72))
+
+
+### Bug Fixes
+
+* **admin:** fix the inbox summary layout, avatar contrast and upload e2e waits ([#496](https://github.com/studiobimo/backstage/issues/496)) ([d658a12](https://github.com/studiobimo/backstage/commit/d658a12c6146f0d7af4ebe34abc5738a3f062d6a))
+
+
+### Documentation
+
+* drop client names from the prd, roadmap and changelog ([#481](https://github.com/studiobimo/backstage/issues/481)) ([479fdce](https://github.com/studiobimo/backstage/commit/479fdce82673229c9eaf30ea55c4ea407e6b2e00))
+
 ## [0.9.0](https://github.com/studiobimo/backstage/compare/v0.8.0...v0.9.0) (2026-11-19)
 
 
