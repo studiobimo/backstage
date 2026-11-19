@@ -10,6 +10,7 @@ export type FieldShape =
   | 'reference'
   | 'hexColor'
   | 'weeklyHours'
+  | 'money'
   | 'array'
   | 'object'
   | 'select'
@@ -26,7 +27,8 @@ const MARKED_SHAPES: Record<string, FieldShape> = {
   localized: 'localized',
   reference: 'reference',
   hexColor: 'hexColor',
-  weeklyHours: 'weeklyHours'
+  weeklyHours: 'weeklyHours',
+  money: 'money'
 }
 
 const TYPE_SHAPES: Record<string, FieldShape> = {
@@ -52,7 +54,8 @@ const OPAQUE_SHAPES: readonly FieldShape[] = [
   'image',
   'link',
   'reference',
-  'weeklyHours'
+  'weeklyHours',
+  'money'
 ]
 
 const joinPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)

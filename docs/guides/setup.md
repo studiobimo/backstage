@@ -263,6 +263,30 @@ The example shortens the week; declare all seven days.
 Any other object renders as a plain group of labelled fields. The times are `HH:mm` strings, so
 validate them in the schema as you would any string. A closed day keeps its times.
 
+### Prices
+
+`money()` stores a whole number of minor units (cents for USD, centavos for HNL), so totals never
+drift through floating point. The currency is not part of the field: it is the registry setting
+named `currency`, declared with `currency()`, which accepts the codes in `CURRENCY_CODES` (`USD`
+and `HNL`) and defaults to `USD`.
+
+```ts
+const settings = z.object({ currency: currency() })
+const price = defineBlock({ name: 'price', schema: z.object({ amount: money() }) })
+
+function Price({ amount }: { amount: number }) {
+  const formatMoney = useMoney()
+  return <p>{formatMoney(amount)}</p>
+}
+```
+
+The admin edits the field as a decimal amount in the saved currency. `useMoney()`, from
+`@studiobimo/backstage/render`, formats with the page locale and the published `currency` setting,
+and reads `USD` when the setting is missing. Client scripts call
+`formatMoney(amount, currency, locale)` from `@studiobimo/backstage/site`. Supporting another
+currency is one line in `MONEY.currencies`, with its minor-unit digits. The package converts
+nothing between currencies.
+
 ### Rate limit a public write
 
 Turnstile stops bots, not a person sending many requests. Put the Workers rate limiting binding in

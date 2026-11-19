@@ -13,6 +13,8 @@ export {
 export type { Entry, EntrySummary } from '../entries.ts'
 export { classifyField, isWeeklyHours, WEEKDAYS } from '../field-shapes.ts'
 export type { FieldShape } from '../field-shapes.ts'
+export { isCurrencyCode, majorToMinor, minorToMajor, minorUnitDigits, MONEY } from '../money.ts'
+export type { CurrencyCode } from '../money.ts'
 export { labelsFor } from '../labels.ts'
 export type { LabelledNode } from '../labels.ts'
 export { HEX_COLOR, LINK, linkValueSchema } from '../fields.ts'

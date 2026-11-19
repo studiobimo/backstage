@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { RICH_TEXT, richTextDoc } from './rich-text.ts'
 
 export type FieldKind =
-  'image' | 'richText' | 'link' | 'localized' | 'reference' | 'hexColor' | 'weeklyHours'
+  'image' | 'richText' | 'link' | 'localized' | 'reference' | 'hexColor' | 'weeklyHours' | 'money'
 
 export const marked = <T extends z.ZodType>(schema: T, backstage: FieldKind): T =>
   schema.meta({ backstage }) as T
