@@ -60,7 +60,18 @@ const reply = (status: number, body?: unknown) =>
 const NEVER_PUBLISHED = { publishedAt: null, publishedBy: null, hasUnpublishedChanges: true }
 const LIVE = { publishedAt: 1_700_000_000_000, publishedBy: 'Ana', hasUnpublishedChanges: false }
 
+const NO_REGISTRY_SETTINGS = { schema: null, settings: {}, version: 0 }
+
+const slotMinutesSchema = {
+  type: 'object',
+  properties: {
+    slotMinutes: { type: 'integer', minimum: 5, maximum: 240 }
+  },
+  required: ['slotMinutes']
+}
+
 const defaultReply = (url: string) => {
+  if (url.endsWith('/settings/registry')) return reply(200, NO_REGISTRY_SETTINGS)
   if (url.endsWith('/slots')) return reply(200, { slots })
   if (url.endsWith('/site/publication')) return reply(200, { publication: NEVER_PUBLISHED })
   return reply(200, { settings: saved, version: 4 })
@@ -153,6 +164,39 @@ describe('SettingsPage saving', { timeout: 15_000 }, () => {
       content: { tagline: 'Still by hand' },
       expectedVersion: 3
     })
+  })
+})
+
+describe('SettingsPage registry settings', { timeout: 15_000 }, () => {
+  const declared = (url: string, method: string) =>
+    url.endsWith('/settings/registry')
+      ? reply(200, {
+          schema: slotMinutesSchema,
+          settings: method === 'PUT' ? { slotMinutes: 45 } : { slotMinutes: 30 },
+          version: method === 'PUT' ? 3 : 2
+        })
+      : undefined
+
+  it('shows no section when the site declares no settings', async () => {
+    mockApi()
+    renderPage()
+    await screen.findByLabelText('Site name')
+    expect(screen.queryByRole('region', { name: 'Site data' })).not.toBeInTheDocument()
+  })
+
+  it('shows one section built from the declared schema and saves it with its version', async () => {
+    const puts = mockApi((method, url) => declared(url, method))
+    renderPage()
+    const user = userEvent.setup()
+    const region = await screen.findByRole('region', { name: 'Site data' })
+    const minutes = within(region).getByRole('textbox', { name: 'Slot minutes' })
+    expect(minutes).toHaveValue('30')
+    await user.clear(minutes)
+    await user.type(minutes, '45')
+    await user.click(pageSave())
+    await waitFor(() => expect(puts).toHaveLength(1))
+    expect(puts[0]!.url).toMatch(/\/settings\/registry$/)
+    expect(puts[0]!.body).toEqual({ settings: { slotMinutes: 45 }, expectedVersion: 2 })
   })
 })
 

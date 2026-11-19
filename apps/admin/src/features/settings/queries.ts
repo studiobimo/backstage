@@ -1,4 +1,5 @@
 import {
+  registrySettingsResponseSchema,
   sitePublicationResponseSchema,
   siteSettingsResponseSchema,
   slotResponseSchema,
@@ -38,6 +39,36 @@ export const saveSettingsMutation = (queryClient: QueryClient) =>
         })
       ),
     onSuccess: (saved) => queryClient.setQueryData(SETTINGS_API.queryKey, saved)
+  })
+
+const REGISTRY_SETTINGS_API = {
+  path: '/settings/registry',
+  queryKey: ['settings', 'registry']
+} as const
+
+const readRegistrySettings = async (response: Response) =>
+  registrySettingsResponseSchema.parse(await response.json())
+
+export const registrySettingsQuery = queryOptions({
+  queryKey: REGISTRY_SETTINGS_API.queryKey,
+  queryFn: async () => readRegistrySettings(await apiRequest(REGISTRY_SETTINGS_API.path))
+})
+
+export interface RegistrySettingsSave {
+  settings: Record<string, unknown>
+  expectedVersion: number
+}
+
+export const saveRegistrySettingsMutation = (queryClient: QueryClient) =>
+  mutationOptions({
+    mutationFn: async (save: RegistrySettingsSave) =>
+      readRegistrySettings(
+        await apiRequest(REGISTRY_SETTINGS_API.path, {
+          method: 'PUT',
+          body: JSON.stringify(save)
+        })
+      ),
+    onSuccess: (saved) => queryClient.setQueryData(REGISTRY_SETTINGS_API.queryKey, saved)
   })
 
 const SLOTS_API = { path: '/slots', queryKey: ['slots'] } as const

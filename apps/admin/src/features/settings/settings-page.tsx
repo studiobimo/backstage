@@ -8,7 +8,6 @@ import { LeaveGuard } from '@/components/leave-guard'
 import { PoweredBy } from '@/components/powered-by'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toastManager } from '@/components/ui/toast'
-import { BlockForm } from '@/features/block-form/block-form.tsx'
 import { EditingLocaleContext } from '@/features/block-form/locale-status'
 import type { JsonSchema } from '@/features/block-form/spec.ts'
 import { blockValue } from '@/features/block-form/value.ts'
@@ -16,14 +15,13 @@ import { useLocaleConfig } from '@/features/config/queries'
 import { useShortcut } from '@/lib/shortcuts'
 
 import { PublishSiteSection } from './publish-site-section'
-import { saveSettingsMutation, settingsQuery, slotsQuery } from './queries'
-import { SaveFailedAlert } from './save-failed-alert'
+import { registrySettingsQuery, saveSettingsMutation, settingsQuery, slotsQuery } from './queries'
+import { RegistrySettingsSection } from './registry-settings-section'
 import { SettingsHeader } from './settings-header'
 import { SAVE_OUTCOME, SettingsHostContext, useSettingsSections } from './settings-host'
 import { SlotSection } from './slot-section'
-import { StaleAlert } from '../page-editor/stale-alert'
 import { type CopyOf, translateSchema } from './translate-schema'
-import { SettingsSection } from './settings-section'
+import { SchemaSection } from './settings-section'
 import { useSection } from './use-section'
 
 const SETTINGS_SCHEMA = siteSettingsJsonSchema() as JsonSchema
@@ -47,7 +45,7 @@ function GeneralSection() {
   const schema = useTranslatedSchema()
   const save = useMutation(saveSettingsMutation(useQueryClient()))
   const saved = useMemo(() => blockValue.parse(data.settings), [data.settings])
-  const { form, failed, stale, reload, generation } = useSection({
+  const section = useSection({
     id: 'general',
     title: t('sections.general.title'),
     schema,
@@ -57,14 +55,12 @@ function GeneralSection() {
       save.mutateAsync({ settings: siteSettingsSchema.parse(value), expectedVersion: data.version })
   })
   return (
-    <SettingsSection
+    <SchemaSection
+      {...section}
       title={t('sections.general.title')}
       description={t('sections.general.description')}
-    >
-      {failed && <SaveFailedAlert />}
-      {stale && <StaleAlert scope="settings" current={stale.current} onReload={reload} />}
-      <BlockForm key={generation} schema={schema} className="max-w-none gap-8" {...form} />
-    </SettingsSection>
+      schema={schema}
+    />
   )
 }
 
@@ -85,6 +81,7 @@ function NotSavedAlert({ sections }: { sections: string[] }) {
 export function SettingsPage() {
   const { t } = useTranslation('settings')
   const { data: slots } = useSuspenseQuery(slotsQuery)
+  const { data: registrySettings } = useSuspenseQuery(registrySettingsQuery)
   const { locales, defaultLocale } = useLocaleConfig()
   const [active, setActive] = useState<string>(defaultLocale)
   const sections = useSettingsSections(locales, setActive)
@@ -122,6 +119,7 @@ export function SettingsPage() {
           {slots.map((slot) => (
             <SlotSection key={slot.name} slot={slot} />
           ))}
+          {registrySettings.schema && <RegistrySettingsSection />}
         </div>
         <PoweredBy className="self-center" />
       </EditingLocaleContext.Provider>
