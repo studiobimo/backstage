@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import type { PublishProblem } from '../publishing.ts'
 import {
   buildSiteSnapshots,
@@ -17,11 +17,10 @@ import { replacePageLinkRefs } from './page-link-references.ts'
 import { readMedia, readPageAddresses } from './publishing.ts'
 import { siteBlocks, sitePublication, siteSettings, users } from './schema.ts'
 import { readSiteBlocks } from './site-blocks.ts'
-import { readVersionedSiteSettings } from './settings.ts'
+import { readRegistrySettings, readVersionedSiteSettings, SETTINGS_ROW } from './settings.ts'
 import { ROW_VERSION } from './versioned-row.ts'
 
 const PUBLICATION_ROW_ID = 'site'
-const SETTINGS_ROW_ID = 'site'
 
 export const SITE_PUBLISH_PLAN = { ready: 'ready', invalid: 'invalid' } as const
 
@@ -37,14 +36,20 @@ export type SitePublishPlan =
 const readSiteDraft = async (
   d1: AnyD1Database
 ): Promise<{ draft: SiteDraft; versions: SiteVersions }> => {
-  const [{ settings, version }, blocks] = await Promise.all([
+  const [{ settings, version }, registry, blocks] = await Promise.all([
     readVersionedSiteSettings(d1),
+    readRegistrySettings(d1),
     readSiteBlocks(d1)
   ])
   return {
-    draft: { settings, blocks },
+    draft: {
+      settings,
+      registrySettings: registry.version === ROW_VERSION.absent ? null : registry.settings,
+      blocks
+    },
     versions: {
       settings: version,
+      registrySettings: registry.version,
       slots: Object.fromEntries([...blocks].map(([slot, block]) => [slot, block.version]))
     }
   }
@@ -52,7 +57,7 @@ const readSiteDraft = async (
 
 export const planSitePublish = async (
   d1: AnyD1Database,
-  registry: Registry,
+  registry: AdminRegistry,
   publishedAt: number
 ): Promise<SitePublishPlan> => {
   const { draft, versions } = await readSiteDraft(d1)
@@ -86,15 +91,15 @@ export const recordSitePublished = async (
 
 const readCurrentVersions = async (d1: AnyD1Database): Promise<SiteVersions> => {
   const db = drizzle(d1)
-  const [[settings], blocks] = await Promise.all([
-    db
-      .select({ version: siteSettings.version })
-      .from(siteSettings)
-      .where(eq(siteSettings.id, SETTINGS_ROW_ID)),
+  const [settingsRows, blocks] = await Promise.all([
+    db.select({ id: siteSettings.id, version: siteSettings.version }).from(siteSettings),
     db.select({ slot: siteBlocks.slot, version: siteBlocks.version }).from(siteBlocks)
   ])
+  const versionOf = (rowId: string) =>
+    settingsRows.find(({ id }) => id === rowId)?.version ?? ROW_VERSION.absent
   return {
-    settings: settings?.version ?? ROW_VERSION.absent,
+    settings: versionOf(SETTINGS_ROW.site),
+    registrySettings: versionOf(SETTINGS_ROW.registry),
     slots: Object.fromEntries(blocks.map(({ slot, version }) => [slot, version]))
   }
 }

@@ -66,11 +66,13 @@ export function defineLayout<const N extends string>(
 
 export interface RegistryOptions<
   L extends readonly LayoutDefinition[] = readonly LayoutDefinition[],
-  C extends readonly Collection[] = readonly Collection[]
+  C extends readonly Collection[] = readonly Collection[],
+  S extends z.ZodType | undefined = z.ZodType | undefined
 > extends Partial<LocaleConfig> {
   slots?: Readonly<Record<string, readonly string[]>>
   layouts?: L
   collections?: C
+  settings?: S
 }
 
 export interface Registry<
@@ -85,6 +87,11 @@ export interface Registry<
   isSlotBlock(name: string): boolean
   hasLayout(name: string): boolean
   jsonSchema(name: string): z.core.JSONSchema.BaseSchema
+}
+
+export interface SettingsRegistry<S extends z.ZodType | undefined = z.ZodType | undefined> {
+  readonly settings: S
+  settingsJsonSchema(): z.core.JSONSchema.BaseSchema | undefined
 }
 
 export interface CollectionRegistry<C extends readonly Collection[] = readonly Collection[]> {
@@ -145,6 +152,16 @@ export function assertRenderable(
   return schema
 }
 
+function assertSettings(settings: z.ZodType | undefined) {
+  if (!settings) return
+  const schema = assertRenderable({ name: 'settings', schema: settings }, 'Registry')
+  if (schema.type !== 'object') throw new Error('Registry settings must be a z.object')
+  const [place] = referencePlacesIn(schema)
+  if (place) {
+    throw new Error(`Registry settings field "${place.path || '(root)'}" cannot refer to entries`)
+  }
+}
+
 function assertReferences(
   blocks: ReadonlyMap<string, Block>,
   collections: ReadonlyMap<string, Collection>
@@ -173,12 +190,17 @@ function assertReferences(
 export function defineRegistry<
   const B extends readonly Block[],
   const L extends readonly LayoutDefinition[] = readonly [],
-  const C extends readonly Collection[] = readonly []
->(blocks: B, options: RegistryOptions<L, C> = {}): Registry<B, L> & CollectionRegistry<C> {
+  const C extends readonly Collection[] = readonly [],
+  const S extends z.ZodType | undefined = undefined
+>(
+  blocks: B,
+  options: RegistryOptions<L, C, S> = {}
+): Registry<B, L> & CollectionRegistry<C> & SettingsRegistry<S> {
   const {
     slots = {},
     layouts = [] as unknown as L,
     collections = [] as unknown as C,
+    settings,
     ...localeOptions
   } = options
   const { locales, defaultLocale } = resolveLocaleConfig(localeOptions)
@@ -191,7 +213,9 @@ export function defineRegistry<
   collectionsByName.forEach(assertCollection)
   assertRoutesAvailable(collectionsByName.values(), locales)
   assertReferences(byName, collectionsByName)
+  assertSettings(settings)
   return {
+    settings: settings as S,
     locales,
     defaultLocale,
     blocks: byName,
@@ -207,6 +231,7 @@ export function defineRegistry<
       if (!block) throw new Error(`Unknown block "${name}"`)
       return schemaNodeOf(block.schema)
     },
+    settingsJsonSchema: () => (settings ? schemaNodeOf(settings) : undefined),
     collectionJsonSchema(name) {
       const collection = collectionsByName.get(name)
       if (!collection) throw new Error(`Unknown collection "${name}"`)

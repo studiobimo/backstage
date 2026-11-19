@@ -70,11 +70,12 @@ export type {
 } from '../pages.ts'
 export {
   EMPTY_SITE_SETTINGS,
+  registrySettingsResponseSchema,
   siteSettingsJsonSchema,
   siteSettingsResponseSchema,
   siteSettingsSchema
 } from '../settings.ts'
-export type { SiteSettings } from '../settings.ts'
+export type { RegistrySettingsResponse, SiteSettings } from '../settings.ts'
 export { layoutsResponseSchema, slotResponseSchema, slotsResponseSchema } from '../slots.ts'
 export type { SiteBlock, Slot } from '../slots.ts'
 export { publishProblemsResponseSchema } from '../publishing.ts'

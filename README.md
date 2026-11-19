@@ -121,6 +121,7 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
 - Reading published entries: `findPublishedEntry`, `findEntryTranslations`
+- Reading the registry's own settings: `findRegistrySettings`
 - Routing: `parseRoute`, `parseEntryRoute`, `pathOf`, `entryPathOf`, `routeOf`, and the `Route`, `EntryRoute` and
   `CollectionRoute` types
 - The KV layout: `SITE_VERSION`, `routeKey`, `snapshotKey`, `siteSnapshotKey`, `SNAPSHOT`, `SITE_SNAPSHOT`,

@@ -5,14 +5,14 @@ import {
   recordSitePublished,
   SITE_PUBLISH_PLAN
 } from '../db/site-publishing.ts'
-import type { Registry } from '../blocks.ts'
+import type { AdminRegistry } from '../collections.ts'
 import { Hono } from 'hono'
 
 import type { AccessEnv } from './auth.ts'
 import { respondUnpublishable } from './respond.ts'
 import { writeSiteSnapshots } from './snapshots.ts'
 
-export const sitePublishRoutes = (registry: Registry) =>
+export const sitePublishRoutes = (registry: AdminRegistry) =>
   new Hono<AccessEnv>()
     .get('/publication', async (c) => c.json({ publication: await readSitePublication(c.env.DB) }))
     .post('/publish', async (c) => {
