@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "newCount": "{{count}} new"
+  },
+  "missing": {
+    "title": "This form does not exist",
+    "description": "It may have been removed from the site. Pick another form from the sidebar."
+  },
+  "list": {
+    "emptyTitle": "Nothing received yet",
+    "emptyDescription": "Submissions from visitors will appear here as soon as they arrive.",
+    "noMatchTitle": "No submissions match",
+    "noMatchDescription": "Try another status or dates.",
+    "columns": {
+      "details": "Details",
+      "status": "Status",
+      "received": "Received"
+    }
+  },
+  "filters": {
+    "label": "Filter submissions",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "from": "{{field}} from",
+    "to": "{{field}} to",
+    "clear": "Clear filters"
+  },
+  "status": {
+    "new": "New",
+    "confirmed": "Confirmed",
+    "declined": "Declined"
+  },
+  "detail": {
+    "back": "Back to {{form}}",
+    "received": "Received {{date}}",
+    "details": "Details",
+    "none": "Not provided",
+    "yes": "Yes",
+    "no": "No",
+    "missingEntry": "An entry that is no longer available",
+    "missingTitle": "This submission does not exist",
+    "missingDescription": "It may belong to another form or have been removed."
+  },
+  "change": {
+    "title": "Status",
+    "current": "Current status",
+    "markAs": "Mark as {{status}}",
+    "changed": "Marked as {{status}}",
+    "failed": "Could not change the status",
+    "updatedBy": "Last changed by {{name}} on {{date}}"
+  }
+}

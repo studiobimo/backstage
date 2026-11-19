@@ -1,0 +1,52 @@
+{
+  "nav": {
+    "newCount": "{{count}} nuevas"
+  },
+  "missing": {
+    "title": "Este formulario no existe",
+    "description": "Puede que se haya quitado del sitio. Elige otro formulario en la barra lateral."
+  },
+  "list": {
+    "emptyTitle": "Todavía no ha llegado nada",
+    "emptyDescription": "Los envíos de los visitantes aparecerán aquí en cuanto lleguen.",
+    "noMatchTitle": "Ningún envío coincide",
+    "noMatchDescription": "Prueba con otro estado u otras fechas.",
+    "columns": {
+      "details": "Detalles",
+      "status": "Estado",
+      "received": "Recibido"
+    }
+  },
+  "filters": {
+    "label": "Filtrar envíos",
+    "status": "Estado",
+    "allStatuses": "Todos los estados",
+    "from": "{{field}} desde",
+    "to": "{{field}} hasta",
+    "clear": "Quitar filtros"
+  },
+  "status": {
+    "new": "Nueva",
+    "confirmed": "Confirmada",
+    "declined": "Rechazada"
+  },
+  "detail": {
+    "back": "Volver a {{form}}",
+    "received": "Recibido {{date}}",
+    "details": "Detalles",
+    "none": "Sin indicar",
+    "yes": "Sí",
+    "no": "No",
+    "missingEntry": "Una entrada que ya no está disponible",
+    "missingTitle": "Este envío no existe",
+    "missingDescription": "Puede que pertenezca a otro formulario o que se haya quitado."
+  },
+  "change": {
+    "title": "Estado",
+    "current": "Estado actual",
+    "markAs": "Marcar como {{status}}",
+    "changed": "Marcada como {{status}}",
+    "failed": "No se pudo cambiar el estado",
+    "updatedBy": "Último cambio de {{name}} el {{date}}"
+  }
+}

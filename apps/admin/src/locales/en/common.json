@@ -29,7 +29,8 @@
     "toggle": "Toggle the sidebar",
     "groups": {
       "workspace": "Workspace",
-      "collections": "Collections"
+      "collections": "Collections",
+      "forms": "Forms"
     },
     "sections": {
       "pages": {
@@ -53,6 +54,9 @@
       },
       "collections": {
         "title": "Collections"
+      },
+      "forms": {
+        "title": "Forms"
       }
     }
   },
