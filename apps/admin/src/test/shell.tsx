@@ -17,6 +17,7 @@ const apiBodies: Record<string, unknown> = {
     role: 'editor'
   },
   '/api/v1/config': DEFAULT_TEST_CONFIG,
+  '/api/v1/forms': { forms: [] },
   '/api/v1/pages': { pages: [aboutPage] },
   '/api/v1/pages/p1/blocks': { blocks: [], layout: 'default', version: 1 },
   '/api/v1/pages/p1/seo': {
