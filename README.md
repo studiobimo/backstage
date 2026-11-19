@@ -118,8 +118,8 @@ The client's admin Worker. The only entry that reaches D1.
 
 - `createAdmin`, and the `AdminEnv` type of its bindings
 - `ensureUser`, `writeSiteBlock`, `writeSiteSettings`, which seed a database
-- Submissions: `setSubmissionStatus`, `findSubmission`, `listSubmissions`, and the `Submission` and
-  `StatusChange` types
+- Submissions: `setSubmissionStatus`, which takes `(d1, kv, registry, id, status)` and also republishes the form's
+  public projection to KV, `findSubmission`, `listSubmissions`, and the `Submission` and `StatusChange` types
 - Mail: `cloudflareMailer`, and the `Mailer` and `MailMessage` types
 
 ### `@studiobimo/backstage/admin/entrypoint`
@@ -145,6 +145,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
 - Reading published entries: `findPublishedEntry`, `findEntryTranslations`
 - Reading the registry's own settings: `findRegistrySettings`
+- Reading a form's public projection, such as the confirmed seats: `findFormProjection`, `formProjectionKey`,
+  `FORM_PROJECTION`, and the `FormProjection` and `FormProjectionRead` types
 - Routing: `parseRoute`, `parseEntryRoute`, `pathOf`, `entryPathOf`, `routeOf`, and the `Route`, `EntryRoute` and
   `CollectionRoute` types
 - The KV layout: `SITE_VERSION`, `routeKey`, `snapshotKey`, `siteSnapshotKey`, `SNAPSHOT`, `SITE_SNAPSHOT`,

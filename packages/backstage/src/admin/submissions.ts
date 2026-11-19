@@ -13,6 +13,7 @@ import { ownerEmailsOf } from '../db/users.ts'
 import { readPublishedEntries } from '../db/entry-references.ts'
 import { API_ERROR, fieldIssuesOf, type FieldIssue } from '../errors.ts'
 import type { SchemaNode } from '../field-shapes.ts'
+import { publicFieldsOf } from '../form-projection.ts'
 import { formsOf, initialStatusOf, type Form } from '../forms.ts'
 import { logLine } from '../log.ts'
 import { REFERENCE, referenceFieldsIn, type ReferenceField } from '../references.ts'
@@ -27,6 +28,7 @@ import {
   type SubmitResult
 } from '../submissions.ts'
 import { randomToken, sha256Hex } from './auth-tokens.ts'
+import { publishFormProjection } from './form-projection.ts'
 import type { AdminEnv } from './env.ts'
 import type { Mailer } from './mailer.ts'
 
@@ -141,24 +143,19 @@ export const submitForm = async (
   if (unknownReferences.length > 0) return refuse(API_ERROR.invalid, unknownReferences)
   const id = crypto.randomUUID()
   const token = randomToken(SUBMISSION.token.bytes)
+  const createdAt = now()
   await insertSubmission(env.DB, {
     id,
     form: form.name,
     tokenHash: await sha256Hex(token),
     payload: data,
     status: initialStatusOf(form),
-    now: now()
+    now: createdAt
   })
+  await publishFormProjection(env.DB, env.SITE, form, createdAt)
   await notifyOwners(env, mailer, form, id, data)
   return { ok: true, id, token }
 }
-
-const publicFieldsOf = (form: Form | undefined, payload: Record<string, unknown>) =>
-  Object.fromEntries(
-    (form?.public.fields ?? [])
-      .filter((field) => field in payload)
-      .map((field) => [field, payload[field]])
-  )
 
 const NOT_FOUND = { ok: false, code: API_ERROR.notFound.code } as const
 
@@ -171,11 +168,12 @@ export const statusOfSubmission = async (
   if (!parsed.success) return NOT_FOUND
   const row = await findSubmissionByTokenHash(env.DB, await sha256Hex(parsed.data))
   if (!row) return NOT_FOUND
+  const form = formsOf(registry).get(row.form)
   return statusResultSchema.parse({
     ok: true,
     form: row.form,
     status: row.status,
-    fields: publicFieldsOf(formsOf(registry).get(row.form), row.payload)
+    fields: form ? publicFieldsOf(form, row.payload) : {}
   })
 }
 
@@ -185,6 +183,7 @@ export type StatusChange =
 
 export const setSubmissionStatus = async (
   d1: AnyD1Database,
+  kv: KVNamespace,
   registry: AdminRegistry,
   id: string,
   status: string,
@@ -195,5 +194,7 @@ export const setSubmissionStatus = async (
   if (!current || !form) return { ok: false, code: API_ERROR.notFound.code }
   if (!form.statuses.includes(status)) return { ok: false, code: API_ERROR.invalid.code }
   const submission = await changeSubmissionStatus(d1, id, status, now)
-  return submission ? { ok: true, submission } : { ok: false, code: API_ERROR.notFound.code }
+  if (!submission) return { ok: false, code: API_ERROR.notFound.code }
+  await publishFormProjection(d1, kv, form, now)
+  return { ok: true, submission }
 }

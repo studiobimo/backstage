@@ -1,8 +1,8 @@
 import { setSubmissionStatus } from '@studiobimo/backstage/admin'
-import { testRegistry } from './test-registry'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { db, useFreshPagesDb } from './pages-test-support'
+import { db, kv, useFreshPagesDb } from './pages-test-support'
+import { testRegistry } from './test-registry'
 import { answerTurnstile, submitted } from './forms-test-support'
 
 const createdAtOf = (id: string) =>
@@ -15,14 +15,14 @@ describe('changing the status of a submission', () => {
 
   it('refuses a status the form does not have', async () => {
     const { id } = await submitted()
-    expect(await setSubmissionStatus(db, testRegistry, id, 'seated')).toEqual({
+    expect(await setSubmissionStatus(db, kv, testRegistry, id, 'seated')).toEqual({
       ok: false,
       code: 'invalid'
     })
   })
 
   it('refuses a submission that does not exist', async () => {
-    expect(await setSubmissionStatus(db, testRegistry, 'missing', 'declined')).toEqual({
+    expect(await setSubmissionStatus(db, kv, testRegistry, 'missing', 'declined')).toEqual({
       ok: false,
       code: 'not_found'
     })
@@ -32,7 +32,7 @@ describe('changing the status of a submission', () => {
     const { id } = await submitted()
     const created = (await createdAtOf(id))!
     const later = created + 1000
-    const changed = await setSubmissionStatus(db, testRegistry, id, 'declined', later)
+    const changed = await setSubmissionStatus(db, kv, testRegistry, id, 'declined', later)
     expect(changed).toMatchObject({
       ok: true,
       submission: { createdAt: created, updatedAt: later, status: 'declined' }

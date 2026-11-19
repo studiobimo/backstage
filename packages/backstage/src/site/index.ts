@@ -55,13 +55,16 @@ export { TURNSTILE, verifyTurnstile } from './turnstile.ts'
 export type { TurnstileCheck, TurnstileFailure, TurnstileResult } from './turnstile.ts'
 export {
   findEntryTranslations,
+  findFormProjection,
   findPublished,
   findPublishedEntry,
   findRegistrySettings,
   findSiteSnapshot,
   findTranslations
 } from './store.ts'
-export type { KvReader } from './store.ts'
+export type { FormProjectionRead, KvReader } from './store.ts'
+export { FORM_PROJECTION, formProjectionKey } from '../form-projection.ts'
+export type { FormProjection } from '../form-projection.ts'
 
 export interface SiteEnv {
   SITE: KVNamespace

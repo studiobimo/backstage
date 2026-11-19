@@ -68,3 +68,24 @@ public })` and `defineRegistry(blocks, { forms })`. The schema is a `z.object` t
   form that keeps Turnstile on.
 - Entries a submission refers to are checked when it is submitted, not later: unpublishing a dish
   does not change a stored preorder, and the inbox shows whatever the entry's id resolves to.
+
+## Addendum: the public projection (#472)
+
+- **One key per form, `form:<name>`**, not one per date. The reader needs no knowledge of which
+  field is a date, and a form that has none (a contact form) is served the same way. The cost is
+  that the value grows with the public submissions of the form. A restaurant's confirmed
+  reservations stay well under KV's 25 MiB value limit, and a site that needs a window by date
+  filters what the reader returns.
+- **The value is rebuilt from D1, not patched.** After a status changes, the admin lists the
+  form's submissions whose status is in `public.statuses`, keeps only `public.fields` of each
+  payload, and writes `{ format, form, publishedAt, entries }` oldest first. Confirming adds an
+  entry, declining or any other status drops it, and two changes racing each other settle on the
+  later write. Entries carry no id and no token unless a field of that name is public.
+- **It happens inside `setSubmissionStatus(d1, kv, registry, id, status)`**, so every caller gets
+  it, and when a submission is created with an initial status that is public. A form with no
+  public statuses or no public fields writes nothing.
+- **The reader is `findFormProjection(kv, registry, name)` in `./site`**. It reads KV only, parses
+  the value and filters every entry to the form's `public.fields` again, so a value written by an
+  older version cannot leak a field the form no longer lists. It answers `null` until something
+  has been published. A few seconds of staleness is accepted: the owner reviews every request.
+- **`setSubmissionStatus` takes the KV namespace** as its second argument.
