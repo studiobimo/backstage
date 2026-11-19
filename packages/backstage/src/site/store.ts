@@ -1,5 +1,6 @@
 import type { z } from 'zod'
 
+import type { FormRegistry } from '../blocks.ts'
 import type { CollectionRoute } from '../entry-pages.ts'
 import {
   entryRouteKey,
@@ -7,6 +8,7 @@ import {
   entrySnapshotSchema,
   type EntrySnapshot
 } from '../entry-publishing.ts'
+import { formProjectionKey, formProjectionSchema, publicFieldsOf } from '../form-projection.ts'
 import { LOCALE, type Locale } from '../locales.ts'
 import { isPreviewExpired, isPreviewToken, pagePreviewSchema, previewKey } from '../page-preview.ts'
 import {
@@ -106,4 +108,29 @@ export async function findEntryTranslations(
     others.map((locale) => readEntrySnapshot(kv, snapshot.collection, snapshot.entryId, locale))
   )
   return found.filter((translation) => translation !== null)
+}
+
+type FormOf<R extends FormRegistry, N extends string> =
+  R extends FormRegistry<infer F> ? Extract<F[number], { name: N }> : never
+
+export interface FormProjectionRead<S extends z.ZodType = z.ZodType> {
+  publishedAt: number
+  entries: Partial<z.output<S>>[]
+}
+
+export async function findFormProjection<R extends FormRegistry, const N extends string>(
+  kv: KvReader,
+  registry: R,
+  name: N
+): Promise<FormProjectionRead<FormOf<R, N>['schema']> | null> {
+  const form = registry.getForm(name)
+  if (!form) return null
+  const parsed = formProjectionSchema.safeParse(
+    await kv.get(formProjectionKey(name), { type: 'json' })
+  )
+  if (!parsed.success || parsed.data.form !== name) return null
+  return {
+    publishedAt: parsed.data.publishedAt,
+    entries: parsed.data.entries.map((entry) => publicFieldsOf(form, entry))
+  } as FormProjectionRead<FormOf<R, N>['schema']>
 }
