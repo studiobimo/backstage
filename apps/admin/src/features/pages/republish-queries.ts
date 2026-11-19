@@ -15,7 +15,7 @@ const statusPath = ({ since, cursor, entry }: RepublishScope) => {
   if (cursor !== null) params.set('cursor', cursor)
   if (entry) {
     params.set('collection', entry.collection)
-    params.set('entryId', entry.entryId)
+    if (entry.entryId) params.set('entryId', entry.entryId)
   }
   const query = params.toString()
   return query ? `${REPUBLISH_API.path}?${query}` : REPUBLISH_API.path

@@ -10,6 +10,7 @@ export const createEntrySchema = z.object({
   slugs: z.record(z.string(), slugSchema).optional()
 })
 export const saveEntrySchema = createEntrySchema.extend({ expectedVersion })
+export const reorderEntriesSchema = z.object({ ids: z.array(z.string().min(1)).min(1) })
 export const publishEntrySchema = publishPageSchema
 
 export const entrySummarySchema = authorshipSchema.extend({
@@ -18,6 +19,7 @@ export const entrySummarySchema = authorshipSchema.extend({
   version: z.number().int(),
   schemaVersion: z.number().int(),
   label: z.record(z.string(), z.string()),
+  position: z.number().int(),
   slugs: z.record(z.string(), z.string().nullable()).default({}),
   createdAt: z.number().int()
 })

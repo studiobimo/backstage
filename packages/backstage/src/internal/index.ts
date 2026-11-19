@@ -7,7 +7,8 @@ export {
   entrySchema,
   entrySummarySchema,
   createEntrySchema,
-  saveEntrySchema
+  saveEntrySchema,
+  reorderEntriesSchema
 } from '../entries.ts'
 export type { Entry, EntrySummary } from '../entries.ts'
 export { classifyField, isWeeklyHours, WEEKDAYS } from '../field-shapes.ts'

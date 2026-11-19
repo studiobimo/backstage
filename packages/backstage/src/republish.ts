@@ -37,7 +37,7 @@ export const kvWritesToRefresh = (pageCount: number, locales: readonly Locale[])
 
 const republishEntrySchema = z.object({
   collection: z.string().min(1),
-  entryId: z.string().min(1)
+  entryId: z.string().min(1).optional()
 })
 export type RepublishEntry = z.infer<typeof republishEntrySchema>
 
