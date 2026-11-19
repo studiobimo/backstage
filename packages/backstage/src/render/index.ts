@@ -5,7 +5,8 @@ export {
   useImage,
   useLocale,
   useLocalized,
-  useLogo
+  useLogo,
+  useSettings
 } from './context.ts'
 export type { RenderContext, RenderedImage } from './context.ts'
 export { RichText } from './rich-text.tsx'
