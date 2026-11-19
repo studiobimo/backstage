@@ -93,7 +93,8 @@ const tables = [
   'site_blocks',
   'site_publication',
   'entry_locales',
-  'entries'
+  'entries',
+  'submissions'
 ]
 
 export const useFreshPagesDb = () => {
