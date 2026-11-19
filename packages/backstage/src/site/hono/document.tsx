@@ -191,10 +191,12 @@ const pageHeadOf = (props: PageProps): HeadProps => {
 function SnapshotProvider({
   snapshot,
   locales,
+  settings,
   children
 }: {
   snapshot: Pick<Snapshot, 'locale' | 'media'>
   locales: LocaleConfig
+  settings?: SiteSnapshot['settings']
   children: ReactNode
 }) {
   return (
@@ -202,7 +204,8 @@ function SnapshotProvider({
       value={{
         locale: snapshot.locale,
         defaultLocale: locales.defaultLocale,
-        media: snapshot.media
+        media: snapshot.media,
+        settings
       }}
     >
       {children}
@@ -248,7 +251,7 @@ function DocumentBody({
     components.layouts[layoutName] ?? components.layouts[LAYOUT.default] ?? FallbackLayout
   return (
     <body>
-      <SnapshotProvider snapshot={snapshot} locales={locales}>
+      <SnapshotProvider snapshot={snapshot} locales={locales} settings={site?.settings}>
         {createElement(layout, { slots: renderSlots(components, site), children })}
       </SnapshotProvider>
       <LanguageSwitcher current={snapshot.locale} links={links} locales={locales} />

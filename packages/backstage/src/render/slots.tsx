@@ -46,7 +46,8 @@ const slotNode = (
           locale: site.locale,
           defaultLocale: resolveLocaleConfig(registry).defaultLocale,
           media: site.media,
-          brand: site.brand
+          brand: site.brand,
+          settings: site.settings
         }}
       >
         <Component {...(result.content as Record<string, unknown>)} />

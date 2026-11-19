@@ -122,6 +122,10 @@ export default createSite({
 - **Do not name a package script `deploy`.** `pnpm deploy` is a built-in command, so
   `pnpm deploy` runs the built-in and not your script; use `pnpm run deploy`, or pick another name
   such as `ship`.
+- **Registry settings inside a block.** A block reads the published settings while it renders with
+  `useSettings(settingsSchema)` from `@studiobimo/backstage/render`, passing the same schema the
+  registry declares. It returns the parsed, typed settings, or `null` when none were published or
+  they do not match the schema. Outside a block, `findRegistrySettings` reads them.
 - **Exported types.** With `composite` or `declaration` on, exporting a block schema or registry
   that uses `link()` needs `LinkInput` and `ResolvedLink` to be nameable, or TypeScript reports
   TS2883 or TS4023. Import both from `@studiobimo/backstage`.

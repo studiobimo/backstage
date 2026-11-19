@@ -1,8 +1,10 @@
 import { createContext, useContext } from 'react'
+import type { z } from 'zod'
 
 import { NO_SITE_BRAND, type SiteBrand } from '../brand.ts'
 import { LOCALE, type Locale } from '../locales.ts'
 import type { Snapshot } from '../publishing.ts'
+import type { SiteSnapshot } from '../site-publishing.ts'
 import { isBlank } from '../translations.ts'
 
 export interface RenderContext {
@@ -10,6 +12,7 @@ export interface RenderContext {
   defaultLocale: Locale
   media: Snapshot['media']
   brand?: SiteBrand
+  settings?: SiteSnapshot['settings']
 }
 
 const RenderReactContext = createContext<RenderContext>({
@@ -52,3 +55,9 @@ export function useImage(image: { id: string; alt: string } | undefined): Render
 export const useBrand = () => useContext(RenderReactContext).brand ?? NO_SITE_BRAND
 
 export const useLogo = () => useImage(useBrand().logo ?? undefined)
+
+export function useSettings<S extends z.ZodType>(schema: S): z.output<S> | null {
+  const { settings } = useContext(RenderReactContext)
+  const parsed = schema.safeParse(settings)
+  return parsed.success ? parsed.data : null
+}
