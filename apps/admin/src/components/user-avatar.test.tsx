@@ -12,6 +12,12 @@ describe('UserAvatar', () => {
     expect(avatar).toHaveTextContent('AL')
   })
 
+  it('sets the initials in the foreground colour so they stay readable on the fallback', () => {
+    render(<UserAvatar name="Ada Lovelace" />)
+    const fallback = screen.getByText('AL')
+    expect(fallback).toHaveClass('text-foreground')
+  })
+
   it('shows one initial for a one-word name', () => {
     render(<UserAvatar name="Ada" />)
     expect(screen.getByRole('img', { name: 'Ada' })).toHaveTextContent(/^A$/)
