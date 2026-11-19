@@ -1,14 +1,11 @@
 import type { Media } from '@studiobimo/backstage/internal'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
-import { ImageIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ListNotice } from '@/components/list-notice'
 import { SearchField } from '@/components/search-field'
 import { Button } from '@/components/ui/button'
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { RadioGroup, RadioPrimitive } from '@/components/ui/radio-group'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -26,7 +23,10 @@ import { useLocaleConfig } from '@/features/config/queries'
 import { altStatusOf, filterMedia } from './alt-status'
 import { ImageCard } from './image-card'
 import { imageDetailOf } from './media-details'
+import { EmptyLibrary } from './media-library'
 import { mediaFileUrl, mediaListQuery } from './queries'
+import { PendingCard, UploaderLayer, UploadButton } from './uploader-parts'
+import { useMediaUploader, type MediaUploader } from './use-media-uploader'
 
 interface MediaPickerProps {
   label: string
@@ -48,10 +48,12 @@ function SelectedThumbnail({ id }: { id: string }) {
 function PickerGrid({
   items,
   value,
+  uploader,
   onPick
 }: {
   items: Media[]
   value: string | null | undefined
+  uploader: MediaUploader
   onPick: (id: string) => void
 }) {
   const { t, i18n } = useTranslation('media')
@@ -63,6 +65,9 @@ function PickerGrid({
       onValueChange={(next) => onPick(String(next))}
       className="grid grid-cols-2 gap-3"
     >
+      {uploader.pending.map((upload) => (
+        <PendingCard key={upload.key} upload={upload} uploader={uploader} />
+      ))}
       {items.map((media) => (
         <RadioPrimitive.Root
           key={media.id}
@@ -85,50 +90,47 @@ function PickerGrid({
 
 function Library({
   value,
-  onPick
+  onPick,
+  onUploaded
 }: {
   value: string | null | undefined
   onPick: (id: string) => void
+  onUploaded: (id: string) => void
 }) {
   const { t } = useTranslation('media')
   const { data, isPending, isError } = useQuery(mediaListQuery)
+  const uploader = useMediaUploader({ onUploaded: (media) => onUploaded(media.id) })
   const [query, setQuery] = useState('')
   if (isPending) return <Skeleton className="h-40 w-full" />
   if (isError) return <p role="alert">{t('picker.loadFailed')}</p>
-  if (data.length === 0) {
-    return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <ImageIcon />
-          </EmptyMedia>
-          <EmptyTitle>{t('library.emptyTitle')}</EmptyTitle>
-          <EmptyDescription>
-            <Link to="/media" className="underline">
-              {t('library.upload')}
-            </Link>
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    )
-  }
   const visible = filterMedia(data, query)
+  const empty = data.length === 0 && uploader.pending.length === 0
   return (
     <div className="flex flex-col gap-4">
-      <SearchField
-        label={t('library.searchLabel')}
-        placeholder={t('library.searchPlaceholder')}
-        value={query}
-        onChange={setQuery}
-      />
-      {visible.length === 0 ? (
-        <ListNotice
-          title={t('library.noMatchTitle')}
-          description={t('library.noMatchDescription')}
-        />
+      {empty ? (
+        <EmptyLibrary onFiles={uploader.addFiles} />
       ) : (
-        <PickerGrid items={visible} value={value} onPick={onPick} />
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <UploadButton onFiles={uploader.addFiles}>{t('library.upload')}</UploadButton>
+            <SearchField
+              label={t('library.searchLabel')}
+              placeholder={t('library.searchPlaceholder')}
+              value={query}
+              onChange={setQuery}
+            />
+          </div>
+          {visible.length === 0 && uploader.pending.length === 0 ? (
+            <ListNotice
+              title={t('library.noMatchTitle')}
+              description={t('library.noMatchDescription')}
+            />
+          ) : (
+            <PickerGrid items={visible} value={value} uploader={uploader} onPick={onPick} />
+          )}
+        </>
       )}
+      <UploaderLayer uploader={uploader} />
     </div>
   )
 }
@@ -155,6 +157,7 @@ export function MediaPicker({ label, value, onChange }: MediaPickerProps) {
                 onChange(id)
                 setOpen(false)
               }}
+              onUploaded={onChange}
             />
           </SheetPanel>
         </SheetPopup>

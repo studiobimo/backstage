@@ -8,9 +8,7 @@
   },
   "picker": {
     "label": "Imagen",
-    "hint": "JPEG, PNG, WebP o AVIF. Se reduce y se le quitan los datos de ubicación y de cámara en tu navegador antes de subirla.",
-    "processing": "Preparando la imagen…",
-    "rejected": "No se puede usar esa imagen",
+    "rejected": "No se puede usar {{name}}",
     "loadFailed": "No se pudieron cargar las imágenes."
   },
   "rejections": {
@@ -36,15 +34,7 @@
     "hint": "Di qué muestra la imagen, como se lo dirías a alguien que no puede verla.",
     "needsAttention": "Corregir"
   },
-  "upload": {
-    "heading": "Nueva imagen",
-    "description": "Elige un archivo y descríbelo en cada idioma.",
-    "progress": "Subiendo"
-  },
   "submit": "Subir imagen",
-  "uploaded": {
-    "title": "Imagen subida"
-  },
   "delete": {
     "title": "¿Eliminar {{name}}?",
     "description": "La imagen se quita de la biblioteca para siempre. Las imágenes en uso no se pueden eliminar.",
@@ -69,9 +59,25 @@
     "description": "Elige una de las imágenes que subiste.",
     "label": "Imágenes subidas",
     "emptyTitle": "Aún no hay imágenes subidas",
-    "upload": "Sube una imagen",
+    "upload": "Subir imágenes",
     "choose": "Elegir {{label}}",
     "change": "Cambiar {{label}}",
-    "remove": "Quitar {{label}}"
+    "remove": "Quitar {{label}}",
+    "emptyDescription": "Suelta imágenes en cualquier parte de esta página o elígelas desde tu dispositivo."
+  },
+  "drop": {
+    "title": "Suelta las imágenes para subirlas",
+    "hint": "JPEG, PNG, WebP o AVIF. Se reducen y se les quitan los datos de ubicación y de cámara en tu navegador."
+  },
+  "describe": {
+    "title": "Describe esta imagen",
+    "description": "Añade una descripción en cada idioma o márcala como decorativa, y se sube.",
+    "cancel": "Omitir esta imagen",
+    "waiting_one": "1 más en espera",
+    "waiting_other": "{{count}} más en espera"
+  },
+  "pending": {
+    "uploading": "Subiendo",
+    "dismiss": "Descartar"
   }
 }

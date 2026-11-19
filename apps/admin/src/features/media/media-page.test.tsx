@@ -1,14 +1,23 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ToastProvider } from '@/components/ui/toast'
+import { ApiError } from '@/lib/api'
+import { uploadRequest } from '@/lib/upload-request'
 import { testQueryClient } from '@/test/query-client'
 
 import { MediaPage } from './media-page'
 import { MediaPicker } from './media-picker'
+import { processImage } from './process-image'
+
+vi.mock('@/lib/upload-request', () => ({ uploadRequest: vi.fn() }))
+vi.mock('./process-image', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./process-image')>()),
+  processImage: vi.fn()
+}))
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: ReactNode }) => <a href="/pages/p1">{children}</a>
@@ -96,20 +105,123 @@ describe('MediaPage library', () => {
     expect(screen.getByText('No images match')).toBeInTheDocument()
   })
 
-  it('invites the first upload when the library is empty', async () => {
+  it('offers one upload button when the library is empty', async () => {
     libraryApi([])
     renderInProviders(<MediaPage />)
     expect(await screen.findByText('No images uploaded yet')).toBeInTheDocument()
     expect(screen.queryByRole('meter')).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Upload images' })).toHaveLength(1)
+  })
+})
+
+const processed = {
+  width: 800,
+  height: 600,
+  contentType: 'image/jpeg',
+  file: new File([new Uint8Array(2048)], 'lamp.jpg', { type: 'image/jpeg' })
+}
+
+const createdMedia = (id: string) =>
+  new Response(JSON.stringify({ media: image(id, 'lamp.jpg', { decorative: true, alt: {} }) }), {
+    status: 201
   })
 
-  it('opens the upload form in a dialog', async () => {
+const chooseFile = (name = 'lamp.jpg') =>
+  userEvent.upload(screen.getByLabelText('Image'), new File(['x'], name, { type: 'image/jpeg' }))
+
+const markDecorativeAndUpload = async () => {
+  await userEvent.click(await screen.findByRole('switch', { name: /Decorative image/ }))
+  await userEvent.click(screen.getByRole('button', { name: 'Upload image' }))
+}
+
+const setUpUpload = () => {
+  URL.createObjectURL = vi.fn(() => 'blob:preview')
+  URL.revokeObjectURL = vi.fn()
+  vi.mocked(processImage).mockResolvedValue(processed as never)
+}
+
+describe('MediaPage upload', () => {
+  it('asks only for the description after a file is chosen, then uploads at once', async () => {
+    setUpUpload()
+    libraryApi()
+    vi.mocked(uploadRequest).mockResolvedValue(createdMedia('m9'))
+    renderInProviders(<MediaPage />)
+    await screen.findByText('chair.jpg')
+    await chooseFile()
+    const dialog = await screen.findByRole('dialog', { name: 'Describe this image' })
+    expect(within(dialog).getByText('lamp.jpg')).toBeInTheDocument()
+    await markDecorativeAndUpload()
+    await waitFor(() => expect(uploadRequest).toHaveBeenCalledOnce())
+    expect(vi.mocked(uploadRequest).mock.calls[0]![0]).toBe('/media')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('shows a pending card with progress while the image uploads', async () => {
+    setUpUpload()
+    libraryApi()
+    vi.mocked(uploadRequest).mockImplementation((_path, _body, onProgress) => {
+      onProgress(0.5)
+      return new Promise(() => {})
+    })
+    renderInProviders(<MediaPage />)
+    await screen.findByText('chair.jpg')
+    await chooseFile()
+    await markDecorativeAndUpload()
+    const progress = await screen.findByRole('progressbar')
+    expect(progress).toHaveAttribute('aria-valuenow', '50')
+    expect(progress).toHaveAccessibleName('Uploading')
+  })
+
+  it('keeps a failed upload on its card so it can be dismissed', async () => {
+    setUpUpload()
+    libraryApi()
+    vi.mocked(uploadRequest).mockRejectedValue(new ApiError('too_large', 'x'))
+    renderInProviders(<MediaPage />)
+    await screen.findByText('chair.jpg')
+    await chooseFile()
+    await markDecorativeAndUpload()
+    expect(await screen.findByRole('alert')).toHaveTextContent('too large')
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+})
+
+describe('MediaPage drag and drop', () => {
+  it('uploads files dropped anywhere on the page and shows the drop overlay', async () => {
+    setUpUpload()
+    libraryApi([])
+    renderInProviders(<MediaPage />)
+    await screen.findByText('No images uploaded yet')
+    const file = new File(['x'], 'lamp.jpg', { type: 'image/jpeg' })
+    const dataTransfer = { types: ['Files'], files: [file] }
+    fireEvent.dragEnter(document.body, { dataTransfer })
+    expect(await screen.findByText('Drop images to upload')).toBeInTheDocument()
+    fireEvent.drop(document.body, { dataTransfer })
+    expect(screen.queryByText('Drop images to upload')).toBeNull()
+    expect(await screen.findByRole('dialog', { name: 'Describe this image' })).toBeInTheDocument()
+  })
+
+  it('ignores drags that carry no files', async () => {
     libraryApi()
     renderInProviders(<MediaPage />)
-    await userEvent.click(await screen.findByRole('button', { name: 'Upload an image' }))
-    const dialog = await screen.findByRole('dialog', { name: 'New image' })
-    expect(within(dialog).getByLabelText('Image')).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Upload image' })).toBeDisabled()
+    await screen.findByText('chair.jpg')
+    fireEvent.dragEnter(document.body, { dataTransfer: { types: ['text/plain'], files: [] } })
+    expect(screen.queryByText('Drop images to upload')).toBeNull()
+  })
+
+  it('walks through several dropped images one description at a time', async () => {
+    setUpUpload()
+    libraryApi()
+    vi.mocked(uploadRequest).mockResolvedValue(createdMedia('m9'))
+    renderInProviders(<MediaPage />)
+    await screen.findByText('chair.jpg')
+    const files = ['a.jpg', 'b.jpg'].map((name) => new File(['x'], name, { type: 'image/jpeg' }))
+    fireEvent.drop(document.body, { dataTransfer: { types: ['Files'], files } })
+    expect(await screen.findByText('1 more waiting')).toBeInTheDocument()
+    await markDecorativeAndUpload()
+    await waitFor(() => expect(uploadRequest).toHaveBeenCalledOnce())
+    await markDecorativeAndUpload()
+    await waitFor(() => expect(uploadRequest).toHaveBeenCalledTimes(2))
   })
 })
 
@@ -172,5 +284,24 @@ describe('MediaPicker', () => {
     expect(screen.queryByRole('radio', { name: 'chair.jpg' })).toBeNull()
     await userEvent.click(screen.getByRole('radio', { name: 'table.png' }))
     expect(onChange).toHaveBeenCalledWith('m2')
+  })
+
+  it('uploads inside the picker and selects the new image without leaving', async () => {
+    setUpUpload()
+    libraryApi()
+    vi.mocked(uploadRequest).mockResolvedValue(createdMedia('m9'))
+    const onChange = await openPicker()
+    await chooseFile()
+    await screen.findByRole('dialog', { name: 'Describe this image' })
+    await markDecorativeAndUpload()
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith('m9'))
+  })
+
+  it('offers a single upload button when the library is empty', async () => {
+    libraryApi([])
+    renderInProviders(<MediaPicker label="Hero image" value={null} onChange={vi.fn()} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Choose Hero image' }))
+    expect(await screen.findByText('No images uploaded yet')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Upload images' })).toHaveLength(1)
   })
 })

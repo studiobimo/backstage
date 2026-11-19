@@ -8,9 +8,7 @@
   },
   "picker": {
     "label": "Image",
-    "hint": "JPEG, PNG, WebP or AVIF. It is resized and stripped of location and camera data in your browser before it is uploaded.",
-    "processing": "Preparing the image…",
-    "rejected": "That image can't be used",
+    "rejected": "{{name}} can't be used",
     "loadFailed": "The images could not be loaded."
   },
   "rejections": {
@@ -36,15 +34,7 @@
     "hint": "Say what the image shows, as you would to someone who can't see it.",
     "needsAttention": "Fix"
   },
-  "upload": {
-    "heading": "New image",
-    "description": "Choose a file, then describe it for each language.",
-    "progress": "Uploading"
-  },
   "submit": "Upload image",
-  "uploaded": {
-    "title": "Image uploaded"
-  },
   "delete": {
     "title": "Delete {{name}}?",
     "description": "The image is removed from the library for good. Images that are in use cannot be deleted.",
@@ -69,9 +59,25 @@
     "description": "Pick one of the images you uploaded.",
     "label": "Uploaded images",
     "emptyTitle": "No images uploaded yet",
-    "upload": "Upload an image",
+    "upload": "Upload images",
     "choose": "Choose {{label}}",
     "change": "Change {{label}}",
-    "remove": "Remove {{label}}"
+    "remove": "Remove {{label}}",
+    "emptyDescription": "Drop images anywhere on this page, or choose them from your device."
+  },
+  "drop": {
+    "title": "Drop images to upload",
+    "hint": "JPEG, PNG, WebP or AVIF. They are resized and stripped of location and camera data in your browser."
+  },
+  "describe": {
+    "title": "Describe this image",
+    "description": "Add a description for each language, or mark it decorative, then it uploads.",
+    "cancel": "Skip this image",
+    "waiting_one": "1 more waiting",
+    "waiting_other": "{{count}} more waiting"
+  },
+  "pending": {
+    "uploading": "Uploading",
+    "dismiss": "Dismiss"
   }
 }
