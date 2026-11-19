@@ -5,6 +5,7 @@ export const CONTENT_WIDTH = {
 
 export const CONTROL_WIDTH = {
   compact: 'w-full sm:w-44',
+  amount: 'w-full sm:w-60',
   action: 'sm:w-24',
   rowAction: 'sm:min-w-31'
 } as const
