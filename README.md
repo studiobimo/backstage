@@ -103,10 +103,11 @@ What a site author writes. It reaches no database and no Hono.
 
 - Blocks and layouts: `defineBlock`, `defineLayout`, `defineRegistry`, `defineComponents`, `LAYOUT`, `SLOT`
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
+- Forms: `defineForm`, `FORM`, passed to `defineRegistry(blocks, { forms })`
 - Fields: `entries`, `hexColor`, `image`, `link`, `localized`, `richText`, `isBlank`
 - Shared constants: `API_ERROR`, `MEDIA`
 - Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionComponents`,
-  `CollectionDefinition`, `CollectionDescription`, `CollectionRoute`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
+  `CollectionDefinition`, `CollectionDescription`, `CollectionRoute`, `Form`, `FormDefinition`, `FormNotify`, `FormPublic`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
   `LayoutDefinition`, `LayoutProps`, `Locale`, `LocaleConfig`, `Registry`, `RegistryOptions`, `RoutedCollection`, `RichTextDoc`
 
 ### `@studiobimo/backstage/admin`
@@ -115,6 +116,7 @@ The client's admin Worker. The only entry that reaches D1.
 
 - `createAdmin`, and the `AdminEnv` type of its bindings
 - `ensureUser`, `writeSiteBlock`, `writeSiteSettings`, which seed a database
+- Mail: `cloudflareMailer`, and the `Mailer` and `MailMessage` types
 
 ### `@studiobimo/backstage/admin/entrypoint`
 
