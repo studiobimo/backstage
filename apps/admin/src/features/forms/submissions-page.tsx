@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next'
 import { CardTable } from '@/components/card-table'
 import { ListNotice } from '@/components/list-notice'
 import { PageHeader } from '@/components/page-header'
-import { Button } from '@/components/ui/button'
 import { TableCell, TableHead, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
 
@@ -117,11 +116,6 @@ export function SubmissionsPage({ name, filter, onFilterChange }: SubmissionsPag
           icon={<SearchXIcon />}
           title={t('list.noMatchTitle')}
           description={t('list.noMatchDescription')}
-          action={
-            <Button variant="outline" onClick={() => onFilterChange({})}>
-              {t('filters.clear')}
-            </Button>
-          }
         />
       ) : (
         <ListNotice

@@ -93,17 +93,7 @@ describe('SubmissionsPage', () => {
     await waitFor(() =>
       expect(onFilterChange).toHaveBeenCalledWith({ status: 'new', from: '2026-12-24' })
     )
-    await user.click(screen.getAllByRole('button', { name: 'Clear filters' })[0]!)
-    expect(onFilterChange).toHaveBeenLastCalledWith({})
-  })
-
-  it('offers to clear the filters from the no-match state', async () => {
-    api([])
-    const onFilterChange = vi.fn()
-    const user = userEvent.setup()
-    renderNewOnly(onFilterChange)
-    await screen.findByText('No submissions match')
-    await user.click(screen.getAllByRole('button', { name: 'Clear filters' }).at(-1)!)
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }))
     expect(onFilterChange).toHaveBeenLastCalledWith({})
   })
 
