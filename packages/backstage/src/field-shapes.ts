@@ -9,6 +9,7 @@ export type FieldShape =
   | 'localized'
   | 'reference'
   | 'hexColor'
+  | 'weeklyHours'
   | 'array'
   | 'object'
   | 'select'
@@ -24,7 +25,8 @@ const MARKED_SHAPES: Record<string, FieldShape> = {
   link: 'link',
   localized: 'localized',
   reference: 'reference',
-  hexColor: 'hexColor'
+  hexColor: 'hexColor',
+  weeklyHours: 'weeklyHours'
 }
 
 const TYPE_SHAPES: Record<string, FieldShape> = {
@@ -45,7 +47,13 @@ export function classifyField(node: SchemaNode): FieldShape {
   return typed ?? 'unsupported'
 }
 
-const OPAQUE_SHAPES: readonly FieldShape[] = ['richText', 'image', 'link', 'reference']
+const OPAQUE_SHAPES: readonly FieldShape[] = [
+  'richText',
+  'image',
+  'link',
+  'reference',
+  'weeklyHours'
+]
 
 const joinPath = (path: string, key: string) => (path === '' ? key : `${path}.${key}`)
 
