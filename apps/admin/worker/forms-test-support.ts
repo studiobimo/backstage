@@ -91,3 +91,6 @@ export const draftDish = async () => {
 
 export const storedSubmissions = async () =>
   (await db.prepare('SELECT * FROM submissions ORDER BY created_at').all()).results
+
+export const sendForms = (path: string, method = 'GET', body?: unknown) =>
+  sendTo(admin, method, path, body)

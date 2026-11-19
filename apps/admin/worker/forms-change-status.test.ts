@@ -32,7 +32,7 @@ describe('changing the status of a submission', () => {
     const { id } = await submitted()
     const created = (await createdAtOf(id))!
     const later = created + 1000
-    const changed = await setSubmissionStatus(db, kv, testRegistry, id, 'declined', later)
+    const changed = await setSubmissionStatus(db, kv, testRegistry, id, 'declined', { now: later })
     expect(changed).toMatchObject({
       ok: true,
       submission: { createdAt: created, updatedAt: later, status: 'declined' }

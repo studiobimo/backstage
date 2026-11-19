@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { blocksRoutes } from './blocks.ts'
 import { collectionsRoutes } from './collections.ts'
 import { configRoutes } from './config.ts'
+import { formsRoutes } from './forms.ts'
 import { entryPublishRoutes } from './entry-publish.ts'
 import { layoutsRoutes } from './layouts.ts'
 import { mediaRoutes } from './media.ts'
@@ -26,6 +27,7 @@ export const v1Routes = (registry: AdminRegistry) =>
     .route('/collections', collectionsRoutes(registry))
     .route('/collections', entryPublishRoutes(registry))
     .route('/config', configRoutes(registry))
+    .route('/forms', formsRoutes(registry))
     .route('/layouts', layoutsRoutes(registry))
     .route('/media', mediaRoutes(registry))
     .route('/republish', republishRoutes(registry))

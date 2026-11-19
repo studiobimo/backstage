@@ -181,19 +181,21 @@ export type StatusChange =
   | { ok: true; submission: Submission }
   | { ok: false; code: typeof API_ERROR.notFound.code | typeof API_ERROR.invalid.code }
 
+export type StatusChangeOptions = { now?: number; editorId?: string | null }
+
 export const setSubmissionStatus = async (
   d1: AnyD1Database,
   kv: KVNamespace,
   registry: AdminRegistry,
   id: string,
   status: string,
-  now: number = Date.now()
+  { now = Date.now(), editorId = null }: StatusChangeOptions = {}
 ): Promise<StatusChange> => {
   const current = await findSubmission(d1, id)
   const form = current ? formsOf(registry).get(current.form) : undefined
   if (!current || !form) return { ok: false, code: API_ERROR.notFound.code }
   if (!form.statuses.includes(status)) return { ok: false, code: API_ERROR.invalid.code }
-  const submission = await changeSubmissionStatus(d1, id, status, now)
+  const submission = await changeSubmissionStatus(d1, id, status, now, editorId)
   if (!submission) return { ok: false, code: API_ERROR.notFound.code }
   await publishFormProjection(d1, kv, form, now)
   return { ok: true, submission }

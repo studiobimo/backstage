@@ -44,7 +44,7 @@ public })` and `defineRegistry(blocks, { forms })`. The schema is a `z.object` t
 - **The token is stored as a SHA-256 hash.** It is a bearer capability to read a visitor's own
   fields, so a leaked database must not hand them all out. The lookup hashes the presented token.
   The id is separate and never accepted in place of the token.
-- **One function changes a status**, `setSubmissionStatus(d1, registry, id, status)`, which checks
+- **One function changes a status**, `setSubmissionStatus(d1, kv, registry, id, status, options?)`, which checks
   the status against the form's list and moves `updated_at`. #471 calls it from the admin API and
   #472 reads the rows it leaves. `listSubmissions` and `findSubmission` are exported beside it.
 - **The notification is the owner's, optional and never blocking.** `notify: { to, subject }`
@@ -81,7 +81,7 @@ public })` and `defineRegistry(blocks, { forms })`. The schema is a `z.object` t
   payload, and writes `{ format, form, publishedAt, entries }` oldest first. Confirming adds an
   entry, declining or any other status drops it, and two changes racing each other settle on the
   later write. Entries carry no id and no token unless a field of that name is public.
-- **It happens inside `setSubmissionStatus(d1, kv, registry, id, status)`**, so every caller gets
+- **It happens inside `setSubmissionStatus(d1, kv, registry, id, status, options?)`**, so every caller gets
   it, and when a submission is created with an initial status that is public. A form with no
   public statuses or no public fields writes nothing.
 - **The reader is `findFormProjection(kv, registry, name)` in `./site`**. It reads KV only, parses

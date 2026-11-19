@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
@@ -6,6 +6,7 @@ import { openStoredContent } from '../blocks.ts'
 import type { Collection, EntryLabels } from '../collections.ts'
 import type { Entry } from '../entries.ts'
 import type { EntrySlugs } from '../entry-snapshot-build.ts'
+import { D1_LIMITS, inChunks } from './chunks.ts'
 import { entrySlugWrites, readEntrySlugs, writeEntrySlugs } from './entry-slugs.ts'
 import { entries, users } from './schema.ts'
 import { ROW_WRITE, readStamp, type VersionedWrite } from './versioned-row.ts'
@@ -74,6 +75,18 @@ export const listEntries = async (d1: AnyD1Database, collection: Collection) => 
   ])
   return rows.map((row) => toEntry(collection, row, slugs.get(row.entry.id)))
 }
+
+export const readEntryLabels = async (d1: AnyD1Database, ids: readonly string[]) =>
+  (
+    await Promise.all(
+      inChunks([...new Set(ids)], D1_LIMITS.boundParameters).map((chunk) =>
+        drizzle(d1)
+          .select({ id: entries.id, collection: entries.collection, label: entries.label })
+          .from(entries)
+          .where(inArray(entries.id, chunk))
+      )
+    )
+  ).flat()
 
 export const findEntry = async (d1: AnyD1Database, collection: Collection, id: string) => {
   const [[row], slugs] = await Promise.all([
