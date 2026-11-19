@@ -24,6 +24,7 @@ interface DeleteDialogProps {
   description: ReactNode
   cancelLabel: string
   confirmLabel: string
+  failureDetail?: (error: Error) => ReactNode
 }
 
 export function DeleteDialog({
@@ -34,7 +35,8 @@ export function DeleteDialog({
   title,
   description,
   cancelLabel,
-  confirmLabel
+  confirmLabel,
+  failureDetail
 }: DeleteDialogProps) {
   const messageOf = useApiErrorMessage()
   const handleOpenChange = (next: boolean) => {
@@ -51,7 +53,10 @@ export function DeleteDialog({
         {remove.isError && (
           <Alert variant="error">
             <CircleAlertIcon />
-            <AlertDescription>{messageOf(remove.error)}</AlertDescription>
+            <AlertDescription>
+              {messageOf(remove.error)}
+              {failureDetail?.(remove.error)}
+            </AlertDescription>
           </Alert>
         )}
         <AlertDialogFooter>
