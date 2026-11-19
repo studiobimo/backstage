@@ -19,6 +19,10 @@
     "general": {
       "title": "General",
       "description": "The basics every page shares: the site's name, logo and theme color, and the image used when a link is shared."
+    },
+    "registry": {
+      "title": "Site data",
+      "description": "Values the site reads but does not show, such as opening hours. Its fields come from this site’s settings schema."
     }
   },
   "fields": {
@@ -44,6 +48,9 @@
     }
   },
   "slots": {
+    "_settings": {
+      "title": "Site data"
+    },
     "header": {
       "title": "Header",
       "description": "What opens every page that shows it. Its fields come from this site’s header block."

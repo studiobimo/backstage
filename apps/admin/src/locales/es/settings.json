@@ -19,6 +19,10 @@
     "general": {
       "title": "General",
       "description": "Lo básico que comparten todas las páginas: el nombre del sitio, el logotipo y el color del tema, y la imagen que se usa al compartir un enlace."
+    },
+    "registry": {
+      "title": "Datos del sitio",
+      "description": "Valores que el sitio lee pero no muestra, como el horario. Sus campos vienen del esquema de ajustes de este sitio."
     }
   },
   "fields": {
@@ -44,6 +48,9 @@
     }
   },
   "slots": {
+    "_settings": {
+      "title": "Datos del sitio"
+    },
     "header": {
       "title": "Cabecera",
       "description": "Lo que abre cada página que la muestra. Sus campos vienen del bloque de cabecera de este sitio."
