@@ -32,7 +32,7 @@ export const v1Routes = (registry: AdminRegistry) =>
     .route('/pages', pagesRoutes(registry))
     .route('/pages', publishRoutes(registry))
     .route('/pages', previewRoutes(registry))
-    .route('/settings', settingsRoutes())
+    .route('/settings', settingsRoutes(registry))
     .route('/site-origin', siteOriginRoutes())
     .route('/site', sitePublishRoutes(registry))
     .route('/slots', slotsRoutes(registry))

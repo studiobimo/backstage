@@ -34,3 +34,17 @@ export type VersionedSiteSettings = z.infer<typeof siteSettingsResponseSchema>
 export const EMPTY_SITE_SETTINGS: SiteSettings = { siteName: {} }
 
 export const siteSettingsJsonSchema = () => z.toJSONSchema(siteSettingsSchema, { io: 'input' })
+
+const settingsValues = z.record(z.string(), z.unknown())
+
+export const registrySettingsResponseSchema = z.object({
+  schema: z.record(z.string(), z.unknown()).nullable(),
+  settings: settingsValues,
+  version: z.number().int()
+})
+export type RegistrySettingsResponse = z.infer<typeof registrySettingsResponseSchema>
+
+export const saveRegistrySettingsSchema = z.object({
+  settings: settingsValues,
+  expectedVersion: expectedSiteVersion
+})

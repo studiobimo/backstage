@@ -1,7 +1,9 @@
 import { z } from 'zod'
 
 import { NO_SITE_BRAND, siteBrandSchema, type SiteBrand } from './brand.ts'
-import { validateBlockContent, type Registry } from './blocks.ts'
+import { CONTENT_FAILURE, validateBlockContent } from './blocks.ts'
+import type { AdminRegistry } from './collections.ts'
+import { fieldIssuesOf } from './errors.ts'
 import { resolveLocaleConfig, type Locale } from './locales.ts'
 import {
   contentProblems,
@@ -38,6 +40,7 @@ export const siteSnapshotSchema = z.object({
     socialImageId: z.string().nullable()
   }),
   brand: siteBrandSchema.default(NO_SITE_BRAND),
+  settings: z.record(z.string(), z.unknown()).nullable().optional(),
   slots: z.record(z.string(), siteBlockSchema),
   media: z.record(z.string(), snapshotMediaSchema)
 })
@@ -54,15 +57,18 @@ export const sitePublicationResponseSchema = z.object({ publication: sitePublica
 
 export interface SiteVersions {
   settings: number
+  registrySettings?: number
   slots: Record<string, number>
 }
 
 export const sameSiteVersions = (a: SiteVersions, b: SiteVersions) =>
   a.settings === b.settings &&
+  (a.registrySettings ?? 0) === (b.registrySettings ?? 0) &&
   Object.keys({ ...a.slots, ...b.slots }).every((slot) => a.slots[slot] === b.slots[slot])
 
 export interface SiteDraft {
   settings: SiteSettings
+  registrySettings: Record<string, unknown> | null
   blocks: ReadonlyMap<string, SiteBlock>
 }
 
@@ -71,7 +77,7 @@ export type SiteSnapshotBuild =
 
 type CheckedSlot = { ok: true; value: SiteBlock } | { ok: false; problems: PublishProblem[] }
 
-const checkSlotBlock = (registry: Registry, slot: string, stored: SiteBlock): CheckedSlot => {
+const checkSlotBlock = (registry: AdminRegistry, slot: string, stored: SiteBlock): CheckedSlot => {
   const definition = registry.get(stored.block)
   if (!definition || !registry.slots.get(slot)?.includes(definition.name)) {
     return { ok: false, problems: [problemOf(PUBLISH_PROBLEM.unknownBlock, { slot })] }
@@ -93,33 +99,90 @@ const brandOf = ({ logo, themeColor }: SiteSettings): SiteBrand => ({
   themeColor: themeColor ?? null
 })
 
-const slotsToPublish = (registry: Registry, draft: SiteDraft) =>
+const REGISTRY_SETTINGS_PROBLEM_SLOT = '_settings'
+const REGISTRY_LOCATION = { slot: REGISTRY_SETTINGS_PROBLEM_SLOT }
+
+type CheckedRegistrySettings =
+  { ok: true; value: Record<string, unknown> | null } | { ok: false; problems: PublishProblem[] }
+
+const checkRegistrySettings = (
+  registry: AdminRegistry,
+  draft: SiteDraft
+): CheckedRegistrySettings => {
+  if (!registry.settings || draft.registrySettings === null) return { ok: true, value: null }
+  const parsed = registry.settings.safeParse(draft.registrySettings)
+  if (parsed.success) return { ok: true, value: parsed.data as Record<string, unknown> }
+  const issues = fieldIssuesOf(parsed.error)
+  return {
+    ok: false,
+    problems: failureProblems(
+      { ok: false, failure: CONTENT_FAILURE.invalid, issues },
+      REGISTRY_LOCATION
+    )
+  }
+}
+
+const registrySettingsProblems = (
+  registry: AdminRegistry,
+  checked: CheckedRegistrySettings,
+  media: ReadonlyMap<string, PublishMediaRow>,
+  addresses: PageAddresses
+) => {
+  if (!checked.ok) return checked.problems
+  if (!checked.value) return []
+  const node = registry.settingsJsonSchema?.()
+  if (!node) return []
+  const { defaultLocale, locales } = resolveLocaleConfig(registry)
+  return [
+    ...contentProblems(node, checked.value, media, REGISTRY_LOCATION, defaultLocale),
+    ...pageLinkProblems(node, checked.value, addresses, locales, REGISTRY_LOCATION)
+  ]
+}
+
+const registrySettingsIn = (registry: AdminRegistry, draft: SiteDraft) => {
+  const checked = checkRegistrySettings(registry, draft)
+  if (!checked.ok || !checked.value) return undefined
+  const node = registry.settingsJsonSchema?.()
+  return node ? { node, value: checked.value } : undefined
+}
+
+const slotsToPublish = (registry: AdminRegistry, draft: SiteDraft) =>
   [...registry.slots.keys()].flatMap((slot) => {
     const stored = draft.blocks.get(slot)
     return stored ? [{ slot, checked: checkSlotBlock(registry, slot, stored) }] : []
   })
 
-export const siteMediaIds = (registry: Registry, draft: SiteDraft) => [
+const mediaIdsOfRegistrySettings = (registry: AdminRegistry, draft: SiteDraft) => {
+  const settings = registrySettingsIn(registry, draft)
+  return settings ? mediaIdsIn(settings.node, settings.value) : []
+}
+
+export const siteMediaIds = (registry: AdminRegistry, draft: SiteDraft) => [
   ...new Set([
     ...mediaIdsIn(siteSettingsJsonSchema(), draft.settings),
+    ...mediaIdsOfRegistrySettings(registry, draft),
     ...slotsToPublish(registry, draft).flatMap(({ checked }) =>
       checked.ok ? mediaIdsIn(registry.jsonSchema(checked.value.block), checked.value.content) : []
     )
   ])
 ]
 
-export const siteLinkedPageIds = (registry: Registry, draft: SiteDraft) => [
-  ...new Set(
-    slotsToPublish(registry, draft).flatMap(({ checked }) =>
-      checked.ok
-        ? pageLinkIdsIn(registry.jsonSchema(checked.value.block), checked.value.content)
-        : []
-    )
-  )
-]
+export const siteLinkedPageIds = (registry: AdminRegistry, draft: SiteDraft) => {
+  const settings = registrySettingsIn(registry, draft)
+  return [
+    ...new Set([
+      ...(settings ? pageLinkIdsIn(settings.node, settings.value) : []),
+      ...slotsToPublish(registry, draft).flatMap(({ checked }) =>
+        checked.ok
+          ? pageLinkIdsIn(registry.jsonSchema(checked.value.block), checked.value.content)
+          : []
+      )
+    ])
+  ]
+}
 
 const slotProblems = (
-  registry: Registry,
+  registry: AdminRegistry,
   slot: string,
   checked: CheckedSlot,
   media: ReadonlyMap<string, PublishMediaRow>,
@@ -135,7 +198,7 @@ const slotProblems = (
 }
 
 const slotsFor = (
-  registry: Registry,
+  registry: AdminRegistry,
   published: Record<string, SiteBlock>,
   locale: Locale,
   addresses: PageAddresses
@@ -156,8 +219,26 @@ const slotsFor = (
     ])
   )
 
+const registrySettingsFor = (
+  registry: AdminRegistry,
+  draft: SiteDraft,
+  locale: Locale,
+  addresses: PageAddresses
+) => {
+  const settings = registrySettingsIn(registry, draft)
+  return settings
+    ? (resolvePageLinks(
+        settings.node,
+        settings.value,
+        locale,
+        addresses,
+        resolveLocaleConfig(registry)
+      ) as Record<string, unknown>)
+    : null
+}
+
 export const buildSiteSnapshots = (
-  registry: Registry,
+  registry: AdminRegistry,
   draft: SiteDraft,
   media: ReadonlyMap<string, PublishMediaRow>,
   publishedAt: number,
@@ -172,6 +253,7 @@ export const buildSiteSnapshots = (
       {},
       resolveLocaleConfig(registry).defaultLocale
     ),
+    ...registrySettingsProblems(registry, checkRegistrySettings(registry, draft), media, addresses),
     ...slots.flatMap(({ slot, checked }) => slotProblems(registry, slot, checked, media, addresses))
   ]
   if (problems.length > 0) return { ok: false, problems }
@@ -193,6 +275,7 @@ export const buildSiteSnapshots = (
         socialImageId: defaultSocialImage?.id ?? null
       },
       brand: brandOf(draft.settings),
+      settings: registrySettingsFor(registry, draft, locale, addresses),
       slots: slotsFor(registry, published, locale, addresses),
       media: mediaFor(mediaIds, media, locale)
     }))

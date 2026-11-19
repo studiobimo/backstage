@@ -1,3 +1,5 @@
+import type { z } from 'zod'
+
 import type { CollectionRoute } from '../entry-pages.ts'
 import {
   entryRouteKey,
@@ -52,6 +54,16 @@ export async function findSiteSnapshot(kv: KvReader, locale: Locale) {
   const parsed = siteSnapshotSchema.safeParse(
     await kv.get(siteSnapshotKey(locale), { type: 'json' })
   )
+  return parsed.success ? parsed.data : null
+}
+
+export async function findRegistrySettings<S extends z.ZodType>(
+  kv: KvReader,
+  { settings }: { settings: S },
+  locale: Locale
+): Promise<z.output<S> | null> {
+  const snapshot = await findSiteSnapshot(kv, locale)
+  const parsed = settings.safeParse(snapshot?.settings)
   return parsed.success ? parsed.data : null
 }
 

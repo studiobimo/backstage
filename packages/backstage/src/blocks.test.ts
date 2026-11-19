@@ -263,3 +263,34 @@ describe('field helpers', () => {
     expect(link({ requireLabel: true }).safeParse({ href: '/a', label: 'A' }).success).toBe(true)
   })
 })
+
+describe('defineRegistry settings', () => {
+  const settings = z.object({
+    slotMinutes: z.number().int().min(5),
+    note: localized(z.string()).optional()
+  })
+
+  it('keeps the schema and describes it for the admin', () => {
+    const registry = defineRegistry([], { settings })
+    expect(registry.settings).toBe(settings)
+    expect(Object.keys(registry.settingsJsonSchema()?.properties ?? {})).toEqual([
+      'slotMinutes',
+      'note'
+    ])
+  })
+
+  it('has no settings unless it declares them', () => {
+    const registry = defineRegistry([])
+    expect(registry.settings).toBeUndefined()
+    expect(registry.settingsJsonSchema()).toBeUndefined()
+  })
+
+  it('refuses a schema the admin cannot render', () => {
+    const unrenderable = z.object({ a: z.union([z.string(), z.number()]) })
+    expect(() => defineRegistry([], { settings: unrenderable })).toThrow(/Registry "settings"/)
+  })
+
+  it('refuses settings that are not an object', () => {
+    expect(() => defineRegistry([], { settings: z.string() })).toThrow(/must be a z.object/)
+  })
+})

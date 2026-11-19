@@ -52,6 +52,7 @@ export {
   findEntryTranslations,
   findPublished,
   findPublishedEntry,
+  findRegistrySettings,
   findSiteSnapshot,
   findTranslations
 } from './store.ts'
