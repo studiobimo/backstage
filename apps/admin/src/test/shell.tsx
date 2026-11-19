@@ -43,6 +43,7 @@ export function stubApi() {
 }
 
 export async function renderShell(path = '/') {
+  if (!vi.isMockFunction(fetch)) stubApi()
   const queryClient = testQueryClient()
   const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }))
   render(

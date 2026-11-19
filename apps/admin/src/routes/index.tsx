@@ -1,17 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useTranslation } from 'react-i18next'
 
-import { PageHeader } from '@/components/page-header'
-import { site } from '@/config/site'
+import { HomePage } from '@/features/home/home-page'
+import { pagesQuery } from '@/features/pages/queries'
 
 export const Route = createFileRoute('/')({
+  loader: ({ context }) => context.queryClient.ensureQueryData(pagesQuery),
   staticData: { title: 'nav.home' },
-  component: HomeRoute
+  component: HomePage
 })
-
-function HomeRoute() {
-  const { t } = useTranslation()
-  return (
-    <PageHeader title={t('home.title', { name: site.name })} description={t('home.description')} />
-  )
-}

@@ -56,7 +56,7 @@ function LanguageBadges({
   )
 }
 
-function StatusBadge({ page }: { page: PageSummary }) {
+export function StatusBadge({ page }: { page: PageSummary }) {
   const { t } = useTranslation('pages')
   return (
     <PublishStateBadge
