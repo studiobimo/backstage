@@ -3,6 +3,7 @@ import type { ComponentProps } from 'react'
 
 import { BrandMark } from '@/components/brand-mark'
 import { NavCollections } from '@/components/nav-collections'
+import { NavForms } from '@/components/nav-forms'
 import { NavMain } from '@/components/nav-main'
 import { NavSecondary } from '@/components/nav-secondary'
 import { NavUser } from '@/components/nav-user'
@@ -38,6 +39,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain />
         <NavCollections />
+        <NavForms />
         <NavSecondary className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
