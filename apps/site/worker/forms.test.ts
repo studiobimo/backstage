@@ -14,8 +14,8 @@ import { z } from 'zod'
 import { components } from '../src/blocks/component-map'
 import { contactForm } from '../src/forms/contact/form'
 import { FORM_ROUTE, formPathOf, formProjectionPathOf, formStatusPathOf } from '../src/forms/route'
-import { formRoutes } from './forms'
-import { platform } from './test-support'
+import { formRoutes, type FormBindings } from './forms'
+import { kv, platform } from './test-support'
 
 afterAll(() => platform.dispose())
 
@@ -46,17 +46,27 @@ const registry = { forms, getForm: (name: string) => forms.get(name) }
 const allowing = { limit: async () => ({ success: true }) }
 const refusing = { limit: async () => ({ success: false }) }
 
-const envWith = (admin: Partial<VisitorRpc>, limiter = allowing) =>
-  ({ ...platform.env, ADMIN: admin, FORM_LIMITER: limiter }) as unknown as Env
+const envWith = (admin: Partial<VisitorRpc> | undefined, limiter = allowing) => ({
+  ...platform.env,
+  ADMIN: admin,
+  FORM_LIMITER: limiter
+})
+
+type TestEnv = ReturnType<typeof envWith>
 
 const submitting = (result: SubmitResult, limiter = allowing) => {
   const submit = vi.fn<VisitorRpc['submit']>(async () => result)
   return { submit, env: envWith({ submit }, limiter) }
 }
 
-const siteOf = () => createSite({ components, stylesheet: '', routes: formRoutes(registry) })
+const siteOf = () =>
+  createSite<FormBindings>({
+    components,
+    stylesheet: '',
+    routes: formRoutes(registry)
+  })
 
-const post = (env: Env, name: string, fields: Record<string, string>) =>
+const post = (env: TestEnv, name: string, fields: Record<string, string>) =>
   siteOf().request(
     formPathOf(name),
     {
@@ -136,7 +146,7 @@ describe('submitting a form by name', () => {
 })
 
 describe('submitting as JSON', () => {
-  const postJson = (env: Env, body: unknown) =>
+  const postJson = (env: TestEnv, body: unknown) =>
     siteOf().request(
       formPathOf('order'),
       {
@@ -258,8 +268,8 @@ describe('reading a projection', () => {
   }
 
   it('returns the projected entries with a short public cache', async () => {
-    await platform.env.SITE!.put(formProjectionKey('contact'), JSON.stringify(PROJECTION))
-    const response = await siteOf().request(formProjectionPathOf('contact'), {}, envWith({}))
+    await kv.put(formProjectionKey('contact'), JSON.stringify(PROJECTION))
+    const response = await siteOf().request(formProjectionPathOf('contact'), {}, envWith(undefined))
     expect(response.status).toBe(200)
     expect(response.headers.get('Cache-Control')).toBe(EDGE_CACHE.form.projection)
     const body = (await response.json()) as { publishedAt: number; entries: unknown[] }
@@ -268,7 +278,18 @@ describe('reading a projection', () => {
   })
 
   it('answers a form with no projection as not found', async () => {
-    const response = await siteOf().request(formProjectionPathOf('newsletter'), {}, envWith({}))
+    const response = await siteOf().request(
+      formProjectionPathOf('newsletter'),
+      {},
+      envWith(undefined)
+    )
     expect(response.status).toBe(API_ERROR.notFound.status)
+  })
+})
+
+describe('without the admin binding', () => {
+  it('answers a submit with an internal error instead of throwing', async () => {
+    const response = await post(envWith(undefined), 'contact', FIELDS)
+    expect(response.status).toBe(API_ERROR.internal.status)
   })
 })

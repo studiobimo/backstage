@@ -7,8 +7,8 @@ import type { SiteEnvironment } from './create-site.ts'
 import { renderEntryPage, type DocumentContext } from './document.tsx'
 import { siteOriginOf } from './origin.ts'
 
-export const renderEntryRoute = async (
-  c: Context<SiteEnvironment>,
+export const renderEntryRoute = async <Extra extends object>(
+  c: Context<SiteEnvironment<Extra>>,
   document: DocumentContext,
   entryRoutes: Readonly<Record<string, CollectionRoute>>,
   headers: HeadersInit

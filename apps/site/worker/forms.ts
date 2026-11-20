@@ -30,20 +30,24 @@ const respondWithError = (
   issues: unknown[] = []
 ) => c.json({ code: error.code, error: error.message, issues }, error.status)
 
-const limiterOf = (env: SiteEnv) => (env as unknown as Env)[FORM_ROUTE.limiter]
+export type FormBindings = Pick<Env, typeof FORM_ROUTE.limiter>
 
-export const formRoutes = (source: FormSource) => (app: SiteApp) => {
+const adminOf = (env: SiteEnv) => (env.ADMIN ? adminRpc(env.ADMIN) : null)
+
+export const formRoutes = (source: FormSource) => (app: SiteApp<FormBindings>) => {
   const registry = complete(source)
   return app
     .post(FORM_ROUTE.path, async (c) => {
-      const limited = await rateLimited(limiterOf(c.env), c.req.raw)
+      const limited = await rateLimited(c.env[FORM_ROUTE.limiter], c.req.raw)
       if (limited) return limited
       const name = c.req.param(FORM_ROUTE.param.name)
       const definition = registry.getForm(name)
       if (!definition) return respondWithError(c, API_ERROR.notFound)
       const read = await readFormPayload(c.req.raw, definition.schema)
       if (!read) return respondWithError(c, API_ERROR.invalid)
-      const sent = await adminRpc(c.env.ADMIN!).submit(
+      const admin = adminOf(c.env)
+      if (!admin) return respondWithError(c, API_ERROR.internal)
+      const sent = await admin.submit(
         requestContextOf(c.req.raw),
         name,
         read.payload,
@@ -53,11 +57,13 @@ export const formRoutes = (source: FormSource) => (app: SiteApp) => {
       return respondWithError(c, errorFor(sent.code), sent.issues)
     })
     .get(FORM_ROUTE.statusPath, async (c) => {
-      const limited = await rateLimited(limiterOf(c.env), c.req.raw)
+      const limited = await rateLimited(c.env[FORM_ROUTE.limiter], c.req.raw)
       if (limited) return limited
       const name = c.req.param(FORM_ROUTE.param.name)
       if (!registry.getForm(name)) return respondWithError(c, API_ERROR.notFound)
-      const found = await adminRpc(c.env.ADMIN!).status(
+      const admin = adminOf(c.env)
+      if (!admin) return respondWithError(c, API_ERROR.internal)
+      const found = await admin.status(
         requestContextOf(c.req.raw),
         c.req.param(FORM_ROUTE.param.token)
       )
