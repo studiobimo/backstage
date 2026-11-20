@@ -97,3 +97,14 @@ export const clearKv = async () => {
   const { keys } = await kv.list()
   await Promise.all(keys.map(({ name }) => kv.delete(name)))
 }
+
+export function directives(response: Response) {
+  const policy = response.headers.get('Content-Security-Policy') ?? ''
+  return new Map(
+    policy
+      .split(';')
+      .map((directive) => directive.trim().split(/\s+/))
+      .filter(([name]) => name)
+      .map(([name, ...sources]) => [name, sources])
+  )
+}
