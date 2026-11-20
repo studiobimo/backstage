@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { defineBlock, defineRegistry } from './blocks.ts'
 import { defineCollection } from './collections.ts'
-import { defineForm, FORM, formsOf, initialStatusOf, tokenDaysOf } from './forms.ts'
+import { defineForm, FORM, formsOf, initialStatusOf } from './forms.ts'
 import { entries } from './references.ts'
 
 const menu = defineCollection({
@@ -114,7 +114,6 @@ describe('a registry with forms', () => {
 describe('defineForm token and retention', () => {
   it('expires the status token after the default days, and keeps no retention', () => {
     const form = defineForm('reservation', { schema })
-    expect(tokenDaysOf(form)).toBe(FORM.token.defaultExpiresInDays)
     expect(form.token).toEqual({ expiresInDays: FORM.token.defaultExpiresInDays })
     expect(form.retention).toBeUndefined()
   })
@@ -125,7 +124,7 @@ describe('defineForm token and retention', () => {
       token: { expiresInDays: 7 },
       retention: { days: 90 }
     })
-    expect(tokenDaysOf(form)).toBe(7)
+    expect(form.token.expiresInDays).toBe(7)
     expect(form.retention).toEqual({ days: 90 })
   })
 
