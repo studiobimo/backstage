@@ -91,3 +91,42 @@ export const changeStatusMutation = (queryClient: QueryClient, form: string, id:
       ])
     }
   })
+
+type PrivacyAction = keyof typeof INBOX.paths
+
+const refreshSubmissions = (queryClient: QueryClient, form: string) =>
+  Promise.all([
+    queryClient.invalidateQueries({ queryKey: submissionsKey(form) }),
+    queryClient.invalidateQueries({ queryKey: formsKey })
+  ])
+
+export const privacyMutation = (queryClient: QueryClient, form: string, action: PrivacyAction) =>
+  mutationOptions({
+    mutationFn: async (id: string) =>
+      submissionResponseSchema.pick({ submission: true }).parse(
+        await (
+          await apiRequest(`/forms/${form}/submissions/${id}/${INBOX.paths[action]}`, {
+            method: 'POST'
+          })
+        ).json()
+      ).submission,
+    onSuccess: async (submission) => {
+      queryClient.setQueryData(
+        submissionKey(form, submission.id),
+        (current?: z.infer<typeof submissionResponseSchema>) =>
+          current && { ...current, submission }
+      )
+      await refreshSubmissions(queryClient, form)
+    }
+  })
+
+export const deleteSubmissionMutation = (queryClient: QueryClient, form: string) =>
+  mutationOptions({
+    mutationFn: async (id: string) => {
+      await apiRequest(`/forms/${form}/submissions/${id}`, { method: 'DELETE' })
+    },
+    onSuccess: async (_data, id) => {
+      queryClient.removeQueries({ queryKey: submissionKey(form, id) })
+      await refreshSubmissions(queryClient, form)
+    }
+  })

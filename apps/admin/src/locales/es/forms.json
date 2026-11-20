@@ -47,5 +47,28 @@
     "markAs": "Marcar como {{status}}",
     "failed": "No se pudo cambiar el estado",
     "updatedBy": "Último cambio de {{name}} el {{date}}"
+  },
+  "privacy": {
+    "title": "Privacidad",
+    "description": "Controla qué se conserva de este envío y quién puede seguirlo.",
+    "cancel": "Cancelar",
+    "revokeToken": {
+      "button": "Revocar enlace de estado",
+      "title": "¿Revocar el enlace de estado?",
+      "description": "La persona ya no podrá seguir este envío. El envío sigue en la bandeja.",
+      "confirm": "Revocar enlace"
+    },
+    "anonymise": {
+      "button": "Anonimizar",
+      "title": "¿Anonimizar este envío?",
+      "description": "Se borran los datos de la persona y el enlace de estado deja de funcionar. Se conservan la fecha y el estado. No se puede deshacer.",
+      "confirm": "Anonimizar"
+    },
+    "delete": {
+      "button": "Eliminar",
+      "title": "¿Eliminar este envío?",
+      "description": "El envío se elimina para siempre y el enlace de estado deja de funcionar. No se puede deshacer.",
+      "confirm": "Eliminar envío"
+    }
   }
 }

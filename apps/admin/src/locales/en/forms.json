@@ -47,5 +47,28 @@
     "markAs": "Mark as {{status}}",
     "failed": "Could not change the status",
     "updatedBy": "Last changed by {{name}} on {{date}}"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "description": "Control what is kept about this submission and who can still follow it.",
+    "cancel": "Cancel",
+    "revokeToken": {
+      "button": "Revoke status link",
+      "title": "Revoke the status link?",
+      "description": "The visitor will no longer be able to follow this submission. The submission stays in the inbox.",
+      "confirm": "Revoke link"
+    },
+    "anonymise": {
+      "button": "Anonymise",
+      "title": "Anonymise this submission?",
+      "description": "The visitor's details are erased and the status link stops working. The date and status are kept. This cannot be undone.",
+      "confirm": "Anonymise"
+    },
+    "delete": {
+      "button": "Delete",
+      "title": "Delete this submission?",
+      "description": "The submission is removed for good and the status link stops working. This cannot be undone.",
+      "confirm": "Delete submission"
+    }
   }
 }

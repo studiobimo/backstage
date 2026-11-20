@@ -221,6 +221,18 @@ sends it to the admin through the entrypoint, and the owner reads it in the admi
 
    `status` returns the status and only the fields the form lists under `public.fields`.
 
+6. Decide how long a visitor can follow a submission. The `token` stops working after
+   `token.expiresInDays` days (30 by default) and then `status` answers `not_found`, the same as
+   for an unknown token. Add `retention: { days }` to delete a form's submissions after that many
+   days. There is no cron: the purge runs when the owner opens the form's inbox. In the inbox the
+   owner can revoke a submission's link, anonymise it (the visitor's fields are erased, the date and
+   status are kept) or delete it; the last two also stop the link. Migration `0019` gives existing
+   submissions an expiry of their `created_at` plus 30 days.
+
+   ```ts
+   defineForm('reservation', { schema, token: { expiresInDays: 14 }, retention: { days: 365 } })
+   ```
+
 ### Label fields in each language
 
 The admin shows each field's title and description from the schema. Without more, the title is the
