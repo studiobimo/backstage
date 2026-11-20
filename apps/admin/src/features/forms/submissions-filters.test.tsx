@@ -61,4 +61,21 @@ describe('the filters of the submissions', () => {
     await screen.findByText('Nothing received yet')
     expect(screen.queryByLabelText('Date from')).toBeNull()
   })
+
+  it('goes back to the first page when a filter changes', async () => {
+    api([], { page: 3 })
+    const onFilterChange = vi.fn()
+    const user = userEvent.setup()
+    renderInbox(
+      <SubmissionsPage
+        name="reservation"
+        filter={{ status: 'new', page: 3 }}
+        onFilterChange={onFilterChange}
+      />
+    )
+    await user.type(await screen.findByLabelText('Date from'), '2026-12-24')
+    await waitFor(() => expect(onFilterChange).toHaveBeenCalled())
+    expect(onFilterChange.mock.calls.at(-1)?.[0]).toMatchObject({ status: 'new' })
+    expect(onFilterChange.mock.calls.at(-1)?.[0].page).toBeUndefined()
+  })
 })

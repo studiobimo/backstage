@@ -57,6 +57,7 @@ Admin Worker, typed as `AdminEnv` from `@studiobimo/backstage/admin`:
 | `MEDIA`              | R2 bucket              | yes        | uploaded images, shared with the site Worker                        |
 | `ASSETS`             | static assets          | yes        | the admin SPA                                                       |
 | `SITE_ORIGIN`        | variable               | no         | the site's origin, so the page editor can frame its preview         |
+| `ADMIN_ORIGIN`       | variable               | no         | the admin's own origin, for the inbox link in a form notification   |
 | `AUTH_MODE`          | variable               | no         | `access` (default) or `magic-link`                                  |
 | `OWNER_EMAIL`        | variable               | no         | the address (or comma-separated addresses) that are always owners   |
 | `ACCESS_TEAM_DOMAIN` | variable               | access     | Cloudflare Access team domain                                       |
