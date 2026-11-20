@@ -18,6 +18,8 @@ import { daysToMs, formsOf, initialStatusOf, tokenDaysOf, type Form } from '../f
 import { logLine } from '../log.ts'
 import { REFERENCE, referenceFieldsIn, type ReferenceField } from '../references.ts'
 import type { RequestContext } from '../rpc.ts'
+import { formTitleIn, presentSubmission } from '../submission-presentation.ts'
+import type { SubmissionStrings } from '../submission-text.ts'
 import { verifyTurnstile } from '../site/turnstile.ts'
 import {
   statusResultSchema,
@@ -32,6 +34,8 @@ import { isTokenActive } from './submission-privacy.ts'
 import { publishFormProjection } from './form-projection.ts'
 import type { AdminEnv } from './env.ts'
 import type { Mailer } from './mailer.ts'
+import { submissionMessage } from './submission-email.ts'
+import { presentationContextFor } from './submission-context.ts'
 
 export interface SubmissionDeps {
   registry: AdminRegistry
@@ -86,28 +90,55 @@ const passesTurnstile = async (
   return result.success
 }
 
-const valueText = (value: unknown) => (typeof value === 'string' ? value : JSON.stringify(value))
+const subjectOf = (
+  form: Form,
+  payload: Record<string, unknown>,
+  title: string,
+  strings: SubmissionStrings
+) => {
+  const { subject } = form.notify ?? {}
+  try {
+    return (
+      (typeof subject === 'function' ? subject(payload) : subject) || strings.email.subject(title)
+    )
+  } catch (error) {
+    logLine('error', SUBMISSION.failure.subjectFailed, { form: form.name, error: String(error) })
+    return strings.email.subject(title)
+  }
+}
 
-const notificationText = (form: Form, id: string, payload: Record<string, unknown>) =>
-  [
-    SUBMISSION.notification.intro(form.name),
-    `${SUBMISSION.notification.idLabel}: ${id}`,
-    ...Object.entries(payload).map(([field, value]) => `${field}: ${valueText(value)}`)
-  ].join('\n')
+const notificationOf = async (
+  env: AdminEnv,
+  registry: AdminRegistry,
+  form: Form,
+  id: string,
+  payload: Record<string, unknown>
+) => {
+  const notify = form.notify ?? {}
+  const context = await presentationContextFor(env.DB, registry, form, payload)
+  const title = formTitleIn(form, context)
+  return submissionMessage({
+    form,
+    title,
+    id,
+    fields: presentSubmission(form, payload, context, notify),
+    strings: context.strings,
+    subject: subjectOf(form, payload, title, context.strings),
+    adminOrigin: env.ADMIN_ORIGIN,
+    html: notify.html ?? false
+  })
+}
 
 const notifyOwners = async (
   env: AdminEnv,
-  mailer: Mailer,
+  { registry, mailer }: Pick<SubmissionDeps, 'registry' | 'mailer'>,
   form: Form,
   id: string,
   payload: Record<string, unknown>
 ) => {
   if (!form.notify) return
   const recipients = form.notify.to ?? ownerEmailsOf(env.OWNER_EMAIL)
-  const message = {
-    subject: form.notify.subject ?? SUBMISSION.notification.subject(form.name),
-    text: notificationText(form, id, payload)
-  }
+  const message = await notificationOf(env, registry, form, id, payload)
   const sent = await Promise.allSettled(
     recipients.map((to) => mailer.send({ to, ...message }, env))
   )
@@ -155,7 +186,7 @@ export const submitForm = async (
     now: createdAt
   })
   await publishFormProjection(env.DB, env.SITE, form, createdAt)
-  await notifyOwners(env, mailer, form, id, data)
+  await notifyOwners(env, { registry, mailer }, form, id, data)
   return { ok: true, id, token }
 }
 

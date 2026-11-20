@@ -25,3 +25,19 @@ export function labelsFor(node: LabelledNode, language: string, defaultLocale: s
     description: current?.description ?? fallback?.description ?? node.description
   }
 }
+
+const WORD_BREAK = /([a-z0-9])([A-Z])|[-_]+/g
+
+export const humanize = (key: string) => {
+  const spaced = key.replace(WORD_BREAK, (_match, lower: string | undefined, upper: string) =>
+    lower ? `${lower} ${upper.toLowerCase()}` : ' '
+  )
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+}
+
+export const fieldTitle = (
+  key: string,
+  node: LabelledNode,
+  language: string,
+  defaultLocale: string
+) => labelsFor(node, language, defaultLocale).title ?? humanize(key)

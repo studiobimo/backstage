@@ -6,7 +6,8 @@ export const INBOX = {
   maxSubmissions: 500,
   dateFormat: 'date',
   paths: { anonymise: 'anonymise', revokeToken: 'revoke-token' },
-  query: { status: 'status', from: 'from', to: 'to' }
+  query: { status: 'status', from: 'from', to: 'to' },
+  submissionPath: (form: string, id: string) => `/forms/${form}/${id}`
 } as const
 
 const dateSchema = z.string().regex(DATE_PATTERN)

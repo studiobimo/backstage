@@ -3,6 +3,7 @@ import {
   defineForm,
   defineRegistry,
   entries,
+  labeled,
   localized
 } from '@studiobimo/backstage'
 import { z } from 'zod'
@@ -27,7 +28,10 @@ const menuCollection = defineCollection({
 
 const reservationForm = defineForm(RESERVATION_FORM.name, {
   schema: z.object({
-    seats: z.number().int().min(RESERVATION_FORM.seats.min).max(RESERVATION_FORM.seats.max),
+    seats: labeled(
+      z.number().int().min(RESERVATION_FORM.seats.min).max(RESERVATION_FORM.seats.max),
+      { en: { title: 'Seats' }, es: { title: 'Comensales' } }
+    ),
     date: z.iso.date(),
     time: z.string().regex(RESERVATION_FORM.time.pattern),
     name: z.string().trim().min(1).max(RESERVATION_FORM.person.maxLength),
@@ -46,7 +50,11 @@ const reservationForm = defineForm(RESERVATION_FORM.name, {
       .max(RESERVATION_FORM.preorder.maxLines)
       .optional()
   }),
-  notify: { subject: 'New reservation request' },
+  notify: {
+    subject: (payload) => `Table for ${String(payload.seats)} on ${String(payload.date)}`,
+    exclude: ['phone'],
+    html: true
+  },
   public: { statuses: ['confirmed'], fields: ['seats', 'date', 'time'] },
   title: { en: 'Reservation', es: 'Reserva' }
 })

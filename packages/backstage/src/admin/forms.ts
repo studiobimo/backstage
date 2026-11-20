@@ -2,7 +2,6 @@ import { Hono, type Context } from 'hono'
 
 import { schemaNodeOf } from '../blocks.ts'
 import type { AdminRegistry } from '../collections.ts'
-import { readEntryLabels } from '../db/entries.ts'
 import {
   countSubmissionsByStatus,
   findSubmission,
@@ -11,17 +10,14 @@ import {
 } from '../db/submissions.ts'
 import { ensureUser, listUsers } from '../db/users.ts'
 import { API_ERROR, fieldIssuesOf } from '../errors.ts'
-import type { SchemaNode } from '../field-shapes.ts'
 import {
   INBOX,
   inboxFilterSchema,
   submissionStatusChangeSchema,
   type FormDescription,
-  type InboxSubmission,
-  type ReferencedEntries
+  type InboxSubmission
 } from '../form-inbox.ts'
 import { formsOf, initialStatusOf, type Form } from '../forms.ts'
-import { REFERENCE, referenceFieldsIn } from '../references.ts'
 import type { AccessEnv } from './auth.ts'
 import { readJsonBody, respondInvalid, respondWithError, RESPONSE_STATUS } from './respond.ts'
 import {
@@ -32,6 +28,7 @@ import {
   revokeToken,
   type PrivacyChange
 } from './submission-privacy.ts'
+import { readReferencedEntries } from './submission-context.ts'
 import { setSubmissionStatus } from './submissions.ts'
 
 const dateFieldOf = (form: Form) => {
@@ -77,31 +74,6 @@ const presentSubmission = (
 
 const editorNamesOf = async (c: Context<AccessEnv>) =>
   new Map((await listUsers(c.env.DB)).map((user) => [user.id, user.name || user.email]))
-
-const referencedEntriesOf = async (
-  c: Context<AccessEnv>,
-  form: Form,
-  submission: Submission
-): Promise<ReferencedEntries> => {
-  const fields = referenceFieldsIn(
-    schemaNodeOf(form.schema) as SchemaNode,
-    form.name,
-    submission.payload
-  )
-  const wanted = fields.flatMap(({ collection, value }) =>
-    value.mode === REFERENCE.mode.chosen ? value.ids.map((id) => ({ collection, id })) : []
-  )
-  const found = await readEntryLabels(
-    c.env.DB,
-    wanted.map(({ id }) => id)
-  )
-  const entries: ReferencedEntries = {}
-  for (const { collection, id } of wanted) {
-    const entry = found.find((row) => row.id === id && row.collection === collection)
-    if (entry) (entries[collection] ??= {})[id] = entry.label
-  }
-  return entries
-}
 
 const submissionOf = async (c: Context<AccessEnv>, form: Form) => {
   const submission = await findSubmission(c.env.DB, c.req.param('id') ?? '')
@@ -183,7 +155,7 @@ export const formsRoutes = (registry: AdminRegistry) =>
       if (!submission) return respondWithError(c, API_ERROR.notFound)
       return c.json({
         submission: presentSubmission(submission, await editorNamesOf(c)),
-        entries: await referencedEntriesOf(c, found.form, submission)
+        entries: await readReferencedEntries(c.env.DB, found.form, submission.payload)
       })
     })
     .put('/:name/submissions/:id/status', async (c) => {
