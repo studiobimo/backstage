@@ -52,6 +52,7 @@ export const reservation = {
     name: 'Ana Pérez',
     preorder: [{ dish: { mode: 'chosen', ids: ['dish-1'] }, quantity: 2 }]
   },
+  tokenActive: true,
   createdAt: 1_700_000_000_000,
   updatedAt: 1_700_000_000_000,
   updatedBy: null

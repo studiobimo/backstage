@@ -94,3 +94,9 @@ export const storedSubmissions = async () =>
 
 export const sendForms = (path: string, method = 'GET', body?: unknown) =>
   sendTo(admin, method, path, body)
+
+export const setSubmissionColumn = (
+  id: string,
+  column: 'created_at' | 'token_expires_at',
+  value: number
+) => db.prepare(`UPDATE submissions SET ${column} = ? WHERE id = ?`).bind(value, id).run()

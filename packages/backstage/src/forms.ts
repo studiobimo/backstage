@@ -2,10 +2,13 @@ import { z } from 'zod'
 
 import { assertRenderable, NAME_PATTERN } from './blocks.ts'
 import type { FormRegistry } from './blocks.ts'
+import { DURATION_MS } from './time.ts'
 
 export const FORM = {
   defaultStatuses: ['new', 'confirmed', 'declined'],
-  maxStatuses: 12
+  maxStatuses: 12,
+  token: { defaultExpiresInDays: 30 },
+  limits: { maxDays: 3650 }
 } as const
 
 type FieldKey<S extends z.ZodType> = z.ZodType extends S
@@ -15,6 +18,14 @@ type FieldKey<S extends z.ZodType> = z.ZodType extends S
 export interface FormNotify {
   to?: readonly string[]
   subject?: string
+}
+
+interface FormToken {
+  expiresInDays: number
+}
+
+interface FormRetention {
+  days: number
 }
 
 export interface FormPublic {
@@ -33,6 +44,8 @@ export interface FormDefinition<S extends z.ZodType = z.ZodType> {
   notify?: FormNotify
   public?: FormPublicDefinition<S>
   turnstile?: boolean
+  token?: Partial<FormToken>
+  retention?: FormRetention
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
 }
@@ -44,6 +57,8 @@ export interface Form<S extends z.ZodType = z.ZodType, N extends string = string
   notify?: FormNotify
   public: FormPublic
   turnstile: boolean
+  token?: FormToken
+  retention?: FormRetention
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
 }
@@ -68,6 +83,15 @@ const assertNotify = (name: string, notify: FormNotify | undefined) => {
   const bad = notify?.to?.find((address) => !z.email().safeParse(address).success)
   if (bad) throw new Error(`Form "${name}" notifies "${bad}", which is not an email address`)
   if (notify?.subject?.trim() === '') throw new Error(`Form "${name}" notify.subject is blank`)
+}
+
+const assertDays = (name: string, label: string, days: number | undefined) => {
+  if (days === undefined) return
+  if (!Number.isInteger(days) || days < 1 || days > FORM.limits.maxDays) {
+    throw new Error(
+      `Form "${name}" ${label} must be a whole number of days from 1 to ${FORM.limits.maxDays}`
+    )
+  }
 }
 
 const assertPublic = (form: Form, properties: readonly string[]) => {
@@ -95,6 +119,8 @@ export function defineForm<S extends z.ZodType, const N extends string>(
   const statuses = definition.statuses ?? FORM.defaultStatuses
   assertStatuses(name, statuses)
   assertNotify(name, definition.notify)
+  assertDays(name, 'token.expiresInDays', definition.token?.expiresInDays)
+  assertDays(name, 'retention.days', definition.retention?.days)
   const form: Form<S, N> = {
     name,
     schema: definition.schema,
@@ -105,6 +131,8 @@ export function defineForm<S extends z.ZodType, const N extends string>(
       fields: definition.public?.fields ?? []
     },
     turnstile: definition.turnstile ?? true,
+    token: { expiresInDays: definition.token?.expiresInDays ?? FORM.token.defaultExpiresInDays },
+    retention: definition.retention,
     title: definition.title,
     description: definition.description
   }
@@ -115,5 +143,10 @@ export function defineForm<S extends z.ZodType, const N extends string>(
 }
 
 export const formsOf = ({ forms }: Partial<FormRegistry>) => forms ?? new Map<string, Form>()
+
+export const tokenDaysOf = (form: Form) =>
+  form.token?.expiresInDays ?? FORM.token.defaultExpiresInDays
+
+export const daysToMs = (days: number) => days * DURATION_MS.day
 
 export const initialStatusOf = (form: Form) => form.statuses[0]!

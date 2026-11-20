@@ -124,6 +124,9 @@ The client's admin Worker. The only entry that reaches D1.
 - `ensureUser`, `writeSiteBlock`, `writeSiteSettings`, which seed a database
 - Submissions: `setSubmissionStatus`, which takes `(d1, kv, registry, id, status, options?)`, where `options` holds `now` and `editorId`, and also republishes the form's
   public projection to KV, `findSubmission`, `listSubmissions`, and the `Submission`, `StatusChange` and `StatusChangeOptions` types
+- Submission privacy: `revokeToken` stops a submission's status link, `anonymiseSubmission` erases the visitor's fields and the link,
+  `deleteSubmission` removes a submission, and `purgeExpiredSubmissions` deletes what a form's `retention` has outlived. They take `(d1, registry, id)`,
+  `(d1, kv, registry, id, options?)`, `(d1, kv, registry, id)` and `(d1, kv, form)`, and the `PrivacyChange` and `PrivacyOptions` types describe their results and options
 - Mail: `cloudflareMailer`, and the `Mailer` and `MailMessage` types
 
 ### `@studiobimo/backstage/admin/entrypoint`

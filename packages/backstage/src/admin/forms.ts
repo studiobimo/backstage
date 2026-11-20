@@ -23,7 +23,15 @@ import {
 import { formsOf, initialStatusOf, type Form } from '../forms.ts'
 import { REFERENCE, referenceFieldsIn } from '../references.ts'
 import type { AccessEnv } from './auth.ts'
-import { readJsonBody, respondInvalid, respondWithError } from './respond.ts'
+import { readJsonBody, respondInvalid, respondWithError, RESPONSE_STATUS } from './respond.ts'
+import {
+  anonymiseSubmission,
+  deleteSubmission,
+  isTokenActive,
+  purgeExpiredSubmissions,
+  revokeToken,
+  type PrivacyChange
+} from './submission-privacy.ts'
 import { setSubmissionStatus } from './submissions.ts'
 
 const dateFieldOf = (form: Form) => {
@@ -63,6 +71,7 @@ const presentSubmission = (
   names: ReadonlyMap<string, string>
 ): InboxSubmission => ({
   ...row,
+  tokenActive: isTokenActive(row, Date.now()),
   updatedBy: (row.updatedBy && names.get(row.updatedBy)) || null
 })
 
@@ -99,6 +108,47 @@ const submissionOf = async (c: Context<AccessEnv>, form: Form) => {
   return submission && submission.form === form.name ? submission : null
 }
 
+const withSubmission = async (
+  registry: AdminRegistry,
+  c: Context<AccessEnv>,
+  act: (submission: Submission) => Promise<Response>
+) => {
+  const found = formOf(registry, c)
+  if (!found.ok) return found.response
+  const existing = await submissionOf(c, found.form)
+  return existing ? act(existing) : respondWithError(c, API_ERROR.notFound)
+}
+
+const respondWithChange = async (c: Context<AccessEnv>, change: PrivacyChange) =>
+  change.ok
+    ? c.json({ submission: presentSubmission(change.submission, await editorNamesOf(c)) })
+    : respondWithError(c, API_ERROR.notFound)
+
+const privacyRoutes = (registry: AdminRegistry) =>
+  new Hono<AccessEnv>()
+    .delete('/:name/submissions/:id', (c) =>
+      withSubmission(registry, c, async ({ id }) =>
+        (await deleteSubmission(c.env.DB, c.env.SITE, registry, id))
+          ? c.body(null, RESPONSE_STATUS.noContent)
+          : respondWithError(c, API_ERROR.notFound)
+      )
+    )
+    .post(`/:name/submissions/:id/${INBOX.paths.anonymise}`, (c) =>
+      withSubmission(registry, c, async ({ id }) =>
+        respondWithChange(
+          c,
+          await anonymiseSubmission(c.env.DB, c.env.SITE, registry, id, {
+            editorId: await ensureUser(c.env.DB, c.get('editor'))
+          })
+        )
+      )
+    )
+    .post(`/:name/submissions/:id/${INBOX.paths.revokeToken}`, (c) =>
+      withSubmission(registry, c, async ({ id }) =>
+        respondWithChange(c, await revokeToken(c.env.DB, registry, id))
+      )
+    )
+
 export const formsRoutes = (registry: AdminRegistry) =>
   new Hono<AccessEnv>()
     .get('/', async (c) => {
@@ -113,6 +163,7 @@ export const formsRoutes = (registry: AdminRegistry) =>
       const filter = inboxFilterSchema.safeParse(c.req.query())
       if (!filter.success) return respondInvalid(c, fieldIssuesOf(filter.error))
       const { status, from, to } = filter.data
+      await purgeExpiredSubmissions(c.env.DB, c.env.SITE, found.form)
       const field = dateFieldOf(found.form)
       const range = field && (from || to) ? { field, from, to } : undefined
       const rows = await listSubmissions(
@@ -158,3 +209,4 @@ export const formsRoutes = (registry: AdminRegistry) =>
       }
       return c.json({ submission: presentSubmission(result.submission, await editorNamesOf(c)) })
     })
+    .route('/', privacyRoutes(registry))

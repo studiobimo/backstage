@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
+import { DURATION_MS } from './time.ts'
+
 const SECOND_MS = 1000
 const MINUTE_MS = 60 * SECOND_MS
-const DAY_MS = 24 * 60 * MINUTE_MS
 const TOKEN_TTL_MINUTES = 15
 
 export const AUTH = {
@@ -24,7 +25,7 @@ export const AUTH = {
     ttlMinutes: TOKEN_TTL_MINUTES,
     ttlMs: TOKEN_TTL_MINUTES * MINUTE_MS
   },
-  session: { bytes: 32, ttlMs: 14 * DAY_MS },
+  session: { bytes: 32, ttlMs: 14 * DURATION_MS.day },
   cookie: { name: 'backstage_session', sameSite: 'Lax' },
   rateLimit: {
     windowMs: 15 * MINUTE_MS,

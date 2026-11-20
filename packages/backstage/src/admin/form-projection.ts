@@ -12,6 +12,7 @@ const publicPayloadsOf = async (d1: AnyD1Database, form: Form) => {
     .flat()
     .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))
     .map(({ payload }) => payload)
+    .filter((payload) => Object.keys(payload).length > 0)
 }
 
 export const publishFormProjection = async (

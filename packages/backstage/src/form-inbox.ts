@@ -5,6 +5,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 export const INBOX = {
   maxSubmissions: 500,
   dateFormat: 'date',
+  paths: { anonymise: 'anonymise', revokeToken: 'revoke-token' },
   query: { status: 'status', from: 'from', to: 'to' }
 } as const
 
@@ -37,7 +38,8 @@ export const submissionSchema = z.object({
   payload: z.record(z.string(), z.unknown()),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
-  updatedBy: z.string().nullable()
+  updatedBy: z.string().nullable(),
+  tokenActive: z.boolean()
 })
 export type InboxSubmission = z.infer<typeof submissionSchema>
 
