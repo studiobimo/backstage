@@ -155,6 +155,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Listing a collection's published entries, for a collection defined with `snapshot: true`: `findCollectionEntries`,
   `collectionSnapshotKey`, `collectionSnapshotOf`, and the `CollectionEntryQuery` and `CollectionEntryRead` types
 - Reading the registry's own settings: `findRegistrySettings`
+- Linking a Vite client bundle from its manifest: `viteAssets`, `viteManifestSchema`, `VITE_ASSETS`, and the
+  `ViteAssets`, `ViteAssetsOptions` and `ViteManifest` types
 - Formatting an amount in minor units: `formatMoney`, `CURRENCY_CODES`, `MONEY`, and the `CurrencyCode` type
 - Opening hours in the business's time zone: `isOpenAt`, `nextOpening`, `slotsFor`, `WEEKLY_HOURS`, and the
   `WeeklyHours`, `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types

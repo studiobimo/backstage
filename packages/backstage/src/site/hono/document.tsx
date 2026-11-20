@@ -23,6 +23,7 @@ import {
   socialImageOf,
   themeColorOf
 } from './head.ts'
+import { uniquePaths } from '../../client-scripts.ts'
 import { clientScriptsOf, slotBlockNamesOf } from './client-scripts.ts'
 import { entryLinksOf, linksOf } from './origin.ts'
 
@@ -30,13 +31,24 @@ export type SiteHead = (snapshot: Snapshot) => ReactNode
 
 export type SiteFavicon = string | { href: string; type?: string }
 
+export interface ShellHeadContext {
+  locale: Locale
+  title: string
+  path: string
+}
+
+export type ShellHead = (shell: ShellHeadContext) => ReactNode
+
 export interface DocumentContext {
   components: ComponentMap
   locales: LocaleConfig
   stylesheetPath: string
   siteScripts: readonly string[]
+  siteStyles: readonly string[]
+  sitePreloads: readonly string[]
   favicon?: SiteFavicon
   head?: SiteHead
+  shellHead?: ShellHead
 }
 
 export interface PageProps extends DocumentContext {
@@ -49,7 +61,13 @@ export interface PageProps extends DocumentContext {
 
 export type PreviewProps = Pick<
   PageProps,
-  'components' | 'locales' | 'snapshot' | 'stylesheetPath' | 'siteScripts'
+  | 'components'
+  | 'locales'
+  | 'snapshot'
+  | 'stylesheetPath'
+  | 'siteScripts'
+  | 'siteStyles'
+  | 'sitePreloads'
 >
 
 function FallbackLayout({ children }: LayoutProps) {
@@ -116,10 +134,20 @@ interface HeadProps {
   siteName: string | null
   themeColor: string | null
   stylesheetPath: string
+  styles: readonly string[]
+  preloads: readonly string[]
   scripts: readonly string[]
   favicon?: SiteFavicon
   preview: boolean
   extra?: ReactNode
+}
+
+function StylesheetLinks({ hrefs }: { hrefs: readonly string[] }) {
+  return uniquePaths(hrefs).map((href) => <link key={href} rel="stylesheet" href={href} />)
+}
+
+function ModulePreloadLinks({ hrefs }: { hrefs: readonly string[] }) {
+  return uniquePaths(hrefs).map((href) => <link key={href} rel="modulepreload" href={href} />)
 }
 
 function Head({
@@ -131,6 +159,8 @@ function Head({
   siteName,
   themeColor,
   stylesheetPath,
+  styles,
+  preloads,
   scripts,
   favicon,
   preview,
@@ -141,7 +171,7 @@ function Head({
       <meta charSet="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title}</title>
-      <link rel="stylesheet" href={stylesheetPath} />
+      <StylesheetLinks hrefs={[stylesheetPath, ...styles]} />
       {favicon ? <link rel="icon" {...faviconLinkOf(favicon)} /> : null}
       {description ? <meta name="description" content={description} /> : null}
       {preview ? (
@@ -163,6 +193,7 @@ function Head({
           <meta name="msapplication-TileColor" content={themeColor} />
         </>
       ) : null}
+      <ModulePreloadLinks hrefs={preloads} />
       {scripts.map((src) => (
         <script key={src} type="module" src={src} />
       ))}
@@ -193,6 +224,8 @@ const pageHeadOf = (props: PageProps): HeadProps => {
     siteName: site?.siteName ?? null,
     themeColor: themeColorOf(site),
     stylesheetPath,
+    styles: props.siteStyles,
+    preloads: props.sitePreloads,
     scripts: clientScriptsOf(components, props.siteScripts, [
       ...snapshot.blocks.map(({ block }) => block),
       ...slotBlockNamesOf(site)
@@ -244,7 +277,8 @@ function PreviewDocument(props: PreviewProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="noindex, nofollow" />
         <title>{snapshot.title}</title>
-        <link rel="stylesheet" href={stylesheetPath} />
+        <StylesheetLinks hrefs={[stylesheetPath, ...props.siteStyles]} />
+        <ModulePreloadLinks hrefs={props.sitePreloads} />
         {previewScriptsOf(props).map((src) => (
           <script key={src} type="module" src={src} />
         ))}
@@ -351,6 +385,8 @@ const entryHeadOf = (props: EntryPageProps): HeadProps => {
     siteName: site?.siteName ?? null,
     themeColor: themeColorOf(site),
     stylesheetPath,
+    styles: props.siteStyles,
+    preloads: props.sitePreloads,
     scripts: clientScriptsOf(props.components, props.siteScripts, slotBlockNamesOf(site)),
     favicon,
     preview: false
@@ -384,6 +420,9 @@ export interface ShellProps extends DocumentContext {
   description: string
   body: ReactNode
   scripts: readonly string[]
+  styles: readonly string[]
+  preloads: readonly string[]
+  routeHead?: ReactNode
   site: SiteSnapshot | null
   siteOrigin: string
   path: string
@@ -409,13 +448,21 @@ const shellHeadOf = (props: ShellProps): HeadProps => {
     siteName: site?.siteName ?? null,
     themeColor: themeColorOf(site),
     stylesheetPath: props.stylesheetPath,
+    styles: [...props.siteStyles, ...props.styles],
+    preloads: [...props.sitePreloads, ...props.preloads],
     scripts: clientScriptsOf(
       props.components,
       [...props.siteScripts, ...props.scripts],
       slotBlockNamesOf(site)
     ),
     favicon: props.favicon,
-    preview: false
+    preview: false,
+    extra: (
+      <>
+        {props.shellHead?.({ locale, title, path })}
+        {props.routeHead}
+      </>
+    )
   }
 }
 

@@ -6,6 +6,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "upload_source_maps": true,
+  "assets": { "binding": "ASSETS" },
   "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
   "services": [{ "binding": "ADMIN", "service": "backstage-admin", "entrypoint": "AdminEntrypoint" }],
@@ -15,6 +16,7 @@
   "vars": { "ADMIN_ORIGIN": "http://localhost:5173", "SITE_URL": "http://localhost:8787" },
   "env": {
     "production": {
+      "assets": { "binding": "ASSETS" },
       "kv_namespaces": [{ "binding": "SITE", "id": "00000000000000000000000000000000" }],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "backstage-media" }],
       "services": [
