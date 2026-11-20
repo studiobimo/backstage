@@ -10,5 +10,5 @@ export default createSite({
   stylesheet,
   preview,
   turnstile: true,
-  routes: formRoutes(components.registry.forms)
+  routes: formRoutes(components.registry)
 })

@@ -1,16 +1,25 @@
 import { API_ERROR, type Form } from '@studiobimo/backstage'
 import {
   adminRpc,
+  EDGE_CACHE,
+  findFormProjection,
+  readFormPayload,
   requestContextOf,
-  type SiteEnv,
-  type VisitorRpc
+  type SiteEnv
 } from '@studiobimo/backstage/site'
-import type { SiteApp } from '@studiobimo/backstage/site/hono'
-import type { z } from 'zod'
+import { rateLimited, type SiteApp } from '@studiobimo/backstage/site/hono'
 
 import { FORM_ROUTE } from '../src/forms/route'
 
-const adminOf = (env: SiteEnv) => adminRpc((env as unknown as { ADMIN: VisitorRpc }).ADMIN)
+interface FormSource {
+  readonly forms?: ReadonlyMap<string, Form>
+  getForm?(name: string): Form | undefined
+}
+
+const complete = ({ forms, getForm }: FormSource) => ({
+  forms: forms ?? new Map<string, Form>(),
+  getForm: (name: string) => getForm?.(name)
+})
 
 const errorFor = (code: string) =>
   Object.values(API_ERROR).find((error) => error.code === code) ?? API_ERROR.internal
@@ -21,43 +30,49 @@ const respondWithError = (
   issues: unknown[] = []
 ) => c.json({ code: error.code, error: error.message, issues }, error.status)
 
-const unwrapped = (schema: z.ZodType): z.ZodType => {
-  const def = schema._zod.def as { type: string; innerType?: z.ZodType }
-  return def.innerType ? unwrapped(def.innerType) : schema
-}
+const limiterOf = (env: SiteEnv) => (env as unknown as Env)[FORM_ROUTE.limiter]
 
-const kindOf = (schema: z.ZodType) => (unwrapped(schema)._zod.def as { type: string }).type
-
-const shapeOf = (schema: z.ZodType): Record<string, z.ZodType> =>
-  kindOf(schema) === 'object' ? (unwrapped(schema) as z.ZodObject).shape : {}
-
-const coerce = (kind: string, raw: string): unknown => {
-  if (kind === 'number') return raw === '' ? undefined : Number(raw)
-  if (kind === 'boolean') return raw === 'on' || raw === 'true'
-  return raw
-}
-
-const payloadOf = (schema: z.ZodType, form: FormData) =>
-  Object.fromEntries(
-    Object.entries(shapeOf(schema)).flatMap(([key, field]) => {
-      const raw = form.get(key)
-      return typeof raw === 'string' ? [[key, coerce(kindOf(field), raw)]] : []
+export const formRoutes = (source: FormSource) => (app: SiteApp) => {
+  const registry = complete(source)
+  return app
+    .post(FORM_ROUTE.path, async (c) => {
+      const limited = await rateLimited(limiterOf(c.env), c.req.raw)
+      if (limited) return limited
+      const name = c.req.param(FORM_ROUTE.param.name)
+      const definition = registry.getForm(name)
+      if (!definition) return respondWithError(c, API_ERROR.notFound)
+      const read = await readFormPayload(c.req.raw, definition.schema)
+      if (!read) return respondWithError(c, API_ERROR.invalid)
+      const sent = await adminRpc(c.env.ADMIN!).submit(
+        requestContextOf(c.req.raw),
+        name,
+        read.payload,
+        read.turnstileToken
+      )
+      if (sent.ok) return c.json({ id: sent.id, token: sent.token }, FORM_ROUTE.status.created)
+      return respondWithError(c, errorFor(sent.code), sent.issues)
     })
-  )
-
-export const formRoutes = (forms: ReadonlyMap<string, Form> | undefined) => (app: SiteApp) =>
-  app.post(FORM_ROUTE.path, async (c) => {
-    const name = c.req.param('name')
-    const definition = forms?.get(name)
-    if (!definition) return respondWithError(c, API_ERROR.notFound)
-    const form = await c.req.formData()
-    const turnstileToken = form.get(FORM_ROUTE.field.turnstile)?.toString() ?? null
-    const sent = await adminOf(c.env).submit(
-      requestContextOf(c.req.raw),
-      name,
-      payloadOf(definition.schema, form),
-      turnstileToken
-    )
-    if (sent.ok) return c.json({ id: sent.id, token: sent.token }, FORM_ROUTE.status.created)
-    return respondWithError(c, errorFor(sent.code), sent.issues)
-  })
+    .get(FORM_ROUTE.statusPath, async (c) => {
+      const limited = await rateLimited(limiterOf(c.env), c.req.raw)
+      if (limited) return limited
+      const name = c.req.param(FORM_ROUTE.param.name)
+      if (!registry.getForm(name)) return respondWithError(c, API_ERROR.notFound)
+      const found = await adminRpc(c.env.ADMIN!).status(
+        requestContextOf(c.req.raw),
+        c.req.param(FORM_ROUTE.param.token)
+      )
+      if (!found.ok || found.form !== name) return respondWithError(c, API_ERROR.notFound)
+      c.header('Cache-Control', EDGE_CACHE.form.status)
+      return c.json({ status: found.status, fields: found.fields })
+    })
+    .get(FORM_ROUTE.projectionPath, async (c) => {
+      const read = await findFormProjection(
+        c.env.SITE,
+        registry,
+        c.req.param(FORM_ROUTE.param.name)
+      )
+      if (!read) return respondWithError(c, API_ERROR.notFound)
+      c.header('Cache-Control', EDGE_CACHE.form.projection)
+      return c.json(read)
+    })
+}
