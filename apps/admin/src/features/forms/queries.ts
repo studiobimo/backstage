@@ -22,6 +22,7 @@ export interface SubmissionFilter {
   status?: string
   from?: string
   to?: string
+  page?: number
 }
 
 const formOptionSchema = formsResponseSchema.shape.forms.element.extend({
@@ -32,14 +33,14 @@ const formsKey = ['forms'] as const
 const submissionsKey = (form: string) => ['submissions', form] as const
 const submissionKey = (form: string, id: string) => ['submission', form, id] as const
 
-const filterQuery = (filter: SubmissionFilter) => {
+const queryOf = (language: string, filter: SubmissionFilter = {}) => {
   const params = new URLSearchParams()
   for (const key of Object.values(INBOX.query)) {
     const value = filter[key]
-    if (value) params.set(key, value)
+    if (value) params.set(key, String(value))
   }
-  const text = params.toString()
-  return text && `?${text}`
+  params.set(INBOX.languageParam, language)
+  return `?${params.toString()}`
 }
 
 export const formsQuery = queryOptions({
@@ -50,13 +51,13 @@ export const formsQuery = queryOptions({
       .forms
 })
 
-export const submissionsQuery = (form: string, filter: SubmissionFilter) =>
+export const submissionsQuery = (form: string, filter: SubmissionFilter, language: string) =>
   queryOptions({
-    queryKey: [...submissionsKey(form), filter],
+    queryKey: [...submissionsKey(form), filter, language],
     queryFn: async () =>
       submissionsResponseSchema.parse(
-        await (await apiRequest(`/forms/${form}/submissions${filterQuery(filter)}`)).json()
-      ).submissions
+        await (await apiRequest(`/forms/${form}/submissions${queryOf(language, filter)}`)).json()
+      )
   })
 
 export const submissionQuery = (form: string, id: string, language: string) =>
@@ -64,11 +65,7 @@ export const submissionQuery = (form: string, id: string, language: string) =>
     queryKey: [...submissionKey(form, id), language],
     queryFn: async () =>
       submissionResponseSchema.parse(
-        await (
-          await apiRequest(
-            `/forms/${form}/submissions/${id}?${new URLSearchParams({ [INBOX.languageParam]: language })}`
-          )
-        ).json()
+        await (await apiRequest(`/forms/${form}/submissions/${id}${queryOf(language)}`)).json()
       )
   })
 

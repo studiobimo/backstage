@@ -1,8 +1,9 @@
-import type { InboxSubmission } from '@studiobimo/backstage/internal'
+import type { submissionsResponseSchema } from '@studiobimo/backstage/internal'
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { InboxIcon, SearchXIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import type { z } from 'zod'
 
 import { CardTable } from '@/components/card-table'
 import { ListNotice } from '@/components/list-notice'
@@ -12,7 +13,7 @@ import { formatDateTime } from '@/lib/format'
 
 import { localizedText } from '../page-editor/localized-text'
 import { useLocaleConfig } from '../config/queries'
-import { cellText, columnsOf, fieldLabel, formTitle } from './form-text'
+import { formTitle } from './form-text'
 import { formsQuery, submissionsQuery, type FormOption, type SubmissionFilter } from './queries'
 import { StatusBadge } from './status-badge'
 import { SubmissionsFilters } from './submissions-filters'
@@ -23,32 +24,36 @@ const RECEIVED_VISIBILITY = 'hidden lg:table-cell'
 
 const visibilityOf = (index: number) => COLUMN_VISIBILITY[index] ?? ''
 
-function SubmissionRow({ form, submission }: { form: FormOption; submission: InboxSubmission }) {
+type Listing = z.infer<typeof submissionsResponseSchema>
+
+function SubmissionRow({
+  form,
+  submission
+}: {
+  form: FormOption
+  submission: Listing['submissions'][number]
+}) {
   const { t, i18n } = useTranslation('forms')
-  const columns = columnsOf(form.schema)
   return (
     <TableRow>
-      {columns.map(([key, node], index) => {
-        const text = cellText(node, submission.payload[key], i18n.language)
-        return (
-          <TableCell
-            key={key}
-            className={`${visibilityOf(index)} ${index === 0 ? 'font-medium' : 'text-muted-foreground'}`}
-          >
-            {index === 0 ? (
-              <Link
-                to="/forms/$name/$submissionId"
-                params={{ name: form.name, submissionId: submission.id }}
-                className="rounded-sm py-0.5 outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
-              >
-                {text || t('detail.none')}
-              </Link>
-            ) : (
-              text
-            )}
-          </TableCell>
-        )
-      })}
+      {submission.cells.map((text, index) => (
+        <TableCell
+          key={index}
+          className={`${visibilityOf(index)} ${index === 0 ? 'font-medium' : 'text-muted-foreground'}`}
+        >
+          {index === 0 ? (
+            <Link
+              to="/forms/$name/$submissionId"
+              params={{ name: form.name, submissionId: submission.id }}
+              className="rounded-sm py-0.5 outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
+            >
+              {text || t('detail.none')}
+            </Link>
+          ) : (
+            text
+          )}
+        </TableCell>
+      ))}
       <TableCell className={`${RECEIVED_VISIBILITY} text-muted-foreground`}>
         {formatDateTime(i18n.language, submission.createdAt)}
       </TableCell>
@@ -59,21 +64,15 @@ function SubmissionRow({ form, submission }: { form: FormOption; submission: Inb
   )
 }
 
-function SubmissionsTable({
-  form,
-  submissions
-}: {
-  form: FormOption
-  submissions: InboxSubmission[]
-}) {
+function SubmissionsTable({ form, listing }: { form: FormOption; listing: Listing }) {
   const { t } = useTranslation('forms')
   return (
     <CardTable
       head={
         <>
-          {columnsOf(form.schema).map(([key, node], index) => (
+          {listing.columns.map(({ key, label }, index) => (
             <TableHead key={key} className={visibilityOf(index)}>
-              {fieldLabel(key, node)}
+              {label}
             </TableHead>
           ))}
           <TableHead className={RECEIVED_VISIBILITY}>{t('list.columns.received')}</TableHead>
@@ -81,7 +80,7 @@ function SubmissionsTable({
         </>
       }
     >
-      {submissions.map((submission) => (
+      {listing.submissions.map((submission) => (
         <SubmissionRow key={submission.id} form={form} submission={submission} />
       ))}
     </CardTable>
@@ -98,7 +97,7 @@ export function SubmissionsPage({ name, filter, onFilterChange }: SubmissionsPag
   const { t, i18n } = useTranslation('forms')
   const { defaultLocale } = useLocaleConfig()
   const { data: forms } = useSuspenseQuery(formsQuery)
-  const { data: submissions, isPending } = useQuery(submissionsQuery(name, filter))
+  const { data: listing, isPending } = useQuery(submissionsQuery(name, filter, i18n.language))
   const form = useLocalizedForm(forms.find((candidate) => candidate.name === name))
   if (!form) return <ListNotice title={t('missing.title')} description={t('missing.description')} />
   const filtered = Boolean(filter.status || filter.from || filter.to)
@@ -109,8 +108,8 @@ export function SubmissionsPage({ name, filter, onFilterChange }: SubmissionsPag
         description={localizedText(form.description, i18n.language, defaultLocale)}
       />
       <SubmissionsFilters form={form} filter={filter} onChange={onFilterChange} />
-      {isPending ? null : submissions?.length ? (
-        <SubmissionsTable form={form} submissions={submissions} />
+      {isPending ? null : listing?.submissions.length ? (
+        <SubmissionsTable form={form} listing={listing} />
       ) : filtered ? (
         <ListNotice
           icon={<SearchXIcon />}
