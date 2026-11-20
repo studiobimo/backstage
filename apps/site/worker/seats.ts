@@ -2,12 +2,10 @@ import { API_ERROR } from '@studiobimo/backstage'
 import { findCollectionEntries, findCollectionEntry } from '@studiobimo/backstage/site'
 import type { SiteApp } from '@studiobimo/backstage/site/hono'
 
-import { components } from '../src/blocks/component-map'
+import { registry } from '../src/blocks/registry'
 import { SEATS_ROUTE } from '../src/collections/seats/route'
 import { SEAT, type Seat } from '../src/collections/seats/schema'
 import { respondWithError } from './forms'
-
-const { registry } = components
 
 const isZone = (value: string | undefined): value is Seat['zone'] =>
   SEAT.zones.some((zone) => zone === value)
