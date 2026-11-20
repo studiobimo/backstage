@@ -1,6 +1,6 @@
 # ADR-0004: Publishing writes a snapshot to KV, and the site renders it on the Worker
 
-- **Status:** Accepted
+- **Status:** Accepted, amended 2026-11-20 (`renderInShell` shipped)
 - **Date:** 2026-11-07
 
 ## Context
@@ -25,7 +25,7 @@ options:
   **no islands** in this repository: a custom client build, manifest and props serialization would
   be thrown away when a site moves to a full framework.
 - A site that needs interactivity takes one of two paths, and the starter decides neither for it:
-  a **client app mounted on the Hono site**, which renders its document through the planned
+  a **client app mounted on the Hono site**, which renders its document through the
   `renderInShell` helper ([#467](https://github.com/studiobimo/backstage/issues/467)), or a **separate
   site in its own repository** that uses the Hono-free `./site` units, and may use TanStack Start
   ([risk 11](../RISKS.md)). A consumer that hydrates sets its own Content-Security-Policy
@@ -47,3 +47,11 @@ options:
 - Server-side React counts against the Worker's size and CPU budget, so a spike in M0 measures it.
 - The block components must render on the server in the starter. Anything that needs the browser
   is a site's own concern: a client app mounted on the Hono site, or a separate site in its own repository.
+
+## Amendment: `renderInShell` shipped (2026-11-20)
+
+- **Changed:** the text said a client app mounted on the Hono site would use a planned
+  `renderInShell` helper. It shipped in 0.10.0 ([#467](https://github.com/studiobimo/backstage/issues/467)),
+  and 0.11.0 adds client scripts to `createSite`, so the wording no longer says "planned".
+- **Unchanged:** the starter ships no client JavaScript, and a site that hydrates sets its own
+  Content-Security-Policy ([risk 12](../RISKS.md)).

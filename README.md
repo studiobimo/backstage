@@ -58,7 +58,7 @@ Admin Worker, typed as `AdminEnv` from `@studiobimo/backstage/admin`:
 | `ASSETS`             | static assets          | yes        | the admin SPA                                                       |
 | `SITE_ORIGIN`        | variable               | no         | the site's origin, so the page editor can frame its preview         |
 | `AUTH_MODE`          | variable               | no         | `access` (default) or `magic-link`                                  |
-| `OWNER_EMAIL`        | variable               | yes        | the address (or comma-separated addresses) that are always owners   |
+| `OWNER_EMAIL`        | variable               | no         | the address (or comma-separated addresses) that are always owners   |
 | `ACCESS_TEAM_DOMAIN` | variable               | access     | Cloudflare Access team domain                                       |
 | `ACCESS_AUD`         | variable               | access     | Cloudflare Access application audience                              |
 | `EMAIL`              | `send_email` binding   | magic-link | sends the sign-in link and form notifications                       |
@@ -79,8 +79,9 @@ invites someone before they can sign in (with Access, they must also pass the Ac
 Removing someone ends their sessions at once. The last owner cannot be removed or demoted.
 
 `OWNER_EMAIL` is how the first owner is made: set it to one address, or a comma-separated list,
-and each one is an owner whenever they sign in, created or promoted if need be. Without it nobody
-is an owner and nobody can be invited. Under `DEV_AUTH` the local developer is an owner.
+and each one is an owner whenever they sign in, created or promoted if need be. Without it, the first person to sign in becomes the owner: see
+[who may sign in](docs/guides/cloudflare-access.md#who-may-sign-in), and set it before the admin is
+reachable. Under `DEV_AUTH` the local developer is an owner.
 
 Site Worker, typed as `SiteEnv` from `@studiobimo/backstage/site`:
 

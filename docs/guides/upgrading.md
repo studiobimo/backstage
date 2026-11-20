@@ -59,3 +59,69 @@ meanwhile is not republished again.
   starts serving 0.5.0.
 - **A routed collection (`route: { path: '/posts/:slug' }`) needs a template** in
   `defineComponents`, and an entry is served at its address only after it is published again.
+
+### 0.6.0
+
+- **Apply `0014_page_link_refs`** with `make migrate`. It records which pages link to which, so
+  publishing a page republishes the pages that link to it.
+- A link field can point to a page. The link table fills as pages are published, so a page that links to
+  another page is tracked once it is published again. Republish all is not required.
+
+### 0.7.0
+
+- **Apply `0015_auth_sessions`** (sign-in attempts, magic-link tokens and sessions)
+  before the admin serves 0.7.0.
+- **Run the migration first:** `make migrate` with `REMOTE=1 ENV=production` (or your environment).
+- **Access needs `OWNER_EMAIL` or the `users` table.** An Access identity that is not in `users`
+  gets `403` on every request, so set `OWNER_EMAIL` on the admin Worker to the owner's address
+  before the deploy. Until 0.8.0, nobody could be an owner without it.
+  See [Access](cloudflare-access.md#who-may-sign-in).
+- **Sign-in is otherwise unchanged.** Access stays the default. Magic link is the other mode, not
+  an addition: set `AUTH_MODE` to `magic-link`, bind `EMAIL`, and set `AUTH_EMAIL_FROM` (and
+  `OWNER_EMAIL`) on the admin Worker.
+- Publishing now writes a `site:version` key to KV, which the site reads to bust its edge cache.
+  There is nothing to create. The snapshot format is unchanged, so Republish all is not required.
+
+### 0.8.0
+
+- **No migration.** `OWNER_EMAIL` is no longer required, but set it before the admin is reachable:
+  with it unset and no users, whoever signs in first becomes the owner
+  ([who may sign in](cloudflare-access.md#who-may-sign-in)).
+- The site snapshot carries a `brand` (`{ logo, themeColor }`), written each time the site is
+  published ([ADR-0018](../adr/0018-site-brand-in-settings.md)). A snapshot published before has no
+  brand and reads as empty, so use **Publish site** from Settings once after choosing a logo or a
+  theme color, or they never reach the site's head. Pages need no republish. A test helper typed
+  as `SiteSnapshot` now has to include `brand`, even though the schema defaults it.
+
+### 0.9.0
+
+- No migration and no republish. Deleting an image that a page uses is now refused.
+
+### 0.10.0
+
+- **Apply `0016_submissions` and `0017_submission_updated_by`** with `make migrate`. They add the
+  `submissions` table the form inbox reads.
+- **The admin's `main` is now `worker/entry.ts`.** It re-exports the admin app and exports
+  `AdminEntrypoint = createAdminEntrypoint(registry)`, so the site can call it
+  ([ADR-0019](../adr/0019-admin-rpc-entrypoint.md)). Change `main` in the admin's `wrangler.jsonc`
+  from `worker/index.ts` and deploy the admin before the site.
+- **The site needs an `ADMIN` service binding** to the admin Worker's `AdminEntrypoint`, in each
+  environment: `"services": [{ "binding": "ADMIN", "service": "<admin name>", "entrypoint": "AdminEntrypoint" }]`.
+  It is needed only when the site submits forms or reads form data.
+- **Set `TURNSTILE_SECRET` on the admin Worker** for any form that keeps Turnstile on, which is
+  every form unless it sets `turnstile: false` ([ADR-0020](../adr/0020-forms-and-submissions.md)). A
+  missing secret refuses every submission. The owner's notification email uses `EMAIL`,
+  `AUTH_EMAIL_FROM` and `OWNER_EMAIL` on the admin Worker.
+- A registry can declare its own site settings fields, and blocks can read them while they render.
+  No snapshot format changed (pages stay `format: 2`), so a block that reads a setting shows it once
+  its page is published again.
+- A site Worker that serves a client app uses `renderInShell` and the CSP additions in the
+  [setup guide](setup.md).
+
+### 0.11.0
+
+- **Apply `0018_entry_position`** with `make migrate`. It adds a manual position to collection
+  entries and numbers the existing entries by creation date, so a collection keeps its order.
+- New field kinds `weeklyHours()` and `money()`, and and `createSite`'s `scripts` option (or a block's `clientScript`), change nothing
+  already published. A site that adds a `money()` field also declares a `currency` setting.
+- No snapshot format changed, so no republish is needed.
