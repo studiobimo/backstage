@@ -58,7 +58,31 @@ export const reservation = {
   updatedBy: null
 }
 
-export const paellaEntries = { menu: { 'dish-1': { en: 'Paella', es: 'Paella' } } }
+const text = (value: string) => ({ kind: 'text', text: value }) as const
+
+export const reservationFields = [
+  { key: 'date', label: 'Date', value: text('Dec 24, 2026') },
+  { key: 'name', label: 'Name', value: text('Ana Pérez') },
+  { key: 'time', label: 'Time', value: text('20:30') },
+  { key: 'seats', label: 'Seats', value: text('4') },
+  {
+    key: 'preorder',
+    label: 'Preorder',
+    value: {
+      kind: 'table',
+      columns: [
+        { key: 'dish', label: 'Dish' },
+        { key: 'price', label: 'Price' },
+        { key: 'quantity', label: 'Quantity' }
+      ],
+      rows: [
+        ['Paella', '$12.50', '2'],
+        ['Flan', '$5.00', '1']
+      ],
+      total: { label: 'Total', text: '$17.50' }
+    }
+  }
+]
 
 export const mockInboxApi = (handlers: Record<string, (init?: RequestInit) => unknown>) => {
   const calls: { method: string; url: string }[] = []

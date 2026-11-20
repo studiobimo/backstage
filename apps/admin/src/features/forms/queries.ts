@@ -59,12 +59,16 @@ export const submissionsQuery = (form: string, filter: SubmissionFilter) =>
       ).submissions
   })
 
-export const submissionQuery = (form: string, id: string) =>
+export const submissionQuery = (form: string, id: string, language: string) =>
   queryOptions({
-    queryKey: submissionKey(form, id),
+    queryKey: [...submissionKey(form, id), language],
     queryFn: async () =>
       submissionResponseSchema.parse(
-        await (await apiRequest(`/forms/${form}/submissions/${id}`)).json()
+        await (
+          await apiRequest(
+            `/forms/${form}/submissions/${id}?${new URLSearchParams({ [INBOX.languageParam]: language })}`
+          )
+        ).json()
       )
   })
 
@@ -80,8 +84,8 @@ export const changeStatusMutation = (queryClient: QueryClient, form: string, id:
         ).json()
       ).submission,
     onSuccess: async (submission) => {
-      queryClient.setQueryData(
-        submissionKey(form, id),
+      queryClient.setQueriesData(
+        { queryKey: submissionKey(form, id) },
         (current?: z.infer<typeof submissionResponseSchema>) =>
           current && { ...current, submission }
       )

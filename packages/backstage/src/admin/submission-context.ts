@@ -13,12 +13,13 @@ import { REFERENCE, referenceFieldsIn } from '../references.ts'
 import type { PresentationContext } from '../submission-presentation.ts'
 import { submissionStringsFor } from '../submission-text.ts'
 
-export const readReferencedEntries = async (
+const readReferencedEntries = async (
   d1: AnyD1Database,
   form: Form,
-  payload: Record<string, unknown>
+  payloads: readonly Record<string, unknown>[]
 ): Promise<ReferencedEntries> => {
-  const fields = referenceFieldsIn(schemaNodeOf(form.schema) as SchemaNode, form.name, payload)
+  const node = schemaNodeOf(form.schema) as SchemaNode
+  const fields = payloads.flatMap((payload) => referenceFieldsIn(node, form.name, payload))
   const wanted = fields.flatMap(({ collection, value }) =>
     value.mode === REFERENCE.mode.chosen ? value.ids.map((id) => ({ collection, id })) : []
   )
@@ -43,12 +44,12 @@ export const presentationContextFor = async (
   d1: AnyD1Database,
   registry: AdminRegistry,
   form: Form,
-  payload: Record<string, unknown>,
+  payloads: readonly Record<string, unknown>[],
   language?: string
 ): Promise<PresentationContext> => {
   const { defaultLocale } = resolveLocaleConfig(registry)
   const [entries, currency] = await Promise.all([
-    readReferencedEntries(d1, form, payload),
+    readReferencedEntries(d1, form, payloads),
     readSiteCurrency(d1)
   ])
   const chosen = language ?? defaultLocale

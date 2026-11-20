@@ -132,4 +132,9 @@ export {
   submissionsResponseSchema,
   submissionStatusChangeSchema
 } from '../form-inbox.ts'
-export type { FormDescription, InboxSubmission, ReferencedEntries } from '../form-inbox.ts'
+export type {
+  FormDescription,
+  InboxSubmission,
+  PresentedField,
+  PresentedValue
+} from '../form-inbox.ts'

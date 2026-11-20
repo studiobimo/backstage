@@ -28,7 +28,8 @@ import {
   revokeToken,
   type PrivacyChange
 } from './submission-privacy.ts'
-import { readReferencedEntries } from './submission-context.ts'
+import { presentSubmission } from '../submission-presentation.ts'
+import { presentationContextFor } from './submission-context.ts'
 import { setSubmissionStatus } from './submissions.ts'
 
 const dateFieldOf = (form: Form) => {
@@ -63,7 +64,7 @@ const formOf = (registry: AdminRegistry, c: Context) => {
     : ({ ok: false, response: respondWithError(c, API_ERROR.notFound) } as const)
 }
 
-const presentSubmission = (
+const toInboxSubmission = (
   row: Submission,
   names: ReadonlyMap<string, string>
 ): InboxSubmission => ({
@@ -93,7 +94,7 @@ const withSubmission = async (
 
 const respondWithChange = async (c: Context<AccessEnv>, change: PrivacyChange) =>
   change.ok
-    ? c.json({ submission: presentSubmission(change.submission, await editorNamesOf(c)) })
+    ? c.json({ submission: toInboxSubmission(change.submission, await editorNamesOf(c)) })
     : respondWithError(c, API_ERROR.notFound)
 
 const privacyRoutes = (registry: AdminRegistry) =>
@@ -121,6 +122,25 @@ const privacyRoutes = (registry: AdminRegistry) =>
       )
     )
 
+const detailResponse = async (
+  c: Context<AccessEnv>,
+  registry: AdminRegistry,
+  form: Form,
+  submission: Submission
+) => {
+  const context = await presentationContextFor(
+    c.env.DB,
+    registry,
+    form,
+    [submission.payload],
+    c.req.query(INBOX.languageParam)
+  )
+  return {
+    submission: toInboxSubmission(submission, await editorNamesOf(c)),
+    fields: presentSubmission(form, submission.payload, context)
+  }
+}
+
 export const formsRoutes = (registry: AdminRegistry) =>
   new Hono<AccessEnv>()
     .get('/', async (c) => {
@@ -146,17 +166,14 @@ export const formsRoutes = (registry: AdminRegistry) =>
         INBOX.maxSubmissions
       )
       const names = await editorNamesOf(c)
-      return c.json({ submissions: rows.map((row) => presentSubmission(row, names)) })
+      return c.json({ submissions: rows.map((row) => toInboxSubmission(row, names)) })
     })
     .get('/:name/submissions/:id', async (c) => {
       const found = formOf(registry, c)
       if (!found.ok) return found.response
       const submission = await submissionOf(c, found.form)
       if (!submission) return respondWithError(c, API_ERROR.notFound)
-      return c.json({
-        submission: presentSubmission(submission, await editorNamesOf(c)),
-        entries: await readReferencedEntries(c.env.DB, found.form, submission.payload)
-      })
+      return c.json(await detailResponse(c, registry, found.form, submission))
     })
     .put('/:name/submissions/:id/status', async (c) => {
       const found = formOf(registry, c)
@@ -179,6 +196,6 @@ export const formsRoutes = (registry: AdminRegistry) =>
           result.code === API_ERROR.notFound.code ? API_ERROR.notFound : API_ERROR.invalid
         )
       }
-      return c.json({ submission: presentSubmission(result.submission, await editorNamesOf(c)) })
+      return c.json({ submission: toInboxSubmission(result.submission, await editorNamesOf(c)) })
     })
     .route('/', privacyRoutes(registry))

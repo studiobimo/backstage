@@ -1,29 +1,18 @@
 import { schemaNodeOf } from './blocks.ts'
 import { classifyField, type SchemaNode } from './field-shapes.ts'
-import { INBOX, type ReferencedEntries } from './form-inbox.ts'
-import type { Form } from './forms.ts'
+import {
+  INBOX,
+  type PresentedField,
+  type PresentedValue,
+  type ReferencedEntries
+} from './form-inbox.ts'
+import { inboxOf, type Form, type FormInbox } from './forms.ts'
 import { fieldTitle, type LabelledNode } from './labels.ts'
 import { formatMoney, type CurrencyCode } from './money.ts'
 import type { SubmissionStrings } from './submission-text.ts'
 import { isBlank, isRecord, richTextPlain } from './translations.ts'
 
 export type PresentedNode = SchemaNode & LabelledNode & { format?: string }
-
-export interface PresentedColumn {
-  key: string
-  label: string
-}
-
-export type PresentedValue =
-  | { kind: 'text'; text: string }
-  | { kind: 'fields'; fields: PresentedField[] }
-  | { kind: 'table'; columns: PresentedColumn[]; rows: string[][] }
-
-export interface PresentedField {
-  key: string
-  label: string
-  value: PresentedValue
-}
 
 export interface PresentationContext {
   language: string
@@ -164,15 +153,40 @@ function presentValue(
 const inScope = (key: string, { include, exclude }: FieldScope) =>
   (!include || include.includes(key)) && !exclude?.includes(key)
 
+const sumOf = (rows: unknown, key: string) =>
+  (Array.isArray(rows) ? rows : [])
+    .filter(isRecord)
+    .reduce((sum, row) => sum + (typeof row[key] === 'number' ? row[key] : 0), 0)
+
+const withTotal = (
+  field: PresentedField,
+  payload: Record<string, unknown>,
+  context: PresentationContext,
+  total: FormInbox['total']
+): PresentedField => {
+  if (field.key !== total?.field || field.value.kind !== 'table') return field
+  const amount = sumOf(payload[total.field], total.money)
+  return {
+    ...field,
+    value: {
+      ...field.value,
+      total: {
+        label: context.strings.total,
+        text: formatMoney(amount, context.currency, context.language)
+      }
+    }
+  }
+}
+
 export const presentSubmission = (
   form: Form,
   payload: Record<string, unknown>,
   context: PresentationContext,
   scope: FieldScope = {}
 ): PresentedField[] =>
-  fieldsOf(schemaNodeOf(form.schema) as PresentedNode, payload, context).filter(({ key }) =>
-    inScope(key, scope)
-  )
+  fieldsOf(schemaNodeOf(form.schema) as PresentedNode, payload, context)
+    .filter(({ key }) => inScope(key, scope))
+    .map((field) => withTotal(field, payload, context, inboxOf(form).total))
 
 export const formTitleIn = (form: Form, context: PresentationContext) =>
   (form.title && entryLabelIn(form.title, context.language, context.defaultLocale)) || form.name

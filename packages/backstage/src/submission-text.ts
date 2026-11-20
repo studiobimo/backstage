@@ -5,6 +5,7 @@ export interface SubmissionStrings {
   no: string
   none: string
   missingEntry: string
+  total: string
   email: {
     subject: (form: string) => string
     intro: (form: string) => string
@@ -19,6 +20,7 @@ export const SUBMISSION_TEXT: Readonly<Record<string, SubmissionStrings>> = {
     no: 'No',
     none: 'Not provided',
     missingEntry: 'An entry that is no longer available',
+    total: 'Total',
     email: {
       subject: (form) => `New ${form} submission`,
       intro: (form) => `A visitor sent the "${form}" form.`,
@@ -31,6 +33,7 @@ export const SUBMISSION_TEXT: Readonly<Record<string, SubmissionStrings>> = {
     no: 'No',
     none: 'Sin indicar',
     missingEntry: 'Una entrada que ya no está disponible',
+    total: 'Total',
     email: {
       subject: (form) => `Nuevo envío de ${form}`,
       intro: (form) => `Un visitante envió el formulario "${form}".`,

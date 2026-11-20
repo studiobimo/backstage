@@ -115,7 +115,7 @@ const notificationOf = async (
   payload: Record<string, unknown>
 ) => {
   const notify = form.notify ?? {}
-  const context = await presentationContextFor(env.DB, registry, form, payload)
+  const context = await presentationContextFor(env.DB, registry, form, [payload])
   const title = formTitleIn(form, context)
   return submissionMessage({
     form,

@@ -13,8 +13,8 @@ import { useApiErrorMessage } from '@/lib/api-feedback'
 import { formatDateTime } from '@/lib/format'
 
 import { useLocaleConfig } from '../config/queries'
-import { FieldValue } from './field-value'
-import { fieldEntries, fieldLabel, formTitle, statusLabel } from './form-text'
+import { formTitle, statusLabel } from './form-text'
+import { PresentedValueView } from './presented-value'
 import { changeStatusMutation, formsQuery, submissionQuery, type FormOption } from './queries'
 import { StatusBadge } from './status-badge'
 import { SubmissionPrivacy } from './submission-privacy'
@@ -79,12 +79,12 @@ export function SubmissionPage({ name, submissionId }: SubmissionPageProps) {
   const { t, i18n } = useTranslation('forms')
   const { defaultLocale } = useLocaleConfig()
   const { data: forms } = useSuspenseQuery(formsQuery)
-  const { data } = useSuspenseQuery(submissionQuery(name, submissionId))
+  const { data } = useSuspenseQuery(submissionQuery(name, submissionId, i18n.language))
   const form = useLocalizedForm(forms.find((candidate) => candidate.name === name))
   if (!form) {
     return <ListNotice title={t('missing.title')} description={t('missing.description')} />
   }
-  const { submission, entries } = data
+  const { submission, fields } = data
   const title = formTitle(form, i18n.language, defaultLocale)
   return (
     <>
@@ -104,14 +104,14 @@ export function SubmissionPage({ name, submissionId }: SubmissionPageProps) {
       />
       <FrameSection title={t('detail.details')}>
         <dl className="flex flex-col divide-y">
-          {fieldEntries(form.schema).map(([key, node]) => (
+          {fields.map(({ key, label, value }) => (
             <div
               key={key}
               className="grid gap-1 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(8rem,12rem)_1fr] sm:gap-6"
             >
-              <dt className="text-muted-foreground">{fieldLabel(key, node)}</dt>
+              <dt className="text-muted-foreground">{label}</dt>
               <dd className="min-w-0 break-words">
-                <FieldValue node={node} value={submission.payload[key]} entries={entries} />
+                <PresentedValueView label={label} value={value} />
               </dd>
             </div>
           ))}

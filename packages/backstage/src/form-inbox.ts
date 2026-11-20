@@ -5,6 +5,9 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 export const INBOX = {
   maxSubmissions: 500,
   dateFormat: 'date',
+  columns: { defaultCount: 4, maxCount: 6, keySeparator: '+', cellSeparator: ' ' },
+  languageParam: 'language',
+  maxLanguageLength: 35,
   paths: { anonymise: 'anonymise', revokeToken: 'revoke-token' },
   query: { status: 'status', from: 'from', to: 'to' },
   submissionPath: (form: string, id: string) => `/forms/${form}/${id}`
@@ -17,6 +20,46 @@ export const inboxFilterSchema = z.object({
   [INBOX.query.from]: dateSchema.optional(),
   [INBOX.query.to]: dateSchema.optional()
 })
+
+export interface PresentedColumn {
+  key: string
+  label: string
+}
+
+export interface PresentedTotal {
+  label: string
+  text: string
+}
+
+export type PresentedValue =
+  | { kind: 'text'; text: string }
+  | { kind: 'fields'; fields: PresentedField[] }
+  | { kind: 'table'; columns: PresentedColumn[]; rows: string[][]; total?: PresentedTotal }
+
+export interface PresentedField {
+  key: string
+  label: string
+  value: PresentedValue
+}
+
+const presentedColumnSchema = z.object({ key: z.string(), label: z.string() })
+
+const presentedValueSchema: z.ZodType<PresentedValue> = z.lazy(() =>
+  z.discriminatedUnion('kind', [
+    z.object({ kind: z.literal('text'), text: z.string() }),
+    z.object({ kind: z.literal('fields'), fields: z.array(presentedFieldSchema) }),
+    z.object({
+      kind: z.literal('table'),
+      columns: z.array(presentedColumnSchema),
+      rows: z.array(z.array(z.string())),
+      total: z.object({ label: z.string(), text: z.string() }).optional()
+    })
+  ])
+)
+
+const presentedFieldSchema: z.ZodType<PresentedField> = z.lazy(() =>
+  z.object({ key: z.string(), label: z.string(), value: presentedValueSchema })
+)
 
 export const formDescriptionSchema = z.object({
   name: z.string(),
@@ -46,15 +89,11 @@ export type InboxSubmission = z.infer<typeof submissionSchema>
 
 export const submissionsResponseSchema = z.object({ submissions: z.array(submissionSchema) })
 
-const referencedEntriesSchema = z.record(
-  z.string(),
-  z.record(z.string(), z.record(z.string(), z.string()))
-)
-export type ReferencedEntries = z.infer<typeof referencedEntriesSchema>
+export type ReferencedEntries = Record<string, Record<string, Record<string, string>>>
 
 export const submissionResponseSchema = z.object({
   submission: submissionSchema,
-  entries: referencedEntriesSchema
+  fields: z.array(presentedFieldSchema)
 })
 
 export const submissionStatusChangeSchema = z.object({ status: z.string().min(1) })

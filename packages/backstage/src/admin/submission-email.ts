@@ -1,12 +1,13 @@
-import { INBOX } from '../form-inbox.ts'
-import type { Form } from '../forms.ts'
-import { escapeXml } from '../seo.ts'
 import {
-  plainTextOf,
+  INBOX,
   type PresentedColumn,
   type PresentedField,
+  type PresentedTotal,
   type PresentedValue
-} from '../submission-presentation.ts'
+} from '../form-inbox.ts'
+import type { Form } from '../forms.ts'
+import { escapeXml } from '../seo.ts'
+import { plainTextOf } from '../submission-presentation.ts'
 import type { SubmissionStrings } from '../submission-text.ts'
 import type { MailMessage } from './mailer.ts'
 
@@ -44,15 +45,20 @@ const rowText = (columns: PresentedColumn[], row: string[]) =>
     .flatMap(({ label }, index) => (row[index] ? [`${label}${EMAIL.separator}${row[index]}`] : []))
     .join(EMAIL.cellSeparator)
 
+const totalText = ({ label, text }: PresentedTotal) => `${label}${EMAIL.separator}${text}`
+
 const fieldLines = ({ label, value }: PresentedField, depth: number): string[] => {
   const pad = EMAIL.indent.repeat(depth)
   if (value.kind === 'text') return [`${pad}${label}${EMAIL.separator}${value.text}`]
   const children =
     value.kind === 'fields'
       ? value.fields.filter(isFilled).flatMap((child) => fieldLines(child, depth + 1))
-      : value.rows.map(
-          (row) => `${pad}${EMAIL.indent}${EMAIL.bullet}${rowText(value.columns, row)}`
-        )
+      : [
+          ...value.rows.map(
+            (row) => `${pad}${EMAIL.indent}${EMAIL.bullet}${rowText(value.columns, row)}`
+          ),
+          ...(value.total ? [`${pad}${EMAIL.indent}${totalText(value.total)}`] : [])
+        ]
   return [`${pad}${label}${EMAIL.separator}`, ...children]
 }
 
@@ -66,17 +72,20 @@ const textBody = ({ fields, strings, title, id }: SubmissionEmailInput, link: st
     ...(link ? [`${strings.email.open}${EMAIL.separator}${link}`] : [])
   ].join(EMAIL.paragraphBreak)
 
-const htmlRows = (columns: PresentedColumn[], rows: string[][]) =>
+const htmlRows = (columns: PresentedColumn[], rows: string[][], total?: PresentedTotal) =>
   [
     '<table>',
     `<tr>${columns.map(({ label }) => `<th align="left">${escapeXml(label)}</th>`).join('')}</tr>`,
     ...rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeXml(cell)}</td>`).join('')}</tr>`),
+    ...(total
+      ? [`<tr><td colspan="${columns.length}">${escapeXml(totalText(total))}</td></tr>`]
+      : []),
     '</table>'
   ].join('')
 
 const htmlValue = (value: PresentedValue): string => {
   if (value.kind === 'text') return escapeXml(value.text)
-  if (value.kind === 'table') return htmlRows(value.columns, value.rows)
+  if (value.kind === 'table') return htmlRows(value.columns, value.rows, value.total)
   return htmlList(value.fields)
 }
 
