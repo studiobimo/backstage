@@ -384,6 +384,9 @@ const length = bookingDuration({ minDuration: 30, maxDuration: 180 }).safeParse(
   `start` and `end`.
 - `rangesOverlap(a, b)` is the same test on two `{ start, end }` ranges. Ranges that only touch do
   not overlap, so back-to-back bookings are allowed.
+- `bookableSlots(hours, entries, date, { step, duration, resource })` joins the two: the slots of
+  that day, each as `{ date, start, end }` in the business's time zone, that fit the hours and are
+  not taken. An overnight slot after midnight carries the next day's `date`.
 - `bookingDuration({ minDuration, maxDuration })` is a zod schema for the requested length in
   minutes. Read the bounds from the settings that hold your `minDuration` and `maxDuration`.
 

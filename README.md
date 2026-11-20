@@ -111,7 +111,7 @@ What a site author writes. It reaches no database and no Hono.
 - Fields: `entries`, `ENTRY_QUERY`, `hexColor`, `image`, `link`, `localized`, `richText`, `timeOfDay`, `weeklyHours`, `money`, `currency`, `isBlank`
 - Opening hours, which also run in the browser: `isOpenAt`, `nextOpening`, `slotsFor`, and the `WeeklyHours`,
   `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types
-- Bookings, which also run in the browser: `occupiedAt`, `rangesOverlap`, `bookingDuration`, `BOOKING`
+- Bookings, which also run in the browser: `bookableSlots`, `occupiedAt`, `rangesOverlap`, `bookingDuration`, `BOOKING`
 - Money: `formatMoney`, `currencySettingSchema`, `CURRENCY_CODES`, and the `CurrencyCode` type, which also run in the browser
 - Shared constants: `API_ERROR`, `MEDIA`, `MONEY`
 - Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionComponents`,
@@ -159,7 +159,7 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Linking a Vite client bundle from its manifest: `viteAssets`, `viteManifestSchema`, `VITE_ASSETS`, and the
   `ViteAssets`, `ViteAssetsOptions` and `ViteManifest` types
 - Formatting an amount in minor units: `formatMoney`, `CURRENCY_CODES`, `MONEY`, and the `CurrencyCode` type
-- Bookings in the business's time zone: `occupiedAt`, `rangesOverlap`, `bookingDuration`, `BOOKING`, and the `InstantRange`, `OccupiedQuery`, `BookingFields` and `DurationBounds` types
+- Bookings in the business's time zone: `bookableSlots`, `occupiedAt`, `rangesOverlap`, `bookingDuration`, `BOOKING`, and the `InstantRange`, `OccupiedQuery`, `BookingFields`, `BookableQuery`, `BookableSlot` and `DurationBounds` types
 - Opening hours in the business's time zone: `isOpenAt`, `nextOpening`, `slotsFor`, `WEEKLY_HOURS`, and the
   `WeeklyHours`, `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types
 - Reading a form's public projection, such as the confirmed seats: `findFormProjection`, `formProjectionKey`,

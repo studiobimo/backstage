@@ -40,8 +40,15 @@ export {
   MONEY
 } from './money.ts'
 export type { CurrencyCode } from './money.ts'
-export { bookingDuration, BOOKING, occupiedAt, rangesOverlap } from './bookings.ts'
-export type { BookingFields, DurationBounds, InstantRange, OccupiedQuery } from './bookings.ts'
+export { bookableSlots, bookingDuration, BOOKING, occupiedAt, rangesOverlap } from './bookings.ts'
+export type {
+  BookableQuery,
+  BookableSlot,
+  BookingFields,
+  DurationBounds,
+  InstantRange,
+  OccupiedQuery
+} from './bookings.ts'
 export { isOpenAt, nextOpening, slotsFor, weeklyHours } from './weekly-hours.ts'
 export type { HoursRange, Instant, OpenState, SlotOptions, WeeklyHours } from './weekly-hours.ts'
 export { ENTRY_QUERY } from './entry-query.ts'

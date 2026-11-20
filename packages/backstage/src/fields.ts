@@ -26,7 +26,8 @@ export const hexColor = () =>
 
 export const TIME_OF_DAY = {
   pattern: /^(?:[01]\d|2[0-3]):[0-5]\d$/,
-  minutesPerHour: 60
+  minutesPerHour: 60,
+  length: 5
 } as const
 
 export const timeOfDaySchema = z.string().regex(TIME_OF_DAY.pattern)

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { bookingDuration, occupiedAt, rangesOverlap } from './bookings.ts'
+import { bookableSlots, bookingDuration, occupiedAt, rangesOverlap } from './bookings.ts'
 import { classifyField } from './field-shapes.ts'
 import { timeOfDay } from './fields.ts'
 import type { TranslatedNode } from './translations.ts'
@@ -146,5 +146,27 @@ describe('bookingDuration', () => {
   it('leaves out a bound that is not set', () => {
     expect(bookingDuration({}).safeParse(1000).success).toBe(true)
     expect(bookingDuration({}).safeParse(0).success).toBe(false)
+  })
+})
+
+describe('bookableSlots', () => {
+  const taken = [{ resource: 'room-a', date: '2026-03-02', start: '10:00', end: '11:00' }]
+  const query = { step: 60, duration: 60, now: farAway, resource: 'room-a' }
+  const startsOf = (slots: { start: string }[]) => slots.map((slot) => slot.start)
+
+  it('drops the starts that share time and keeps those that only touch', () => {
+    const slots = bookableSlots(clinic, taken, '2026-03-02', query)
+    expect(startsOf(slots)).toEqual(['09:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'])
+  })
+
+  it('offers every start for another resource', () => {
+    const slots = bookableSlots(clinic, taken, '2026-03-02', { ...query, resource: 'room-b' })
+    expect(slots).toHaveLength(8)
+  })
+
+  it('dates an overnight start after midnight on the next day', () => {
+    const slots = bookableSlots(clinic, [], '2026-03-14', { ...query, duration: 120 })
+    expect(slots.at(-1)).toEqual({ date: '2026-03-15', start: '02:00', end: '04:00' })
+    expect(slots[0]).toEqual({ date: '2026-03-14', start: '22:00', end: '00:00' })
   })
 })

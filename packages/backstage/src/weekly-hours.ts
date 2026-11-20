@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { marked, minutesOfTime, timeOfDaySchema } from './fields.ts'
+import { marked, minutesOfTime, TIME_OF_DAY, timeOfDaySchema } from './fields.ts'
 import { WEEKDAYS } from './field-shapes.ts'
 
 export const WEEKLY_HOURS = {
@@ -164,6 +164,15 @@ export interface SlotOptions {
   leadTime?: number
   now?: Instant
   duration?: number
+}
+
+export function wallTimeOf(timeZone: string, instant: Instant) {
+  const iso = new Date(wallClockOf(timeZone, millisecondsOf(instant))).toISOString()
+  const timeStart = WEEKLY_HOURS.date.length + 1
+  return {
+    date: iso.slice(0, WEEKLY_HOURS.date.length),
+    time: iso.slice(timeStart, timeStart + TIME_OF_DAY.length)
+  }
 }
 
 export const instantOfDateTime = (timeZone: string, date: string, time: string) =>

@@ -6,6 +6,10 @@ import {
   instantOfDateTime,
   isRealDate,
   millisecondsOf,
+  slotsFor,
+  type SlotOptions,
+  wallTimeOf,
+  type WeeklyHours,
   WEEKLY_HOURS
 } from './weekly-hours.ts'
 
@@ -82,4 +86,41 @@ export const bookingDuration = ({ minDuration, maxDuration }: DurationBounds) =>
   const base = z.number().int().positive()
   const atLeast = minDuration === undefined ? base : base.min(minDuration)
   return maxDuration === undefined ? atLeast : atLeast.max(maxDuration)
+}
+
+export interface BookableQuery extends SlotOptions {
+  duration: number
+  resource?: unknown
+  fields?: Partial<BookingFields>
+}
+
+export interface BookableSlot {
+  date: string
+  start: string
+  end: string
+}
+
+export function bookableSlots(
+  hours: WeeklyHours,
+  entries: readonly Record<string, unknown>[],
+  date: string,
+  { resource, fields, ...slotOptions }: BookableQuery
+): BookableSlot[] {
+  const { timeZone } = hours
+  const durationMilliseconds = slotOptions.duration * WEEKLY_HOURS.minute.milliseconds
+  return slotsFor(hours, date, slotOptions).flatMap((begin) => {
+    const from = wallTimeOf(timeZone, begin)
+    const until = wallTimeOf(timeZone, begin.getTime() + durationMilliseconds)
+    const request = {
+      resource,
+      date: from.date,
+      start: from.time,
+      end: until.time,
+      timeZone,
+      fields
+    }
+    return occupiedAt(entries, request).length === 0
+      ? [{ date: from.date, start: from.time, end: until.time }]
+      : []
+  })
 }
