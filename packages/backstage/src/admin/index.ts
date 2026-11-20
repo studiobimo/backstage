@@ -65,5 +65,12 @@ export { writeSiteSettings } from '../db/settings.ts'
 export { writeSiteBlock } from '../db/site-blocks.ts'
 export { setSubmissionStatus } from './submissions.ts'
 export type { StatusChange, StatusChangeOptions } from './submissions.ts'
+export {
+  anonymiseSubmission,
+  deleteSubmission,
+  purgeExpiredSubmissions,
+  revokeToken
+} from './submission-privacy.ts'
+export type { PrivacyChange, PrivacyOptions } from './submission-privacy.ts'
 export { findSubmission, listSubmissions } from '../db/submissions.ts'
 export type { Submission } from '../db/submissions.ts'

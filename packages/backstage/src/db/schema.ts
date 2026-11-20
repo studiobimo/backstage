@@ -224,6 +224,7 @@ export const submissions = sqliteTable(
     id: text('id').primaryKey(),
     form: text('form').notNull(),
     tokenHash: text('token_hash').notNull().unique(),
+    tokenExpiresAt: integer('token_expires_at'),
     payload: text('payload', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
     status: text('status').notNull(),
     createdAt: integer('created_at').notNull(),

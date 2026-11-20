@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, lte, sql, type SQL } from 'drizzle-orm'
+import { and, count, desc, eq, gte, lt, lte, sql, type SQL } from 'drizzle-orm'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import { submissions } from './schema.ts'
@@ -7,6 +7,7 @@ export interface NewSubmission {
   id: string
   form: string
   tokenHash: string
+  tokenExpiresAt: number
   payload: Record<string, unknown>
   status: string
   now: number
@@ -86,3 +87,46 @@ export const changeSubmissionStatus = async (
     .returning()
   return row ?? null
 }
+
+export const revokeSubmissionToken = async (d1: AnyD1Database, id: string) => {
+  const [row] = await drizzle(d1)
+    .update(submissions)
+    .set({ tokenExpiresAt: null })
+    .where(eq(submissions.id, id))
+    .returning()
+  return row ?? null
+}
+
+export const anonymiseStoredSubmission = async (
+  d1: AnyD1Database,
+  id: string,
+  now: number,
+  editorId: string | null
+) => {
+  const [row] = await drizzle(d1)
+    .update(submissions)
+    .set({ payload: {}, tokenExpiresAt: null, updatedAt: now, updatedBy: editorId })
+    .where(eq(submissions.id, id))
+    .returning()
+  return row ?? null
+}
+
+export const deleteStoredSubmission = async (d1: AnyD1Database, id: string) => {
+  const removed = await drizzle(d1)
+    .delete(submissions)
+    .where(eq(submissions.id, id))
+    .returning({ id: submissions.id })
+  return removed.length > 0
+}
+
+export const deleteSubmissionsCreatedBefore = async (
+  d1: AnyD1Database,
+  form: string,
+  cutoff: number
+) =>
+  (
+    await drizzle(d1)
+      .delete(submissions)
+      .where(and(eq(submissions.form, form), lt(submissions.createdAt, cutoff)))
+      .returning({ id: submissions.id })
+  ).length

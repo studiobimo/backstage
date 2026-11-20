@@ -14,7 +14,7 @@ import { readPublishedEntries } from '../db/entry-references.ts'
 import { API_ERROR, fieldIssuesOf, type FieldIssue } from '../errors.ts'
 import type { SchemaNode } from '../field-shapes.ts'
 import { publicFieldsOf } from '../form-projection.ts'
-import { formsOf, initialStatusOf, type Form } from '../forms.ts'
+import { daysToMs, formsOf, initialStatusOf, tokenDaysOf, type Form } from '../forms.ts'
 import { logLine } from '../log.ts'
 import { REFERENCE, referenceFieldsIn, type ReferenceField } from '../references.ts'
 import type { RequestContext } from '../rpc.ts'
@@ -28,6 +28,7 @@ import {
   type SubmitResult
 } from '../submissions.ts'
 import { randomToken, sha256Hex } from './auth-tokens.ts'
+import { isTokenActive } from './submission-privacy.ts'
 import { publishFormProjection } from './form-projection.ts'
 import type { AdminEnv } from './env.ts'
 import type { Mailer } from './mailer.ts'
@@ -148,6 +149,7 @@ export const submitForm = async (
     id,
     form: form.name,
     tokenHash: await sha256Hex(token),
+    tokenExpiresAt: createdAt + daysToMs(tokenDaysOf(form)),
     payload: data,
     status: initialStatusOf(form),
     now: createdAt
@@ -161,13 +163,13 @@ const NOT_FOUND = { ok: false, code: API_ERROR.notFound.code } as const
 
 export const statusOfSubmission = async (
   env: AdminEnv,
-  { registry }: SubmissionDeps,
+  { registry, now = Date.now }: SubmissionDeps,
   token: string
 ): Promise<StatusResult> => {
   const parsed = submissionTokenSchema.safeParse(token)
   if (!parsed.success) return NOT_FOUND
   const row = await findSubmissionByTokenHash(env.DB, await sha256Hex(parsed.data))
-  if (!row) return NOT_FOUND
+  if (!row || !isTokenActive(row, now())) return NOT_FOUND
   const form = formsOf(registry).get(row.form)
   return statusResultSchema.parse({
     ok: true,

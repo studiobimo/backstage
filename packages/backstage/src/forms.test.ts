@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { defineBlock, defineRegistry } from './blocks.ts'
 import { defineCollection } from './collections.ts'
-import { defineForm, FORM, formsOf, initialStatusOf } from './forms.ts'
+import { defineForm, FORM, formsOf, initialStatusOf, tokenDaysOf } from './forms.ts'
 import { entries } from './references.ts'
 
 const menu = defineCollection({
@@ -107,6 +107,34 @@ describe('a registry with forms', () => {
     const form = defineForm('reservation', { schema })
     expect(() => defineRegistry([note], { forms: [form] })).toThrow(
       /Form "reservation" field "dishes" refers to the unknown collection "menu"/
+    )
+  })
+})
+
+describe('defineForm token and retention', () => {
+  it('expires the status token after the default days, and keeps no retention', () => {
+    const form = defineForm('reservation', { schema })
+    expect(tokenDaysOf(form)).toBe(FORM.token.defaultExpiresInDays)
+    expect(form.token).toEqual({ expiresInDays: FORM.token.defaultExpiresInDays })
+    expect(form.retention).toBeUndefined()
+  })
+
+  it('keeps the token expiry and the retention it is given', () => {
+    const form = defineForm('reservation', {
+      schema,
+      token: { expiresInDays: 7 },
+      retention: { days: 90 }
+    })
+    expect(tokenDaysOf(form)).toBe(7)
+    expect(form.retention).toEqual({ days: 90 })
+  })
+
+  it.each([0, -1, 1.5, FORM.limits.maxDays + 1])('refuses %s days', (days) => {
+    expect(() => defineForm('reservation', { schema, token: { expiresInDays: days } })).toThrow(
+      /token.expiresInDays/
+    )
+    expect(() => defineForm('reservation', { schema, retention: { days } })).toThrow(
+      /retention.days/
     )
   })
 })
