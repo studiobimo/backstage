@@ -153,7 +153,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
 - Reading published entries: `findPublishedEntry`, `findEntryTranslations`
 - Listing a collection's published entries, for a collection defined with `snapshot: true`: `findCollectionEntries`,
-  `collectionSnapshotKey`, `collectionSnapshotOf`, and the `CollectionEntryQuery` and `CollectionEntryRead` types
+  `findCollectionEntry`, `COLLECTION_KEY`, `collectionSnapshotKey`, `collectionSnapshotOf`, and the
+  `CollectionEntryQuery` and `CollectionEntryRead` types
 - Reading the registry's own settings: `findRegistrySettings`
 - Formatting an amount in minor units: `formatMoney`, `CURRENCY_CODES`, `MONEY`, and the `CurrencyCode` type
 - Opening hours in the business's time zone: `isOpenAt`, `nextOpening`, `slotsFor`, `WEEKLY_HOURS`, and the

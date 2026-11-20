@@ -1,7 +1,8 @@
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
+import { jsonPathOf, keyOf } from '../collection-key.ts'
 import { openStoredContent } from '../blocks.ts'
 import { togglesOf, type Collection, type EntryLabels } from '../collections.ts'
 import type { Entry } from '../entries.ts'
@@ -55,6 +56,7 @@ const toEntry = (
     position: entry.position,
     toggles: togglesOf(collection, opened.content),
     slugs,
+    key: keyOf(collection, opened.content),
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     updatedBy: updater ? personOf(updater) : null,
@@ -171,6 +173,26 @@ export const updateEntry = async (
     .returning({ id: entries.id })
   if (changed.length > 0 && slugs) await writeEntrySlugs(d1, collection.name, id, slugs)
   return outcomeOf(d1, collection, id, changed)
+}
+
+export const isKeyTaken = async (
+  d1: AnyD1Database,
+  collection: Collection,
+  key: string,
+  exceptId: string
+) => {
+  const [taken] = await drizzle(d1)
+    .select({ id: entries.id })
+    .from(entries)
+    .where(
+      and(
+        eq(entries.collection, collection.name),
+        ne(entries.id, exceptId),
+        sql`json_extract(${entries.content}, ${jsonPathOf(collection.key ?? '')}) = ${key}`
+      )
+    )
+    .limit(1)
+  return taken !== undefined
 }
 
 export const deleteEntry = async (d1: AnyD1Database, collection: Collection, id: string) => {

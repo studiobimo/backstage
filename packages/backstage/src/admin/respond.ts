@@ -22,6 +22,9 @@ export const respondWithError = (c: Context, error: ApiError) =>
 export const respondInvalid = (c: Context, issues: readonly FieldIssue[]) =>
   c.json(invalidBody(issues), API_ERROR.invalid.status)
 
+export const respondKeyProblem = (c: Context, field: string, error: ApiError) =>
+  c.json({ ...errorBody(error), issues: [{ path: [field], code: error.code }] }, error.status)
+
 export const respondWithStale = (c: Context, current: PageStamp | null) =>
   c.json({ ...errorBody(API_ERROR.staleVersion), current }, API_ERROR.staleVersion.status)
 

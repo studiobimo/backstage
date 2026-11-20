@@ -35,6 +35,7 @@ export interface CollectionDefinition<
   label: LabelKey<S>
   quickToggle?: readonly BooleanKey<S>[]
   snapshot?: boolean
+  key?: LabelKey<S>
   version?: number
   schema: S
   migrate?: (content: unknown, fromVersion: number) => unknown
@@ -45,9 +46,10 @@ export interface CollectionDefinition<
 export interface Collection<
   S extends z.ZodType = z.ZodType,
   N extends string = string
-> extends Omit<CollectionDefinition<S, N>, 'label' | 'quickToggle'> {
+> extends Omit<CollectionDefinition<S, N>, 'label' | 'quickToggle' | 'key'> {
   label: string
   quickToggle?: readonly string[]
+  key?: string
   version: number
 }
 
@@ -96,6 +98,11 @@ export function assertCollection(collection: Collection) {
       `Collection "${collection.name}" label "${collection.label}" must name a text or localized text field`
     )
   }
+  if (collection.key !== undefined && !isTextNode(schema.properties?.[collection.key])) {
+    throw new Error(
+      `Collection "${collection.name}" key "${collection.key}" must name a top-level text field`
+    )
+  }
   for (const field of quickToggleOf(collection)) {
     if (!isBooleanNode(schema.properties?.[field])) {
       throw new Error(
@@ -137,6 +144,7 @@ export interface CollectionDescription {
   route?: CollectionRoute
   quickToggle?: readonly string[]
   snapshot?: boolean
+  key?: string
   schema: Readonly<Record<string, unknown>>
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
@@ -154,13 +162,14 @@ export const describeCollections = (
   registry: Partial<CollectionRegistry>
 ): CollectionDescription[] =>
   [...collectionsOf(registry).values()].map(
-    ({ name, version, label, route, quickToggle, snapshot, schema, title, description }) => ({
+    ({ name, version, label, route, quickToggle, snapshot, key, schema, title, description }) => ({
       name,
       version,
       label,
       route,
       quickToggle,
       snapshot,
+      key,
       schema: schemaNodeOf(schema),
       title,
       description

@@ -190,6 +190,25 @@ This ADR records the decisions they share, so that the later ones do not reopen 
   consumers (#200) stays separate. One key per collection suits reference data (tables, rooms,
   staff); a collection too large for one KV value needs a different design.
 
+### An editor-set entry key
+
+- `defineCollection({ ..., key: 'code' })` names a top-level text field as the entry's key, for other
+  data to refer to (a table code, a SKU, a room number). `defineRegistry` refuses a name that is not
+  a top-level text field. Ids stay UUIDs.
+- The key uses lowercase letters, numbers and hyphens, the same pattern as a slug
+  (`COLLECTION_KEY`), and is unique within the collection. A save is refused with `key_invalid` (400)
+  or `key_taken` (409), each with an `issues` entry on the key field so the form shows it there.
+  Uniqueness is a lookup on `json_extract` of the draft content inside the save request, as the slug
+  check is, not a database index, because the key's field differs per collection. Two saves of the
+  same new key at the same moment can still both pass, as with slugs.
+- **The key is read-only while the entry is published.** A save whose key differs from the published
+  copy's is refused with `key_locked` (409), and the form shows the field locked. Unpublish to
+  change it.
+- Queries and the site reader take the key as `$key`, next to `$position`: `where: { $key: 'a1' }`,
+  `orderBy: { field: '$key' }`. `findCollectionEntry(kv, registry, name, key)` in `./site` reads the
+  collection snapshot above and so needs `snapshot: true`.
+- The entries list and the reference picker show the key beside the title.
+
 ## Consequences
 
 - One admin build still serves every client: the entry form is built from the collection's JSON

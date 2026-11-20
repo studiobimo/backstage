@@ -129,6 +129,28 @@ describe('quick toggles', () => {
   })
 })
 
+describe('entry keys', () => {
+  const table = (key: string) =>
+    defineCollection({
+      name: 'tables',
+      label: 'code',
+      key,
+      schema: z.object({ code: z.string(), seats: z.number() })
+    } as never)
+
+  it('accepts a text field and describes it', () => {
+    const registry = defineRegistry([note], { collections: [table('code')] })
+    expect(describeCollections(registry)[0]?.key).toBe('code')
+  })
+
+  it.each([
+    ['a number field', 'seats'],
+    ['a missing field', 'gone']
+  ])('refuses %s', (_, field) => {
+    expect(() => defineRegistry([note], { collections: [table(field)] })).toThrow(`key "${field}"`)
+  })
+})
+
 describe('collection JSON Schema', () => {
   it('describes each collection like a block, with its fields marked', () => {
     const schema = registry.collectionJsonSchema('blog') as {

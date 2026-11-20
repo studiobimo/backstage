@@ -1,6 +1,7 @@
 import type { z } from 'zod'
 
 import type { CollectionRegistry, FormRegistry } from '../blocks.ts'
+import { COLLECTION_KEY } from '../collection-key.ts'
 import { collectionSnapshotKey, collectionSnapshotSchema } from '../collection-snapshot.ts'
 import { ENTRY_QUERY, selectEntries } from '../entry-query.ts'
 import type { CollectionRoute } from '../entry-pages.ts'
@@ -145,9 +146,9 @@ type ContentOf<R extends CollectionRegistry, N extends string> = z.output<
 >
 
 export interface CollectionEntryQuery<T> {
-  where?: { [K in keyof T]?: T[K] }
+  where?: { [K in keyof T]?: T[K] } & { [COLLECTION_KEY.queryField]?: string }
   orderBy?: {
-    field: (keyof T & string) | typeof ENTRY_QUERY.positionKey
+    field: (keyof T & string) | typeof ENTRY_QUERY.positionKey | typeof COLLECTION_KEY.queryField
     direction: (typeof ENTRY_QUERY.direction)[keyof typeof ENTRY_QUERY.direction]
   }
   limit?: number
@@ -158,19 +159,46 @@ export interface CollectionEntryRead<T> {
   content: T
 }
 
+type StoredQuery = Parameters<typeof selectEntries>[1]
+
+async function readCollectionEntries(
+  kv: KvReader,
+  registry: CollectionRegistry,
+  name: string,
+  query: StoredQuery
+) {
+  const collection = registry.getCollection(name)
+  if (!collection?.snapshot) return []
+  const parsed = collectionSnapshotSchema.safeParse(
+    await kv.get(collectionSnapshotKey(name), { type: 'json' })
+  )
+  if (!parsed.success || parsed.data.collection !== name) return []
+  return selectEntries(parsed.data.entries, query, { keyField: collection.key })
+}
+
 export async function findCollectionEntries<R extends CollectionRegistry, const N extends string>(
   kv: KvReader,
   registry: R,
   name: N,
   query: CollectionEntryQuery<ContentOf<R, N>> = {}
 ): Promise<CollectionEntryRead<ContentOf<R, N>>[]> {
-  if (!registry.getCollection(name)?.snapshot) return []
-  const parsed = collectionSnapshotSchema.safeParse(
-    await kv.get(collectionSnapshotKey(name), { type: 'json' })
-  )
-  if (!parsed.success || parsed.data.collection !== name) return []
-  return selectEntries(
-    parsed.data.entries,
-    query as Parameters<typeof selectEntries>[1]
-  ) as CollectionEntryRead<ContentOf<R, N>>[]
+  return (await readCollectionEntries(
+    kv,
+    registry,
+    name,
+    query as StoredQuery
+  )) as CollectionEntryRead<ContentOf<R, N>>[]
+}
+
+export async function findCollectionEntry<R extends CollectionRegistry, const N extends string>(
+  kv: KvReader,
+  registry: R,
+  name: N,
+  key: string
+): Promise<CollectionEntryRead<ContentOf<R, N>> | null> {
+  const [found] = await readCollectionEntries(kv, registry, name, {
+    where: { [COLLECTION_KEY.queryField]: key },
+    limit: 1
+  })
+  return (found as CollectionEntryRead<ContentOf<R, N>> | undefined) ?? null
 }
