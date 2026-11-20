@@ -7,6 +7,7 @@ import { preview } from './preview'
 import { formRoutes, type FormBindings } from './forms'
 import { reserveRoutes } from './reserve'
 import { slotRoutes } from './slots'
+import { seatRoutes } from './seats'
 
 export default createSite<FormBindings>({
   components,
@@ -18,5 +19,6 @@ export default createSite<FormBindings>({
     formRoutes(components.registry)(app)
     reserveRoutes(app)
     slotRoutes(app)
+    seatRoutes(app)
   }
 })

@@ -1,4 +1,10 @@
-import { KV_LIMITS, kvWritesToRepublish, resolveLocaleConfig } from '@studiobimo/backstage/internal'
+import {
+  collectionSnapshotWrites,
+  KV_LIMITS,
+  kvWritesToRepublish,
+  resolveLocaleConfig
+} from '@studiobimo/backstage/internal'
+import { registry } from 'backstage-site/registry'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { regular, send, sendApi, useFreshPagesDb } from './pages-test-support'
@@ -14,6 +20,11 @@ import {
   REPUBLISH_TEST_TIMING
 } from './republish-test-support'
 
+const SNAPSHOT_WRITES = [...registry.collections.values()].reduce(
+  (total, collection) => total + collectionSnapshotWrites(collection),
+  0
+)
+
 describe('republish limits', { timeout: REPUBLISH_TEST_TIMING.suiteTimeoutMs }, () => {
   useFreshPagesDb()
   afterEach(resetRepublishRun)
@@ -23,7 +34,7 @@ describe('republish limits', { timeout: REPUBLISH_TEST_TIMING.suiteTimeoutMs }, 
     const status = await statusOf()
     expect(status).toMatchObject({
       remaining: 5,
-      writes: kvWritesToRepublish(5, resolveLocaleConfig().locales),
+      writes: kvWritesToRepublish(5, resolveLocaleConfig().locales) + SNAPSHOT_WRITES,
       dailyWriteLimit: KV_LIMITS.freePlanWritesPerDay
     })
     const writes = countKvWrites()
@@ -39,12 +50,16 @@ describe('republish limits', { timeout: REPUBLISH_TEST_TIMING.suiteTimeoutMs }, 
     expect((await statusOf()).changed).toBe(1)
   })
 
-  it('reports no writes when nothing is published', async () => {
+  it('writes only the collection snapshots when no page is published', async () => {
     await createPage('a')
-    expect(await statusOf()).toMatchObject({ remaining: 0, writes: 0 })
+    expect(await statusOf()).toMatchObject({ remaining: 0, writes: SNAPSHOT_WRITES })
     const writes = countKvWrites()
-    expect(await runBatch(START)).toMatchObject({ done: true, republished: [], writes: 0 })
-    expect(writes).toEqual([])
+    expect(await runBatch(START)).toMatchObject({
+      done: true,
+      republished: [],
+      writes: SNAPSHOT_WRITES
+    })
+    expect(writes).toHaveLength(SNAPSHOT_WRITES)
   })
 
   it('halts when KV refuses a write and resumes from the failed page', async () => {
