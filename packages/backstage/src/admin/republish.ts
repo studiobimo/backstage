@@ -27,6 +27,7 @@ import { logEvent } from '../observability.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 import type { AdminRegistry } from '../collections.ts'
 import type { AccessEnv } from './auth.ts'
+import { refreshCollectionSnapshots, snapshotWritesOf } from './collection-snapshot.ts'
 import { readJsonBody } from './respond.ts'
 import {
   readSnapshots,
@@ -151,6 +152,8 @@ export const runRepublishBatch = async (
   const done = !progress.halted && remaining === 0
   const rebuilds = !scope.entry && done && (pages.length > 0 || scope.cursor !== null)
   if (rebuilds) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
+  const refreshesCollections = !scope.entry && !scope.linkedTo && done
+  if (refreshesCollections) await refreshCollectionSnapshots(c.env.DB, c.env.SITE, registry)
   const perPage = scope.entry ? locales.length : kvWritesPerPage(locales)
   return {
     since,
@@ -159,7 +162,9 @@ export const runRepublishBatch = async (
     skipped: progress.skipped,
     remaining,
     writes:
-      progress.republished.length * perPage + (rebuilds ? REPUBLISH.writes.perIndexRebuild : 0),
+      progress.republished.length * perPage +
+      (rebuilds ? REPUBLISH.writes.perIndexRebuild : 0) +
+      (refreshesCollections ? snapshotWritesOf(registry) : 0),
     done,
     halted: progress.halted
   }
@@ -186,7 +191,7 @@ export const republishRoutes = (registry: AdminRegistry) => {
           changed: entry ? 0 : changed,
           writes: entry
             ? kvWritesToRefresh(remaining, locales)
-            : kvWritesToRepublish(remaining, locales),
+            : kvWritesToRepublish(remaining, locales) + snapshotWritesOf(registry),
           dailyWriteLimit: KV_LIMITS.freePlanWritesPerDay
         }
       })

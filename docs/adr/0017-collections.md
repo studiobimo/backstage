@@ -174,6 +174,22 @@ This ADR records the decisions they share, so that the later ones do not reopen 
   entry's dependents need and the free daily limit. After each toggle the toast shows the writes
   used: the entry's own pages and index when its collection has a route, plus its dependents.
 
+### Listing a collection from the site Worker
+
+- `defineCollection({ ..., snapshot: true })` opts a collection in. One KV key per collection,
+  `collection:<name>`, holds every published entry (`id` and published `content`) in the entries'
+  manual order. A collection without `snapshot` writes nothing.
+- Publishing, unpublishing, deleting, toggling a published entry and reordering rewrite the key, one
+  write each, with the same publish and unpublish rules as the entry's own snapshots (COL-5): only
+  the published copy is listed. "Republish all" rewrites every such key when its last batch is done.
+- `findCollectionEntries(kv, registry, name, { where, orderBy, limit })` in `./site` reads the key
+  with no Hono. It runs `selectEntries` from `entry-query.ts`, the code `entries()` uses at page
+  publish, so `where` and `orderBy` mean the same in both, and types the content from the
+  collection's schema.
+- This is the in-Worker read for a route that is not a CMS page. The read-only API for outside
+  consumers (#200) stays separate. One key per collection suits reference data (tables, rooms,
+  staff); a collection too large for one KV value needs a different design.
+
 ## Consequences
 
 - One admin build still serves every client: the entry form is built from the collection's JSON

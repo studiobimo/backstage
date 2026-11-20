@@ -26,6 +26,7 @@ import type { PublishMediaRow, PublishProblem } from '../publishing.ts'
 import type { TranslatedNode } from '../translations.ts'
 
 import type { AccessEnv } from './auth.ts'
+import { refreshCollectionSnapshot } from './collection-snapshot.ts'
 import { respondWithError } from './respond.ts'
 import {
   entrySnapshotsOf,
@@ -169,6 +170,11 @@ const removeEntryPages = async (
   )
 }
 
+export const refreshEntryIndex = async (c: Context<AccessEnv>, collection: Collection) => {
+  if (isRouted(collection)) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
+  await refreshCollectionSnapshot(c.env.DB, c.env.SITE, collection)
+}
+
 export const withoutEntryPages = async (
   c: Context<AccessEnv>,
   registry: AdminRegistry,
@@ -176,13 +182,8 @@ export const withoutEntryPages = async (
   entryId: string,
   write: () => Promise<EntryWrite>
 ) => {
-  if (!isRouted(collection)) return write()
-  await removeEntryPages(c, registry, collection, entryId)
+  if (isRouted(collection)) await removeEntryPages(c, registry, collection, entryId)
   const outcome = await write()
-  if (outcome === ENTRY_WRITE.ok) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
+  if (outcome === ENTRY_WRITE.ok) await refreshEntryIndex(c, collection)
   return outcome
-}
-
-export const refreshEntryIndex = async (c: Context<AccessEnv>, collection: Collection) => {
-  if (isRouted(collection)) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
 }
