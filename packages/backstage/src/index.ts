@@ -31,6 +31,15 @@ export { hexColor, image, link, localized, richText } from './fields.ts'
 export type { LinkInput, ResolvedLink } from './fields.ts'
 export { labeled } from './labels.ts'
 export type { FieldLabel, FieldLabels } from './labels.ts'
+export {
+  currency,
+  CURRENCY_CODES,
+  currencySettingSchema,
+  formatMoney,
+  money,
+  MONEY
+} from './money.ts'
+export type { CurrencyCode } from './money.ts'
 export { isOpenAt, nextOpening, slotsFor, weeklyHours } from './weekly-hours.ts'
 export type { HoursRange, Instant, OpenState, SlotOptions, WeeklyHours } from './weekly-hours.ts'
 export { ENTRY_QUERY } from './entry-query.ts'

@@ -107,10 +107,11 @@ What a site author writes. It reaches no database and no Hono.
 - Collections ([ADR-0017](docs/adr/0017-collections.md)): `defineCollection`, `describeCollections`
 - Forms ([ADR-0020](docs/adr/0020-forms-and-submissions.md)): `defineForm`, `FORM`, passed to `defineRegistry(blocks, { forms })`
 - Field labels per locale: `labeled`, which gives a schema field a title and description in each admin language
-- Fields: `entries`, `ENTRY_QUERY`, `hexColor`, `image`, `link`, `localized`, `richText`, `weeklyHours`, `isBlank`
+- Fields: `entries`, `ENTRY_QUERY`, `hexColor`, `image`, `link`, `localized`, `richText`, `weeklyHours`, `money`, `currency`, `isBlank`
 - Opening hours, which also run in the browser: `isOpenAt`, `nextOpening`, `slotsFor`, and the `WeeklyHours`,
   `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types
-- Shared constants: `API_ERROR`, `MEDIA`
+- Money: `formatMoney`, `currencySettingSchema`, `CURRENCY_CODES`, and the `CurrencyCode` type, which also run in the browser
+- Shared constants: `API_ERROR`, `MEDIA`, `MONEY`
 - Types: `ApiError`, `Block`, `BlockComponents`, `BlockDefinition`, `Collection`, `CollectionComponents`,
   `CollectionDefinition`, `CollectionDescription`, `CollectionRoute`, `Form`, `FormDefinition`, `FormNotify`, `FormPublic`, `ComponentMap`, `EntryLabels`, `EntryReferenceValue`, `ResolvedEntry`, `LayoutComponents`,
   `LayoutDefinition`, `LayoutProps`, `Locale`, `LocaleConfig`, `Registry`, `RegistryOptions`, `RoutedCollection`, `RichTextDoc`
@@ -148,6 +149,7 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
 - Reading published entries: `findPublishedEntry`, `findEntryTranslations`
 - Reading the registry's own settings: `findRegistrySettings`
+- Formatting an amount in minor units: `formatMoney`, `CURRENCY_CODES`, `MONEY`, and the `CurrencyCode` type
 - Opening hours in the business's time zone: `isOpenAt`, `nextOpening`, `slotsFor`, `WEEKLY_HOURS`, and the
   `WeeklyHours`, `HoursRange`, `Instant`, `OpenState` and `SlotOptions` types
 - Reading a form's public projection, such as the confirmed seats: `findFormProjection`, `formProjectionKey`,
@@ -186,7 +188,7 @@ The site Worker in one call, and its Hono middleware.
 ### `@studiobimo/backstage/render`
 
 Renders blocks and slots with React: `Blocks`, `renderSlots`, `RichText`, `RenderProvider`,
-`useBrand`, `useDefaultLocale`, `useImage`, `useLocale`, `useLocalized`, `useLogo`, `useSettings`, and the `RenderContext` and
+`useBrand`, `useDefaultLocale`, `useImage`, `useLocale`, `useLocalized`, `useLogo`, `useMoney`, `useSettings`, and the `RenderContext` and
 `RenderedImage` types.
 
 ## Internal entry
