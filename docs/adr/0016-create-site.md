@@ -30,16 +30,16 @@ Hono-free helpers stay in `./site`, so a site that moves to TanStack Start keeps
 
 **A site supplies or may add:**
 
-| Option                  | Required | Effect                                                                                        |
-| ----------------------- | -------- | --------------------------------------------------------------------------------------------- |
-| `components`            | yes      | the blocks and layouts to render, and through them the locales                                |
-| `stylesheet`            | yes      | the CSS, served under a content-hashed path and linked from every document                    |
-| `preview`               | no       | samples, media, thumbnails and assets for the block preview; none, no route                   |
-| `contentSecurityPolicy` | no       | sources added to `style-src`, `img-src`, `font-src`, `media-src`, `connect-src`, `script-src` |
-| `favicon`               | no       | a URL, or `{ href, type }`, rendered as `<link rel="icon">` in every page and entry document  |
-| `head`                  | no       | extra elements in a page's `<head>`                                                           |
-| `scripts`               | no       | same-origin module scripts added to every document; adds `script-src 'self'`                  |
-| `routes`                | no       | extra routes, registered before the page route                                                |
+| Option                  | Required | Effect                                                                                                     |
+| ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| `components`            | yes      | the blocks and layouts to render, and through them the locales                                             |
+| `stylesheet`            | yes      | the CSS, served under a content-hashed path and linked from every document                                 |
+| `preview`               | no       | samples, media, thumbnails and assets for the block preview; none, no route                                |
+| `contentSecurityPolicy` | no       | sources added to `style-src`, `img-src`, `font-src`, `media-src`, `connect-src`, `script-src`, `frame-src` |
+| `favicon`               | no       | a URL, or `{ href, type }`, rendered as `<link rel="icon">` in every page and entry document               |
+| `head`                  | no       | extra elements in a page's `<head>`                                                                        |
+| `scripts`               | no       | same-origin module scripts added to every document; adds `script-src 'self'`                               |
+| `routes`                | no       | extra routes, registered before the page route                                                             |
 
 **Adding a script.** `default-src 'none'` blocks every script, so a same-origin script needs a
 policy entry and a tag. Declare it instead of wiring both by hand: `scripts: ['/cart.js']` adds
