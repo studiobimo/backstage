@@ -95,16 +95,16 @@ breaking commits. A change to a managed file titled `chore`, `docs` or `ci` merg
 
 ## Testing a package change in the site
 
-`apps/site` installs the published `@studiobimo/backstage`, as a client site does, so an edit under
-`packages/backstage` does not reach it until a release. `apps/admin` stays on the workspace source,
-because the package ships its build as the prebuilt admin SPA. To try a change in the site first:
+`apps/site` and `apps/admin` both use `packages/backstage` as `workspace:*`, so an edit to the
+package is in the site at once. What a client installs is the packed package, which has its own
+check:
 
 ```sh
-make -C .devtools link-local     # the site now uses packages/backstage's source
-make -C .devtools unlink-local   # before committing: restores package.json, pnpm-lock.yaml, pnpm-workspace.yaml
+make -C .devtools pack-check   # pack, install the tarball in a throwaway project, type-check and import every entry point
 ```
 
-`unlink-local` restores those three files from `HEAD`, so commit any real change to them first. While the link is in effect, the pre-commit hook and `make -C .devtools ci` fail, so a linked lockfile cannot be merged.
+It runs in the full CI suites, so run it by hand after changing `package.json`'s `exports`,
+`publishConfig` or the package's build.
 
 ## Planning: milestones and issues
 

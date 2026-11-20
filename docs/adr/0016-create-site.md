@@ -59,8 +59,9 @@ client gets it with a bump.
 ## Consequences
 
 - `apps/site/worker/index.ts` shrinks to `createSite({ components, stylesheet, preview })` and
-  whatever is the site's own. It can only do so after a release, because `apps/site` depends on the
-  published package.
+  whatever is the site's own. It could only do so after a release while `apps/site` depended on the
+  published package; since 2026-11-20 it uses the workspace source, so it can do so now
+  ([ADR-0008](0008-workspace-profiles-and-styling.md)).
 - `SiteEnv` gains `SITE_URL`, which the Worker needs for canonical links and the sitemap.
 - The site's tests no longer cover the routing and headers; the package's tests do, against a
   fixture site.

@@ -7,6 +7,10 @@
 GitHub Packages asks for a token even to read a package. This is how a client project gives it one
 in each place the install runs, and how the token is rotated.
 
+This repository does not need the token: `apps/admin` and `apps/site` use the workspace source, and
+`make -C .devtools pack-check` installs the packed tarball from disk. The guide is for client
+projects, which install the published package.
+
 ## The decision
 
 - **One token per client**, a classic personal access token with only `read:packages`. Fine-grained
@@ -18,8 +22,7 @@ in each place the install runs, and how the token is rotated.
   by itself and each client can be revoked alone.
 - **Use `BACKSTAGE_PACKAGE_TOKEN`, not `GITHUB_TOKEN`, in a client project's CI.** The workflow's
   `GITHUB_TOKEN` is scoped to the repository that runs it, so it cannot read a package owned by
-  another repository such as `@studiobimo/backstage`. It only works inside the backstage repository
-  itself, where the harness CI (`e2e.yml`) uses it. A client repository's workflow reads the
+  another repository such as `@studiobimo/backstage`. A client repository's workflow reads the
   `BACKSTAGE_PACKAGE_TOKEN` secret.
 - **One environment variable**, `BACKSTAGE_PACKAGE_TOKEN`, in all three places. The name is the
   same everywhere, so `.npmrc` is the same everywhere.
@@ -48,7 +51,8 @@ Because the whole value is one variable, a client project sets `BACKSTAGE_PACKAG
 this JSON from it in the same place it sets the variable.
 
 pnpm's cooldown (`minimumReleaseAge`) rejects a version younger than a week, and that includes this
-package's own release, so `pnpm-workspace.yaml` lists `@studiobimo/*` under `minimumReleaseAgeExclude`.
+package's own release, so a client's `pnpm-workspace.yaml` lists `@studiobimo/*` under
+`minimumReleaseAgeExclude`.
 
 `pnpm add` of a package inside the cooldown writes a version-specific entry
 (`'@studiobimo/backstage@0.6.0'`) to `minimumReleaseAgeExclude`, which stops matching at the next

@@ -1,8 +1,8 @@
 # ADR-0008: The org's profiles inside a workspace, with coss ui and lineup's styling
 
 - **Status:** Accepted, amended 2026-11-07 (bimo.dev moved to its own repository), 2026-11-10
-  (the site owns its blocks and stylesheet) and 2026-11-12 (the admin SPA's source and how the
-  package ships)
+  (the site owns its blocks and stylesheet), 2026-11-12 (the admin SPA's source and how the
+  package ships) and 2026-11-20 (the site uses the workspace package)
 - **Date:** 2026-11-07
 
 ## Context
@@ -81,3 +81,20 @@ way a client uses it.
   ([#261](https://github.com/studiobimo/backstage/issues/261)), mapped through `publishConfig.exports`
   to the entry points of [ADR-0015](0015-entry-points-and-semver.md), so a consumer needs no
   TypeScript source transform.
+
+## Amendment: the site uses the workspace package (2026-11-20)
+
+- **Changed:** `apps/site` depends on `@studiobimo/backstage` as `workspace:*`, as `apps/admin`
+  does. It had installed the published package since
+  [#244](https://github.com/studiobimo/backstage/pull/244), so a change to the package reached the
+  site only after a release, and a feature and its site template could not land together.
+- **Trade-off:** the site no longer proves, on every pull request, that a client can install the
+  published package. `make -C .devtools pack-check` replaces that proof: it builds the package, runs
+  `pnpm pack`, installs the tarball into a project outside the workspace with only the peer
+  dependencies, and type-checks and imports every entry point listed in `publishConfig.exports`. It
+  needs no GitHub Packages token. It runs in the full CI suites, not in a narrowed run.
+- **Removed:** the repository's `.npmrc`, the `GITHUB_TOKEN` install steps in the e2e workflow, the
+  `minimumReleaseAgeExclude` entry for `@studiobimo/*` and the `link-local` targets, which existed
+  only to install or bypass the published package.
+- **Unchanged:** a client project installs the package from GitHub Packages with a token
+  ([guide](../guides/package-token.md)).

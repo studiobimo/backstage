@@ -197,12 +197,13 @@ Backstage becomes something a client project installs, rather than code it copie
 - `@studiobimo/backstage` is published to GitHub Packages by the reusable workflow in
   `studiobimo/.github`. Not met: `0.1.0` is on GitHub Packages but was published by hand, because
   the workflow's Actions do not run ([#271](https://github.com/studiobimo/backstage/issues/271))
-- `apps/site` consumes the published package, not the workspace source. `apps/admin` stays on the
-  workspace source, because the package ships the admin SPA's build in `dist/client`
-  ([ADR-0008](adr/0008-workspace-profiles-and-styling.md)). The package ships compiled JavaScript
-  through the entry points of [ADR-0015](adr/0015-entry-points-and-semver.md). Met for `0.1.0`;
-  later changes (the site's header and footer, site locales and `createSite`) wait for the next
-  release
+- The package ships compiled JavaScript through the entry points of
+  [ADR-0015](adr/0015-entry-points-and-semver.md), and `make -C .devtools pack-check` proves it in
+  CI: it packs the package, installs the tarball in a throwaway project and type-checks and imports
+  every entry point of `publishConfig.exports`. Amended 2026-11-20: `apps/admin` and `apps/site` both
+  use the workspace source. `apps/site` installed the published package until then
+  ([ADR-0008](adr/0008-workspace-profiles-and-styling.md)), which kept a change to the package out
+  of the site until a release
 - The `backstage` profile is released in `studiobimo/project-template`
 - On a test Cloudflare account, a fresh repo with the profile and a token reaches a working admin
   and site by following the README alone
