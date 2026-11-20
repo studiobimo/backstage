@@ -14,7 +14,12 @@ const news = defineCollection({
   name: 'news',
   label: 'title',
   route: { path: '/news/:slug' },
-  schema: z.object({ title: localized(z.string().min(1)), body: localized(z.string()).optional() })
+  quickToggle: ['pinned'],
+  schema: z.object({
+    title: localized(z.string().min(1)),
+    body: localized(z.string()).optional(),
+    pinned: z.boolean().default(false)
+  })
 })
 
 const faq = defineCollection({

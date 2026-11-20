@@ -20,7 +20,8 @@ import { db, kv, regular, sendTo } from './pages-test-support'
 const post = defineCollection({
   name: 'post',
   label: 'title',
-  schema: z.object({ title: localized(z.string().min(1)) })
+  quickToggle: ['soldOut'],
+  schema: z.object({ title: localized(z.string().min(1)), soldOut: z.boolean().default(false) })
 })
 
 const postList = defineBlock({

@@ -3,7 +3,7 @@ import { alias } from 'drizzle-orm/sqlite-core'
 import { drizzle, type AnyD1Database } from 'drizzle-orm/d1'
 
 import { openStoredContent } from '../blocks.ts'
-import type { Collection, EntryLabels } from '../collections.ts'
+import { togglesOf, type Collection, type EntryLabels } from '../collections.ts'
 import type { Entry } from '../entries.ts'
 import type { EntrySlugs } from '../entry-snapshot-build.ts'
 import { D1_LIMITS, inChunks } from './chunks.ts'
@@ -53,6 +53,7 @@ const toEntry = (
     schemaVersion: opened.schemaVersion,
     label: entry.label,
     position: entry.position,
+    toggles: togglesOf(collection, opened.content),
     slugs,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
@@ -241,6 +242,59 @@ export const recordEntryPublished = async (
     .where(and(entryMatches(collection, id), eq(entries.version, expectedVersion)))
     .returning({ id: entries.id })
   return outcomeOf(d1, collection, id, changed)
+}
+
+export interface EntryToggle {
+  expectedVersion: number
+  editorId: string
+  content: unknown
+  publication: { publishedAt: number; publishedContent: unknown } | null
+}
+
+const publishedVersionAfterEdit = sql`CASE WHEN ${entries.publishedVersion} = ${entries.version} THEN ${entries.version} + 1 ELSE ${entries.publishedVersion} END`
+
+export const recordEntryToggled = async (
+  d1: AnyD1Database,
+  collection: Collection,
+  id: string,
+  { expectedVersion, editorId, content, publication }: EntryToggle
+) => {
+  const changed = await drizzle(d1)
+    .update(entries)
+    .set({
+      content,
+      schemaVersion: collection.version,
+      version: expectedVersion + 1,
+      updatedAt: Date.now(),
+      updatedBy: editorId,
+      ...(publication && {
+        publishedAt: publication.publishedAt,
+        publishedBy: editorId,
+        publishedContent: publication.publishedContent,
+        publishedSchemaVersion: collection.version,
+        publishedVersion: publishedVersionAfterEdit
+      })
+    })
+    .where(and(entryMatches(collection, id), eq(entries.version, expectedVersion)))
+    .returning({ id: entries.id })
+  return outcomeOf(d1, collection, id, changed)
+}
+
+export const findPublishedContent = async (
+  d1: AnyD1Database,
+  collection: Collection,
+  id: string
+) => {
+  const [row] = await drizzle(d1)
+    .select({
+      content: entries.publishedContent,
+      schemaVersion: entries.publishedSchemaVersion,
+      version: entries.publishedVersion
+    })
+    .from(entries)
+    .where(entryMatches(collection, id))
+  if (!row || row.content == null || row.schemaVersion == null) return undefined
+  return { ...openStoredContent(collection, row.schemaVersion, row.content), version: row.version }
 }
 
 export const recordEntryUnpublished = async (

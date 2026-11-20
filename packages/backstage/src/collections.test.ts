@@ -105,6 +105,30 @@ describe('defineRegistry with collections', () => {
   })
 })
 
+describe('quick toggles', () => {
+  const dish = (quickToggle: string[]) =>
+    defineCollection({
+      name: 'dishes',
+      label: 'name',
+      quickToggle,
+      schema: z.object({ name: z.string(), soldOut: z.boolean().default(false) })
+    } as never)
+
+  it('accepts a yes/no field and describes it', () => {
+    const registry = defineRegistry([note], { collections: [dish(['soldOut'])] })
+    expect(describeCollections(registry)[0]?.quickToggle).toEqual(['soldOut'])
+  })
+
+  it.each([
+    ['a text field', 'name'],
+    ['a missing field', 'gone']
+  ])('refuses %s', (_, field) => {
+    expect(() => defineRegistry([note], { collections: [dish([field])] })).toThrow(
+      `quick toggle "${field}"`
+    )
+  })
+})
+
 describe('collection JSON Schema', () => {
   it('describes each collection like a block, with its fields marked', () => {
     const schema = registry.collectionJsonSchema('blog') as {

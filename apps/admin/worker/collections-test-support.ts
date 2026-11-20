@@ -14,6 +14,7 @@ import { db, sendTo, useFreshPagesDb } from './pages-test-support'
 const blog = defineCollection({
   name: 'blog',
   label: 'title',
+  quickToggle: ['featured'],
   title: { en: 'Blog', es: 'Blog' },
   schema: z.object({
     title: localized(z.string().min(1)),
