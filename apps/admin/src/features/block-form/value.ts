@@ -13,6 +13,7 @@ export interface ValueByKind {
   text: string
   richText: BlockValue
   number: number
+  money: number
   boolean: boolean
   select: string | number
   group: BlockValue

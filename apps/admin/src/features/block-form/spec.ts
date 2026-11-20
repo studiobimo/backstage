@@ -62,6 +62,10 @@ interface HexColorSpec extends Common {
   kind: 'hexColor'
 }
 
+interface MoneySpec extends Common {
+  kind: 'money'
+}
+
 interface NumberSpec extends Common {
   kind: 'number'
   integer: boolean
@@ -117,6 +121,7 @@ export type FieldSpec =
   | TextSpec
   | RichTextSpec
   | HexColorSpec
+  | MoneySpec
   | NumberSpec
   | BooleanSpec
   | SelectSpec
@@ -158,6 +163,11 @@ function parseChild(schema: JsonSchema | undefined, key: string, required: boole
 
 const NUMBER_SHAPES: readonly FieldShape[] = ['number', 'integer']
 
+const BARE_KINDS = ['richText', 'hexColor', 'money'] as const
+
+const isBareKind = (shape: FieldShape): shape is (typeof BARE_KINDS)[number] =>
+  (BARE_KINDS as readonly FieldShape[]).includes(shape)
+
 function parseScalarField(
   shape: FieldShape,
   schema: JsonSchema,
@@ -182,8 +192,7 @@ function parseField(schema: JsonSchema, key: string, required: boolean): FieldSp
   const { title, description } = schema
   const common: Common = { key, title, description, required, defaultValue: schema.default }
   const shape = classifyField(schema)
-  if (shape === 'richText') return { ...common, kind: 'richText' }
-  if (shape === 'hexColor') return { ...common, kind: 'hexColor' }
+  if (isBareKind(shape)) return { ...common, kind: shape }
   if (shape === 'weeklyHours') return { ...common, kind: 'schedule', days: WEEKDAYS }
   if (shape === 'localized') {
     return {

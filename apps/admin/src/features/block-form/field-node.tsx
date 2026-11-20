@@ -12,6 +12,7 @@ import { HexColorField } from './hex-color-field.tsx'
 import { ImageField } from './image-field.tsx'
 import { LinkField } from './link-field.tsx'
 import { ListField } from './list-field.tsx'
+import { MoneyField } from './money-field.tsx'
 import { LocalizedField } from './localized-field.tsx'
 import { ReferenceField } from './reference-field.tsx'
 import { ScheduleField } from './schedule-field.tsx'
@@ -55,6 +56,8 @@ function LeafNode({ form, spec, path, label, chrome, translated, icon }: NodePro
             return <RichTextField {...props} />
           case 'hexColor':
             return <HexColorField {...props} />
+          case 'money':
+            return <MoneyField {...props} />
           case 'text':
             return (
               <field.TextField
@@ -136,7 +139,7 @@ function GroupLegend({
   )
 }
 
-const COMPACT_KINDS: readonly FieldSpec['kind'][] = ['number', 'select', 'boolean']
+const COMPACT_KINDS: readonly FieldSpec['kind'][] = ['number', 'money', 'select', 'boolean']
 const COMPACT_GRID = 'grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-4'
 
 const isCompact = (spec: GroupSpec) =>

@@ -50,6 +50,9 @@
     "invalid_other": "{{count}} errors",
     "copyFrom": "Copy {{language}}"
   },
+  "money": {
+    "hint": "Amount in {{currency}}, the site currency"
+  },
   "hexColor": {
     "placeholder": "#1a2b3c"
   },
