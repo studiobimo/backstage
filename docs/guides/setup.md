@@ -354,6 +354,41 @@ The older shape, a week keyed by weekday with a boolean `closed` and string `ope
 for each day, still renders as a day-by-day editor with a switch and times, but the helpers above do not read it.
 Use `weeklyHours()` for new fields. Any other object renders as a plain group of labelled fields.
 
+### Book time inside the opening hours
+
+`timeOfDay()` is a field kind for an `HH:mm` string, shown in the admin as a time input. A form
+that takes bookings stores a `date` (`YYYY-MM-DD`), a `start` and an `end` as `timeOfDay()`, plus
+the resource being booked. An `end` at or before the `start` runs into the next morning.
+
+```ts
+import { bookingDuration, occupiedAt, slotsFor } from '@studiobimo/backstage/site'
+
+const starts = slotsFor(hours, '2026-03-07', { step: 30, duration: 90 })
+const taken = occupiedAt(projection.entries, {
+  resource: 'room-a',
+  date: '2026-03-07',
+  start: '10:00',
+  end: '11:30',
+  timeZone: hours.timeZone
+})
+const length = bookingDuration({ minDuration: 30, maxDuration: 180 }).safeParse(90)
+```
+
+- `slotsFor` with a `duration` in minutes returns only the starts whose whole booking fits inside
+  one open range, an overnight range included. Without it, every start inside a range is returned.
+  A booking is measured in elapsed time, so a night that crosses a daylight saving change is an
+  hour shorter or longer than its clock times.
+- `occupiedAt` returns the entries of the projection that share time with the request, for the
+  same `resource` when one is given. Pass the weekly hours' `timeZone` so wall-clock times compare
+  as real instants. Name the entry's fields with `fields` when they are not `resource`, `date`,
+  `start` and `end`.
+- `rangesOverlap(a, b)` is the same test on two `{ start, end }` ranges. Ranges that only touch do
+  not overlap, so back-to-back bookings are allowed.
+- `bookingDuration({ minDuration, maxDuration })` is a zod schema for the requested length in
+  minutes. Read the bounds from the settings that hold your `minDuration` and `maxDuration`.
+
+`HH:mm` strings sort in time order as plain text, so a list can sort on them without parsing.
+
 ### Prices
 
 `money()` stores a whole number of minor units (cents for USD, centavos for HNL), so totals never

@@ -17,7 +17,7 @@ export { isCurrencyCode, majorToMinor, minorToMajor, minorUnitDigits, MONEY } fr
 export type { CurrencyCode } from '../money.ts'
 export { humanize, labelsFor } from '../labels.ts'
 export type { LabelledNode } from '../labels.ts'
-export { HEX_COLOR, LINK, linkValueSchema } from '../fields.ts'
+export { HEX_COLOR, LINK, linkValueSchema, TIME_OF_DAY } from '../fields.ts'
 export type { FieldKind, LinkValue } from '../fields.ts'
 export { REFERENCE } from '../references.ts'
 export type { EntryReferenceValue } from '../references.ts'
