@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.11.0](https://github.com/studiobimo/backstage/compare/v0.10.0...v0.11.0) (2026-11-20)
+
+
+### Features
+
+* **admin:** edit a money field as a decimal amount in the site currency ([#518](https://github.com/studiobimo/backstage/issues/518)) ([8fe77b1](https://github.com/studiobimo/backstage/commit/8fe77b1e640cd795da1a198129333acb3fbff370))
+* **admin:** edit weekly hours with several ranges per day and dated exceptions ([#510](https://github.com/studiobimo/backstage/issues/510)) ([071befd](https://github.com/studiobimo/backstage/commit/071befd6c06e0a8370f25429408acd49f5bccf23))
+* **admin:** order collection entries by hand ([#509](https://github.com/studiobimo/backstage/issues/509)) ([83d85ba](https://github.com/studiobimo/backstage/commit/83d85ba37be283685a37d415be83712b5066b149))
+* **admin:** switch a yes/no field from the entries list and publish it ([#515](https://github.com/studiobimo/backstage/issues/515)) ([57890b9](https://github.com/studiobimo/backstage/commit/57890b9b2dafe1c46e278c955fd9a78bb62203c3))
+* **core:** add a money field and price formatting ([#517](https://github.com/studiobimo/backstage/issues/517)) ([1a428c7](https://github.com/studiobimo/backstage/commit/1a428c78f6fee6547146b4aecb6c4ad480f7cc8f))
+* **core:** add a weekly hours field with open-time helpers ([#508](https://github.com/studiobimo/backstage/issues/508)) ([4984667](https://github.com/studiobimo/backstage/commit/49846679b28cb1693f7d3402c3811e08197b1cb4))
+* **core:** list a collection's published entries by query, sorted and grouped ([#513](https://github.com/studiobimo/backstage/issues/513)) ([eedf80c](https://github.com/studiobimo/backstage/commit/eedf80c7bf9396a046a315860ed5702cb24380a0))
+* **core:** store a manual position on collection entries ([#507](https://github.com/studiobimo/backstage/issues/507)) ([7d744f7](https://github.com/studiobimo/backstage/commit/7d744f75bc4a02e4db7338cc9b1f570977137f8c))
+* **core:** toggle a yes/no field and publish just that change ([#514](https://github.com/studiobimo/backstage/issues/514)) ([57c66b9](https://github.com/studiobimo/backstage/commit/57c66b91a49f0fc52275db6e34a4caa5526e8d84))
+* **site:** add a contact form, site settings and a generic form route ([#503](https://github.com/studiobimo/backstage/issues/503)) ([5b079c9](https://github.com/studiobimo/backstage/commit/5b079c9c276a1563c310bec916626f71bd3f4248))
+* **site:** declare client scripts on createsite or per block ([#506](https://github.com/studiobimo/backstage/issues/506)) ([7d37c2e](https://github.com/studiobimo/backstage/commit/7d37c2e301341c150a445ac82a8326f4a33a7899))
+
 ## [0.10.0](https://github.com/studiobimo/backstage/compare/v0.9.0...v0.10.0) (2026-11-19)
 
 
