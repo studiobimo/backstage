@@ -17,7 +17,9 @@ import { collectionTitle } from './collection-text'
 import { DeleteEntryDialog } from './delete-entry-dialog'
 import { EntriesBody } from './entries-body'
 import { EntryRepublishDialog } from './entry-republish'
+import { EntryToggleCostDialog } from './entry-toggle-switch'
 import { useEntryReorder } from './use-entry-reorder'
+import { toggleFieldsOf, useEntryToggle } from './use-entry-toggle'
 import {
   DEFAULT_ENTRY_SORT,
   defaultDirection,
@@ -69,6 +71,7 @@ export function EntriesPage({ name }: { name: string }) {
   const ordering = useListOrdering()
   const reorder = useEntryReorder(name)
   const collection = collections.find((candidate) => candidate.name === name)
+  const toggle = useEntryToggle(name, collection ? toggleFieldsOf(collection) : [], reorder.outcome)
   const navigate = useNavigate()
   const startCreate = useCallback(
     () => void navigate({ to: '/collections/$name/new', params: { name } }),
@@ -111,6 +114,7 @@ export function EntriesPage({ name }: { name: string }) {
               collection={name}
               entries={visible}
               reorderable={ordering.sort === ENTRY_SORT.manual && query.trim() === ''}
+              toggle={toggle}
               onMove={reorder.move}
               onDelete={setDeleting}
             />
@@ -122,6 +126,7 @@ export function EntriesPage({ name }: { name: string }) {
         pending={reorder.outcome.pending}
         onClose={reorder.outcome.clear}
       />
+      <EntryToggleCostDialog collection={name} control={toggle} />
       {deleting && (
         <DeleteEntryDialog
           entry={deleting}

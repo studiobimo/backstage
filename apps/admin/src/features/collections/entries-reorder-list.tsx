@@ -8,7 +8,9 @@ import { useLocaleConfig } from '@/features/config/queries'
 import { cn } from '@/lib/utils'
 
 import { entryLabelText } from './collection-text'
+import { EntryToggleSwitches } from './entry-toggle-switch'
 import { StateBadge } from './entry-state-badge'
+import type { EntryToggleControl } from './use-entry-toggle'
 
 const SortableItems = lazy(() => import('@/components/sortable-items'))
 
@@ -18,10 +20,11 @@ interface ReorderRowProps {
   collection: string
   entry: EntrySummary
   name: string
+  toggle: EntryToggleControl
   slot?: SortableSlot
 }
 
-function ReorderRow({ collection, entry, name, slot }: ReorderRowProps) {
+function ReorderRow({ collection, entry, name, toggle, slot }: ReorderRowProps) {
   return (
     <li
       ref={slot?.ref}
@@ -39,6 +42,7 @@ function ReorderRow({ collection, entry, name, slot }: ReorderRowProps) {
         {name}
       </Link>
       <StateBadge entry={entry} />
+      <EntryToggleSwitches control={toggle} entry={entry} name={name} />
     </li>
   )
 }
@@ -46,10 +50,16 @@ function ReorderRow({ collection, entry, name, slot }: ReorderRowProps) {
 interface EntriesReorderListProps {
   collection: string
   entries: EntrySummary[]
+  toggle: EntryToggleControl
   onMove: (from: number, to: number) => void
 }
 
-export function EntriesReorderList({ collection, entries, onMove }: EntriesReorderListProps) {
+export function EntriesReorderList({
+  collection,
+  entries,
+  toggle,
+  onMove
+}: EntriesReorderListProps) {
   const { t, i18n } = useTranslation('collections')
   const { defaultLocale } = useLocaleConfig()
   const names = entries.map(
@@ -61,6 +71,7 @@ export function EntriesReorderList({ collection, entries, onMove }: EntriesReord
       collection={collection}
       entry={entries[index]!}
       name={names[index]!}
+      toggle={toggle}
       slot={slot}
     />
   )

@@ -47,5 +47,25 @@
   "missing": {
     "title": "Colección no encontrada",
     "description": "Esta colección no está definida en este sitio."
+  },
+  "toggle": {
+    "switchLabel": "{{field}}: {{name}}",
+    "publishedOn_one": "{{field}} está activado en {{name}} y publicado. Usó {{count}} escritura en KV.",
+    "publishedOn_other": "{{field}} está activado en {{name}} y publicado. Usó {{count}} escrituras en KV.",
+    "publishedOff_one": "{{field}} está desactivado en {{name}} y publicado. Usó {{count}} escritura en KV.",
+    "publishedOff_other": "{{field}} está desactivado en {{name}} y publicado. Usó {{count}} escrituras en KV.",
+    "draftOn": "{{field}} está activado en {{name}}. La entrada es un borrador, así que nada se publicó.",
+    "draftOff": "{{field}} está desactivado en {{name}}. La entrada es un borrador, así que nada se publicó.",
+    "failed": "No se pudo guardar el interruptor. Se actualizó la lista.",
+    "confirm": {
+      "title": "¿Publicar con cada interruptor?",
+      "description": "Al cambiar un interruptor se guarda la entrada y se publica solo ese cambio al instante. Las demás ediciones sin publicar siguen sin publicarse.",
+      "cost_one": "{{count}} página publicada muestra esta entrada y se actualizará, con {{writes}} escrituras en KV.",
+      "cost_other": "{{count}} páginas publicadas muestran esta entrada y se actualizarán, con {{writes}} escrituras en KV.",
+      "noPages": "Ninguna página publicada muestra esta entrada.",
+      "limit": "El plan gratuito permite {{limit}} escrituras en KV al día, y cada interruptor usa algunas.",
+      "cancel": "Cancelar",
+      "confirm": "Publicar con interruptores"
+    }
   }
 }

@@ -11,13 +11,20 @@ import { useLocaleConfig } from '@/features/config/queries'
 import { formatDateTime } from '@/lib/format'
 
 import { entryLabelText } from './collection-text'
+import { EntryToggleSwitch } from './entry-toggle-switch'
 import { StateBadge } from './entry-state-badge'
+import type { EntryToggleControl } from './use-entry-toggle'
 
 const UPDATED_COLUMN = 'hidden md:table-cell'
+const STATUS_COLUMN_WITH_TOGGLES = 'hidden sm:table-cell'
+
+const statusColumnOf = (toggle: EntryToggleControl) =>
+  toggle.fields.length > 0 ? STATUS_COLUMN_WITH_TOGGLES : undefined
 
 interface EntriesTableProps {
   collection: string
   entries: EntrySummary[]
+  toggle: EntryToggleControl
   onDelete: (entry: EntrySummary) => void
 }
 
@@ -66,10 +73,12 @@ function EntryActions({
 function EntryRow({
   collection,
   entry,
+  toggle,
   onDelete
 }: {
   collection: string
   entry: EntrySummary
+  toggle: EntryToggleControl
   onDelete: (entry: EntrySummary) => void
 }) {
   const { i18n } = useTranslation('collections')
@@ -85,9 +94,14 @@ function EntryRow({
           {name}
         </Link>
       </TableCell>
-      <TableCell>
+      <TableCell className={statusColumnOf(toggle)}>
         <StateBadge entry={entry} />
       </TableCell>
+      {toggle.fields.map((field) => (
+        <TableCell key={field.key}>
+          <EntryToggleSwitch control={toggle} entry={entry} field={field} name={name} />
+        </TableCell>
+      ))}
       <TableCell className={`${UPDATED_COLUMN} text-muted-foreground`}>
         {formatDateTime(i18n.language, entry.updatedAt)}
       </TableCell>
@@ -98,14 +112,17 @@ function EntryRow({
   )
 }
 
-export function EntriesTable({ collection, entries, onDelete }: EntriesTableProps) {
+export function EntriesTable({ collection, entries, toggle, onDelete }: EntriesTableProps) {
   const { t } = useTranslation('collections')
   return (
     <CardTable
       head={
         <>
           <TableHead>{t('list.columns.label')}</TableHead>
-          <TableHead>{t('list.columns.status')}</TableHead>
+          <TableHead className={statusColumnOf(toggle)}>{t('list.columns.status')}</TableHead>
+          {toggle.fields.map((field) => (
+            <TableHead key={field.key}>{field.label}</TableHead>
+          ))}
           <TableHead className={UPDATED_COLUMN}>{t('list.columns.updated')}</TableHead>
           <TableHead>
             <span className="sr-only">{t('list.columns.actions')}</span>
@@ -114,7 +131,13 @@ export function EntriesTable({ collection, entries, onDelete }: EntriesTableProp
       }
     >
       {entries.map((entry) => (
-        <EntryRow key={entry.id} collection={collection} entry={entry} onDelete={onDelete} />
+        <EntryRow
+          key={entry.id}
+          collection={collection}
+          entry={entry}
+          toggle={toggle}
+          onDelete={onDelete}
+        />
       ))}
     </CardTable>
   )
