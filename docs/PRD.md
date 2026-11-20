@@ -143,7 +143,7 @@ may slip to the next release.
 | ----- | ------------------------------------ | ----------------------------------------------------------------------------------------------------- | -------- |
 | COL-1 | As a dev, I define a collection once | A collection is a zod schema, registered like a block, with localized fields                          | Must     |
 | COL-2 | I can manage entries                 | List, search, sort, create, edit and delete the entries of each collection                            | Must     |
-| COL-3 | Blocks can show entries              | A block field can refer to chosen entries, or to the latest N entries of a collection                 | Must     |
+| COL-3 | Blocks can show entries              | A block field can refer to chosen entries, the latest N, or a query (where, orderBy, groupBy)         | Must     |
 | COL-4 | Entries can have their own pages     | A collection can declare a route, such as `/blog/:slug`, which the site renders with a template block | Should   |
 | COL-5 | Publishing an entry updates the site | Every published page that shows the entry reflects the change                                         | Must     |
 

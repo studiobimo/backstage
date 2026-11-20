@@ -142,6 +142,7 @@ export const refreshSnapshots = async (
   return snapshots.map((snapshot) => ({
     ...snapshot,
     references: resolved.references,
+    groups: resolved.groups,
     entries: entriesForLocale(registry, resolved, snapshot.locale, defaultLocale),
     media: mediaFor(mediaIds, mediaRows, snapshot.locale)
   }))

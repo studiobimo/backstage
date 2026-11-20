@@ -9,7 +9,8 @@ import { mapMarkedFields, type TranslatedNode } from '../translations.ts'
 
 interface BlocksProps {
   components: ComponentMap
-  snapshot: Pick<Snapshot, 'blocks' | 'pageId'> & Partial<Pick<Snapshot, 'entries' | 'references'>>
+  snapshot: Pick<Snapshot, 'blocks' | 'pageId'> &
+    Partial<Pick<Snapshot, 'entries' | 'references' | 'groups'>>
 }
 
 const BLOCK_DROP = {
@@ -29,19 +30,31 @@ const dropBlock = (pageId: string, block: PageBlock, reason: DropReason) => {
   return []
 }
 
+type SnapshotEntries = NonNullable<BlocksProps['snapshot']['entries']>
+
+const resolvedEntriesOf = (entries: SnapshotEntries, collection: string, ids: readonly string[]) =>
+  ids.flatMap((id) => {
+    const entry = entries[collection]?.[id]
+    return entry ? [{ id, content: entry.content, slug: entry.slug, href: entry.href }] : []
+  })
+
 const withEntries = (
   node: TranslatedNode,
   content: unknown,
-  { entries = {}, references = {} }: BlocksProps['snapshot'],
+  { entries = {}, references = {}, groups = {} }: BlocksProps['snapshot'],
   blockId: string
 ) =>
   references[blockId]
-    ? mapMarkedFields(node, content, 'reference', ({ path, node: field }) =>
-        (references[blockId]?.[path] ?? []).flatMap((id) => {
-          const entry = entries[field.collection ?? '']?.[id]
-          return entry ? [{ id, content: entry.content, slug: entry.slug, href: entry.href }] : []
-        })
-      )
+    ? mapMarkedFields(node, content, 'reference', ({ path, node: field }) => {
+        const collection = field.collection ?? ''
+        const grouped = groups[blockId]?.[path]
+        return grouped
+          ? grouped.map(({ group, ids }) => ({
+              group,
+              entries: resolvedEntriesOf(entries, collection, ids)
+            }))
+          : resolvedEntriesOf(entries, collection, references[blockId]?.[path] ?? [])
+      })
     : content
 
 export function Blocks({ components, snapshot }: BlocksProps) {
