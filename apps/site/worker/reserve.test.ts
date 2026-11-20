@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
 import { TURNSTILE, viteAssets, type ViteManifest } from '@studiobimo/backstage/site'
 import { afterAll, describe, expect, it } from 'vitest'
@@ -8,7 +9,7 @@ import { directives, get, platform } from './test-support'
 
 afterAll(() => platform.dispose())
 
-const BUILT_MANIFEST = new URL('../dist/client/.vite/manifest.json', import.meta.url)
+const BUILT_MANIFEST = fileURLToPath(new URL('../dist/client/.vite/manifest.json', import.meta.url))
 
 const builtAssets = () =>
   viteAssets(JSON.parse(readFileSync(BUILT_MANIFEST, 'utf8')) as ViteManifest, RESERVE.entry)
