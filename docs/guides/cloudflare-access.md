@@ -1,14 +1,15 @@
 # Put the admin behind Cloudflare Access
 
-- **Status:** Written from Cloudflare's documentation, not yet walked through on an account. The
-  first deployed consumer, bimo.dev's repository ([#40](https://github.com/studiobimo/backstage/issues/40)),
-  confirms it and corrects what it finds.
+- **Status:** Written from Cloudflare's documentation. A client consumer has since used it, and
+  the user rules were corrected from that. A step it did not exercise is still unconfirmed.
 - **Date:** 2026-11-07
 - **Issue:** [#8](https://github.com/studiobimo/backstage/issues/8)
 - **Story:** AUT-1, [ADR-0005](../adr/0005-access-then-magic-link.md)
 
-Until magic-link sign-in lands (M5), Cloudflare Access is the only thing between the internet and
-a client's admin. It does two jobs, and both are needed:
+Cloudflare Access is the default sign-in (`AUTH_MODE` unset or `access`). Magic link
+(`AUTH_MODE=magic-link`, since 0.7.0) replaces it: a deployment runs one mode or the other, never
+both, and in magic-link mode the Access variables and header are ignored. With Access, it is the
+only thing between the internet and a client's admin. It does two jobs, and both are needed:
 
 1. **Access keeps people out.** It sits in front of the admin's hostname and lets in only the
    people on its policy. This covers the SPA's files too, because Access answers before the
@@ -24,7 +25,7 @@ a client's admin. It does two jobs, and both are needed:
   ([risk 4](../RISKS.md)).
 - Zero Trust set up on that account. It is free for up to 50 users, but Cloudflare asks for
   payment details even on the free plan, and some clients will not give them
-  ([risk 2](../RISKS.md)). Magic link (M5) is the answer for those clients.
+  ([risk 2](../RISKS.md)). Magic link is the answer for those clients.
 
 ## Steps
 
@@ -103,6 +104,8 @@ On every `/api/*` request, `packages/backstage/src/admin/auth.ts` does this:
 - verify its signature against the keys at `<team domain>/cdn-cgi/access/certs`
 - require the issuer to be the team domain and the audience to be `ACCESS_AUD`
 - answer `403` if the header, either variable or a valid signature is missing
+- look the verified email up in the `users` table, and answer `403` when it is not there: passing
+  Access is not enough, an owner must have invited the person ([Who may sign in](#who-may-sign-in))
 
 After that, `csrf()` rejects a form-type write (`multipart/form-data`,
 `application/x-www-form-urlencoded` or `text/plain`, which is also what a request with no content
@@ -114,6 +117,19 @@ default, so it is your choice. In the Access application's cookie settings, set 
 
 The check runs before routing, so an unknown path gets `403` as well, not `404`. It does this itself because `ctx.access`, the shortcut Cloudflare offers for Workers, is not
 passed to a worker that has static assets, which the admin does.
+
+## Who may sign in
+
+Access proves who a person is. The admin's `users` table says who may use it, as an `owner` or an
+`editor`. Set `OWNER_EMAIL` on the admin Worker (a variable, one address or a comma-separated
+list) before the first deploy: each address is an owner whenever it signs in, created or promoted
+if need be, and can then invite everyone else on the Users page.
+
+- **With `OWNER_EMAIL` unset and no users yet,** the first identity to pass Access, or the first
+  person to open a magic link, becomes the owner. In magic-link mode the sign-in form sends a link
+  to any address until a user exists. Set the variable so that this is never left to chance.
+- **An identity that passes Access but is not in `users`** gets `403` on every `/api/*` request.
+  Invite them, or add them to `OWNER_EMAIL`.
 
 ## Local development
 
@@ -140,7 +156,8 @@ worker. `apps/admin/worker/auth.test.ts` covers it.
 
 - **Everyone is refused, or the login page loops.** The application has no Allow policy, or the
   policy does not match the address used to sign in.
-- **The admin loads but every API call is `403`.** `ACCESS_AUD` is stale, or `ACCESS_TEAM_DOMAIN`
+- **The admin loads but every API call is `403`.** The person is not in `users` (see above), or
+  `ACCESS_AUD` is stale, or `ACCESS_TEAM_DOMAIN`
   is wrong. Deleting and recreating the Access application gives it a new audience tag, so copy it
   again and redeploy.
 - **The worker can't fetch the keys.** Check that the team domain is the exact

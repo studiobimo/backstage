@@ -5,8 +5,8 @@
 
 This guide takes a client project from an empty Cloudflare account to a working admin and site.
 Only the database migrations are written so far, plus the notes below on what a consumer hits.
-Still missing: the site Worker's `wrangler.jsonc`, the Vite plugin setup, the Content-Security-Policy,
-the deploy flow, and a consumer template to copy.
+Still missing: the site Worker's `wrangler.jsonc`, the Vite plugin setup, the deploy flow, and a
+consumer template to copy.
 
 ## Apply the package's migrations
 
@@ -104,8 +104,11 @@ export default createSite({
 - **`scripts`** are same-origin paths, served from the site's `ASSETS` binding and loaded as
   `<script type="module">`. A full URL or a protocol-relative one throws.
 - **CSP additions.** `scriptSrc: ["'self'"]` lets the bundle run. Add `connectSrc: ["'self'"]` (or
-  the API origin) when the client calls `fetch`. Nothing allows inline scripts, so the bundle cannot
-  rely on them.
+  the API origin) when the client calls `fetch`, because the default policy blocks it. Styles set at
+  run time, such as an inline `style` attribute, need `styleSrc` to allow them. Nothing allows
+  inline scripts, so the bundle cannot rely on them. `contentSecurityPolicy` takes `styleSrc`,
+  `imgSrc`, `fontSrc`, `mediaSrc`, `connectSrc` and `scriptSrc`; `frameSrc` is not offered, and
+  `turnstile: true` adds the one frame origin it needs.
 - **`translations`** maps other locales to the path of the same route. It adds the `hreflang`
   alternates and the switcher links; leave it out for a route that exists in one locale.
 - Register the route in `routes`, which runs before the catch-all page route, and serve the bundle
@@ -200,7 +203,8 @@ sends it to the admin through the entrypoint, and the owner reads it in the admi
 2. Export the entrypoint from the admin Worker, built from the same registry:
    `export const AdminEntrypoint = createAdminEntrypoint(registry)`.
 3. Set `TURNSTILE_SECRET` on the admin Worker (`pnpm exec wrangler secret put TURNSTILE_SECRET`),
-   and follow the Turnstile section below for the widget on the site. For the owner notification,
+   and follow the Turnstile section below for the widget on the site: the site holds no secret, and
+   the admin verifies the token. For the owner notification,
    bind `EMAIL` and set `AUTH_EMAIL_FROM` and `OWNER_EMAIL` on the admin Worker.
 4. Run `make migrate`: the package adds the `submissions` table.
 5. Call it from the site Worker with the visitor's context, and keep the `token` it returns:
@@ -249,19 +253,40 @@ takes its heading from the same title.
 
 ### Weekly opening hours
 
-A settings object renders as a weekly editor, one row per day with a switch and labelled From and
-To times, when it is keyed by exactly the seven weekday names (`monday` to `sunday`, lowercase) and
-each day is an object with a boolean `closed` and string `opens` and `closes`:
+`weeklyHours()` declares a field that the admin edits as a week. It stores a time zone, several
+`open` and `close` ranges for each weekday and a list of dated exceptions:
 
 ```ts
-const openingDay = () => z.object({ closed: z.boolean(), opens: timeOfDay(), closes: timeOfDay() })
-const hours = z.object({ monday: openingDay(), tuesday: openingDay(), sunday: openingDay() })
+const settings = z.object({ hours: weeklyHours() })
+
+const stored = {
+  timeZone: 'America/Tegucigalpa',
+  week: { monday: [{ open: '09:00', close: '17:00' }], tuesday: [] /* through sunday */ },
+  exceptions: [{ date: '2026-12-25', ranges: [] }]
+}
 ```
 
-The example shortens the week; declare all seven days.
+Declare all seven days (`monday` to `sunday`); a day with no ranges is closed. The times are `HH:mm`
+strings, a range may not open and close at the same minute, and an exception date appears once.
+`timeZone` is an IANA name, and an exception replaces that date's ranges (an empty list closes it).
+A range whose `close` is earlier than its `open` runs past midnight into the next day.
 
-Any other object renders as a plain group of labelled fields. The times are `HH:mm` strings, so
-validate them in the schema as you would any string. A closed day keeps its times.
+`weeklyHours` and these helpers come from `@studiobimo/backstage`, and the helpers also from
+`@studiobimo/backstage/site` for client scripts. They read the stored value (`instant` is a `Date` or a
+millisecond timestamp):
+
+- `isOpenAt(hours, instant)` answers `'open'`, `'before-opening'` (closed now, opens later today) or
+  `'closed'`.
+- `nextOpening(hours, instant)` returns the `Date` of the next time a range starts, or `undefined`
+  when none starts within 400 days.
+- `slotsFor(hours, date, { step, leadTime, now })` lists the `Date` of each bookable start on a
+  `YYYY-MM-DD` date, every `step` minutes inside its ranges. `leadTime` (minutes, default 0) drops
+  starts earlier than `now` plus that lead time. A date that is not real, or a `step` that is not
+  positive, returns an empty list.
+
+The older shape, a week keyed by weekday with a boolean `closed` and string `opens` and `closes`
+for each day, still renders as a day-by-day editor with a switch and times, but the helpers above do not read it.
+Use `weeklyHours()` for new fields. Any other object renders as a plain group of labelled fields.
 
 ### Prices
 
@@ -310,9 +335,10 @@ count exactly. The package does not do this itself yet.
 ## Protect a public form with Turnstile
 
 1. Create a Turnstile widget in the Cloudflare dashboard and note its site key and secret key.
-2. Store the secret on the site Worker, never in the repository:
-   `pnpm exec wrangler secret put TURNSTILE_SECRET` (add `--env <env>` for a deployed environment).
-   The site key is public and can sit in `vars` or in your block's markup.
+2. Store the secret on the **admin** Worker, never in the repository:
+   `pnpm exec wrangler secret put TURNSTILE_SECRET` (add `--env <env>` for a deployed environment),
+   run from the admin app. The site Worker never sees it. The site key is public and can sit in
+   `vars` or in your block's markup.
 3. Pass `turnstile: true` to `createSite`. It adds `https://challenges.cloudflare.com` to
    `script-src` and `frame-src` and nothing else, so the widget script loads and its iframe
    renders under the package's policy. The rest of the policy is unchanged, and
@@ -325,8 +351,13 @@ count exactly. The package does not do this itself yet.
 4. Render the widget in your form: load `https://challenges.cloudflare.com/turnstile/v0/api.js`
    and add `<div class="cf-turnstile" data-sitekey="...">`. The widget adds a
    `cf-turnstile-response` field to the form.
-5. Verify on the server before acting on the submission. `verifyTurnstile` is exported from
-   `@studiobimo/backstage/site` and does not depend on Hono:
+5. Pass the token to the admin. `rpc.submit(context, form, payload, turnstileToken)` verifies it
+   with `AdminEnv.TURNSTILE_SECRET` before storing anything, and a form that sets
+   `turnstile: false` skips the check ([ADR-0020](../adr/0020-forms-and-submissions.md)). A missing
+   secret refuses every submission. Read the token from the form's `cf-turnstile-response` field.
+6. A route that is not a form submission can verify on the site with `verifyTurnstile`, exported
+   from `@studiobimo/backstage/site` without Hono. That route is the only one that needs the secret
+   on the site Worker:
 
    ```ts
    const result = await verifyTurnstile({
