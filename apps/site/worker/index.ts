@@ -6,6 +6,7 @@ import stylesheet from '../src/site.css?inline'
 import { preview } from './preview'
 import { formRoutes, type FormBindings } from './forms'
 import { reserveRoutes } from './reserve'
+import { slotRoutes } from './slots'
 
 export default createSite<FormBindings>({
   components,
@@ -16,5 +17,6 @@ export default createSite<FormBindings>({
   routes: (app) => {
     formRoutes(components.registry)(app)
     reserveRoutes(app)
+    slotRoutes(app)
   }
 })
