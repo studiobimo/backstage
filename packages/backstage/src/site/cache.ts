@@ -3,7 +3,11 @@ import { API_ERROR } from '../errors.ts'
 export const EDGE_CACHE = {
   control: 'public, max-age=0, s-maxage=30, stale-while-revalidate=15',
   bypass: { query: 'nocache', header: 'x-bypass-cache' },
-  versionParam: 'v'
+  versionParam: 'v',
+  form: {
+    status: 'private, no-store',
+    projection: 'public, max-age=15, s-maxage=30, stale-while-revalidate=15'
+  }
 } as const
 
 export interface EdgeCache {

@@ -1,6 +1,8 @@
 export { OBSERVABILITY, observe, reportError, respondHealthy } from '../../observability.ts'
 export { createSite } from './create-site.ts'
 export type { CreateSiteOptions, SiteApp, SiteEnvironment } from './create-site.ts'
+export { RATE_LIMIT, rateLimited } from './rate-limit.ts'
+export type { RateLimitBinding } from './rate-limit.ts'
 export { renderInShell } from './shell.ts'
 export type { ShellOptions } from './shell.ts'
 export type { SiteHead } from './document.tsx'

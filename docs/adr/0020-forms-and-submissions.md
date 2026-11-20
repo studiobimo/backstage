@@ -53,9 +53,9 @@ public })` and `defineRegistry(blocks, { forms })`. The schema is a `z.object` t
 - **The mailer is general.** `Mailer.send({ to, subject, text }, env)` replaces
   `LoginMailer.sendLoginLink`; the login link builds its own message. `EMAIL` and
   `AUTH_EMAIL_FROM` serve both.
-- **Rate limits are not built here.** A public write should sit behind the Workers rate limiting
-  binding on the site; `docs/guides/setup.md` shows how. Turnstile and the per-visitor address in
-  the context are what the package itself relies on.
+- **Rate limits are not built into the admin.** A public write sits behind the Workers rate
+  limiting binding on the site, which the package now helps with: see the amendment below.
+  Turnstile and the per-visitor address in the context are what the admin itself relies on.
 
 ## Consequences
 
@@ -89,3 +89,23 @@ public })` and `defineRegistry(blocks, { forms })`. The schema is a `z.object` t
   older version cannot leak a field the form no longer lists. It answers `null` until something
   has been published. A few seconds of staleness is accepted: the owner reviews every request.
 - **`setSubmissionStatus` takes the KV namespace** as its second argument.
+
+## Amendment: the site ships the rate-limit and payload helpers (2026-11-20)
+
+The first version left rate limiting to each consumer, and every consumer wrote the same few
+lines, plus the same payload parsing, for `submit` and `status` (#530). Both are public.
+
+- **Changed:** `@studiobimo/backstage/site/hono` exports `rateLimited(binding, request)`. It keys
+  the Workers rate limiting binding on `requestContextOf(request).ip` and returns `null` under the
+  limit, or a `429` response (`API_ERROR.tooManyRequests`) with a `Retry-After` header. The
+  admin still does no rate limiting.
+- **Changed:** `@studiobimo/backstage/site` exports `readFormPayload(request, schema)`. It reads
+  JSON, which keeps nested arrays and objects, or multipart, which keeps the flat coercion and
+  accepts a JSON string for a field whose schema is an array or object. The form's own zod schema
+  drives it, and the admin still validates the payload.
+- **Changed:** `SiteEnv` declares an optional `ADMIN` binding, and `EDGE_CACHE.form` holds the
+  `Cache-Control` values for a status read (private, no-store) and a projection read (short and
+  public).
+- **Unchanged:** the limit is per Cloudflare location and eventually consistent, so it slows
+  abuse and does not count exactly. `status` needs the same limit as `submit`, since the token is
+  a bearer capability.

@@ -207,17 +207,27 @@ sends it to the admin through the entrypoint, and the owner reads it in the admi
    the admin verifies the token. For the owner notification,
    bind `EMAIL` and set `AUTH_EMAIL_FROM` and `OWNER_EMAIL` on the admin Worker.
 4. Run `make migrate`: the package adds the `submissions` table.
-5. Call it from the site Worker with the visitor's context, and keep the `token` it returns:
+5. Read the payload and call the entrypoint from the site Worker, and keep the `token` it returns.
+   `readFormPayload(request, form.schema)` reads JSON (nested arrays and objects kept) or multipart
+   (flat fields coerced, a JSON string accepted for an array or object field) and splits off the
+   Turnstile token. `env.ADMIN` is typed on `SiteEnv`, so there is no cast:
 
    ```ts
+   const read = await readFormPayload(request, form.schema)
+   if (!read) return respondWithError(c, API_ERROR.invalid)
    const rpc = adminRpc(env.ADMIN)
-   const sent = await rpc.submit(requestContextOf(request), 'reservation', payload, turnstileToken)
+   const sent = await rpc.submit(requestContextOf(request), 'reservation', read.payload, read.turnstileToken)
    if (!sent.ok) {
      const error = Object.values(API_ERROR).find(({ code }) => code === sent.code)!
      return c.json({ code: error.code, error: error.message, issues: sent.issues }, error.status)
    }
    const followed = await rpc.status(requestContextOf(request), sent.token)
    ```
+
+   The template's `apps/site/worker/forms.ts` shows the routes for submit, status and the
+   projection read, each behind the rate limit below. Send the status read with
+   `EDGE_CACHE.form.status` and a projection read with `EDGE_CACHE.form.projection` as its
+   `Cache-Control`.
 
    `status` returns the status and only the fields the form lists under `public.fields`.
 
@@ -322,15 +332,18 @@ front of the write, on the site Worker. Declare it in `wrangler.jsonc`, with a u
 "ratelimits": [{ "name": "FORM_LIMITER", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } }]
 ```
 
-and call it before `rpc.submit`, keyed by the visitor's address:
+and call `rateLimited` from `@studiobimo/backstage/site/hono` first in the route. It keys on the
+visitor's address and returns a `429` with `Retry-After`, or `null` to carry on. Give `status` the
+same limit as `submit`: its token is a bearer capability, so an unlimited route lets a script
+guess it.
 
 ```ts
-const { success } = await env.FORM_LIMITER.limit({ key: requestContextOf(request).ip ?? 'unknown' })
-if (!success) return respondWithError(c, API_ERROR.tooManyRequests)
+const limited = await rateLimited(env.FORM_LIMITER, c.req.raw)
+if (limited) return limited
 ```
 
 The limit is per Cloudflare location and eventually consistent, so it slows abuse and does not
-count exactly. The package does not do this itself yet.
+count exactly.
 
 ## Protect a public form with Turnstile
 
