@@ -274,6 +274,35 @@ describe('createSite security and preview', () => {
   })
 })
 
+describe('createSite turnstile frame-src', () => {
+  it('keeps a consumer frame-src next to turnstile, without listing an origin twice', async () => {
+    const embed = 'https://www.youtube-nocookie.com'
+    const merged = directives(
+      await request(
+        '/about',
+        envWith({}, publishedKv()),
+        fixtureOptions({ turnstile: true, contentSecurityPolicy: { frameSrc: [embed] } })
+      )
+    )
+    expect(merged.get('frame-src')).toEqual([embed, TURNSTILE.origin])
+    const listed = directives(
+      await request(
+        '/about',
+        envWith({}, publishedKv()),
+        fixtureOptions({
+          turnstile: true,
+          contentSecurityPolicy: {
+            frameSrc: [embed, TURNSTILE.origin],
+            scriptSrc: [TURNSTILE.origin]
+          }
+        })
+      )
+    )
+    expect(listed.get('frame-src')).toEqual([embed, TURNSTILE.origin])
+    expect(listed.get('script-src')).toEqual([TURNSTILE.origin])
+  })
+})
+
 describe('createSite routes', () => {
   it('serves the stylesheet immutably under its hashed path', async () => {
     const response = await request(stylesheetPathFor(FIXTURE.stylesheet))

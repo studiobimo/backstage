@@ -19,7 +19,7 @@ type AdditionKey = (typeof ADDITION_KEYS)[number]
 
 type PolicyAdditions = Partial<Record<AdditionKey, readonly string[]>>
 
-export type ContentSecurityPolicyAdditions = Omit<PolicyAdditions, 'frameSrc'>
+export type ContentSecurityPolicyAdditions = PolicyAdditions
 
 export interface SecurityOptions {
   turnstile?: boolean
@@ -62,15 +62,19 @@ const isPreviewPath = (path: string) => path.startsWith(`${BLOCK_PREVIEW.path}/`
 const isThumbnailPath = (path: string) =>
   isPreviewPath(path) && path.endsWith(`/${BLOCK_PREVIEW.thumbnailFile}`)
 
-const withTurnstile = (additions: ContentSecurityPolicyAdditions): PolicyAdditions => ({
+const mergeSources = (...lists: (readonly string[] | undefined)[]) => [
+  ...new Set(lists.flatMap((list) => list ?? []))
+]
+
+const withTurnstile = (additions: PolicyAdditions): PolicyAdditions => ({
   ...additions,
-  scriptSrc: [...(additions.scriptSrc ?? []), TURNSTILE.origin],
-  frameSrc: [TURNSTILE.origin]
+  scriptSrc: mergeSources(additions.scriptSrc, [TURNSTILE.origin]),
+  frameSrc: mergeSources(additions.frameSrc, [TURNSTILE.origin])
 })
 
 const withSelfScripts = (additions: PolicyAdditions): PolicyAdditions => ({
   ...additions,
-  scriptSrc: [...new Set([...SELF, ...(additions.scriptSrc ?? [])])]
+  scriptSrc: mergeSources(SELF, additions.scriptSrc)
 })
 
 export const securityHeaders = (
