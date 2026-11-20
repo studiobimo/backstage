@@ -107,8 +107,8 @@ export default createSite({
   the API origin) when the client calls `fetch`, because the default policy blocks it. Styles set at
   run time, such as an inline `style` attribute, need `styleSrc` to allow them. Nothing allows
   inline scripts, so the bundle cannot rely on them. `contentSecurityPolicy` takes `styleSrc`,
-  `imgSrc`, `fontSrc`, `mediaSrc`, `connectSrc` and `scriptSrc`; `frameSrc` is not offered, and
-  `turnstile: true` adds the one frame origin it needs.
+  `imgSrc`, `fontSrc`, `mediaSrc`, `connectSrc`, `scriptSrc` and `frameSrc`. `turnstile: true` merges
+  its origin into your `scriptSrc` and `frameSrc` rather than replacing them.
 - **`translations`** maps other locales to the path of the same route. It adds the `hreflang`
   alternates and the switcher links; leave it out for a route that exists in one locale.
 - Register the route in `routes`, which runs before the catch-all page route, and serve the bundle
@@ -340,9 +340,9 @@ count exactly. The package does not do this itself yet.
    run from the admin app. The site Worker never sees it. The site key is public and can sit in
    `vars` or in your block's markup.
 3. Pass `turnstile: true` to `createSite`. It adds `https://challenges.cloudflare.com` to
-   `script-src` and `frame-src` and nothing else, so the widget script loads and its iframe
-   renders under the package's policy. The rest of the policy is unchanged, and
-   `contentSecurityPolicy` still takes the other additions.
+   `script-src` and `frame-src`, merged with any `scriptSrc` and `frameSrc` you pass, so the widget
+   script loads and its iframe renders under the package's policy. The rest of the policy is
+   unchanged, and `contentSecurityPolicy` still takes the other additions.
 
    ```ts
    export default createSite({ components, stylesheet, turnstile: true })
