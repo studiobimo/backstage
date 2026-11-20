@@ -169,6 +169,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
   `AlternateLink` type
 - Responses: `renderHtml`, `respondWithMedia`, `defaultEdgeCache`, `EDGE_CACHE`, `withEdgeCache`, and the
   `Deferrable`, `EdgeCache`, `MediaObject` and `MediaReader` types
+- Reading a form submission: `readFormPayload`, `FORM_PAYLOAD`, and the `FormPayload` type, which read
+  JSON or multipart and keep nested arrays and objects
 - Locales: `localeName`, `LOCALE_NAME`, `switcherLabel`, `SWITCHER_LABEL`
 - Turnstile: `verifyTurnstile`, `TURNSTILE`, and the `TurnstileCheck`, `TurnstileFailure` and
   `TurnstileResult` types
@@ -187,6 +189,8 @@ The site Worker in one call, and its Hono middleware.
   `SitePreview` and `ContentSecurityPolicyAdditions` types
 - `renderInShell`, which renders a consumer route inside the site document (slots, head,
   stylesheet and language switcher from the published snapshot), with the `ShellOptions` type
+- `rateLimited`, `RATE_LIMIT`, and the `RateLimitBinding` type, which answer 429 with `Retry-After` over a
+  Workers rate limiting binding, keyed on the visitor's address
 - `observe`, `reportError`, `respondHealthy`, `OBSERVABILITY`
 
 ### `@studiobimo/backstage/render`
