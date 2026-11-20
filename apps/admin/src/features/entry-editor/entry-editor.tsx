@@ -240,6 +240,31 @@ function RoutedSlug({
   )
 }
 
+function EntryContent({
+  collection,
+  draft,
+  published
+}: {
+  collection: CollectionOption
+  draft: ReturnType<typeof useEntryDraft>
+  published: boolean
+}) {
+  const { t } = useTranslation('entryEditor')
+  const { locales } = useLocaleConfig()
+  return (
+    <FrameSection title={t('content.heading')} description={t('content.description')}>
+      <BlockForm
+        schema={collection.schema}
+        locales={locales}
+        value={draft.content}
+        onChange={draft.setContent}
+        issues={draft.save.issues}
+        lockedFields={published && collection.key ? [collection.key] : undefined}
+      />
+    </FrameSection>
+  )
+}
+
 function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) {
   const { t, i18n } = useTranslation('entryEditor')
   const hintId = useId()
@@ -306,15 +331,7 @@ function EntryEditorBody({ collection, entry, onReload }: EntryEditorBodyProps) 
           onReload={onReload}
         />
         <RoutedSlug collection={collection} draft={draft} />
-        <FrameSection title={t('content.heading')} description={t('content.description')}>
-          <BlockForm
-            schema={collection.schema}
-            locales={locales}
-            value={content}
-            onChange={draft.setContent}
-            issues={save.issues}
-          />
-        </FrameSection>
+        <EntryContent collection={collection} draft={draft} published={published} />
       </div>
       <PendingRepublish publishing={publish} />
     </EditingLocaleContext.Provider>

@@ -8,6 +8,7 @@ import { useLocaleConfig } from '@/features/config/queries'
 import { cn } from '@/lib/utils'
 
 import { entryLabelText } from './collection-text'
+import { EntryKey } from './entry-key'
 import { EntryToggleSwitches } from './entry-toggle-switch'
 import { StateBadge } from './entry-state-badge'
 import type { EntryToggleControl } from './use-entry-toggle'
@@ -41,6 +42,7 @@ function ReorderRow({ collection, entry, name, toggle, slot }: ReorderRowProps) 
       >
         {name}
       </Link>
+      <EntryKey entry={entry} />
       <StateBadge entry={entry} />
       <EntryToggleSwitches control={toggle} entry={entry} name={name} />
     </li>

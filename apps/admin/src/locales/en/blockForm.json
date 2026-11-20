@@ -1,5 +1,6 @@
 {
   "save": "Save",
+  "locked": "Locked while published. Unpublish to change it.",
   "unsupported": "This block uses a field the editor cannot show yet.",
   "variants": {
     "image": {

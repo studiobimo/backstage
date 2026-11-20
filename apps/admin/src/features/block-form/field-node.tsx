@@ -17,6 +17,7 @@ import { LocalizedField } from './localized-field.tsx'
 import { ReferenceField } from './reference-field.tsx'
 import { ScheduleField } from './schedule-field.tsx'
 import { TimeOfDayField } from './time-of-day-field.tsx'
+import { useIsLocked } from './locale-status.ts'
 import { RichTextField } from './rich-text-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
 import { WeeklyHoursField } from './weekly-hours-field.tsx'
@@ -42,9 +43,11 @@ function fieldLabel(t: TFunction<'blockForm'>, spec: FieldSpec, parent?: GroupSp
 const variantIcon = { image: <ImageIcon />, link: <LinkIcon /> }
 
 function LeafNode({ form, spec, path, label, chrome, translated, icon }: NodeProps) {
+  const { t } = useTranslation('blockForm')
+  const locked = useIsLocked(path)
   const props = {
     label,
-    description: spec.description,
+    description: locked ? t('locked') : spec.description,
     optional: !spec.required && !translated,
     ...chrome
   }
@@ -68,6 +71,7 @@ function LeafNode({ form, spec, path, label, chrome, translated, icon }: NodePro
                 icon={icon}
                 maxLength={spec.maxLength}
                 emptyValue={emptyValue}
+                readOnly={locked}
               />
             )
           case 'number':

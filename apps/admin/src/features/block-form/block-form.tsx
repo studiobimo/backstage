@@ -14,6 +14,7 @@ import {
   EditingLocaleContext,
   hasLocalized,
   localeStatus,
+  LockedFieldsContext,
   useEditingLocale
 } from './locale-status.ts'
 import { LocaleSwitcher } from './locale-switcher.tsx'
@@ -44,10 +45,12 @@ export interface BlockFormProps {
   onChange?: (value: BlockValue) => void
   onDirtyChange?: (dirty: boolean) => void
   issues?: readonly FieldIssue[]
+  lockedFields?: readonly string[]
   className?: string
 }
 
 const noIssues: readonly never[] = []
+const noLocked: readonly string[] = []
 
 interface ParsedBlock {
   root: GroupSpec
@@ -142,6 +145,7 @@ function SupportedBlockForm({
   onChange,
   onDirtyChange,
   issues = noIssues,
+  lockedFields = noLocked,
   className
 }: BlockFormProps & { parsed: ParsedBlock }) {
   const { t } = useTranslation('blockForm')
@@ -175,38 +179,40 @@ function SupportedBlockForm({
   return (
     <EditingLocaleContext.Provider value={embedded ? outerEditing : editing}>
       <ShownIssuesContext.Provider value={attempted || embedded ? issuePaths : noIssues}>
-        <Form
-          noValidate
-          className={cn('flex w-full flex-col gap-6', className)}
-          onSubmit={(event) => {
-            event.preventDefault()
-            submit()
-          }}
-        >
-          {!embedded && locales.length > 1 && hasLocalized(parsed.root) && (
-            <LocaleSwitcher
-              locales={locales}
-              active={active}
-              status={status}
-              showInvalid={attempted}
-              onChange={setActive}
-            />
-          )}
-          <GroupFields form={form} spec={parsed.root} path={[]} label="" />
-          {!embedded && (
-            <div className="sticky bottom-10 z-10 flex items-center justify-end gap-3">
-              {attempted && issuePaths.length > 0 && (
-                <p role="alert" className="text-destructive-foreground text-sm">
-                  {t('invalidSummary', { count: issuePaths.length })}
-                </p>
-              )}
-              <Button type="submit" disabled={submitting}>
-                {submitting && <Spinner />}
-                {t('save')}
-              </Button>
-            </div>
-          )}
-        </Form>
+        <LockedFieldsContext.Provider value={lockedFields}>
+          <Form
+            noValidate
+            className={cn('flex w-full flex-col gap-6', className)}
+            onSubmit={(event) => {
+              event.preventDefault()
+              submit()
+            }}
+          >
+            {!embedded && locales.length > 1 && hasLocalized(parsed.root) && (
+              <LocaleSwitcher
+                locales={locales}
+                active={active}
+                status={status}
+                showInvalid={attempted}
+                onChange={setActive}
+              />
+            )}
+            <GroupFields form={form} spec={parsed.root} path={[]} label="" />
+            {!embedded && (
+              <div className="sticky bottom-10 z-10 flex items-center justify-end gap-3">
+                {attempted && issuePaths.length > 0 && (
+                  <p role="alert" className="text-destructive-foreground text-sm">
+                    {t('invalidSummary', { count: issuePaths.length })}
+                  </p>
+                )}
+                <Button type="submit" disabled={submitting}>
+                  {submitting && <Spinner />}
+                  {t('save')}
+                </Button>
+              </div>
+            )}
+          </Form>
+        </LockedFieldsContext.Provider>
       </ShownIssuesContext.Provider>
     </EditingLocaleContext.Provider>
   )

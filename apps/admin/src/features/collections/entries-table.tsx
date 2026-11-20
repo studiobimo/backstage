@@ -11,6 +11,7 @@ import { useLocaleConfig } from '@/features/config/queries'
 import { formatDateTime } from '@/lib/format'
 
 import { entryLabelText } from './collection-text'
+import { EntryKey } from './entry-key'
 import { EntryToggleSwitch } from './entry-toggle-switch'
 import { StateBadge } from './entry-state-badge'
 import type { EntryToggleControl } from './use-entry-toggle'
@@ -86,13 +87,16 @@ function EntryRow({
   return (
     <TableRow>
       <TableCell className="w-full max-w-0 sm:w-auto sm:max-w-none">
-        <Link
-          to="/collections/$name/$entryId"
-          params={{ name: collection, entryId: entry.id }}
-          className="block truncate rounded-sm py-0.5 font-medium outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
-        >
-          {name}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/collections/$name/$entryId"
+            params={{ name: collection, entryId: entry.id }}
+            className="block min-w-0 truncate rounded-sm py-0.5 font-medium outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
+          >
+            {name}
+          </Link>
+          <EntryKey entry={entry} />
+        </div>
       </TableCell>
       <TableCell className={statusColumnOf(toggle)}>
         <StateBadge entry={entry} />
