@@ -196,8 +196,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@studiobimo/backstage':
-        specifier: ^0.10.0
-        version: 0.10.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: workspace:*
+        version: link:../../packages/backstage
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1710,12 +1710,6 @@ packages:
 
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
-
-  '@studiobimo/backstage@0.10.0':
-    resolution: {integrity: sha512-o2d5UxRD6DAPMymL+zSwi5vN9mOh0Ou3imMnv/hwXHC+aK9lSanAUKHQ0p55mWwhJdrCC1PG9gw1/wl7G6oztA==, tarball: https://npm.pkg.github.com/download/@studiobimo/backstage/0.10.0/9ce7251d6455733aac31117ac074a2928684eb4f}
-    peerDependencies:
-      react: ^19.3.1
-      react-dom: ^19.3.1
 
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
@@ -5638,48 +5632,6 @@ snapshots:
   '@sindresorhus/merge-streams@4.0.0': {}
 
   '@speed-highlight/core@1.2.24': {}
-
-  '@studiobimo/backstage@0.10.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
-    dependencies:
-      '@tiptap/core': 3.32.2(@tiptap/pm@3.32.2)
-      '@tiptap/pm': 3.32.2
-      '@tiptap/static-renderer': 3.32.2(@tiptap/core@3.32.2(@tiptap/pm@3.32.2))(@tiptap/pm@3.32.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      drizzle-orm: 0.45.4
-      hono: 4.13.16
-      react: 19.3.1
-      react-dom: 19.3.1(react@19.3.1)
-      zod: 4.6.7
-    transitivePeerDependencies:
-      - '@aws-sdk/client-rds-data'
-      - '@cloudflare/workers-types'
-      - '@electric-sql/pglite'
-      - '@libsql/client'
-      - '@libsql/client-wasm'
-      - '@neondatabase/serverless'
-      - '@netlify/db'
-      - '@op-engineering/op-sqlite'
-      - '@opentelemetry/api'
-      - '@planetscale/database'
-      - '@prisma/client'
-      - '@tidbcloud/serverless'
-      - '@types/better-sqlite3'
-      - '@types/pg'
-      - '@types/sql.js'
-      - '@upstash/redis'
-      - '@vercel/postgres'
-      - '@xata.io/client'
-      - better-sqlite3
-      - bun-types
-      - expo-sqlite
-      - gel
-      - knex
-      - kysely
-      - mysql2
-      - pg
-      - postgres
-      - prisma
-      - sql.js
-      - sqlite3
 
   '@tailwindcss/node@4.3.3':
     dependencies:

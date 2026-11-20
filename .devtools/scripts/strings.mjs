@@ -52,3 +52,13 @@ export const budgetMessages = {
   within: (kib, total, chunk) =>
     `bundle budget: ${kib} of ${total} KiB gzipped, every chunk under ${chunk} KiB`
 }
+
+export const packMessages = {
+  commandFailed: (command, args) => `${command} ${args.join(' ')} failed`,
+  noEntryPoints: 'packages/backstage/package.json has no publishConfig.exports to check',
+  noVersion: (name) =>
+    `no version range for ${name}: add it to PACK.fallbackVersions in pack-check.mjs`,
+  noTarball: (dir) => `pnpm pack left no .tgz in ${dir}`,
+  passed: (name, specifiers) =>
+    `pack check: ${name} installs from its tarball, type-checks and imports ${specifiers.length} entry points (${specifiers.join(', ')})`
+}
