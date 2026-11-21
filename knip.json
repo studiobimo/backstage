@@ -5,6 +5,7 @@
   "workspaces": {
     ".": { "entry": ["e2e/playwright.config.ts", "e2e/*.spec.ts"] },
     "apps/admin": { "entry": ["src/test/setup.ts"] },
+    "apps/site": { "entry": ["src/reserve/main.tsx"] },
     "packages/backstage": { "entry": ["test/rpc/*-worker.ts"] }
   }
 }
