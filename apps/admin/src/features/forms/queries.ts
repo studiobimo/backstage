@@ -115,8 +115,8 @@ export const privacyMutation = (queryClient: QueryClient, form: string, action: 
         ).json()
       ).submission,
     onSuccess: async (submission) => {
-      queryClient.setQueryData(
-        submissionKey(form, submission.id),
+      queryClient.setQueriesData(
+        { queryKey: submissionKey(form, submission.id) },
         (current?: z.infer<typeof submissionResponseSchema>) =>
           current && { ...current, submission }
       )
