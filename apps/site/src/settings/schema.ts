@@ -1,10 +1,25 @@
-import { labeled, localized, weeklyHours } from '@studiobimo/backstage'
+import { labeled, localized, weeklyHours, type WeeklyHours } from '@studiobimo/backstage'
 import { z } from 'zod'
 
 const BOOKING_SETTINGS = {
+  hours: { fallbackTimeZone: 'UTC' },
   step: { fallbackMinutes: 30 },
   leadTime: { fallbackMinutes: 0 }
 } as const
+
+const closedAllWeek = (): WeeklyHours => ({
+  timeZone: BOOKING_SETTINGS.hours.fallbackTimeZone,
+  week: {
+    monday: [],
+    tuesday: [],
+    wednesday: [],
+    thursday: [],
+    friday: [],
+    saturday: [],
+    sunday: []
+  },
+  exceptions: []
+})
 
 const minutes = () => z.number().int().positive()
 
@@ -26,7 +41,10 @@ export const siteSettingsSchema = z.object({
   ),
   booking: labeled(
     z.object({
-      hours: labeled(weeklyHours(), { en: { title: 'Hours' }, es: { title: 'Horario' } }),
+      hours: labeled(weeklyHours().default(closedAllWeek), {
+        en: { title: 'Hours' },
+        es: { title: 'Horario' }
+      }),
       step: labeled(minutes().default(BOOKING_SETTINGS.step.fallbackMinutes), {
         en: { title: 'Minutes between starts' },
         es: { title: 'Minutos entre inicios' }
