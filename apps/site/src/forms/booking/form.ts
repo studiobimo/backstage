@@ -8,7 +8,7 @@ export const BOOKING_FORM = {
   public: { statuses: ['confirmed'] }
 } as const
 
-export const bookingSchema = z.object({
+const bookingSchema = z.object({
   [BOOKING.fields.resource]: z.string().trim().min(1).max(BOOKING_FORM.resource.maxLength),
   [BOOKING.fields.date]: z.iso.date(),
   [BOOKING.fields.start]: timeOfDay(),
