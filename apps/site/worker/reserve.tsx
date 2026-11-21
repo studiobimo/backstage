@@ -17,7 +17,7 @@ const manifestOf = () => {
   throw new Error(`No client manifest: build the site before serving ${RESERVE.path}`)
 }
 
-export const reserveRoutes = (app: SiteApp) => {
+export const reserveRoutes = <Extra extends object>(app: SiteApp<Extra>) => {
   const availability: Availability = { seats: RESERVE.seatsFree }
   app.get(RESERVE.availabilityPath, (c) => c.json(availability))
   app.get(RESERVE.path, (c) =>

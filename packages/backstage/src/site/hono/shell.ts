@@ -19,7 +19,10 @@ export interface ShellOptions extends ClientAssets {
   translations?: Readonly<Record<Locale, string>>
 }
 
-export const renderInShell = async (c: Context<SiteEnvironment>, options: ShellOptions) => {
+export const renderInShell = async <Extra extends object>(
+  c: Context<SiteEnvironment<Extra>>,
+  options: ShellOptions
+) => {
   const {
     locale,
     title,
