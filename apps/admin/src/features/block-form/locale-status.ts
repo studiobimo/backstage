@@ -82,6 +82,15 @@ export const EditingLocaleContext = createContext<EditingLocale>({
 
 export const useEditingLocale = () => useContext(EditingLocaleContext)
 
+const NO_LOCKED_FIELDS: readonly string[] = []
+
+export const LockedFieldsContext = createContext(NO_LOCKED_FIELDS)
+
+export const useIsLocked = (path: Path) => {
+  const locked = useContext(LockedFieldsContext)
+  return path.length === 1 && locked.includes(String(path[0]))
+}
+
 export function languageName(locale: string, uiLanguage: string): string {
   return new Intl.DisplayNames([uiLanguage], { type: 'language' }).of(locale) ?? locale
 }

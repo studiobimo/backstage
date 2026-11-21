@@ -32,7 +32,9 @@ interface Reply {
 const json = ({ status, body }: Reply) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status })
 
-const mockApi = (replies: { write?: Reply; publish?: Reply; collections?: unknown[] } = {}) => {
+const mockApi = (
+  replies: { write?: Reply; publish?: Reply; collections?: unknown[]; entry?: Entry } = {}
+) => {
   const writes: { method: string; url: string; body: Record<string, unknown> }[] = []
   vi.stubGlobal(
     'fetch',
@@ -53,7 +55,8 @@ const mockApi = (replies: { write?: Reply; publish?: Reply; collections?: unknow
           replies.write ?? { status: method === 'POST' ? 201 : 200, body: { entry: saved } }
         )
       }
-      if (url.endsWith('/e1')) return json({ status: 200, body: { entry: stored } })
+      if (url.endsWith('/e1'))
+        return json({ status: 200, body: { entry: replies.entry ?? stored } })
       return json({ status: 200, body: { collections: replies.collections ?? [postsCollection] } })
     })
   )
@@ -247,5 +250,64 @@ describe('EntryEditor publishing', { timeout: 15_000 }, () => {
     await user.type(address, 'hello')
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(writes[0]?.body).toMatchObject({ slugs: { en: 'hello' } }))
+  })
+})
+
+describe('EntryEditor key', { timeout: 15_000 }, () => {
+  const keyed = {
+    ...postsCollection,
+    key: 'code',
+    schema: {
+      ...postsCollection.schema,
+      properties: {
+        ...postsCollection.schema.properties,
+        code: { type: 'string', title: 'Code' }
+      }
+    }
+  }
+  const keyedEntry: Entry = {
+    ...stored,
+    key: 'a1',
+    content: { ...(stored.content as object), code: 'a1' }
+  }
+
+  it('shows the server error on the key field when the key is taken', async () => {
+    mockApi({
+      collections: [keyed],
+      entry: keyedEntry,
+      write: {
+        status: 409,
+        body: {
+          error: 'Taken',
+          code: 'key_taken',
+          issues: [{ path: ['code'], code: 'key_taken' }]
+        }
+      }
+    })
+    const user = userEvent.setup()
+    renderEditor('e1')
+    const field = await screen.findByLabelText('Code')
+    await user.clear(field)
+    await user.type(field, 'a2')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(await screen.findByText('Another entry already uses this key.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Code')).toBeInvalid()
+  })
+
+  it('locks the key of a published entry', async () => {
+    mockApi({
+      collections: [keyed],
+      entry: { ...keyedEntry, publishedAt: 1, publishedVersion: 1 }
+    })
+    renderEditor('e1')
+    const field = await screen.findByLabelText('Code')
+    expect(field).toHaveAttribute('readonly')
+    expect(screen.getByText('Locked while published. Unpublish to change it.')).toBeInTheDocument()
+  })
+
+  it('leaves the key editable while the entry is a draft', async () => {
+    mockApi({ collections: [keyed], entry: keyedEntry })
+    renderEditor('e1')
+    expect(await screen.findByLabelText('Code')).not.toHaveAttribute('readonly')
   })
 })

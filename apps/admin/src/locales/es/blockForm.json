@@ -1,5 +1,6 @@
 {
   "save": "Guardar",
+  "locked": "Bloqueado mientras está publicado. Despublica para cambiarlo.",
   "unsupported": "Este bloque usa un campo que el editor aún no puede mostrar.",
   "variants": {
     "image": {

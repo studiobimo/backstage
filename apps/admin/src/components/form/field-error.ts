@@ -3,6 +3,8 @@ import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 
+import { API_ERROR } from '@studiobimo/backstage'
+
 import { useFieldContext } from './contexts.ts'
 
 const issueShape = z.object({
@@ -35,6 +37,12 @@ function sizeIssueKey(issue: Issue): string {
   return issue.origin === 'string' && Number(issue.minimum) === 1 ? 'required' : keys.small
 }
 
+const API_ISSUE_KEY: Record<string, string> = {
+  [API_ERROR.keyInvalid.code]: 'keyInvalid',
+  [API_ERROR.keyTaken.code]: 'keyTaken',
+  [API_ERROR.keyLocked.code]: 'keyLocked'
+}
+
 function issueKey(issue: Issue): string {
   switch (issue.code) {
     case 'invalid_type':
@@ -47,7 +55,7 @@ function issueKey(issue: Issue): string {
     case 'invalid_format':
       return issue.format === 'email' ? 'email' : 'format'
     default:
-      return 'format'
+      return API_ISSUE_KEY[issue.code] ?? 'format'
   }
 }
 

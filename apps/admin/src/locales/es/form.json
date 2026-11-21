@@ -15,6 +15,9 @@
     "maximum": "Escribe {{max}} o menos.",
     "notChoice": "Elige una de las opciones.",
     "minItems": "Añade al menos {{min}} elementos.",
-    "maxItems": "Usa {{max}} elementos o menos."
+    "maxItems": "Usa {{max}} elementos o menos.",
+    "keyInvalid": "Usa letras minúsculas, números y guiones.",
+    "keyTaken": "Otra entrada ya usa esta clave.",
+    "keyLocked": "Una entrada publicada conserva su clave. Despublícala para cambiarla."
   }
 }

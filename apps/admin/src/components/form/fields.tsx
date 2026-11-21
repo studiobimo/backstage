@@ -113,13 +113,15 @@ interface TextFieldProps extends FieldChromeProps {
   emptyValue?: '' | undefined
   inputMode?: 'email'
   autoComplete?: string
+  readOnly?: boolean
 }
 
-function TextControl({ icon, emptyValue, inputMode, autoComplete }: TextFieldProps) {
+function TextControl({ icon, emptyValue, inputMode, autoComplete, readOnly }: TextFieldProps) {
   const field = useFieldContext<TextFieldValue>()
   const props = {
     inputMode,
     autoComplete,
+    readOnly,
     value: field.state.value ?? '',
     onBlur: field.handleBlur,
     onChange: (event: { target: { value: string } }) =>

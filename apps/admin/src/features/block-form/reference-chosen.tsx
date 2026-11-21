@@ -20,6 +20,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/
 import { Popover, PopoverPopup, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
+import { EntryKey } from '../collections/entry-key.tsx'
 import { useEditingLocale } from './locale-status.ts'
 import { entryLabelOf, referenceEntriesQuery } from './reference-queries.ts'
 
@@ -80,6 +81,7 @@ function EntryRow({
     >
       {slot?.handle}
       <span className="min-w-0 flex-1 truncate px-2 font-medium text-sm">{row.name}</span>
+      {row.entry && <EntryKey entry={row.entry} />}
       {row.entry && !row.entry.publishedAt && (
         <Badge variant="warning">{t('reference.unpublished')}</Badge>
       )}
@@ -123,13 +125,14 @@ function EntryPicker({
               {(option: PickerOption) => (
                 <CommandItem
                   key={option.entry.id}
-                  value={option.label}
+                  value={[option.label, option.entry.key].filter(Boolean).join(' ')}
                   onClick={() => {
                     onPick(option.entry.id)
                     setOpen(false)
                   }}
                 >
                   <span className="flex-1 truncate">{option.label}</span>
+                  <EntryKey entry={option.entry} />
                   {!option.entry.publishedAt && (
                     <Badge variant="warning">{t('reference.unpublished')}</Badge>
                   )}

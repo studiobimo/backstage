@@ -15,6 +15,9 @@
     "maximum": "Enter {{max}} or less.",
     "notChoice": "Choose one of the options.",
     "minItems": "Add at least {{min}} items.",
-    "maxItems": "Use {{max}} items or fewer."
+    "maxItems": "Use {{max}} items or fewer.",
+    "keyInvalid": "Use lowercase letters, numbers and hyphens.",
+    "keyTaken": "Another entry already uses this key.",
+    "keyLocked": "A published entry keeps its key. Unpublish it to change the key."
   }
 }
