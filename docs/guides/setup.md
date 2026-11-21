@@ -157,6 +157,8 @@ renderInShell(c, { locale: 'en', title: 'Reserve', body: <div id="reserve-root" 
   `createSite({ shellHead: ({ locale, title, path }) => ... })` adds tags to every shell route. The
   existing `head` option stays for content pages, because it receives a page snapshot.
 - **`base`.** Pass `{ base: '/app/' }` as the third argument when Vite's `base` is not `/`.
+- **Example.** `apps/site/src/reserve/` and `apps/site/worker/reserve.tsx` are a working client app
+  served this way, built and tested in CI.
 
 ## Enhance server-rendered blocks with a script
 
