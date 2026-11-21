@@ -7,7 +7,7 @@ import i18n from '@/i18n/config'
 
 import {
   mockInboxApi,
-  paellaEntries,
+  reservationFields,
   renderInbox,
   reservation,
   reservationForm
@@ -37,19 +37,27 @@ const api = () =>
     }),
     '/anonymise': () => ({ submission: { ...reservation, payload: {}, tokenActive: false } }),
     '/revoke-token': () => ({ submission: { ...reservation, tokenActive: false } }),
-    '/submissions/s1': () => ({ submission: reservation, entries: paellaEntries }),
+    '/submissions/s1': () => ({ submission: reservation, fields: reservationFields }),
     '/forms': () => ({ forms: [reservationForm] })
   })
 
 describe('SubmissionPage', () => {
-  it('shows each field of the schema and the title of a referenced entry', async () => {
+  it('shows each presented field, and a list of objects as a table with its total', async () => {
     api()
     renderInbox(<SubmissionPage name="reservation" submissionId="s1" />)
     expect(await screen.findByText('Ana Pérez')).toBeInTheDocument()
     expect(screen.getByText('Seats')).toBeInTheDocument()
-    expect(screen.getByText('Time')).toBeInTheDocument()
-    expect(screen.getByText('Paella')).toBeInTheDocument()
-    expect(screen.getByText(/Thursday, December 24, 2026/)).toBeInTheDocument()
+    expect(screen.getByText('Dec 24, 2026')).toBeInTheDocument()
+    const table = screen.getByRole('table', { name: 'Preorder' })
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent)
+    ).toEqual(['Dish', 'Price', 'Quantity'])
+    expect(within(table).getByText('Paella')).toBeInTheDocument()
+    expect(within(table).getByText('$5.00')).toBeInTheDocument()
+    expect(within(table).getByText('Total')).toBeInTheDocument()
+    expect(within(table).getByText('$17.50')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to Reservation/ })).toBeInTheDocument()
   })
 
@@ -111,13 +119,12 @@ describe('SubmissionPage', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalled())
   })
 
-  it('reads in Spanish', async () => {
+  it('reads in Spanish and asks the api for Spanish labels', async () => {
     await i18n.changeLanguage('es')
-    api()
+    const calls = api()
     renderInbox(<SubmissionPage name="reservation" submissionId="s1" />)
     expect(await screen.findByRole('button', { name: 'Marcar como rechazada' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Volver a Reserva/ })).toBeInTheDocument()
-    expect(screen.getByText('Comensales')).toBeInTheDocument()
-    expect(screen.getByText('Fecha')).toBeInTheDocument()
+    expect(calls.some(({ url }) => url.endsWith('/submissions/s1?language=es'))).toBe(true)
   })
 })

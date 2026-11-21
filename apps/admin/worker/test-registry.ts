@@ -4,7 +4,8 @@ import {
   defineRegistry,
   entries,
   labeled,
-  localized
+  localized,
+  money
 } from '@studiobimo/backstage'
 import { z } from 'zod'
 
@@ -36,10 +37,12 @@ const reservationForm = defineForm(RESERVATION_FORM.name, {
     time: z.string().regex(RESERVATION_FORM.time.pattern),
     name: z.string().trim().min(1).max(RESERVATION_FORM.person.maxLength),
     phone: z.string().trim().regex(RESERVATION_FORM.phone.pattern),
+    favorite: entries(menuCollection, { max: 1 }).optional(),
     preorder: z
       .array(
         z.object({
           dish: entries(menuCollection, { max: 1 }),
+          price: money().optional(),
           quantity: z
             .number()
             .int()
@@ -54,6 +57,10 @@ const reservationForm = defineForm(RESERVATION_FORM.name, {
     subject: (payload) => `Table for ${String(payload.seats)} on ${String(payload.date)}`,
     exclude: ['phone'],
     html: true
+  },
+  inbox: {
+    columns: ['name', ['date', 'time'], 'favorite'],
+    total: { field: 'preorder', money: 'price' }
   },
   public: { statuses: ['confirmed'], fields: ['seats', 'date', 'time'] },
   title: { en: 'Reservation', es: 'Reserva' }

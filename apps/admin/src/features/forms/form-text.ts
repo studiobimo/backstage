@@ -16,11 +16,11 @@ export const statusLabel = (instance: I18n, t: TFunction, status: string) => {
 
 export const fieldLabel = (key: string, node?: JsonSchema) => node?.title ?? humanize(key)
 
-export const fieldEntries = (schema: JsonSchema) => Object.entries(schema.properties ?? {})
+const fieldEntries = (schema: JsonSchema) => Object.entries(schema.properties ?? {})
 
 const parseDay = (value: string) => new Date(`${value}T00:00:00Z`)
 
-export const formatDay = (language: string, value: string, dateStyle: 'full' | 'medium' = 'full') =>
+const formatDay = (language: string, value: string, dateStyle: 'full' | 'medium' = 'full') =>
   new Intl.DateTimeFormat(language, { dateStyle, timeZone: 'UTC' }).format(parseDay(value))
 
 const SCALAR_SHAPES = ['string', 'number', 'integer', 'select']

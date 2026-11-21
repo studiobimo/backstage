@@ -30,10 +30,11 @@ describe('a submission in the form inbox', () => {
     expect(response.status).toBe(200)
     const body = (await response.json()) as {
       submission: InboxSubmission
-      entries: Record<string, Record<string, Record<string, string>>>
+      fields: { key: string; value: unknown }[]
     }
     expect(body.submission).toMatchObject({ id: result.id, status: 'new', updatedBy: null })
-    expect(body.entries.menu?.[dish]).toEqual({ en: 'Paella', es: 'Paella' })
+    const order = body.fields.find(({ key }) => key === ORDER_FIELD)?.value
+    expect(order).toMatchObject({ kind: 'table', rows: [['Paella', '', '2']] })
   })
 
   it('does not show a submission through another form', async () => {
