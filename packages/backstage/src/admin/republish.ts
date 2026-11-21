@@ -59,6 +59,9 @@ interface PageToRepublish {
   version: number
 }
 
+const refreshesCollectionsAfter = (scope: RepublishScope, done: boolean) =>
+  !scope.entry && !scope.linkedTo && done
+
 const republishPage = async (
   c: Context<AccessEnv>,
   registry: AdminRegistry,
@@ -152,7 +155,7 @@ export const runRepublishBatch = async (
   const done = !progress.halted && remaining === 0
   const rebuilds = !scope.entry && done && (pages.length > 0 || scope.cursor !== null)
   if (rebuilds) await rebuildPublishedIndex(c, c.env.DB, c.env.SITE)
-  const refreshesCollections = !scope.entry && !scope.linkedTo && done
+  const refreshesCollections = refreshesCollectionsAfter(scope, done)
   if (refreshesCollections) await refreshCollectionSnapshots(c.env.DB, c.env.SITE, registry)
   const perPage = scope.entry ? locales.length : kvWritesPerPage(locales)
   return {
@@ -200,7 +203,10 @@ export const republishRoutes = (registry: AdminRegistry) => {
       const body = await readJsonBody(c, republishScopeSchema)
       if (!body.ok) return body.response
       const batch = await runRepublishBatch(c, registry, body.data)
-      const bumps = batch.done && (batch.writes > 0 || body.data.cursor !== null)
+      const snapshotWrites = refreshesCollectionsAfter(body.data, batch.done)
+        ? snapshotWritesOf(registry)
+        : 0
+      const bumps = batch.done && (batch.writes > snapshotWrites || body.data.cursor !== null)
       if (bumps) await bumpSiteVersion(c.env.SITE)
       return c.json(
         bumps ? { ...batch, writes: batch.writes + REPUBLISH.writes.perVersionBump } : batch

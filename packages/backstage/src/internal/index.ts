@@ -121,6 +121,7 @@ export {
   requestLinkSchema,
   verifyLinkSchema
 } from '../auth.ts'
+export { collectionSnapshotWrites } from '../collection-snapshot.ts'
 export type { AuthMode, AuthSessionResponse, RequestLinkInput } from '../auth.ts'
 export {
   formDescriptionSchema,
