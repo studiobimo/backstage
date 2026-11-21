@@ -1,6 +1,7 @@
 import { defineBlock, defineLayout, defineRegistry, SLOT } from '@studiobimo/backstage'
 
 import { postsCollection } from '../collections/posts/collection.ts'
+import { bookingForm } from '../forms/booking/form.ts'
 import { contactForm } from '../forms/contact/form.ts'
 import { siteSettingsSchema } from '../settings/schema.ts'
 import { SITE_LOCALES } from './locales.ts'
@@ -135,7 +136,7 @@ export const registry = defineRegistry(
       defineLayout({ name: 'bare' })
     ],
     collections: [postsCollection],
-    forms: [contactForm],
+    forms: [contactForm, bookingForm],
     settings: siteSettingsSchema
   }
 )

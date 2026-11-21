@@ -24,7 +24,7 @@ const complete = ({ forms, getForm }: FormSource) => ({
 const errorFor = (code: string) =>
   Object.values(API_ERROR).find((error) => error.code === code) ?? API_ERROR.internal
 
-const respondWithError = (
+export const respondWithError = (
   c: { json: (body: unknown, status: number) => Response },
   error: { code: string; message: string; status: number },
   issues: unknown[] = []
