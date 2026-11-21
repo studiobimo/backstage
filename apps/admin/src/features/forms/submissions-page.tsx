@@ -15,12 +15,15 @@ import { localizedText } from '../page-editor/localized-text'
 import { useLocaleConfig } from '../config/queries'
 import { formTitle } from './form-text'
 import { formsQuery, submissionsQuery, type FormOption, type SubmissionFilter } from './queries'
+import { SubmissionsPager } from './submissions-pager'
 import { StatusBadge } from './status-badge'
 import { SubmissionsFilters } from './submissions-filters'
 import { useLocalizedForm } from './use-localized-form'
 
 const COLUMN_VISIBILITY = ['', '', 'hidden sm:table-cell', 'hidden md:table-cell'] as const
 const RECEIVED_VISIBILITY = 'hidden lg:table-cell'
+
+const withoutPage = (filter: SubmissionFilter): SubmissionFilter => ({ ...filter, page: undefined })
 
 const visibilityOf = (index: number) => COLUMN_VISIBILITY[index] ?? ''
 
@@ -107,9 +110,19 @@ export function SubmissionsPage({ name, filter, onFilterChange }: SubmissionsPag
         title={formTitle(form, i18n.language, defaultLocale)}
         description={localizedText(form.description, i18n.language, defaultLocale)}
       />
-      <SubmissionsFilters form={form} filter={filter} onChange={onFilterChange} />
+      <SubmissionsFilters
+        form={form}
+        filter={filter}
+        onChange={(next) => onFilterChange(withoutPage(next))}
+      />
       {isPending ? null : listing?.submissions.length ? (
-        <SubmissionsTable form={form} listing={listing} />
+        <>
+          <SubmissionsTable form={form} listing={listing} />
+          <SubmissionsPager
+            listing={listing}
+            onPageChange={(page) => onFilterChange({ ...filter, page })}
+          />
+        </>
       ) : filtered ? (
         <ListNotice
           icon={<SearchXIcon />}

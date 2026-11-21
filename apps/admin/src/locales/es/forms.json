@@ -25,6 +25,12 @@
     "to": "{{field}} hasta",
     "clear": "Quitar filtros"
   },
+  "pager": {
+    "label": "Páginas de envíos",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "summary": "{{from}}–{{to}} de {{total}} · Página {{page}} de {{pages}}"
+  },
   "status": {
     "new": "Nueva",
     "confirmed": "Confirmada",

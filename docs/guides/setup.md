@@ -251,7 +251,8 @@ sends it to the admin through the entrypoint, and the owner reads it in the admi
 3. Set `TURNSTILE_SECRET` on the admin Worker (`pnpm exec wrangler secret put TURNSTILE_SECRET`),
    and follow the Turnstile section below for the widget on the site: the site holds no secret, and
    the admin verifies the token. For the owner notification,
-   bind `EMAIL` and set `AUTH_EMAIL_FROM` and `OWNER_EMAIL` on the admin Worker.
+   bind `EMAIL` and set `AUTH_EMAIL_FROM` and `OWNER_EMAIL` on the admin Worker. Set
+   `ADMIN_ORIGIN` there too to put a link to the submission in the email.
 4. Run `make migrate`: the package adds the `submissions` table.
 5. Read the payload and call the entrypoint from the site Worker, and keep the `token` it returns.
    `readFormPayload(request, form.schema)` reads JSON (nested arrays and objects kept) or multipart

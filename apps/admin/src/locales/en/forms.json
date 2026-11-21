@@ -25,6 +25,12 @@
     "to": "{{field}} to",
     "clear": "Clear filters"
   },
+  "pager": {
+    "label": "Pages of submissions",
+    "previous": "Previous",
+    "next": "Next",
+    "summary": "{{from}}–{{to}} of {{total}} · Page {{page}} of {{pages}}"
+  },
   "status": {
     "new": "New",
     "confirmed": "Confirmed",

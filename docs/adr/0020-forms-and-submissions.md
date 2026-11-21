@@ -50,6 +50,17 @@ public })` and `defineRegistry(blocks, { forms })`. The schema is a `z.object` t
 - **The notification is the owner's, optional and never blocking.** `notify: { to, subject }`
   sends one email per recipient (`to` defaults to the `OWNER_EMAIL` addresses) through the
   `Mailer`. A failure is logged without the payload and the submission is kept.
+- **The notification is readable** (#532). Fields print with their `labeled` titles, references as
+  the referenced entries' labels and nested fields as lines or rows, all from one
+  `presentSubmission`, which the inbox reuses. `notify.subject` may be a function of the payload,
+  `include` and `exclude` limit the fields, `html: true` adds an escaped HTML part, and
+  `ADMIN_ORIGIN` adds a link to `/forms/<name>/<id>`. Users have no stored language, so the
+  message follows the registry's `defaultLocale` (English or Spanish, English otherwise).
+- **The inbox shows structure** (#533). `inbox: { columns, total }` declares the list columns (a
+  field, or a `[date, time]` pair; a reference shows its label) and a `total` that sums a money
+  field of a list of objects. The same `presentSubmission` that builds the email builds the detail
+  page, where such a list is a table. The list is paged (25 per page, `?page=`), with the total
+  count in the response, instead of the 500-row cap.
 - **The mailer is general.** `Mailer.send({ to, subject, text }, env)` replaces
   `LoginMailer.sendLoginLink`; the login link builds its own message. `EMAIL` and
   `AUTH_EMAIL_FROM` serve both.
