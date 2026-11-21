@@ -5,8 +5,7 @@
 
 This guide takes a client project from an empty Cloudflare account to a working admin and site.
 Only the database migrations are written so far, plus the notes below on what a consumer hits.
-Still missing: the site Worker's `wrangler.jsonc`, the Vite plugin setup, the deploy flow, and a
-consumer template to copy.
+Still missing: the deploy flow and a consumer template to copy.
 
 ## Apply the package's migrations
 
@@ -111,8 +110,53 @@ export default createSite({
   its origin into your `scriptSrc` and `frameSrc` rather than replacing them.
 - **`translations`** maps other locales to the path of the same route. It adds the `hreflang`
   alternates and the switcher links; leave it out for a route that exists in one locale.
-- Register the route in `routes`, which runs before the catch-all page route, and serve the bundle
-  from your own route or static assets.
+- Register the route in `routes`, which runs before the catch-all page route. Serve the bundle from
+  the site's static assets, as in the next section.
+
+### Serve a Vite bundle with its stylesheet
+
+Build the client with Vite and `build.manifest: true`, and give the site Worker a static `assets`
+binding. Put it at the top level of `wrangler.jsonc` and again in each `env`, because environments
+do not inherit it. Leave out `run_worker_first`, so a file that exists is served and any other path
+reaches the Worker. The Cloudflare Vite plugin points the binding at the client build output.
+
+```jsonc
+{
+  "assets": { "binding": "ASSETS" },
+  "env": { "production": { "assets": { "binding": "ASSETS" } } }
+}
+```
+
+Hashed files are safe to cache for a year. Static assets send `max-age=0` unless a `_headers` file
+in the client output says otherwise, so add `public/_headers`, which Vite copies there:
+
+```text
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+```
+
+`viteAssets(manifest, entry)` from `@studiobimo/backstage/site` reads the manifest and returns the
+hashed `scripts`, the `styles` (the entry's CSS and that of every chunk it imports) and the
+`preloads` (the imported chunks), deduplicated. Spread it into `renderInShell`:
+
+```tsx
+import manifest from '../dist/client/.vite/manifest.json'
+import { viteAssets } from '@studiobimo/backstage/site'
+
+const reserve = viteAssets(manifest, 'src/reserve/main.tsx')
+
+renderInShell(c, { locale: 'en', title: 'Reserve', body: <div id="reserve-root" />, ...reserve })
+```
+
+- **`styles`** become `<link rel="stylesheet">` and **`preloads`** become
+  `<link rel="modulepreload">`, on `renderInShell` and on `createSite`, where they apply to every
+  document. Every entry must be a same-origin path; a full URL or a protocol-relative one throws.
+- **CSP.** The links are same-origin, so the policy does not change: `style-src 'self'` already
+  allows the stylesheets, and `script-src 'self'` the preloads.
+- **Head tags.** `renderInShell({ head })` adds a React node to the head of that route.
+  `createSite({ shellHead: ({ locale, title, path }) => ... })` adds tags to every shell route. The
+  existing `head` option stays for content pages, because it receives a page snapshot.
+- **`base`.** Pass `{ base: '/app/' }` as the third argument when Vite's `base` is not `/`.
 
 ## Enhance server-rendered blocks with a script
 
@@ -172,8 +216,8 @@ document.querySelectorAll('[data-cart]').forEach(enhanceCart)
   TS2883 or TS4023. Import both from `@studiobimo/backstage`.
 - **Block preview assets are SVG only.** `createSite({ preview: { assets } })` serves each entry at
   its path with `Content-Type: image/svg+xml`, so it is for SVGs. For fonts, images or anything
-  else, give the site Worker a static `assets` binding in its `wrangler.jsonc` and serve the files
-  from there (not tried end to end here).
+  else, serve the files from the site Worker's static `assets` binding, as in
+  [Serve a Vite bundle with its stylesheet](#serve-a-vite-bundle-with-its-stylesheet).
 - **What `createSite` renders around your layout.** Besides the layout and its slots, it appends an
   unstyled `<nav aria-label="...">` language switcher after them (labelled `Language`, or `Idioma`
   on a Spanish page; only when the site has more than one locale), and every page, including the

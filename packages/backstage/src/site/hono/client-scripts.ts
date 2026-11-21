@@ -1,4 +1,4 @@
-import { uniqueScripts } from '../../client-scripts.ts'
+import { uniquePaths } from '../../client-scripts.ts'
 import type { ComponentMap } from '../../components.ts'
 import type { SiteSnapshot } from '../../site-publishing.ts'
 
@@ -15,7 +15,7 @@ export const clientScriptsOf = (
   scripts: readonly string[],
   blockNames: readonly string[]
 ) =>
-  uniqueScripts([
+  uniquePaths([
     ...scripts,
     ...blockNames.flatMap((name) => {
       const script = registry.get(name)?.clientScript

@@ -6,6 +6,8 @@ export type { FormPayload } from './form-payload.ts'
 export { renderHtml } from './html.ts'
 export { CURRENCY_CODES, formatMoney, MONEY } from '../money.ts'
 export type { CurrencyCode } from '../money.ts'
+export { viteAssets, VITE_ASSETS, viteManifestSchema } from '../vite-assets.ts'
+export type { ViteAssets, ViteAssetsOptions, ViteManifest } from '../vite-assets.ts'
 export { isOpenAt, nextOpening, slotsFor, WEEKLY_HOURS } from '../weekly-hours.ts'
 export type { HoursRange, Instant, OpenState, SlotOptions, WeeklyHours } from '../weekly-hours.ts'
 export { localeName, LOCALE_NAME, SWITCHER_LABEL, switcherLabel } from './locales.ts'
@@ -87,4 +89,5 @@ export interface SiteEnv {
   SITE_URL: string
   ADMIN_ORIGIN?: string
   ADMIN?: VisitorRpc
+  ASSETS?: Fetcher
 }

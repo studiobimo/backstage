@@ -1,6 +1,6 @@
 import { Hono, type Context } from 'hono'
 
-import { assertSameOriginPaths } from '../../client-scripts.ts'
+import { assertSameOriginAssets, type ClientAssets } from '../../client-scripts.ts'
 import { API_ERROR } from '../../errors.ts'
 import type { ComponentMap } from '../../components.ts'
 import { collectionsOf } from '../../collections.ts'
@@ -14,7 +14,13 @@ import { routeOf } from '../routing.ts'
 import { respondWithRobots, respondWithSitemap } from '../seo.ts'
 import { findPublished, findSiteSnapshot, findTranslations, readSiteVersion } from '../store.ts'
 import type { SiteEnv } from '../index.ts'
-import { renderPage, type DocumentContext, type SiteFavicon, type SiteHead } from './document.tsx'
+import {
+  renderPage,
+  type DocumentContext,
+  type ShellHead,
+  type SiteFavicon,
+  type SiteHead
+} from './document.tsx'
 import { renderEntryRoute } from './entry-route.ts'
 import { atSiteOrigin, siteOriginOf } from './origin.ts'
 import { previewRoutes, type SitePreview } from './preview.ts'
@@ -35,19 +41,19 @@ export interface SiteEnvironment<Extra extends object = object> {
 
 export type SiteApp<Extra extends object = object> = Hono<SiteEnvironment<Extra>>
 
-export interface CreateSiteOptions<Extra extends object = object> {
+export interface CreateSiteOptions<Extra extends object = object> extends ClientAssets {
   components: ComponentMap
   stylesheet: string
   preview?: SitePreview
-  scripts?: readonly string[]
   contentSecurityPolicy?: ContentSecurityPolicyAdditions
   turnstile?: boolean
   favicon?: SiteFavicon
   head?: SiteHead
+  shellHead?: ShellHead
   routes?: (app: SiteApp<Extra>) => void
 }
 
-const SITE_SCRIPTS_OWNER = 'createSite scripts'
+const SITE_OWNER = 'createSite'
 
 const CACHED = { 'Cache-Control': EDGE_CACHE.control } as const
 
@@ -69,6 +75,22 @@ const contentRendererOf =
     )
   }
 
+const documentOf = <Extra extends object>(options: CreateSiteOptions<Extra>): DocumentContext => {
+  const { components, stylesheet, scripts = [], styles = [], preloads = [] } = options
+  assertSameOriginAssets(SITE_OWNER, { scripts, styles, preloads })
+  return {
+    components,
+    locales: resolveLocaleConfig(components.registry),
+    stylesheetPath: stylesheetPathFor(stylesheet),
+    siteScripts: scripts,
+    siteStyles: styles,
+    sitePreloads: preloads,
+    favicon: options.favicon,
+    head: options.head,
+    shellHead: options.shellHead
+  }
+}
+
 export const createSite = <Extra extends object = object>(options: CreateSiteOptions<Extra>) => {
   const {
     components,
@@ -77,20 +99,10 @@ export const createSite = <Extra extends object = object>(options: CreateSiteOpt
     scripts = [],
     contentSecurityPolicy,
     turnstile,
-    favicon,
-    head,
     routes
   } = options
-  assertSameOriginPaths(SITE_SCRIPTS_OWNER, scripts)
-  const locales = resolveLocaleConfig(components.registry)
-  const document: DocumentContext = {
-    components,
-    locales,
-    stylesheetPath: stylesheetPathFor(stylesheet),
-    siteScripts: scripts,
-    favicon,
-    head
-  }
+  const document = documentOf(options)
+  const { locales } = document
   const entryRoutes = routesOf(collectionsOf(components.registry).values())
   const app: SiteApp<Extra> = new Hono<SiteEnvironment<Extra>>()
 

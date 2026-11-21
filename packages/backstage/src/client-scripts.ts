@@ -14,4 +14,16 @@ export function assertSameOriginPaths(owner: string, scripts: readonly string[])
   if (invalid !== undefined) throw new Error(CLIENT_SCRIPT.invalidMessage(owner, invalid))
 }
 
-export const uniqueScripts = (scripts: readonly string[]) => [...new Set(scripts)]
+export const uniquePaths = (paths: readonly string[]) => [...new Set(paths)]
+
+export interface ClientAssets {
+  scripts?: readonly string[]
+  styles?: readonly string[]
+  preloads?: readonly string[]
+}
+
+export function assertSameOriginAssets(owner: string, { scripts, styles, preloads }: ClientAssets) {
+  assertSameOriginPaths(`${owner} scripts`, scripts ?? [])
+  assertSameOriginPaths(`${owner} styles`, styles ?? [])
+  assertSameOriginPaths(`${owner} preloads`, preloads ?? [])
+}

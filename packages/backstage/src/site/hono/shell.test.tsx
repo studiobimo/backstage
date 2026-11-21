@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { createSite } from './create-site.ts'
-import { renderInShell } from './shell.ts'
+import { createSite, type CreateSiteOptions } from './create-site.ts'
+import { viteAssets } from '../../vite-assets.ts'
+import { renderInShell, type ShellOptions } from './shell.ts'
 import {
   envWith,
   FIXTURE,
@@ -32,10 +33,28 @@ const kv = () =>
     ]
   )
 
-const siteWith = (scripts: readonly string[] = [RESERVE.script]) =>
+const BUNDLE = viteAssets(
+  {
+    'src/reserve/main.tsx': {
+      file: 'assets/main-AAA111.js',
+      css: ['assets/main-AAA111.css'],
+      imports: ['_vendor-BBB222.js']
+    },
+    '_vendor-BBB222.js': { file: 'assets/vendor-BBB222.js', css: ['assets/vendor-BBB222.css'] }
+  },
+  'src/reserve/main.tsx'
+)
+
+const CROSS_ORIGIN = 'https://cdn.example.com/app.css'
+
+const siteWith = (
+  assets: Partial<ShellOptions> = { scripts: [RESERVE.script] },
+  options: Partial<CreateSiteOptions> = {}
+) =>
   createSite(
     fixtureOptions({
       contentSecurityPolicy: { scriptSrc: ["'self'"] },
+      ...options,
       routes: (app) => {
         app.get(`/:locale{es}${RESERVE.path}`, (c) =>
           renderInShell(c, {
@@ -43,7 +62,7 @@ const siteWith = (scripts: readonly string[] = [RESERVE.script]) =>
             title: 'Reservar',
             description: 'Elige tu asiento',
             body: <div id={RESERVE.mount} data-floor="main" />,
-            scripts,
+            ...assets,
             translations: { en: RESERVE.path }
           })
         )
@@ -52,15 +71,24 @@ const siteWith = (scripts: readonly string[] = [RESERVE.script]) =>
             locale: 'en',
             title: 'Reserve',
             body: <div id={RESERVE.mount} data-floor="main" />,
-            scripts
+            ...assets
           })
         )
       }
     })
   )
 
-const get = async (path: string, scripts?: readonly string[]) => {
-  const response = await siteWith(scripts).request(path, {}, envWith({}, kv()), executionContext)
+const get = async (
+  path: string,
+  assets?: Partial<ShellOptions>,
+  options?: Partial<CreateSiteOptions>
+) => {
+  const response = await siteWith(assets, options).request(
+    path,
+    {},
+    envWith({}, kv()),
+    executionContext
+  )
   return { response, html: response.status === 200 ? await response.text() : '' }
 }
 
@@ -118,8 +146,54 @@ describe('renderInShell', () => {
   it.each(['https://cdn.example.com/app.js', '//cdn.example.com/app.js', 'app.js'])(
     'refuses the script %s that is not a same-origin path',
     async (script) => {
-      const { response } = await get(RESERVE.path, [script])
+      const { response } = await get(RESERVE.path, { scripts: [script] })
       expect(response.status).toBe(500)
     }
   )
+})
+
+describe('renderInShell with a client bundle', () => {
+  it('links the bundle stylesheets and preloads with the hashed script', async () => {
+    const { html } = await get(RESERVE.path, BUNDLE)
+    expect(html).toContain('<link rel="stylesheet" href="/assets/main-AAA111.css"/>')
+    expect(html).toContain('<link rel="stylesheet" href="/assets/vendor-BBB222.css"/>')
+    expect(html).toContain('<link rel="modulepreload" href="/assets/vendor-BBB222.js"/>')
+    expect(html).toContain('<script type="module" src="/assets/main-AAA111.js"></script>')
+  })
+
+  it('leaves the security headers unchanged by styles and preloads', async () => {
+    const plain = await get(RESERVE.path)
+    const bundled = await get(RESERVE.path, BUNDLE)
+    expect(bundled.response.headers.get('Content-Security-Policy')).toBe(
+      plain.response.headers.get('Content-Security-Policy')
+    )
+    expect(bundled.response.headers.get('Content-Security-Policy')).toContain("style-src 'self'")
+  })
+
+  it.each([
+    ['styles', { styles: [CROSS_ORIGIN] }],
+    ['preloads', { preloads: [CROSS_ORIGIN] }]
+  ])('refuses a cross-origin entry in %s', async (_name, assets) => {
+    const { response } = await get(RESERVE.path, assets)
+    expect(response.status).toBe(500)
+  })
+
+  it('applies the site styles and preloads of createSite to shell routes, once', async () => {
+    const { html } = await get(RESERVE.path, BUNDLE, {
+      styles: BUNDLE.styles,
+      preloads: BUNDLE.preloads
+    })
+    expect(html.split('href="/assets/main-AAA111.css"')).toHaveLength(2)
+    expect(html.split('href="/assets/vendor-BBB222.js"')).toHaveLength(2)
+  })
+
+  it('adds the head of createSite and of the route to a shell route', async () => {
+    const { html } = await get(
+      RESERVE.path,
+      { head: <meta name="route-tag" content="route" /> },
+      { shellHead: ({ title, path }) => <meta name="shell-tag" content={`${title}${path}`} /> }
+    )
+    expect(html).toContain('<meta name="shell-tag" content="Reserve/reserve"/>')
+    expect(html).toContain('<meta name="route-tag" content="route"/>')
+  })
 })
