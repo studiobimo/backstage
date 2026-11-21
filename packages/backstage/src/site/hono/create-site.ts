@@ -28,14 +28,14 @@ interface SiteVariables {
   siteDocument: DocumentContext
 }
 
-export interface SiteEnvironment {
-  Bindings: SiteEnv
+export interface SiteEnvironment<Extra extends object = object> {
+  Bindings: SiteEnv & Extra
   Variables: SiteVariables
 }
 
-export type SiteApp = Hono<SiteEnvironment>
+export type SiteApp<Extra extends object = object> = Hono<SiteEnvironment<Extra>>
 
-export interface CreateSiteOptions {
+export interface CreateSiteOptions<Extra extends object = object> {
   components: ComponentMap
   stylesheet: string
   preview?: SitePreview
@@ -44,7 +44,7 @@ export interface CreateSiteOptions {
   turnstile?: boolean
   favicon?: SiteFavicon
   head?: SiteHead
-  routes?: (app: SiteApp) => void
+  routes?: (app: SiteApp<Extra>) => void
 }
 
 const SITE_SCRIPTS_OWNER = 'createSite scripts'
@@ -52,8 +52,8 @@ const SITE_SCRIPTS_OWNER = 'createSite scripts'
 const CACHED = { 'Cache-Control': EDGE_CACHE.control } as const
 
 const contentRendererOf =
-  (document: DocumentContext, entryRoutes: ReturnType<typeof routesOf>) =>
-  async (c: Context<SiteEnvironment>) => {
+  <Extra extends object>(document: DocumentContext, entryRoutes: ReturnType<typeof routesOf>) =>
+  async (c: Context<SiteEnvironment<Extra>>) => {
     const entryPage = await renderEntryRoute(c, document, entryRoutes, CACHED)
     if (entryPage) return entryPage
     const route = routeOf(c.req.raw, document.locales)
@@ -69,7 +69,7 @@ const contentRendererOf =
     )
   }
 
-export const createSite = (options: CreateSiteOptions) => {
+export const createSite = <Extra extends object = object>(options: CreateSiteOptions<Extra>) => {
   const {
     components,
     stylesheet,
@@ -92,7 +92,7 @@ export const createSite = (options: CreateSiteOptions) => {
     head
   }
   const entryRoutes = routesOf(collectionsOf(components.registry).values())
-  const app: SiteApp = new Hono<SiteEnvironment>()
+  const app: SiteApp<Extra> = new Hono<SiteEnvironment<Extra>>()
 
   app.use(...observe)
   app.use(async (c, next) => {
@@ -127,7 +127,7 @@ export const createSite = (options: CreateSiteOptions) => {
 
   routes?.(app)
 
-  const renderRoute = contentRendererOf(document, entryRoutes)
+  const renderRoute = contentRendererOf<Extra>(document, entryRoutes)
 
   app.get('*', async (c) =>
     withEdgeCache(

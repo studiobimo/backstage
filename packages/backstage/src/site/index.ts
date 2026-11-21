@@ -1,6 +1,8 @@
 export { BLOCK_PREVIEW } from '../blocks.ts'
 export { defaultEdgeCache, EDGE_CACHE, withEdgeCache } from './cache.ts'
 export type { Deferrable, EdgeCache } from './cache.ts'
+export { FORM_PAYLOAD, readFormPayload } from './form-payload.ts'
+export type { FormPayload } from './form-payload.ts'
 export { renderHtml } from './html.ts'
 export { CURRENCY_CODES, formatMoney, MONEY } from '../money.ts'
 export type { CurrencyCode } from '../money.ts'
@@ -70,9 +72,12 @@ export type { FormProjectionRead, KvReader } from './store.ts'
 export { FORM_PROJECTION, formProjectionKey } from '../form-projection.ts'
 export type { FormProjection } from '../form-projection.ts'
 
+import type { VisitorRpc } from '../rpc.ts'
+
 export interface SiteEnv {
   SITE: KVNamespace
   MEDIA: R2Bucket
   SITE_URL: string
   ADMIN_ORIGIN?: string
+  ADMIN?: VisitorRpc
 }
