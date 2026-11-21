@@ -1,11 +1,10 @@
 import { z } from 'zod'
 
-import { marked } from './fields.ts'
+import { marked, minutesOfTime, TIME_OF_DAY, timeOfDaySchema } from './fields.ts'
 import { WEEKDAYS } from './field-shapes.ts'
 
 export const WEEKLY_HOURS = {
-  time: { pattern: /^(?:[01]\d|2[0-3]):[0-5]\d$/, minutesPerHour: 60 },
-  date: { pattern: /^\d{4}-\d{2}-\d{2}$/ },
+  date: { pattern: /^\d{4}-\d{2}-\d{2}$/, length: 10 },
   day: { minutes: 1440, milliseconds: 86_400_000, daysPerWeek: 7 },
   minute: { milliseconds: 60_000 },
   second: { milliseconds: 1000 },
@@ -20,9 +19,7 @@ export const WEEKLY_HOURS = {
 
 export type OpenState = (typeof WEEKLY_HOURS.state)[keyof typeof WEEKLY_HOURS.state]
 
-const timeOfDay = z.string().regex(WEEKLY_HOURS.time.pattern)
-
-const isRealDate = (value: string) =>
+export const isRealDate = (value: string) =>
   WEEKLY_HOURS.date.pattern.test(value) &&
   new Date(`${value}T00:00:00Z`).toISOString().startsWith(value)
 
@@ -36,7 +33,7 @@ const isTimeZone = (value: string) => {
 }
 
 const hoursRange = z
-  .object({ open: timeOfDay, close: timeOfDay })
+  .object({ open: timeOfDaySchema, close: timeOfDaySchema })
   .refine((range) => range.open !== range.close, { message: WEEKLY_HOURS.issue.emptyRange })
 
 const dayRanges = z.array(hoursRange).default([])
@@ -90,7 +87,8 @@ function wallFormatter(timeZone: string) {
   return created
 }
 
-const millisecondsOf = (instant: Instant) => (instant instanceof Date ? instant.getTime() : instant)
+export const millisecondsOf = (instant: Instant) =>
+  instant instanceof Date ? instant.getTime() : instant
 
 function wallClockOf(timeZone: string, instant: number) {
   const parts: Record<string, number> = {}
@@ -118,19 +116,14 @@ const weekdayOfDay = (dayIndex: number) => {
   return WEEKDAYS[(sundayFirst + WEEKLY_HOURS.day.daysPerWeek - 1) % WEEKLY_HOURS.day.daysPerWeek]!
 }
 
-const minutesOf = (time: string) => {
-  const [hours, minutes] = time.split(':').map(Number)
-  return hours! * WEEKLY_HOURS.time.minutesPerHour + minutes!
-}
-
 function rangesOnDay(hours: WeeklyHours, dayIndex: number): HoursRange[] {
   const exception = hours.exceptions.find((candidate) => candidate.date === dateOfDay(dayIndex))
   return exception ? exception.ranges : hours.week[weekdayOfDay(dayIndex)]
 }
 
 function spanOf(dayIndex: number, range: HoursRange) {
-  const opens = minutesOf(range.open)
-  const closes = minutesOf(range.close)
+  const opens = minutesOfTime(range.open)
+  const closes = minutesOfTime(range.close)
   const base = dayIndex * WEEKLY_HOURS.day.milliseconds
   const spill = closes > opens ? 0 : WEEKLY_HOURS.day.minutes
   return {
@@ -170,18 +163,36 @@ export interface SlotOptions {
   step: number
   leadTime?: number
   now?: Instant
+  duration?: number
 }
 
+export function wallTimeOf(timeZone: string, instant: Instant) {
+  const iso = new Date(wallClockOf(timeZone, millisecondsOf(instant))).toISOString()
+  const timeStart = WEEKLY_HOURS.date.length + 1
+  return {
+    date: iso.slice(0, WEEKLY_HOURS.date.length),
+    time: iso.slice(timeStart, timeStart + TIME_OF_DAY.length)
+  }
+}
+
+export const instantOfDateTime = (timeZone: string, date: string, time: string) =>
+  instantOfWallClock(
+    timeZone,
+    Date.parse(`${date}T00:00:00Z`) + minutesOfTime(time) * WEEKLY_HOURS.minute.milliseconds
+  )
+
 export function slotsFor(hours: WeeklyHours, date: string, options: SlotOptions): Date[] {
-  const { step, leadTime = 0, now = Date.now() } = options
-  if (!isRealDate(date) || !(step > 0)) return []
+  const { step, leadTime = 0, now = Date.now(), duration = 0 } = options
+  if (!isRealDate(date) || !(step > 0) || duration < 0) return []
   const earliest = millisecondsOf(now) + leadTime * WEEKLY_HOURS.minute.milliseconds
   const stepMilliseconds = step * WEEKLY_HOURS.minute.milliseconds
+  const durationMilliseconds = duration * WEEKLY_HOURS.minute.milliseconds
   const starts = new Set<number>()
   for (const span of spansOnDay(hours, dayIndexOf(Date.parse(`${date}T00:00:00Z`)))) {
+    const closing = instantOfWallClock(hours.timeZone, span.end)
     for (let at = span.start; at < span.end; at += stepMilliseconds) {
       const instant = instantOfWallClock(hours.timeZone, at)
-      if (instant >= earliest) starts.add(instant)
+      if (instant >= earliest && instant + durationMilliseconds <= closing) starts.add(instant)
     }
   }
   return [...starts].sort((a, b) => a - b).map((start) => new Date(start))

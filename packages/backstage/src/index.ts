@@ -27,7 +27,7 @@ export type {
 export type { CollectionRoute } from './entry-pages.ts'
 export { API_ERROR } from './errors.ts'
 export type { ApiError } from './errors.ts'
-export { hexColor, image, link, localized, richText } from './fields.ts'
+export { hexColor, image, link, localized, richText, timeOfDay } from './fields.ts'
 export type { LinkInput, ResolvedLink } from './fields.ts'
 export { labeled } from './labels.ts'
 export type { FieldLabel, FieldLabels } from './labels.ts'
@@ -40,6 +40,15 @@ export {
   MONEY
 } from './money.ts'
 export type { CurrencyCode } from './money.ts'
+export { bookableSlots, bookingDuration, BOOKING, occupiedAt, rangesOverlap } from './bookings.ts'
+export type {
+  BookableQuery,
+  BookableSlot,
+  BookingFields,
+  DurationBounds,
+  InstantRange,
+  OccupiedQuery
+} from './bookings.ts'
 export { isOpenAt, nextOpening, slotsFor, weeklyHours } from './weekly-hours.ts'
 export type { HoursRange, Instant, OpenState, SlotOptions, WeeklyHours } from './weekly-hours.ts'
 export { ENTRY_QUERY } from './entry-query.ts'

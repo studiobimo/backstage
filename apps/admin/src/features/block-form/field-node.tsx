@@ -16,6 +16,7 @@ import { MoneyField } from './money-field.tsx'
 import { LocalizedField } from './localized-field.tsx'
 import { ReferenceField } from './reference-field.tsx'
 import { ScheduleField } from './schedule-field.tsx'
+import { TimeOfDayField } from './time-of-day-field.tsx'
 import { RichTextField } from './rich-text-field.tsx'
 import type { FieldSpec, GroupSpec } from './spec.ts'
 import { WeeklyHoursField } from './weekly-hours-field.tsx'
@@ -56,6 +57,8 @@ function LeafNode({ form, spec, path, label, chrome, translated, icon }: NodePro
             return <RichTextField {...props} />
           case 'hexColor':
             return <HexColorField {...props} />
+          case 'timeOfDay':
+            return <TimeOfDayField {...props} />
           case 'money':
             return <MoneyField {...props} />
           case 'text':
@@ -139,7 +142,13 @@ function GroupLegend({
   )
 }
 
-const COMPACT_KINDS: readonly FieldSpec['kind'][] = ['number', 'money', 'select', 'boolean']
+const COMPACT_KINDS: readonly FieldSpec['kind'][] = [
+  'number',
+  'money',
+  'timeOfDay',
+  'select',
+  'boolean'
+]
 const COMPACT_GRID = 'grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-x-4'
 
 const isCompact = (spec: GroupSpec) =>

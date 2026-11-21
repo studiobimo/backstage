@@ -62,6 +62,10 @@ interface HexColorSpec extends Common {
   kind: 'hexColor'
 }
 
+interface TimeOfDaySpec extends Common {
+  kind: 'timeOfDay'
+}
+
 interface MoneySpec extends Common {
   kind: 'money'
 }
@@ -122,6 +126,7 @@ export type FieldSpec =
   | RichTextSpec
   | HexColorSpec
   | MoneySpec
+  | TimeOfDaySpec
   | NumberSpec
   | BooleanSpec
   | SelectSpec
@@ -163,7 +168,7 @@ function parseChild(schema: JsonSchema | undefined, key: string, required: boole
 
 const NUMBER_SHAPES: readonly FieldShape[] = ['number', 'integer']
 
-const BARE_KINDS = ['richText', 'hexColor', 'money'] as const
+const BARE_KINDS = ['richText', 'hexColor', 'money', 'timeOfDay'] as const
 
 const isBareKind = (shape: FieldShape): shape is (typeof BARE_KINDS)[number] =>
   (BARE_KINDS as readonly FieldShape[]).includes(shape)

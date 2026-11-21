@@ -3,7 +3,15 @@ import { z } from 'zod'
 import { RICH_TEXT, richTextDoc } from './rich-text.ts'
 
 export type FieldKind =
-  'image' | 'richText' | 'link' | 'localized' | 'reference' | 'hexColor' | 'weeklyHours' | 'money'
+  | 'image'
+  | 'richText'
+  | 'link'
+  | 'localized'
+  | 'reference'
+  | 'hexColor'
+  | 'weeklyHours'
+  | 'money'
+  | 'timeOfDay'
 
 export const marked = <T extends z.ZodType>(schema: T, backstage: FieldKind): T =>
   schema.meta({ backstage }) as T
@@ -15,6 +23,21 @@ export const HEX_COLOR = { pattern: /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/ } as 
 
 export const hexColor = () =>
   marked(z.string().trim().regex(HEX_COLOR.pattern).toLowerCase(), 'hexColor')
+
+export const TIME_OF_DAY = {
+  pattern: /^(?:[01]\d|2[0-3]):[0-5]\d$/,
+  minutesPerHour: 60,
+  length: 5
+} as const
+
+export const timeOfDaySchema = z.string().regex(TIME_OF_DAY.pattern)
+
+export const timeOfDay = () => marked(timeOfDaySchema, 'timeOfDay')
+
+export const minutesOfTime = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours! * TIME_OF_DAY.minutesPerHour + minutes!
+}
 
 export const richText = () => marked(richTextDoc, 'richText')
 

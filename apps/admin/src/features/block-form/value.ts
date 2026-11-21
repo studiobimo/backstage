@@ -14,6 +14,7 @@ export interface ValueByKind {
   richText: BlockValue
   number: number
   money: number
+  timeOfDay: string
   boolean: boolean
   select: string | number
   group: BlockValue
