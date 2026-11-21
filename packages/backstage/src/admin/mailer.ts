@@ -4,6 +4,7 @@ export interface MailMessage {
   to: string
   subject: string
   text: string
+  html?: string
 }
 
 export interface Mailer {
@@ -11,7 +12,13 @@ export interface Mailer {
 }
 
 export interface EmailBinding {
-  send(message: { to: string; from: string; subject: string; text: string }): Promise<unknown>
+  send(message: {
+    to: string
+    from: string
+    subject: string
+    text: string
+    html?: string
+  }): Promise<unknown>
 }
 
 const MAILER = {

@@ -136,7 +136,7 @@ export const alternateLinks = (
   config: LocaleConfig = LOCALE.default
 ): AlternateLink[] => targetAlternates(siteUrl, pageTarget(page, config.defaultLocale), config)
 
-const escapeXml = (text: string) =>
+export const escapeXml = (text: string) =>
   text
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')

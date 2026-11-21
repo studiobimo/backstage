@@ -15,9 +15,22 @@ type FieldKey<S extends z.ZodType> = z.ZodType extends S
   ? string
   : Extract<keyof z.input<S>, string>
 
+type NotifySubject = string | ((payload: Record<string, unknown>) => string)
+
 export interface FormNotify {
   to?: readonly string[]
-  subject?: string
+  subject?: NotifySubject
+  include?: readonly string[]
+  exclude?: readonly string[]
+  html?: boolean
+}
+
+interface FormNotifyDefinition<S extends z.ZodType> extends Omit<
+  FormNotify,
+  'include' | 'exclude'
+> {
+  include?: readonly FieldKey<S>[]
+  exclude?: readonly FieldKey<S>[]
 }
 
 interface FormToken {
@@ -41,7 +54,7 @@ interface FormPublicDefinition<S extends z.ZodType> {
 export interface FormDefinition<S extends z.ZodType = z.ZodType> {
   schema: S
   statuses?: readonly string[]
-  notify?: FormNotify
+  notify?: FormNotifyDefinition<S>
   public?: FormPublicDefinition<S>
   turnstile?: boolean
   token?: Partial<FormToken>
@@ -82,7 +95,22 @@ const assertNotify = (name: string, notify: FormNotify | undefined) => {
   if (notify?.to?.length === 0) throw new Error(`Form "${name}" notify.to needs an address`)
   const bad = notify?.to?.find((address) => !z.email().safeParse(address).success)
   if (bad) throw new Error(`Form "${name}" notifies "${bad}", which is not an email address`)
-  if (notify?.subject?.trim() === '') throw new Error(`Form "${name}" notify.subject is blank`)
+  if (typeof notify?.subject === 'string' && notify.subject.trim() === '')
+    throw new Error(`Form "${name}" notify.subject is blank`)
+}
+
+const assertNotifyFields = (form: Form, properties: readonly string[]) => {
+  for (const [option, fields] of Object.entries({
+    include: form.notify?.include,
+    exclude: form.notify?.exclude
+  })) {
+    const unknownField = fields?.find((field) => !properties.includes(field))
+    if (unknownField) {
+      throw new Error(
+        `Form "${form.name}" notify.${option} "${unknownField}" is not a field of its schema`
+      )
+    }
+  }
 }
 
 const assertDays = (name: string, label: string, days: number | undefined) => {
@@ -139,6 +167,7 @@ export function defineForm<S extends z.ZodType, const N extends string>(
   const schema = assertRenderable(form, 'Form')
   if (schema.type !== 'object') throw new Error(`Form "${name}" schema must be a z.object`)
   assertPublic(form, Object.keys(schema.properties ?? {}))
+  assertNotifyFields(form, Object.keys(schema.properties ?? {}))
   return form
 }
 

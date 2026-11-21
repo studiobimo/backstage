@@ -34,10 +34,10 @@ describe('notifying the owners of a submission', () => {
     expect(email.send).toHaveBeenCalledWith({
       to: OWNER,
       from: SENDER,
-      subject: 'New reservation request',
-      text: expect.stringContaining(`Reference: ${(result as { id: string }).id}`)
+      subject: 'Table for 4 on 2026-12-24',
+      text: expect.stringContaining(`Reference: ${(result as { id: string }).id}`),
+      html: expect.stringContaining('<dl>')
     })
-    expect(JSON.stringify(email.send.mock.calls[0])).toContain('+34 600 000 000')
   })
 
   it('sends nothing when no owner is configured', async () => {

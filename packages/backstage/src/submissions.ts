@@ -13,15 +13,11 @@ export const SUBMISSION = {
     maxTurnstileTokenLength: 2048,
     maxTokenLength: 256
   },
-  notification: {
-    subject: (form: string) => `New ${form} submission`,
-    intro: (form: string) => `A visitor sent the "${form}" form.`,
-    idLabel: 'Reference'
-  },
   issue: { tooLarge: 'too_big', unknownReference: 'unknown_reference' },
   failure: {
     notConfigured: 'Turnstile is on for this form but TURNSTILE_SECRET is not set',
-    notifyFailed: 'The submission notification could not be sent'
+    notifyFailed: 'The submission notification could not be sent',
+    subjectFailed: 'The notification subject function threw, so the default subject was used'
   }
 } as const
 

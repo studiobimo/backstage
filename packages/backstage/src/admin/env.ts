@@ -11,6 +11,7 @@ export interface AdminEnv {
   MEDIA: R2Bucket
   ASSETS: Fetcher
   SITE_ORIGIN?: string
+  ADMIN_ORIGIN?: string
   ACCESS_TEAM_DOMAIN?: string
   ACCESS_AUD?: string
   DEV_AUTH?: string

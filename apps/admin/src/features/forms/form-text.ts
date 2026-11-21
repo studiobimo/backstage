@@ -1,4 +1,4 @@
-import { classifyField, INBOX } from '@studiobimo/backstage/internal'
+import { classifyField, humanize, INBOX } from '@studiobimo/backstage/internal'
 
 import type { i18n as I18n, TFunction } from 'i18next'
 
@@ -8,15 +8,6 @@ import type { JsonSchema } from '../block-form/spec'
 export const formTitle = collectionTitle
 
 export const STATUS = { new: 'new', confirmed: 'confirmed', declined: 'declined' } as const
-
-const WORD_BREAK = /([a-z0-9])([A-Z])|[-_]+/g
-
-const humanize = (key: string) => {
-  const spaced = key.replace(WORD_BREAK, (_match, lower: string | undefined, upper: string) =>
-    lower ? `${lower} ${upper.toLowerCase()}` : ' '
-  )
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
-}
 
 export const statusLabel = (instance: I18n, t: TFunction, status: string) => {
   const key = `status.${status}`
