@@ -46,25 +46,44 @@ const dateConditions = ({ field, from, to }: DateRange): SQL[] => [
   ...(to === undefined ? [] : [lte(dateOf(field), to)])
 ]
 
+export interface SubmissionPaging {
+  limit: number
+  offset: number
+}
+
+const matching = (form: string, status?: string, range?: DateRange) =>
+  and(
+    eq(submissions.form, form),
+    status === undefined ? undefined : eq(submissions.status, status),
+    ...(range ? dateConditions(range) : [])
+  )
+
 export const listSubmissions = (
   d1: AnyD1Database,
   form: string,
   status?: string,
   range?: DateRange,
-  limit?: number
+  paging?: SubmissionPaging
 ) => {
   const query = drizzle(d1)
     .select()
     .from(submissions)
-    .where(
-      and(
-        eq(submissions.form, form),
-        status === undefined ? undefined : eq(submissions.status, status),
-        ...(range ? dateConditions(range) : [])
-      )
-    )
+    .where(matching(form, status, range))
     .orderBy(desc(submissions.createdAt), desc(submissions.id))
-  return limit === undefined ? query : query.limit(limit)
+  return paging ? query.limit(paging.limit).offset(paging.offset) : query
+}
+
+export const countSubmissions = async (
+  d1: AnyD1Database,
+  form: string,
+  status?: string,
+  range?: DateRange
+) => {
+  const [row] = await drizzle(d1)
+    .select({ total: count() })
+    .from(submissions)
+    .where(matching(form, status, range))
+  return row?.total ?? 0
 }
 
 export const countSubmissionsByStatus = (d1: AnyD1Database) =>

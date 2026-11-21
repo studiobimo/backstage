@@ -188,5 +188,39 @@ export const presentSubmission = (
     .filter(({ key }) => inScope(key, scope))
     .map((field) => withTotal(field, payload, context, inboxOf(form).total))
 
+const SCALAR_SHAPES: readonly string[] = ['string', 'number', 'integer', 'select', 'money']
+
+const columnFieldsOf = (form: Form): readonly (readonly string[])[] => {
+  if (inboxOf(form).columns.length > 0) return inboxOf(form).columns
+  return childNodes(schemaNodeOf(form.schema) as PresentedNode)
+    .filter(([, node]) => SCALAR_SHAPES.includes(classifyField(node)))
+    .slice(0, INBOX.columns.defaultCount)
+    .map(([key]) => [key])
+}
+
+export const inboxColumnsOf = (form: Form, context: PresentationContext) => {
+  const labels = new Map(presentSubmission(form, {}, context).map(({ key, label }) => [key, label]))
+  return columnFieldsOf(form).map((fields) => ({
+    key: fields.join(INBOX.columns.keySeparator),
+    label: labels.get(fields[0] ?? '') ?? ''
+  }))
+}
+
+export const inboxCellsOf = (
+  form: Form,
+  payload: Record<string, unknown>,
+  context: PresentationContext
+) => {
+  const present = new Map(
+    presentSubmission(form, payload, context).map((field) => [field.key, plainTextOf(field.value)])
+  )
+  return columnFieldsOf(form).map((fields) =>
+    fields
+      .map((key) => present.get(key) ?? '')
+      .filter(Boolean)
+      .join(INBOX.columns.cellSeparator)
+  )
+}
+
 export const formTitleIn = (form: Form, context: PresentationContext) =>
   (form.title && entryLabelIn(form.title, context.language, context.defaultLocale)) || form.name

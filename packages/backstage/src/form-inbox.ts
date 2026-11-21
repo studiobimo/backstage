@@ -3,13 +3,13 @@ import { z } from 'zod'
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 export const INBOX = {
-  maxSubmissions: 500,
   dateFormat: 'date',
+  paths: { anonymise: 'anonymise', revokeToken: 'revoke-token' },
+  paging: { pageSize: 25, firstPage: 1 },
   columns: { defaultCount: 4, maxCount: 6, keySeparator: '+', cellSeparator: ' ' },
+  query: { status: 'status', from: 'from', to: 'to', page: 'page' },
   languageParam: 'language',
   maxLanguageLength: 35,
-  paths: { anonymise: 'anonymise', revokeToken: 'revoke-token' },
-  query: { status: 'status', from: 'from', to: 'to' },
   submissionPath: (form: string, id: string) => `/forms/${form}/${id}`
 } as const
 
@@ -18,7 +18,12 @@ const dateSchema = z.string().regex(DATE_PATTERN)
 export const inboxFilterSchema = z.object({
   [INBOX.query.status]: z.string().min(1).optional(),
   [INBOX.query.from]: dateSchema.optional(),
-  [INBOX.query.to]: dateSchema.optional()
+  [INBOX.query.to]: dateSchema.optional(),
+  [INBOX.query.page]: z.coerce.number().int().min(INBOX.paging.firstPage).optional()
+})
+
+export const inboxQuerySchema = inboxFilterSchema.extend({
+  [INBOX.languageParam]: z.string().min(1).max(INBOX.maxLanguageLength).optional()
 })
 
 export interface PresentedColumn {
@@ -87,7 +92,15 @@ export const submissionSchema = z.object({
 })
 export type InboxSubmission = z.infer<typeof submissionSchema>
 
-export const submissionsResponseSchema = z.object({ submissions: z.array(submissionSchema) })
+const listedSubmissionSchema = submissionSchema.extend({ cells: z.array(z.string()) })
+
+export const submissionsResponseSchema = z.object({
+  columns: z.array(presentedColumnSchema),
+  submissions: z.array(listedSubmissionSchema),
+  total: z.number().int(),
+  page: z.number().int(),
+  pageSize: z.number().int()
+})
 
 export type ReferencedEntries = Record<string, Record<string, Record<string, string>>>
 

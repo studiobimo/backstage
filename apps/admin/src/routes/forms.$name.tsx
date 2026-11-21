@@ -1,6 +1,7 @@
 import { inboxFilterSchema } from '@studiobimo/backstage/internal'
 import { createFileRoute } from '@tanstack/react-router'
 
+import i18n from '@/i18n/config'
 import { configQuery } from '@/features/config/queries'
 import { formsQuery, submissionsQuery } from '@/features/forms/queries'
 import { SubmissionsPage } from '@/features/forms/submissions-page'
@@ -29,7 +30,7 @@ export const Route = createFileRoute('/forms/$name')({
     Promise.all([
       context.queryClient.ensureQueryData(configQuery),
       context.queryClient.ensureQueryData(formsQuery),
-      context.queryClient.ensureQueryData(submissionsQuery(params.name, deps))
+      context.queryClient.ensureQueryData(submissionsQuery(params.name, deps, i18n.language))
     ]),
   staticData: { title: 'nav.sections.forms.title', width: 'wide' },
   component: SubmissionsRoute

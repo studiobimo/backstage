@@ -1,8 +1,10 @@
 import { Hono, type Context } from 'hono'
+import type { z } from 'zod'
 
 import { schemaNodeOf } from '../blocks.ts'
 import type { AdminRegistry } from '../collections.ts'
 import {
+  countSubmissions,
   countSubmissionsByStatus,
   findSubmission,
   listSubmissions,
@@ -12,7 +14,7 @@ import { ensureUser, listUsers } from '../db/users.ts'
 import { API_ERROR, fieldIssuesOf } from '../errors.ts'
 import {
   INBOX,
-  inboxFilterSchema,
+  inboxQuerySchema,
   submissionStatusChangeSchema,
   type FormDescription,
   type InboxSubmission
@@ -28,7 +30,7 @@ import {
   revokeToken,
   type PrivacyChange
 } from './submission-privacy.ts'
-import { presentSubmission } from '../submission-presentation.ts'
+import { inboxCellsOf, inboxColumnsOf, presentSubmission } from '../submission-presentation.ts'
 import { presentationContextFor } from './submission-context.ts'
 import { setSubmissionStatus } from './submissions.ts'
 
@@ -122,6 +124,49 @@ const privacyRoutes = (registry: AdminRegistry) =>
       )
     )
 
+const pagingOf = (page: number | undefined) => {
+  const current = page ?? INBOX.paging.firstPage
+  return {
+    page: current,
+    limit: INBOX.paging.pageSize,
+    offset: (current - INBOX.paging.firstPage) * INBOX.paging.pageSize
+  }
+}
+
+const listResponse = async (
+  c: Context<AccessEnv>,
+  registry: AdminRegistry,
+  form: Form,
+  { status, from, to, page, language }: z.infer<typeof inboxQuerySchema>
+) => {
+  await purgeExpiredSubmissions(c.env.DB, c.env.SITE, form)
+  const field = dateFieldOf(form)
+  const range = field && (from || to) ? { field, from, to } : undefined
+  const paging = pagingOf(page)
+  const [rows, total, names] = await Promise.all([
+    listSubmissions(c.env.DB, form.name, status, range, paging),
+    countSubmissions(c.env.DB, form.name, status, range),
+    editorNamesOf(c)
+  ])
+  const context = await presentationContextFor(
+    c.env.DB,
+    registry,
+    form,
+    rows.map((row) => row.payload),
+    language
+  )
+  return {
+    columns: inboxColumnsOf(form, context),
+    submissions: rows.map((row) => ({
+      ...toInboxSubmission(row, names),
+      cells: inboxCellsOf(form, row.payload, context)
+    })),
+    total,
+    page: paging.page,
+    pageSize: paging.limit
+  }
+}
+
 const detailResponse = async (
   c: Context<AccessEnv>,
   registry: AdminRegistry,
@@ -152,21 +197,9 @@ export const formsRoutes = (registry: AdminRegistry) =>
     .get('/:name/submissions', async (c) => {
       const found = formOf(registry, c)
       if (!found.ok) return found.response
-      const filter = inboxFilterSchema.safeParse(c.req.query())
+      const filter = inboxQuerySchema.safeParse(c.req.query())
       if (!filter.success) return respondInvalid(c, fieldIssuesOf(filter.error))
-      const { status, from, to } = filter.data
-      await purgeExpiredSubmissions(c.env.DB, c.env.SITE, found.form)
-      const field = dateFieldOf(found.form)
-      const range = field && (from || to) ? { field, from, to } : undefined
-      const rows = await listSubmissions(
-        c.env.DB,
-        found.form.name,
-        status,
-        range,
-        INBOX.maxSubmissions
-      )
-      const names = await editorNamesOf(c)
-      return c.json({ submissions: rows.map((row) => toInboxSubmission(row, names)) })
+      return c.json(await listResponse(c, registry, found.form, filter.data))
     })
     .get('/:name/submissions/:id', async (c) => {
       const found = formOf(registry, c)

@@ -84,6 +84,23 @@ export const reservationFields = [
   }
 ]
 
+export const listingOf = (submissions: unknown[], overrides: Record<string, unknown> = {}) => ({
+  columns: [
+    { key: 'date', label: 'Date' },
+    { key: 'name', label: 'Name' },
+    { key: 'time', label: 'Time' },
+    { key: 'seats', label: 'Seats' }
+  ],
+  submissions: submissions.map((submission) => ({
+    ...(submission as object),
+    cells: ['Dec 24, 2026', 'Ana Pérez', '20:30', '4']
+  })),
+  total: submissions.length,
+  page: 1,
+  pageSize: 25,
+  ...overrides
+})
+
 export const mockInboxApi = (handlers: Record<string, (init?: RequestInit) => unknown>) => {
   const calls: { method: string; url: string }[] = []
   vi.stubGlobal(
@@ -96,6 +113,12 @@ export const mockInboxApi = (handlers: Record<string, (init?: RequestInit) => un
   )
   return calls
 }
+
+export const inboxApi = (submissions: unknown[], overrides: Record<string, unknown> = {}) =>
+  mockInboxApi({
+    '/submissions': () => listingOf(submissions, overrides),
+    '/forms': () => ({ forms: [reservationForm] })
+  })
 
 export const renderInbox = (children: ReactNode) =>
   render(
