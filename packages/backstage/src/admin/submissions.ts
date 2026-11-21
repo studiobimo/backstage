@@ -14,7 +14,7 @@ import { readPublishedEntries } from '../db/entry-references.ts'
 import { API_ERROR, fieldIssuesOf, type FieldIssue } from '../errors.ts'
 import type { SchemaNode } from '../field-shapes.ts'
 import { publicFieldsOf } from '../form-projection.ts'
-import { daysToMs, formsOf, initialStatusOf, tokenDaysOf, type Form } from '../forms.ts'
+import { daysToMs, formsOf, initialStatusOf, type Form } from '../forms.ts'
 import { logLine } from '../log.ts'
 import { REFERENCE, referenceFieldsIn, type ReferenceField } from '../references.ts'
 import type { RequestContext } from '../rpc.ts'
@@ -180,7 +180,7 @@ export const submitForm = async (
     id,
     form: form.name,
     tokenHash: await sha256Hex(token),
-    tokenExpiresAt: createdAt + daysToMs(tokenDaysOf(form)),
+    tokenExpiresAt: createdAt + daysToMs(form.token.expiresInDays),
     payload: data,
     status: initialStatusOf(form),
     now: createdAt

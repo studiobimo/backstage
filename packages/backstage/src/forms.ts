@@ -70,7 +70,7 @@ export interface Form<S extends z.ZodType = z.ZodType, N extends string = string
   notify?: FormNotify
   public: FormPublic
   turnstile: boolean
-  token?: FormToken
+  token: FormToken
   retention?: FormRetention
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
@@ -172,9 +172,6 @@ export function defineForm<S extends z.ZodType, const N extends string>(
 }
 
 export const formsOf = ({ forms }: Partial<FormRegistry>) => forms ?? new Map<string, Form>()
-
-export const tokenDaysOf = (form: Form) =>
-  form.token?.expiresInDays ?? FORM.token.defaultExpiresInDays
 
 export const daysToMs = (days: number) => days * DURATION_MS.day
 

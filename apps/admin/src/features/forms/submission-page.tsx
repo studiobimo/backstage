@@ -17,6 +17,7 @@ import { FieldValue } from './field-value'
 import { fieldEntries, fieldLabel, formTitle, statusLabel } from './form-text'
 import { changeStatusMutation, formsQuery, submissionQuery, type FormOption } from './queries'
 import { StatusBadge } from './status-badge'
+import { SubmissionPrivacy } from './submission-privacy'
 import { useLocalizedForm } from './use-localized-form'
 
 function StatusControl({ form, submission }: { form: FormOption; submission: InboxSubmission }) {
@@ -117,6 +118,7 @@ export function SubmissionPage({ name, submissionId }: SubmissionPageProps) {
         </dl>
       </FrameSection>
       <StatusControl form={form} submission={submission} />
+      <SubmissionPrivacy form={name} submission={submission} />
     </>
   )
 }
