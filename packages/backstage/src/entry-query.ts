@@ -39,10 +39,12 @@ export interface QuerySelection {
   groups: EntryGroupIds[] | null
 }
 
-const valueOf = (entry: PublishedEntry, field: string) =>
+type Queryable = Pick<PublishedEntry, 'content'>
+
+const valueOf = (entry: Queryable, field: string) =>
   isRecord(entry.content) ? entry.content[field] : undefined
 
-const matchesWhere = (entry: PublishedEntry, where: EntryQuery['where']) =>
+const matchesWhere = (entry: Queryable, where: EntryQuery['where']) =>
   Object.entries(where ?? {}).every(([field, wanted]) => valueOf(entry, field) === wanted)
 
 const compareValues = (left: unknown, right: unknown, sign: number) => {
@@ -52,7 +54,7 @@ const compareValues = (left: unknown, right: unknown, sign: number) => {
   return sign * ((left as string | number) < (right as string | number) ? -1 : 1)
 }
 
-const sortedBy = (entries: PublishedEntry[], orderBy: EntryQuery['orderBy']) => {
+const sortedBy = <E extends Queryable>(entries: E[], orderBy: EntryQuery['orderBy']) => {
   if (!orderBy) return entries
   const descending = orderBy.direction === ENTRY_QUERY.direction.descending
   if (orderBy.field === ENTRY_QUERY.positionKey) return descending ? entries.reverse() : entries
@@ -71,9 +73,17 @@ const groupedIds = (
     return ids.length > 0 ? [{ group, ids }] : []
   })
 
+export const selectEntries = <E extends Queryable>(
+  entries: readonly E[],
+  { where, orderBy, limit }: Pick<EntryQuery, 'where' | 'orderBy'> & { limit?: number }
+): E[] =>
+  sortedBy(
+    entries.filter((entry) => matchesWhere(entry, where)),
+    orderBy
+  ).slice(0, limit)
+
 export const selectQuery = (pool: QueryPool, query: EntryQuery): QuerySelection => {
-  const matched = pool.entries.filter((entry) => matchesWhere(entry, query.where))
-  const selected = sortedBy(matched, query.orderBy).slice(0, query.limit)
+  const selected = selectEntries(pool.entries, query)
   const groups = query.groupBy
     ? groupedIds(selected, query.groupBy, pool.groupOrders[query.groupBy] ?? [])
     : null

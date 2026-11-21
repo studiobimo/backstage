@@ -1,4 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { z } from 'zod'
+
+import { defineRegistry } from '../blocks.ts'
+import { collectionSnapshotKey, collectionSnapshotOf } from '../collection-snapshot.ts'
+import { defineCollection } from '../collections.ts'
 
 import { NO_REFERENCES } from '../references.ts'
 import {
@@ -13,6 +18,7 @@ import { NO_SITE_BRAND } from '../brand.ts'
 import { SITE_SNAPSHOT, siteSnapshotKey, type SiteSnapshot } from '../site-publishing.ts'
 import { routeOf } from './routing.ts'
 import {
+  findCollectionEntries,
   findPublished,
   findSiteSnapshot,
   findTranslations,
@@ -131,5 +137,54 @@ describe('reading the publish version', () => {
       ({ get: async (key: string) => records[key] ?? null }) as KvReader
     expect(await readSiteVersion(kvWith({ [SITE_VERSION.key]: 'abc' }))).toBe('abc')
     expect(await readSiteVersion(kvWith({}))).toBeUndefined()
+  })
+})
+
+describe('reading a collection snapshot', () => {
+  const seat = defineCollection({
+    name: 'seat',
+    label: 'code',
+    snapshot: true,
+    schema: z.object({ code: z.string(), capacity: z.number() })
+  })
+  const room = defineCollection({
+    name: 'room',
+    label: 'code',
+    schema: z.object({ code: z.string() })
+  })
+  const registry = defineRegistry([], { collections: [seat, room] })
+  const kv = memoryKv({
+    [collectionSnapshotKey('seat')]: collectionSnapshotOf(
+      'seat',
+      [
+        { id: 'a', content: { code: 'a1', capacity: 2 } },
+        { id: 'b', content: { code: 'b1', capacity: 6 } },
+        { id: 'c', content: { code: 'c1', capacity: 4 } }
+      ],
+      1
+    ),
+    [collectionSnapshotKey('room')]: collectionSnapshotOf('room', [{ id: 'r', content: {} }], 1)
+  })
+
+  it('lists the entries in their stored order', async () => {
+    const found = await findCollectionEntries(kv, registry, 'seat')
+    expect(found.map(({ id }) => id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('filters, orders and limits', async () => {
+    const found = await findCollectionEntries(kv, registry, 'seat', {
+      where: { code: 'b1' }
+    })
+    expect(found).toEqual([{ id: 'b', content: { code: 'b1', capacity: 6 } }])
+    const largest = await findCollectionEntries(kv, registry, 'seat', {
+      orderBy: { field: 'capacity', direction: 'desc' },
+      limit: 2
+    })
+    expect(largest.map(({ content }) => content.code)).toEqual(['b1', 'c1'])
+  })
+
+  it('answers an empty list for a missing key, an unknown name or a collection without snapshot', async () => {
+    expect(await findCollectionEntries(memoryKv({}), registry, 'seat')).toEqual([])
+    expect(await findCollectionEntries(kv, registry, 'room')).toEqual([])
   })
 })

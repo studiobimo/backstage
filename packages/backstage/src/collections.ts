@@ -34,6 +34,7 @@ export interface CollectionDefinition<
   route?: R
   label: LabelKey<S>
   quickToggle?: readonly BooleanKey<S>[]
+  snapshot?: boolean
   version?: number
   schema: S
   migrate?: (content: unknown, fromVersion: number) => unknown
@@ -135,6 +136,7 @@ export interface CollectionDescription {
   label: string
   route?: CollectionRoute
   quickToggle?: readonly string[]
+  snapshot?: boolean
   schema: Readonly<Record<string, unknown>>
   title?: Readonly<Record<string, string>>
   description?: Readonly<Record<string, string>>
@@ -152,12 +154,13 @@ export const describeCollections = (
   registry: Partial<CollectionRegistry>
 ): CollectionDescription[] =>
   [...collectionsOf(registry).values()].map(
-    ({ name, version, label, route, quickToggle, schema, title, description }) => ({
+    ({ name, version, label, route, quickToggle, snapshot, schema, title, description }) => ({
       name,
       version,
       label,
       route,
       quickToggle,
+      snapshot,
       schema: schemaNodeOf(schema),
       title,
       description

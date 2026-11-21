@@ -1,6 +1,7 @@
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 
+import { collectionSnapshotWrites } from '../collection-snapshot.ts'
 import { quickToggleOf, type AdminRegistry, type Collection } from '../collections.ts'
 import { ENTRY_WRITE, findEntry, findPublishedContent, recordEntryToggled } from '../db/entries.ts'
 import { ensureUser } from '../db/users.ts'
@@ -26,9 +27,10 @@ const withField = (content: unknown, { field, value }: FieldChange) =>
   ({ ...(content as Record<string, unknown>), [field]: value }) as Entry['content']
 
 const ownWrites = (registry: AdminRegistry, collection: Collection) =>
-  collection.route
+  collectionSnapshotWrites(collection) +
+  (collection.route
     ? kvWritesPerPage(resolveLocaleConfig(registry).locales) + REPUBLISH.writes.perIndexRebuild
-    : 0
+    : 0)
 
 const publishedVersionAfter = (entry: Entry, publishedVersion: number | null) =>
   publishedVersion === null || publishedVersion === entry.version

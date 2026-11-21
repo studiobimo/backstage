@@ -72,7 +72,7 @@ const readLatest = async (d1: AnyD1Database, collection: Collection, count: numb
           .limit(count)
       ).flatMap((row) => openRow(collection, row))
 
-const readAllPublished = async (d1: AnyD1Database, collection: Collection) =>
+export const readAllPublished = async (d1: AnyD1Database, collection: Collection) =>
   (
     await drizzle(d1)
       .select(publishedColumns)
