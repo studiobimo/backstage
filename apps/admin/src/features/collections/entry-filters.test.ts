@@ -19,6 +19,7 @@ const entry = (id: string, overrides: Partial<EntrySummary>): EntrySummary => ({
   position: 0,
   toggles: {},
   slugs: {},
+  key: null,
   createdAt: 0,
   updatedAt: 0,
   updatedBy: null,

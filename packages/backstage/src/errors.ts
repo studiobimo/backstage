@@ -25,6 +25,17 @@ export const API_ERROR = {
     status: 409,
     message: 'That person already has access'
   },
+  keyInvalid: {
+    code: 'key_invalid',
+    status: 400,
+    message: 'The key can only use lowercase letters, numbers and hyphens'
+  },
+  keyTaken: { code: 'key_taken', status: 409, message: 'Another entry already uses that key' },
+  keyLocked: {
+    code: 'key_locked',
+    status: 409,
+    message: 'The key of a published entry cannot change. Unpublish it first'
+  },
   homeTaken: { code: 'home_taken', status: 409, message: 'The home page already exists' },
   staleVersion: {
     code: 'stale_version',

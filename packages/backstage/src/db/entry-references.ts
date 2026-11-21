@@ -130,7 +130,11 @@ const readPool = async (
   return {
     byId: new Map(everyone.map((entry) => [entry.id, withSlugs(entry)])),
     latest: newest.map(withSlugs),
-    query: { entries: queried.map(withSlugs), groupOrders: query ? enumOrdersOf(collection) : {} }
+    query: {
+      entries: queried.map(withSlugs),
+      groupOrders: query ? enumOrdersOf(collection) : {},
+      keyField: collection.key
+    }
   }
 }
 

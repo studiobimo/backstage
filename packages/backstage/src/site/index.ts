@@ -63,6 +63,7 @@ export { TURNSTILE, verifyTurnstile } from './turnstile.ts'
 export type { TurnstileCheck, TurnstileFailure, TurnstileResult } from './turnstile.ts'
 export {
   findCollectionEntries,
+  findCollectionEntry,
   findEntryTranslations,
   findFormProjection,
   findPublished,
@@ -77,6 +78,7 @@ export type {
   FormProjectionRead,
   KvReader
 } from './store.ts'
+export { COLLECTION_KEY } from '../collection-key.ts'
 export { collectionSnapshotKey, collectionSnapshotOf } from '../collection-snapshot.ts'
 export { FORM_PROJECTION, formProjectionKey } from '../form-projection.ts'
 export type { FormProjection } from '../form-projection.ts'

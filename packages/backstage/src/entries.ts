@@ -27,6 +27,7 @@ export const entrySummarySchema = authorshipSchema.extend({
   position: z.number().int(),
   toggles: z.record(z.string(), z.boolean()).default({}),
   slugs: z.record(z.string(), z.string().nullable()).default({}),
+  key: z.string().nullable().default(null),
   createdAt: z.number().int()
 })
 export type EntrySummary = z.infer<typeof entrySummarySchema>
@@ -43,6 +44,8 @@ export const collectionDescriptionSchema = z.object({
   label: z.string(),
   route: z.object({ path: z.string() }).optional(),
   quickToggle: z.array(z.string()).optional(),
+  snapshot: z.boolean().optional(),
+  key: z.string().optional(),
   schema: z.record(z.string(), z.unknown()),
   title: z.record(z.string(), z.string()).optional(),
   description: z.record(z.string(), z.string()).optional()

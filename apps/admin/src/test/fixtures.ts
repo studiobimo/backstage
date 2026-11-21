@@ -28,6 +28,7 @@ export const helloEntry: EntrySummary = {
   position: 0,
   toggles: {},
   slugs: {},
+  key: null,
   createdAt: 0,
   updatedAt: 1000,
   updatedBy: null,

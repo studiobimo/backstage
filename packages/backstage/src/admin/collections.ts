@@ -6,7 +6,8 @@ import {
   describeCollections,
   entryLabelsOf,
   type AdminRegistry,
-  type Collection
+  type Collection,
+  type EntryLabels
 } from '../collections.ts'
 import {
   createEntry,
@@ -19,7 +20,8 @@ import {
 } from '../db/entries.ts'
 import { ensureUser } from '../db/users.ts'
 import { createEntrySchema, saveEntrySchema } from '../entries.ts'
-import { planEntrySlugs, withoutEntryPages } from './entry-pages.ts'
+import { refuseEntryKey } from './entry-key.ts'
+import { planEntrySlugs, withoutEntryPages, type SlugPlan } from './entry-pages.ts'
 import { API_ERROR } from '../errors.ts'
 import { resolveLocaleConfig } from '../locales.ts'
 
@@ -60,6 +62,19 @@ const contentOf = (registry: AdminRegistry, collection: Collection, content: unk
   } as const
 }
 
+const planEntrySave = async (
+  c: Context<AccessEnv>,
+  registry: AdminRegistry,
+  collection: Collection,
+  id: string,
+  valid: { content: unknown; labels: EntryLabels },
+  provided?: Readonly<Record<string, string>>
+): Promise<SlugPlan> => {
+  const refusedKey = await refuseEntryKey(c, collection, id, valid.content)
+  if (refusedKey) return { ok: false, response: refusedKey }
+  return planEntrySlugs(c, registry, collection, id, { labels: valid.labels, provided })
+}
+
 export const collectionsRoutes = (registry: AdminRegistry) =>
   new Hono<AccessEnv>()
     .get('/', (c) => c.json({ collections: describeCollections(registry) }))
@@ -76,10 +91,7 @@ export const collectionsRoutes = (registry: AdminRegistry) =>
       const valid = contentOf(registry, found.collection, body.data.content)
       if (!valid.ok) return respondInvalid(c, valid.issues)
       const id = crypto.randomUUID()
-      const planned = await planEntrySlugs(c, registry, found.collection, id, {
-        labels: valid.labels,
-        provided: body.data.slugs
-      })
+      const planned = await planEntrySave(c, registry, found.collection, id, valid, body.data.slugs)
       if (!planned.ok) return planned.response
       const editorId = await ensureUser(c.env.DB, c.get('editor'))
       await createEntry(
@@ -104,10 +116,7 @@ export const collectionsRoutes = (registry: AdminRegistry) =>
       const valid = contentOf(registry, found.collection, body.data.content)
       if (!valid.ok) return respondInvalid(c, valid.issues)
       const id = c.req.param('id')
-      const planned = await planEntrySlugs(c, registry, found.collection, id, {
-        labels: valid.labels,
-        provided: body.data.slugs
-      })
+      const planned = await planEntrySave(c, registry, found.collection, id, valid, body.data.slugs)
       if (!planned.ok) return planned.response
       const write = await versionedWrite(c, body.data.expectedVersion)
       const outcome = await updateEntry(

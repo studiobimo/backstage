@@ -153,7 +153,8 @@ The client's site Worker, which reads what the admin publishes. It reaches no da
 - Reading published pages: `findPublished`, `findSiteSnapshot`, `findTranslations`, and the `KvReader` type
 - Reading published entries: `findPublishedEntry`, `findEntryTranslations`
 - Listing a collection's published entries, for a collection defined with `snapshot: true`: `findCollectionEntries`,
-  `collectionSnapshotKey`, `collectionSnapshotOf`, and the `CollectionEntryQuery` and `CollectionEntryRead` types
+  `findCollectionEntry`, `COLLECTION_KEY`, `collectionSnapshotKey`, `collectionSnapshotOf`, and the
+  `CollectionEntryQuery` and `CollectionEntryRead` types
 - Reading the registry's own settings: `findRegistrySettings`
 - Linking a Vite client bundle from its manifest: `viteAssets`, `viteManifestSchema`, `VITE_ASSETS`, and the
   `ViteAssets`, `ViteAssetsOptions` and `ViteManifest` types
