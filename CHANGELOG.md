@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.12.0](https://github.com/studiobimo/backstage/compare/v0.11.0...v0.12.0) (2026-11-21)
+
+
+### Features
+
+* **admin:** list structured submissions with declared columns, paged by the api ([#554](https://github.com/studiobimo/backstage/issues/554)) ([c68ebed](https://github.com/studiobimo/backstage/commit/c68ebed7f93b5a871ef86fe91bd8bdea60f702e8))
+* **admin:** make the form notification email readable ([#548](https://github.com/studiobimo/backstage/issues/548)) ([0f09457](https://github.com/studiobimo/backstage/commit/0f09457cc3a37c12f9237f890ab6e31ec4e6f6ba))
+* **admin:** revoke, anonymise and delete a submission from the inbox ([#540](https://github.com/studiobimo/backstage/issues/540)) ([8d4313c](https://github.com/studiobimo/backstage/commit/8d4313c1b4bf4dd5aa0a3b93deb0d0bfce7a1e29))
+* **admin:** show a structured submission as fields, a table and a total ([#553](https://github.com/studiobimo/backstage/issues/553)) ([bc4c334](https://github.com/studiobimo/backstage/commit/bc4c33454f068c2849ecce092429d74ab4009143))
+* **admin:** show and lock an entry key in the editor, list and picker ([#550](https://github.com/studiobimo/backstage/issues/550)) ([5b228ac](https://github.com/studiobimo/backstage/commit/5b228ac93bf54d39caee13caaaa1c949445723be))
+* **admin:** show structured submissions as columns, a table and a total in the inbox ([#555](https://github.com/studiobimo/backstage/issues/555)) ([301a704](https://github.com/studiobimo/backstage/commit/301a704fe5eda23d20667beb82bec98489cd184c))
+* **core:** expire and revoke form status tokens ([#539](https://github.com/studiobimo/backstage/issues/539)) ([461466d](https://github.com/studiobimo/backstage/commit/461466d02bd2c43fe5bfa63653de80d66bf74a10))
+* **core:** give a collection entry an editor-set key that stays unique and stable ([#549](https://github.com/studiobimo/backstage/issues/549)) ([b408de7](https://github.com/studiobimo/backstage/commit/b408de7519873765b12739e84dd9d13f48f8c7fa))
+* **site:** add a reserve client app served on a shell route ([#552](https://github.com/studiobimo/backstage/issues/552)) ([e768f6a](https://github.com/studiobimo/backstage/commit/e768f6aabbf75309bca3833c8035d73a362d92a0))
+* **site:** fit bookings into open hours and detect overlaps ([#545](https://github.com/studiobimo/backstage/issues/545)) ([0122fad](https://github.com/studiobimo/backstage/commit/0122fadbea9024e0b68ada613e0fb6dcb49b5356))
+* **site:** list a collection's published entries from the site worker ([#547](https://github.com/studiobimo/backstage/issues/547)) ([a7d2cdf](https://github.com/studiobimo/backstage/commit/a7d2cdfbf18c6ba58dd5460fe2209f28aad97a17))
+* **site:** list seats and find one by key in the site template ([#551](https://github.com/studiobimo/backstage/issues/551)) ([13dcffd](https://github.com/studiobimo/backstage/commit/13dcffdb6f0012e5e45486c8e05992c42b7c2e8b))
+* **site:** offer bookable slots from the site template ([#546](https://github.com/studiobimo/backstage/issues/546)) ([e771ae9](https://github.com/studiobimo/backstage/commit/e771ae975fa4d4267fb37fac23bcbb0a4cd6e140))
+* **site:** serve a client app's bundle with its stylesheet and head tags on a shell route ([#544](https://github.com/studiobimo/backstage/issues/544)) ([3ac0837](https://github.com/studiobimo/backstage/commit/3ac08371d64566de265735ddc060883a8dbd236e))
+* **site:** template routes for form status and projection reads, rate limiting and nested payloads ([#543](https://github.com/studiobimo/backstage/issues/543)) ([a75eef2](https://github.com/studiobimo/backstage/commit/a75eef2346492345e19aaa746c44e913b791d55c))
+
+
+### Bug Fixes
+
+* **site:** keep a consumer's frame-src when turnstile is enabled ([#536](https://github.com/studiobimo/backstage/issues/536)) ([922c32f](https://github.com/studiobimo/backstage/commit/922c32f4d056638f9f35e94fce60552c4ad30ce8))
+
+
+### Documentation
+
+* correct the turnstile secret, hours, planned wording and upgrade notes ([#538](https://github.com/studiobimo/backstage/issues/538)) ([884273a](https://github.com/studiobimo/backstage/commit/884273ab6bb8fc1903fd4f7351efaffba8764719))
+
 ## [0.11.0](https://github.com/studiobimo/backstage/compare/v0.10.0...v0.11.0) (2026-11-20)
 
 
